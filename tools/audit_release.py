@@ -30,15 +30,36 @@ for p in json_files:json.loads(p.read_text(encoding='utf-8'))
 version=re.search(r'^mod_version=(.+)$',(ROOT/'gradle.properties').read_text(),re.M)[1].strip()
 jar=ROOT/f'build/libs/modern-ite-{version}.jar'
 report={'author':'NingMeng123','version':version,'source_archives':source_hashes,'json_files_checked':len(json_files),'asset_count':len(assets),'assets':assets}
+base_jar=out/'base/mite-0.1.10.jar'
+if base_jar.exists():
+    with ZipFile(base_jar) as archive:
+        required=['io/github/ningmeng123/mite/api/MiteExtensions.class',
+                  'io/github/ningmeng123/mite/crafting/MaterialEquipmentUpgrade.class',
+                  'io/github/ningmeng123/mite/registry/MiteUpgradeTemplates.class',
+                  'data/mite/recipe/equipment_upgrade_smithing_template.json']
+        assert all(name in archive.namelist() for name in required), 'Base JAR must contain extension APIs and the new upgrade template'
+        assert 'version="0.1.10"' in archive.read('META-INF/neoforge.mods.toml').decode()
+    report['base_mod']={'version':'0.1.10','path':str(base_jar),'sha256':sha256(base_jar.read_bytes()).hexdigest(),
+                        'bytes':base_jar.stat().st_size,'upgrade_template_present':True,'extension_api_present':True}
 if jar.exists():
     with ZipFile(jar) as archive:
         names=archive.namelist()
-        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/')) or n.endswith('GameTests.class') or 'ModernIteClientAudit' in n or 'MobRenderRegressionAudit' in n or 'LanternClientAudit' in n]
+        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/','mezz/jei/')) or n.endswith('GameTests.class') or any(audit in n for audit in ['ModernIteClientAudit','MobRenderRegressionAudit','ForgeJeiClientAudit','MobAuraPreviews','LanternClientAudit'])]
         if forbidden:raise SystemExit('Release includes forbidden runtime or test entries: '+str(forbidden))
         metadata=archive.read('META-INF/neoforge.mods.toml').decode()
-        assert 'modId="modern_ite"' in metadata and 'versionRange="[0.1.9,)"' in metadata
+        assert 'modId="modern_ite"' in metadata and 'versionRange="[0.1.10,)"' in metadata
+        assert re.search(r'modId="jei"\s+type="optional".*?side="CLIENT"',metadata,re.S)
         assert all(s.name not in names for s in sources)
+        compiled=ROOT/'build/classes/java/main'
+        classes=list(compiled.rglob('*.class'))
+        for path in classes:
+            name=path.relative_to(compiled).as_posix()
+            assert archive.read(name)==path.read_bytes(), 'Stale production class: '+name
+        for retired in ['revenant_ghast','pillager','pillager_leader']:
+            assert f'assets/modern_ite/models/item/{retired}_spawn_egg.json' not in names
+            assert f'data/modern_ite/loot_table/entities/{retired}.json' not in names
     report['release_jar']={'path':str(jar),'sha256':sha256(jar.read_bytes()).hexdigest(),'bytes':jar.stat().st_size,'nested_jars':False,'old_runtime_classes':False,'base_classes_bundled':False,'test_classes_bundled':False}
+    report['release_jar'].update(compiled_production_classes_matched=len(classes),jei_bundled=False,removed_creature_resources_absent=True)
 tests=[]
 for p in (ROOT/'build/test-results/test').glob('TEST-*.xml'):
     t=ET.parse(p).getroot();tests.append({'suite':t.get('name'),'tests':int(t.get('tests')),'failures':int(t.get('failures')),'errors':int(t.get('errors'))})
@@ -46,17 +67,24 @@ report['junit']=tests
 client=out/'client-audit.json'
 if client.exists():
     data=json.loads(client.read_text());report['client']={k:data.get(k) for k in ['status','failures','creature_renderer_count','projectile_renderer_count','item_model_count','effect_sprite_count','world_created','server_connected','gameplay_verified']}
-    client_log=ROOT/'extension-client.log'
+    client_log=newest_log(out/'mob-update-client.log',ROOT/'extension-client.log')
     latest=client_log.read_text(encoding='utf-8',errors='replace') if client_log.exists() else ''
     report['client']['latest_launch_confirmed']='MODERN_ITE_CLIENT_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['client']['latest_launch_confirmed']:report['client']['status']='latest_launch_not_verified'
 mob_render=out/'mob-render-audit.json'
 if mob_render.exists():
     report['mob_render']=json.loads(mob_render.read_text(encoding='utf-8'))
-    render_log=ROOT/'extension-mob-render.log'
+    render_log=newest_log(out/'mob-aura-preview-render.log',out/'mob-update-render.log',ROOT/'extension-mob-render.log')
     latest=render_log.read_text(encoding='utf-8',errors='replace') if render_log.exists() else ''
     report['mob_render']['latest_launch_confirmed']='MODERN_ITE_MOB_RENDER_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['mob_render']['latest_launch_confirmed']:report['mob_render']['status']='latest_launch_not_verified'
+forge_jei=out/'forge-jei-audit.json'
+if forge_jei.exists():
+    report['forge_jei']=json.loads(forge_jei.read_text(encoding='utf-8'))
+    jei_log=ROOT/'extension-jei-client.log'
+    latest=jei_log.read_text(encoding='utf-8',errors='replace') if jei_log.exists() else ''
+    report['forge_jei']['latest_launch_confirmed']='MODERN_ITE_FORGE_JEI_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
+    if not report['forge_jei']['latest_launch_confirmed']:report['forge_jei']['status']='latest_launch_not_verified'
 lantern=out/'lantern-client-audit.json'
 if lantern.exists():
     report['lantern_client']=json.loads(lantern.read_text(encoding='utf-8'))
@@ -64,7 +92,7 @@ if lantern.exists():
     latest=lantern_log.read_text(encoding='utf-8',errors='replace') if lantern_log.exists() else ''
     report['lantern_client']['latest_launch_confirmed']='MODERN_ITE_MOB_RENDER_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['lantern_client']['latest_launch_confirmed']:report['lantern_client']['status']='latest_launch_not_verified'
-log=newest_log(out/'lantern-final.log',out/'lantern-gametest.log',ROOT/'extension-render-gametest.log',ROOT/'extension-final.log',ROOT/'extension-gametest.log')
+log=newest_log(out/'launch-gametest.log',out/'lantern-final.log',out/'lantern-gametest.log',out/'mob-update-gametest.log',ROOT/'extension-render-gametest.log',ROOT/'extension-final.log',ROOT/'extension-gametest.log')
 if log.exists():
     text=log.read_text(encoding='utf-8',errors='replace');match=re.search(r'All (\d+) required tests passed',text)
     report['gametest']={'passed':int(match[1]) if match else None,'recipe_errors':len(re.findall('Parsing error loading recipe',text)),'tag_errors':len(re.findall("Couldn.t load tag",text))}

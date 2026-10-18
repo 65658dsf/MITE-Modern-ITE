@@ -3,21 +3,33 @@
   "verification_date": "2026-10-18",
   "minecraft": "1.21.1",
   "neoforge": "21.1.259",
-  "base_mod_version": "0.1.9",
-  "extension_version": "0.1.1",
+  "base_mod_version": "0.1.10",
+  "extension_version": "0.1.10",
   "base_regression": {
     "junit_passed": 1590,
-    "gametest_passed": 2054
+    "gametest_passed": 2054,
+    "historical_base_mod_version": "0.1.9",
+    "carried_forward": true,
+    "not_rerun_for_current_base": true
   },
   "extension_junit": {
+    "status": "passed",
+    "passed": 14,
     "failures": 0,
     "errors": 0,
-    "passed": 8
+    "skipped": 0,
+    "suite_count": 4,
+    "scope": "isolated_candidate",
+    "log": "build/verification/commit-prep/submission-build-gametest.log"
   },
   "extension_gametest": {
-    "passed": 50,
+    "status": "passed",
+    "passed": 102,
     "recipe_errors": 0,
-    "tag_errors": 0
+    "tag_errors": 0,
+    "scope": "isolated_candidate_subset",
+    "jei_installed": false,
+    "log": "build/verification/commit-prep/submission-build-gametest.log"
   },
   "predictive_archery": {
     "verified_date": "2026-10-18",
@@ -63,75 +75,371 @@
   "client": {
     "status": "passed",
     "failures": [],
-    "creature_renderer_count": 48,
+    "creature_renderer_count": 45,
     "projectile_renderer_count": 2,
-    "item_model_count": 253,
+    "item_model_count": 160,
     "effect_sprite_count": 7,
+    "menu_screen_factories": 2,
     "world_created": false,
-    "server_connected": false,
     "gameplay_verified": false,
-    "latest_launch_confirmed": true
+    "report": "build/verification/commit-prep/snapshot/build/verification/client-audit.json",
+    "log": "build/verification/commit-prep/submission-client.log",
+    "latest_launch_confirmed": true,
+    "jei_installed": false,
+    "rerun_for_0_1_10": true,
+    "candidate_tree_verified": true
   },
   "release_jar": {
-    "sha256": "46480d0cf2f013c10e048a4410f01ec1099982c61364e9405a3412fa4b51e8cf",
-    "bytes": 1665504,
+    "status": "passed",
+    "path": "build/verification/commit-prep/snapshot/build/libs/modern-ite-0.1.10.jar",
+    "version": "0.1.10",
+    "sha256": "2e509fb2ec3cf1ea8ae01c3985b230f54797dbff25d72d9c139255180aa6b74e",
+    "bytes": 1052650,
+    "compiled_production_classes_matched": 152,
+    "published_class_set_exact": true,
+    "source_json_files_checked": 527,
+    "published_json_resources_matched": 527,
+    "jar_json_count": 527,
     "nested_jars": false,
-    "old_runtime_classes": false,
     "base_classes_bundled": false,
     "test_classes_bundled": false,
-    "compiled_production_classes_matched": 115
+    "jei_bundled": false,
+    "old_runtime_classes": false,
+    "excluded_entries_absent": true,
+    "removed_creature_resources_absent": true
   },
   "source_archives": {
     "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar": "594c152bb7cfe655f9b0744aea2ed45d71696779cd842c71be2501189c540d98",
     "[MITE不可能这么简单]MITE-ITE-2.0.28.jar": "b891dc495379e0d503207d1a44eb01a9661db42dba31831d77a32dd5162ff798"
   },
-  "audited_assets": 213,
-  "json_files_checked": 1185,
   "manual_verification_pending": [
-    "Full combat and behavior verification for all 48 mobs",
-    "Multiplayer behavior and long-term balance",
-    "Visual menu acceptance and world-generation distribution"
+    "Full survival combat balance for all 45 mobs",
+    "Real multiplayer including high-latency velocity correction",
+    "Better Combat installed gameplay and dense-particle performance",
+    "World-generation distribution"
   ],
   "mob_render": {
     "status": "passed",
     "failures": [],
-    "entity_texture_lookup_count": 48,
-    "focused_gpu_sample_count": 5,
+    "entity_texture_lookup_count": 45,
+    "focused_gpu_sample_count": 14,
+    "native_particle_previews": 5,
+    "player_big_head": {
+      "effect_head_scale": 2.0,
+      "effect_hat_scale": 2.0,
+      "cleared_head_scale": 1.0,
+      "cleared_hat_scale": 1.0
+    },
+    "particle_auras": {
+      "undying_zombie_emperor": 11,
+      "skeleton_lightning": 5,
+      "skeleton_floating": 3,
+      "skeleton_blaze": 8,
+      "annihilation_skeleton": 11
+    },
+    "report": "build/verification/commit-prep/snapshot/build/verification/mob-render-audit.json",
+    "log": "build/verification/commit-prep/submission-render.log",
     "created_only_new_world": true,
     "existing_world_loaded": false,
     "multiplayer_connected": false,
     "only_audit_owned_world_used": true,
     "latest_launch_confirmed": true,
-    "client_ready_ticks_before_capture": 100,
-    "server_ready_ticks_before_capture": 100,
-    "samples": [
+    "rerun_for_0_1_10": true,
+    "candidate_tree_verified": true
+  },
+  "forge_jei": {
+    "status": "historical_mixed_workspace_evidence",
+    "failures": [],
+    "jei_loaded": true,
+    "existing_world_loaded": false,
+    "multiplayer_connected": false,
+    "registered_recipe_count": 1122,
+    "all_gear_grade_variants_verified": true,
+    "native_layouts_validated": 50,
+    "registered_forging_categories": 1,
+    "shared_type": "modern_ite:forging",
+    "global_table_catalysts": 0,
+    "forge_arrow_action_opened_native_jei": true,
+    "gem_mode_has_no_forge_click_area": true,
+    "native_arrow_header_tabs": 1,
+    "actual_native_sidebar_screens_verified": 4,
+    "mixed_visible_page_intersection_only_vibranium": true,
+    "generic_output_r_focus_verified": true,
+    "native_next_page_updates_sidebar": true,
+    "single_shared_category_all_scenes": true,
+    "latest_launch_confirmed": true,
+    "table_uses": [
       {
-        "entity": "witch_lord",
-        "native_draw_succeeded": true,
-        "body_layer_changed_fraction": 0.01073962794860321,
-        "legacy_eyes_negative_control_changed_fraction": 1.0
+        "table_tier": 0,
+        "allowed_recipe_rows": 132,
+        "row_filter_verified": true
       },
       {
-        "entity": "wandering_witch",
-        "native_draw_succeeded": true,
-        "body_layer_changed_fraction": 0.008673653776653415
+        "table_tier": 1,
+        "allowed_recipe_rows": 468,
+        "row_filter_verified": true
       },
       {
-        "entity": "revenant_ghast",
-        "native_draw_succeeded": true,
-        "charging_changed_pixels": 6637
+        "table_tier": 2,
+        "allowed_recipe_rows": 762,
+        "row_filter_verified": true
       },
       {
-        "entity": "annihilation_skeleton",
-        "native_draw_succeeded": true,
-        "body_layer_changed_fraction": 0.0,
-        "dim_light_body_layer_changed_fraction": 0.014276749294006902,
-        "legacy_eyes_negative_control_changed_fraction": 1.0
-      },
-      {
-        "entity": "zombie_pigman_lord",
-        "native_draw_succeeded": true
+        "table_tier": 3,
+        "allowed_recipe_rows": 1122,
+        "row_filter_verified": true
       }
-    ]
+    ],
+    "jei_version": "19.57.0.451",
+    "tiers": [
+      {
+        "tier": 0,
+        "type": "modern_ite:forging",
+        "recipes": 132,
+        "native_visible_sidebar": [
+          "modern_ite:adamantium_forging_table",
+          "modern_ite:iron_forging_table",
+          "modern_ite:mithril_forging_table",
+          "modern_ite:vibranium_forging_table"
+        ],
+        "native_sidebar_slots": 4
+      },
+      {
+        "tier": 1,
+        "type": "modern_ite:forging",
+        "recipes": 336,
+        "native_visible_sidebar": [
+          "modern_ite:adamantium_forging_table",
+          "modern_ite:mithril_forging_table",
+          "modern_ite:vibranium_forging_table"
+        ],
+        "native_sidebar_slots": 3
+      },
+      {
+        "tier": 2,
+        "type": "modern_ite:forging",
+        "recipes": 294,
+        "native_visible_sidebar": [
+          "modern_ite:adamantium_forging_table",
+          "modern_ite:vibranium_forging_table"
+        ],
+        "native_sidebar_slots": 2
+      },
+      {
+        "tier": 3,
+        "type": "modern_ite:forging",
+        "recipes": 360,
+        "native_visible_sidebar": [
+          "modern_ite:vibranium_forging_table"
+        ],
+        "native_sidebar_slots": 1
+      }
+    ],
+    "carried_forward_for_0_1_7": true,
+    "carried_forward_for_0_1_8": true,
+    "carried_forward_for_0_1_9": true,
+    "carried_forward_for_0_1_10": true,
+    "evidence_scope": "Historical mixed workspace evidence; not validation of the isolated candidate commit tree",
+    "candidate_tree_verified": false
+  },
+  "vibranium_furnace_jei": {
+    "status": "historical_mixed_workspace_evidence",
+    "type": "mite:furnace_modern_ite_vibranium_furnace",
+    "registered_categories": 1,
+    "recipes": 102,
+    "native_layouts_validated": 5,
+    "public_catalysts": [
+      "modern_ite:vibranium_furnace"
+    ],
+    "uses_lookup_verified": true,
+    "output_lookup_verified": true,
+    "heat_five_blaze_coal_verified": true,
+    "native_menu_maximum_heat": 5,
+    "ordinary_arrow_area_count": 1,
+    "netherrack_arrow_area_count": 1,
+    "vibranium_arrow_area_count": 2,
+    "off_arrow_area_count": 0,
+    "other_screens_and_off_arrow_unchanged": true,
+    "native_arrow_opened_correct_category": true,
+    "native_visible_sidebar": [
+      "modern_ite:vibranium_furnace"
+    ],
+    "native_sidebar_slots": 1,
+    "native_heat_five_page_rendered": true,
+    "carried_forward_for_0_1_7": true,
+    "carried_forward_for_0_1_8": true,
+    "carried_forward_for_0_1_9": true,
+    "carried_forward_for_0_1_10": true,
+    "evidence_scope": "Historical mixed workspace evidence; not validation of the isolated candidate commit tree",
+    "candidate_tree_verified": false
+  },
+  "base_mod_artifact": {
+    "version": "0.1.10",
+    "sha256": "277c0fdfaec26c950b8ae7e601788530a8565894843d5fb4abd40e1a75342a97",
+    "bytes": 9146734,
+    "upgrade_template_present": true,
+    "extension_api_present": true
+  },
+  "club_smithing_jei": {
+    "status": "historical_mixed_workspace_evidence",
+    "seven_routes": [
+      {
+        "from": "copper",
+        "to": "iron",
+        "recipe": "modern_ite:equipment_upgrade/club_copper_to_iron",
+        "template": "mite:equipment_upgrade_smithing_template",
+        "base": "modern_ite:club_copper",
+        "addition": "minecraft:iron_ingot",
+        "output": "modern_ite:club_iron",
+        "native_layout_verified": true,
+        "output_components_match_assembly": true
+      },
+      {
+        "from": "silver",
+        "to": "iron",
+        "recipe": "modern_ite:equipment_upgrade/club_silver_to_iron",
+        "template": "mite:equipment_upgrade_smithing_template",
+        "base": "modern_ite:club_silver",
+        "addition": "minecraft:iron_ingot",
+        "output": "modern_ite:club_iron",
+        "native_layout_verified": true,
+        "output_components_match_assembly": true
+      },
+      {
+        "from": "gold",
+        "to": "iron",
+        "recipe": "modern_ite:equipment_upgrade/club_gold_to_iron",
+        "template": "mite:equipment_upgrade_smithing_template",
+        "base": "modern_ite:club_gold",
+        "addition": "minecraft:iron_ingot",
+        "output": "modern_ite:club_iron",
+        "native_layout_verified": true,
+        "output_components_match_assembly": true
+      },
+      {
+        "from": "iron",
+        "to": "ancient_metal",
+        "recipe": "modern_ite:club_ancient_metal",
+        "template": "mite:equipment_upgrade_smithing_template",
+        "base": "modern_ite:club_iron",
+        "addition": "mite:ancient_metal_ingot",
+        "output": "modern_ite:club_ancient_metal",
+        "native_layout_verified": true,
+        "output_components_match_assembly": true
+      },
+      {
+        "from": "ancient_metal",
+        "to": "mithril",
+        "recipe": "modern_ite:club_mithril",
+        "template": "mite:equipment_upgrade_smithing_template",
+        "base": "modern_ite:club_ancient_metal",
+        "addition": "mite:mithril_ingot",
+        "output": "modern_ite:club_mithril",
+        "native_layout_verified": true,
+        "output_components_match_assembly": true
+      },
+      {
+        "from": "mithril",
+        "to": "adamantium",
+        "recipe": "modern_ite:club_adamantium",
+        "template": "mite:equipment_upgrade_smithing_template",
+        "base": "modern_ite:club_mithril",
+        "addition": "mite:adamantium_ingot",
+        "output": "modern_ite:club_adamantium",
+        "native_layout_verified": true,
+        "output_components_match_assembly": true
+      },
+      {
+        "from": "adamantium",
+        "to": "vibranium",
+        "recipe": "modern_ite:club_vibranium",
+        "template": "mite:equipment_upgrade_smithing_template",
+        "base": "modern_ite:club_adamantium",
+        "addition": "mite:vibranium_ingot",
+        "output": "modern_ite:club_vibranium",
+        "native_layout_verified": true,
+        "output_components_match_assembly": true
+      }
+    ],
+    "type": "minecraft:smithing",
+    "recipes": 7,
+    "seven_routes_verified": true,
+    "native_recipe_lookup_verified": true,
+    "native_output_lookup_verified": true,
+    "native_layouts_validated": 7,
+    "native_outputs_match_real_assembly": true,
+    "public_catalysts": [
+      "minecraft:smithing_table"
+    ],
+    "legacy_advanced_crafting_recipes": 0,
+    "legacy_advanced_native_crafting_rows": 0,
+    "legacy_advanced_workbench_rows": 0,
+    "native_target_holder_rendered": true,
+    "native_drawn_holder": "modern_ite:club_vibranium",
+    "native_template_base_addition_output_rendered": true,
+    "native_visible_sidebar": [
+      "minecraft:smithing_table"
+    ],
+    "native_sidebar_slots": 1,
+    "gui_scale": 2,
+    "carried_forward_for_0_1_9": true,
+    "carried_forward_for_0_1_10": true,
+    "evidence_scope": "Historical mixed workspace evidence; not validation of the isolated candidate commit tree",
+    "candidate_tree_verified": false
+  },
+  "mob_update_0_1_7": {
+    "active_creature_count": 45,
+    "removed": [
+      "revenant_ghast",
+      "pillager",
+      "pillager_leader"
+    ],
+    "real_arrow_hit_damage_and_levitation_verified": true,
+    "full_death_inventory_reload_verified": true,
+    "legacy_combat_migration_verified": true,
+    "exact_velocity_codec_verified": true,
+    "new_payload_requires_both_sides": true,
+    "launch_behavior_superseded_by": "0.1.10 upward launch fix",
+    "evidence_scope": "Historical mixed workspace evidence; not validation of the isolated candidate commit tree",
+    "candidate_tree_verified": false
+  },
+  "upward_launch_0_1_10": {
+    "author": "NingMeng123",
+    "status": "passed",
+    "zombies": [
+      "zombie_fly_away",
+      "zombie_knockback"
+    ],
+    "zombie_final_vertical_velocity": 9.105464833,
+    "dark_golem_final_vertical_velocity": 15,
+    "horizontal_speed_cap": 0.25,
+    "real_player_travel_half_apex_verified": true,
+    "apex_tolerance_blocks": 0.02,
+    "ground_air_existing_motion_and_knockback_resistance_scenarios": 18,
+    "rejected_melee_preserves_velocity": true,
+    "applied_after_native_melee_returns": true,
+    "velocity_codec_regression_passed": true,
+    "client_graphics_changed": false,
+    "actual_multiplayer_playtest_performed": false,
+    "build_log": "build/verification/commit-prep/submission-build-gametest.log",
+    "gametest_log": "build/verification/commit-prep/submission-build-gametest.log",
+    "evidence_scope": "Independent isolated candidate GameTest validation",
+    "candidate_tree_verified": true
+  },
+  "candidate_validation": {
+    "status": "passed",
+    "version": "0.1.10",
+    "validated_snapshot_tree": "874bedee6d35186435001997ed02b62613868651",
+    "scope": "Independent isolated candidate code/resource snapshot; final documentation-only evidence updates do not change compiled inputs",
+    "isolated_build_completed": true,
+    "isolated_tests_completed": true,
+    "junit_passed": 14,
+    "gametest_passed": 102,
+    "title_audit_passed": true,
+    "native_gpu_audit_passed": true,
+    "package_verified": true,
+    "source_json_files_checked": 527,
+    "documentation_only_updates_after_validation": true,
+    "evidence": "build/verification/commit-prep/submission-validation.json"
   }
 }
