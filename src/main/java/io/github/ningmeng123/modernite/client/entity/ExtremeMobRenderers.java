@@ -16,7 +16,6 @@ import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.*;
-import net.minecraft.client.renderer.entity.layers.EyesLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.IronGolem;
@@ -76,7 +75,7 @@ public final class ExtremeMobRenderers {
                     }
                 };
                 case SKELETON -> new SkeletonRenderer(context){
-                    {if(kind==ExtremeKind.SKELETON_ZOMBIE)this.model=new SkeletonModel<>(context.bakeLayer(SKELETON_ZOMBIE));if(kind==ExtremeKind.ANNIHILATION_SKELETON)addLayer(new EyesLayer<AbstractSkeleton,SkeletonModel<AbstractSkeleton>>(this){@Override public RenderType renderType(){return RenderType.eyes(texture("skeleton/annihilation_skeleton_glow"));}});}
+                    {if(kind==ExtremeKind.SKELETON_ZOMBIE)this.model=new SkeletonModel<>(context.bakeLayer(SKELETON_ZOMBIE));if(kind==ExtremeKind.ANNIHILATION_SKELETON)addLayer(new SourceGlowLayer<AbstractSkeleton,SkeletonModel<AbstractSkeleton>>(this,skeleton->texture("skeleton/annihilation_skeleton_glow")));}
                     @Override public ResourceLocation getTextureLocation(AbstractSkeleton skeleton){return source(kind)==null?super.getTextureLocation(skeleton):texture(source(kind));}
                 };
                 case CREEPER -> new CreeperRenderer(context){
@@ -89,16 +88,20 @@ public final class ExtremeMobRenderers {
                     }
                 };
                 case WITCH -> new WitchRenderer(context){
-                    {addLayer(new EyesLayer<Witch,WitchModel<Witch>>(this){@Override public RenderType renderType(){return RenderType.eyes(texture(source(kind)+"_glow"));}});}
+                    {addLayer(new SourceGlowLayer<Witch,WitchModel<Witch>>(this,witch->texture(source(kind)+"_glow")));}
                     @Override public ResourceLocation getTextureLocation(Witch witch){return texture(source(kind));}
                 };
                 case GHAST -> new GhastRenderer(context){
-                    {addLayer(new EyesLayer<Ghast,GhastModel<Ghast>>(this){@Override public RenderType renderType(){return RenderType.eyes(texture("revenant_ghast_glow"));}});}
+                    {addLayer(new SourceGlowLayer<Ghast,GhastModel<Ghast>>(this,ghast->texture(ghast.isCharging()?"revenant_ghast_shooting_glow":"revenant_ghast_glow")));}
+                    // The source renderer pairs vanilla ghast bodies with its separate custom glow textures.
+                    @Override public ResourceLocation getTextureLocation(Ghast ghast){return ResourceLocation.withDefaultNamespace("textures/entity/ghast/"+(ghast.isCharging()?"ghast_shooting":"ghast")+".png");}
                     @Override protected void scale(Ghast ghast,PoseStack pose,float partial){super.scale(ghast,pose,partial);pose.scale(1.5F,1.5F,1.5F);}
                 };
                 case GOLEM -> new IronGolemRenderer(context){@Override public ResourceLocation getTextureLocation(IronGolem golem){return texture(source(kind));}};
                 case PILLAGER -> new PillagerRenderer(context);
-                case PIGMAN -> new PiglinRenderer(context,ModelLayers.ZOMBIFIED_PIGLIN,ModelLayers.ZOMBIFIED_PIGLIN_INNER_ARMOR,ModelLayers.ZOMBIFIED_PIGLIN_OUTER_ARMOR,true);
+                case PIGMAN -> new PiglinRenderer(context,ModelLayers.ZOMBIFIED_PIGLIN,ModelLayers.ZOMBIFIED_PIGLIN_INNER_ARMOR,ModelLayers.ZOMBIFIED_PIGLIN_OUTER_ARMOR,true){
+                    @Override public ResourceLocation getTextureLocation(Mob pigman){return ResourceLocation.withDefaultNamespace("textures/entity/piglin/zombified_piglin.png");}
+                };
             };
             event.registerEntityRenderer((EntityType)ExtremeMobs.type(kind),provider);
         }

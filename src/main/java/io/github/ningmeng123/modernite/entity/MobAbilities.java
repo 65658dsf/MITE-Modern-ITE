@@ -191,6 +191,9 @@ public final class MobAbilities {
         if(s.cooldown>0&&k!=ZOMBIE_BOSS)s.cooldown--;if(s.fleeingPotion>0)s.fleeingPotion--;
         if(!(mob.level() instanceof ServerLevel level))return;
         LivingEntity target=mob.getTarget();
+        if(k==REVENANT_GHAST&&mob instanceof Ghast ghast)
+            ghast.setCharging(target!=null&&target.isAlive()&&mob.distanceToSqr(target)<=4096
+                &&mob.getSensing().hasLineOfSight(target)&&s.cooldown>0&&s.cooldown<10);
         if(!s.entourage){
             s.entourage=true;
             if(k==UNDYING_ZOMBIE_EMPEROR){summon(mob,ZOMBIE_LORD,2);summon(mob,WANDERING_WITCH,2);}

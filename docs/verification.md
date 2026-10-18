@@ -2,7 +2,7 @@
 
 开发署名：NingMeng123。
 
-此文件区分自动验证和实际游玩，最终运行结果以工程根目录 `extension-compile.log`、`extension-final.log`、`extension-client.log`、`build/verification/client-audit.json` 为准。早期迭代日志保留，不作为最终构建的通过依据。
+此文件区分自动验证和实际游玩，0.1.1 最终运行结果以工程根目录 `extension-render-gametest.log`、`extension-client.log`、`extension-mob-render.log`、`build/verification/client-audit.json` 和 `build/verification/mob-render-audit.json` 为准。早期迭代日志不作为最终构建的通过依据。
 
 ## 自动验证范围
 
@@ -11,9 +11,22 @@
 - 客户端自动检查：在隔离目录启动到标题页，检查 48 种生物及两个弹体渲染器、所有新增物品模型、两类菜单注册和七种状态效果图标；不加载存档。
 - 基础模组 0.1.9 独立回归：1590 项 JUnit、2054 项 GameTest 全部通过（`../miteto1.21.1neoforge/extension-base-regression.log`）。该记录不能替代其他会话在此之后修改的回归。
 
-2026-10-18 最终构建：**8 项 JUnit、44 项组合 GameTest 全部通过**；配方解析错误 0、缺失标签错误 0。客户端自动检查 **50 个实体/弹体渲染器、253 个物品模型、7 个效果图标、2 个菜单工厂全部通过**，不包含完整游玩和菜单视觉截图验收。发布 JAR 的边界与逐文件来源记录见 `build/verification/release-audit.json`。
+2026-10-18 的 **0.1.1** 最终构建：**8 项 JUnit、50 项组合 GameTest 全部通过**，包括亡灵恶魂充能同步和自然生成落点回归；配方解析错误 0、缺失标签错误 0。标题页自动检查 **50 个实体/弹体渲染器、253 个物品模型、7 个效果图标、2 个菜单工厂全部通过**。另完成下述五种生物的实际 GPU 绘制，不包含完整游玩和菜单视觉截图验收。发布 JAR 的边界与逐文件来源记录见 `build/verification/release-audit.json`。
 
 仓库保留可审阅的精简结果 [verification-summary.json](verification-summary.json)。构建日志、运行存档和 `build/` 下的完整报告只在本地保存，不进入 Git 历史。
+
+## 0.1.1 生物渲染修复
+
+- 流浪女巫、女巫领主、湮灭骷髅的来源发光图在全透明像素里保留白色 RGB。原版 `RenderType.eyes` 使用加法混合，不按这些像素的 alpha 遮罩绘制，导致全身发白；改为丢弃透明像素的自发光层，保持来源 PNG 原样。
+- 亡灵恶魂保留来源的原版恶魂本体与自有发光层组合，修正透明混合，并按充能状态切换普通/攻击贴图。服务器同步预开火标记，沿用现有攻击冷却。
+- 猪人领主显式选择僵尸猪灵材质，避免原生 `PiglinRenderer` 仅按原版实体类型查材质时抛出异常。对应实际游戏报告为 `crash-2026-10-18_14.06.36-client.txt`。
+- 开发目录 `crash-2026-10-18_11.51.24-client.txt` 是 NeoForge early display 的 UnionFileSystem 初始化异常，发生在游戏初始化阶段；开发 `runClient` 任务现在只在本工程对应运行目录的 `config/fml.toml` 中设置 `earlyWindowControl = false`，新目录也会得到该修正，其他配置保留。
+
+原有标题页检查只确认渲染器存在，没有执行实体绘制，无法发现这次问题。新增 `modernIteMobRenderAudit` 检查会在专用目录创建测试世界，实际调用全部 48 种实体的材质选择，并对这五种生物执行 GPU 绘制、读取像素及保存截图；结果写入 `build/verification/mob-render-audit.json`。它不操作启动器目录或用户存档。
+
+最终绘制回归 **passed**，无失败：两种女巫发光层只影响约 1.07% / 0.87% 的体表像素，湮灭骷髅暗光下只影响约 1.43%，亡灵恶魂充能改变 6637 个像素，猪人领主材质选择和实际绘制均成功。女巫和湮灭骷髅各有一次旧加法绘制负对照，均能重现整身白罩，确认检查能捕获原错误。截图位于 `build/verification/mob-render-audit/`。测试世界在启动区块完成后再检查，最后正常保存退出。
+
+此绘制验证使用原生 NeoForge 客户端、本体 0.1.9 与本拓展；未覆盖用户整合包的所有其他模组组合。
 
 ## 分批游戏内验收
 

@@ -23,9 +23,11 @@ import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 /** Forty-four Extreme identities and the four production ITE prerequisites. @author NingMeng123 */
@@ -60,7 +62,15 @@ public final class ExtremeMobs {
         }));
     }
     public static EntityType<? extends Mob> type(ExtremeKind kind){return MOBS.get(kind).get();}
-    public static void register(IEventBus bus){TYPES.register(bus);ITEMS.register(bus);SOUNDS.register(bus);InfernalFireball.register(bus);bus.addListener(ExtremeMobs::attributes);}
+    public static void register(IEventBus bus){TYPES.register(bus);ITEMS.register(bus);SOUNDS.register(bus);InfernalFireball.register(bus);bus.addListener(ExtremeMobs::attributes);bus.addListener(ExtremeMobs::spawnPlacements);}
+    private static void spawnPlacements(RegisterSpawnPlacementsEvent event){
+        for(var kind:ExtremeKind.values()) {
+            var placement=kind.family==ExtremeKind.Family.GHAST?SpawnPlacementTypes.NO_RESTRICTIONS:SpawnPlacementTypes.ON_GROUND;
+            // PositionCheck runs the actual mob's MobAbilities.spawnRules once, including its random rolls.
+            event.register(type(kind),placement,Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    (type,level,reason,pos,random)->true,RegisterSpawnPlacementsEvent.Operation.REPLACE);
+        }
+    }
     private static void attributes(EntityAttributeCreationEvent event){
         for(var k:ExtremeKind.values()) {
             AttributeSupplier.Builder b=switch(k.family){

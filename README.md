@@ -1,6 +1,6 @@
 # MITE: Modern ITE
 
-开发署名：**NingMeng123**。Minecraft **1.21.1**，NeoForge **21.1.259**，模组 ID `modern_ite`。
+开发署名：**NingMeng123**。拓展版本 **0.1.1**，Minecraft **1.21.1**，NeoForge **21.1.259**，模组 ID `modern_ite`。
 
 本工程把旧 **MITE-ITE 2.0.28** 与 **Extreme LH 0.6.6** 的移植内容放入同一个拓展模组。运行时需要带扩展接口的 **MITE: Modern 0.1.9**。旧版 ITE 和极难 JAR 只作为本地规则、资源证据，不放入游戏或发布包。
 
@@ -62,9 +62,10 @@
 ./gradlew test
 ./gradlew runGameTestServer
 ./gradlew runClient -PmodernIteClientAudit=true
+./gradlew runClient -PmodernIteMobRenderAudit=true
 ```
 
-最后一条仅在独立 `run-client` 目录执行自动客户端检查，不连接服务器或加载存档，检查后退出该实例。测试类只在开发源集，不进入发布 JAR。
+第一条客户端命令在独立 `run-client` 目录执行标题页资源检查，不加载存档。第二条在独立 `run-mob-render-audit` 目录新建一次性平坦测试世界，实际绘制本次修复的五种生物并保存像素检查与截图；两者均在检查后退出该测试实例。测试类只在开发源集，不进入发布 JAR。
 
 资源复现脚本为 `tools/generate_gear_assets.py` 和 `tools/generate_content.py`，使用本地参考 JAR。素材原路径和 SHA-256 记录在 `modern_ite/content-provenance.json`；本次现代配方适配与资源复用也写在其中。
 

@@ -30,7 +30,7 @@ report={'author':'NingMeng123','version':version,'source_archives':source_hashes
 if jar.exists():
     with ZipFile(jar) as archive:
         names=archive.namelist()
-        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/')) or n.endswith('GameTests.class') or 'ModernIteClientAudit' in n]
+        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/')) or n.endswith('GameTests.class') or 'ModernIteClientAudit' in n or 'MobRenderRegressionAudit' in n]
         if forbidden:raise SystemExit('Release includes forbidden runtime or test entries: '+str(forbidden))
         metadata=archive.read('META-INF/neoforge.mods.toml').decode()
         assert 'modId="modern_ite"' in metadata and 'versionRange="[0.1.9,)"' in metadata
@@ -47,7 +47,15 @@ if client.exists():
     latest=client_log.read_text(encoding='utf-8',errors='replace') if client_log.exists() else ''
     report['client']['latest_launch_confirmed']='MODERN_ITE_CLIENT_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['client']['latest_launch_confirmed']:report['client']['status']='latest_launch_not_verified'
-log=ROOT/'extension-final.log'
+mob_render=out/'mob-render-audit.json'
+if mob_render.exists():
+    report['mob_render']=json.loads(mob_render.read_text(encoding='utf-8'))
+    render_log=ROOT/'extension-mob-render.log'
+    latest=render_log.read_text(encoding='utf-8',errors='replace') if render_log.exists() else ''
+    report['mob_render']['latest_launch_confirmed']='MODERN_ITE_MOB_RENDER_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
+    if not report['mob_render']['latest_launch_confirmed']:report['mob_render']['status']='latest_launch_not_verified'
+log=ROOT/'extension-render-gametest.log'
+if not log.exists():log=ROOT/'extension-final.log'
 if not log.exists():log=ROOT/'extension-gametest.log'
 if log.exists():
     text=log.read_text(encoding='utf-8',errors='replace');match=re.search(r'All (\d+) required tests passed',text)

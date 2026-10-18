@@ -4,18 +4,18 @@
   "minecraft": "1.21.1",
   "neoforge": "21.1.259",
   "base_mod_version": "0.1.9",
-  "extension_version": "0.1.0",
+  "extension_version": "0.1.1",
   "base_regression": {
     "junit_passed": 1590,
     "gametest_passed": 2054
   },
   "extension_junit": {
-    "passed": 8,
     "failures": 0,
-    "errors": 0
+    "errors": 0,
+    "passed": 8
   },
   "extension_gametest": {
-    "passed": 44,
+    "passed": 50,
     "recipe_errors": 0,
     "tag_errors": 0
   },
@@ -32,12 +32,13 @@
     "latest_launch_confirmed": true
   },
   "release_jar": {
-    "sha256": "29848edb024d9d474db7c33cdc59fda3b3b9d0ae379544a4652f029df9b37eac",
-    "bytes": 1664021,
+    "sha256": "46480d0cf2f013c10e048a4410f01ec1099982c61364e9405a3412fa4b51e8cf",
+    "bytes": 1665504,
     "nested_jars": false,
     "old_runtime_classes": false,
     "base_classes_bundled": false,
-    "test_classes_bundled": false
+    "test_classes_bundled": false,
+    "compiled_production_classes_matched": 115
   },
   "source_archives": {
     "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar": "594c152bb7cfe655f9b0744aea2ed45d71696779cd842c71be2501189c540d98",
@@ -49,5 +50,47 @@
     "Full combat and behavior verification for all 48 mobs",
     "Multiplayer behavior and long-term balance",
     "Visual menu acceptance and world-generation distribution"
-  ]
+  ],
+  "mob_render": {
+    "status": "passed",
+    "failures": [],
+    "entity_texture_lookup_count": 48,
+    "focused_gpu_sample_count": 5,
+    "created_only_new_world": true,
+    "existing_world_loaded": false,
+    "multiplayer_connected": false,
+    "only_audit_owned_world_used": true,
+    "latest_launch_confirmed": true,
+    "client_ready_ticks_before_capture": 100,
+    "server_ready_ticks_before_capture": 100,
+    "samples": [
+      {
+        "entity": "witch_lord",
+        "native_draw_succeeded": true,
+        "body_layer_changed_fraction": 0.01073962794860321,
+        "legacy_eyes_negative_control_changed_fraction": 1.0
+      },
+      {
+        "entity": "wandering_witch",
+        "native_draw_succeeded": true,
+        "body_layer_changed_fraction": 0.008673653776653415
+      },
+      {
+        "entity": "revenant_ghast",
+        "native_draw_succeeded": true,
+        "charging_changed_pixels": 6637
+      },
+      {
+        "entity": "annihilation_skeleton",
+        "native_draw_succeeded": true,
+        "body_layer_changed_fraction": 0.0,
+        "dim_light_body_layer_changed_fraction": 0.014276749294006902,
+        "legacy_eyes_negative_control_changed_fraction": 1.0
+      },
+      {
+        "entity": "zombie_pigman_lord",
+        "native_draw_succeeded": true
+      }
+    ]
+  }
 }
