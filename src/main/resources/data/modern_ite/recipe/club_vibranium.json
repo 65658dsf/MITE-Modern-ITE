@@ -1,27 +1,15 @@
 {
-  "type": "mite:vibranium_upgrade",
-  "category": "misc",
-  "pattern": [
-    "#*#",
-    "#*#",
-    "BAB"
-  ],
-  "key": {
-    "#": {
-      "item": "mite:vibranium_nugget"
-    },
-    "*": {
-      "item": "mite:vibranium_ingot"
-    },
-    "A": {
-      "item": "modern_ite:club_adamantium"
-    },
-    "B": {
-      "item": "modern_ite:voucher_club_core"
-    }
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "mite:equipment_upgrade_smithing_template"
+  },
+  "base": {
+    "item": "modern_ite:club_adamantium"
+  },
+  "addition": {
+    "item": "mite:vibranium_ingot"
   },
   "result": {
-    "id": "modern_ite:club_vibranium",
-    "count": 1
+    "id": "modern_ite:club_vibranium"
   }
 }

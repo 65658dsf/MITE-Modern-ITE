@@ -82,11 +82,6 @@ public final class ResourceContentGameTests {
             String nugget = metal.equals("copper") ? "mite:copper_nugget" : ns + metal + "_nugget";
             craft(h,"club_"+metal,"modern_ite:club_"+metal,1,new String[]{"#*#","#*#"," * "},Map.of('#',nugget,'*',ns+metal+"_ingot"));
         }
-        String previous="iron";
-        for (String metal : new String[]{"ancient_metal","mithril","adamantium","vibranium"}) {
-            var keys=new java.util.HashMap<Character,String>();keys.put('#',"mite:"+metal+"_nugget");keys.put('*',"mite:"+metal+"_ingot");keys.put('A',"modern_ite:club_"+previous);keys.put('B',"modern_ite:voucher_club_core");
-            craft(h,"club_"+metal,"modern_ite:club_"+metal,1,new String[]{"#*#","#*#",metal.equals("vibranium")?"BAB":" A "},keys);previous=metal;
-        }
         craft(h,"vibranium_furnace","modern_ite:vibranium_furnace",1,new String[]{"VOA","DND","AOV"},
                 Map.of('V',"mite:vibranium_ingot",'O',"minecraft:obsidian",'A',"mite:adamantium_ingot",'D',"minecraft:diamond",'N',"mite:netherrack_furnace"));
         craft(h,"vibranium_chest","modern_ite:vibranium_chest",1,new String[]{"VVV","V V","VVV"},Map.of('V',"mite:vibranium_ingot"));

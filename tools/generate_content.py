@@ -14,6 +14,9 @@ def save(path, value):
     p.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 def tex(jar, source, target):
     raw=jar.read(source); p=RES/f'assets/modern_ite/textures/{target}.png';p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(raw)
+    # Animation strips need their frame metadata when imported into the modern atlas.
+    if source+'.mcmeta' in jar.namelist():
+        save(f'assets/modern_ite/textures/{target}.png.mcmeta',json.loads(jar.read(source+'.mcmeta')))
     provenance.append({'jar':Path(jar.filename).name,'source':source,'target':str(p.relative_to(RES)).replace('\\','/'),'sha256':hashlib.sha256(raw).hexdigest()})
 def named(id, cn, english, block=False):
     k=('block' if block else 'item')+'.modern_ite.'+id;zh[k]=cn;en[k]=english
@@ -76,8 +79,11 @@ def cube(id, texture=None):
     block_model(id,'minecraft:block/cube_all',{'all':'modern_ite:block/'+(texture or id)});state(id,{'variants':{'':{'model':'modern_ite:block/'+id}}});block_item(id);loot(id)
 def ingredient(id):return id if isinstance(id,(dict,list)) else {'item':id}
 def recipe(id, value):save(f'data/modern_ite/recipe/{id}.json',value)
-def shaped(id, pattern, keys, result=None, count=1, upgrade=False):
-    recipe(id,{'type':'mite:vibranium_upgrade' if upgrade else 'minecraft:crafting_shaped','category':'misc','pattern':pattern,'key':{k:ingredient(v) for k,v in keys.items()},'result':{'id':result or 'modern_ite:'+id,'count':count}})
+def shaped(id, pattern, keys, result=None, count=1):
+    recipe(id,{'type':'minecraft:crafting_shaped','category':'misc','pattern':pattern,'key':{k:ingredient(v) for k,v in keys.items()},'result':{'id':result or 'modern_ite:'+id,'count':count}})
+
+def smithing(id, base, addition, result=None):
+    recipe(id,{'type':'minecraft:smithing_transform','template':ingredient('mite:equipment_upgrade_smithing_template'),'base':ingredient(base),'addition':ingredient(addition),'result':{'id':result or 'modern_ite:'+id}})
 def shapeless(id, items, result=None, count=1):
     recipe(id,{'type':'minecraft:crafting_shapeless','category':'misc','ingredients':[ingredient(i) for i in items],'result':{'id':result or 'modern_ite:'+id,'count':count}})
 def smelt(id, source, result, xp=.1):recipe(id,{'type':'minecraft:smelting','category':'misc','ingredient':ingredient(source),'result':{'id':result},'experience':xp,'cookingtime':200})
@@ -101,7 +107,6 @@ def slab(id, base):
     t='modern_ite:block/'+base
     for suffix,parent in [('', 'slab'),('_top','slab_top')]:block_model(id+suffix,'minecraft:block/'+parent,{'bottom':t,'top':t,'side':t})
     state(id,{'variants':{'type=bottom':{'model':'modern_ite:block/'+id},'type=top':{'model':'modern_ite:block/'+id+'_top'},'type=double':{'model':'modern_ite:block/'+base}}});block_item(id);loot(id,double_slab=True)
-
 simple={
  'fancy_red':('红钻','Red Diamond'), 'diamond_chunk':('钻石碎块','Diamond Chunk'),
  'blaze_coal_powder':('烈焰煤粉','Blaze Coal Powder'), 'nether_ender_eye':('堡垒之眼','Fortress Eye'),
@@ -162,10 +167,10 @@ for n in range(2,5):
 shaped('club_iron',['#*#','#*#',' * '],{'#':'minecraft:iron_nugget','*':'minecraft:iron_ingot'})
 for mat in ['copper','silver','gold']:
     shaped('club_'+mat,['#*#','#*#',' * '],{'#':('minecraft:' if mat=='gold' else 'mite:')+mat+'_nugget','*':('mite:' if mat=='silver' else 'minecraft:')+mat+'_ingot'})
+    smithing('equipment_upgrade/club_'+mat+'_to_iron','modern_ite:club_'+mat,'minecraft:iron_ingot','modern_ite:club_iron')
 for mat,prev in [('ancient_metal','iron'),('mithril','ancient_metal'),('adamantium','mithril'),('vibranium','adamantium')]:
-    keys={'#':'mite:'+mat+'_nugget','*':'mite:'+mat+'_ingot','A':'modern_ite:club_'+prev}
-    if mat=='vibranium':keys['B']='modern_ite:voucher_club_core'
-    shaped('club_'+mat,['#*#','#*#','BAB' if mat=='vibranium' else ' A '],keys,upgrade=True)
+    # Match the base mod's native one-template, one-equipment, one-target-ingot route.
+    smithing('club_'+mat,'modern_ite:club_'+prev,'mite:'+mat+'_ingot')
 shaped('blaze_coal_powder',[' B ','BCB',' B '],{'B':'minecraft:blaze_powder','C':'minecraft:coal'})
 shapeless('diamond_from_chunks',['modern_ite:diamond_chunk']*4,'minecraft:diamond')
 shapeless('wither_skull',['minecraft:skeleton_skull']+['minecraft:coal_block']*8,'minecraft:wither_skeleton_skull')

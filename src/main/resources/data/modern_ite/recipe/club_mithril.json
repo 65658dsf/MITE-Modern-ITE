@@ -1,24 +1,15 @@
 {
-  "type": "mite:vibranium_upgrade",
-  "category": "misc",
-  "pattern": [
-    "#*#",
-    "#*#",
-    " A "
-  ],
-  "key": {
-    "#": {
-      "item": "mite:mithril_nugget"
-    },
-    "*": {
-      "item": "mite:mithril_ingot"
-    },
-    "A": {
-      "item": "modern_ite:club_ancient_metal"
-    }
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "mite:equipment_upgrade_smithing_template"
+  },
+  "base": {
+    "item": "modern_ite:club_ancient_metal"
+  },
+  "addition": {
+    "item": "mite:mithril_ingot"
   },
   "result": {
-    "id": "modern_ite:club_mithril",
-    "count": 1
+    "id": "modern_ite:club_mithril"
   }
 }
