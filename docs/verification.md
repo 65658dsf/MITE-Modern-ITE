@@ -4,6 +4,16 @@
 
 此文件区分自动验证和实际游玩，0.1.1 最终运行结果以工程根目录 `extension-render-gametest.log`、`extension-client.log`、`extension-mob-render.log`、`build/verification/client-audit.json` 和 `build/verification/mob-render-audit.json` 为准。早期迭代日志不作为最终构建的通过依据。
 
+## 弓箭手预判与静止命中率（2026-10-18）
+
+普通骷髅、本体长死人及 11 种拓展骷髅共 13 个实体类型，在简单、普通、困难三个难度分别验证 6、15、30 格平地距离，以及 15 格距离的正负 5 格高低差。每个组合以 100 支固定随机种子的真实原生箭射击已加入世界的静止生存玩家，逐 tick 执行箭矢碰撞，以实际扣血计数；195 个组合、共 **19,500 箭全部命中，每组最低 100/100**，达到至少 95% 的目标。场景为无遮挡空气环境、站立玩家，不以伤害直调或仅方向检查代替命中。
+
+移动测试覆盖全部上述骷髅的 0.215 格/tick 横向走位，每种各 100 箭，预判命中至少 85%，且比无运动信息对照至少多命中 60 箭；猪人真实持弓 Goal 的静止与移动各 100 箭也通过对应门槛。另覆盖服务器位置取样识别停步、反向、传送及同 tick 多弓手共用观测，石墙遮挡拒绝射击，以及发射后持续遵守原生重力、阻力。6 项新增纯数学测试独立积分弹道，验证静止距离/高差/朝向、5 类移动轨迹、限幅、不可达目标及数值边界。
+
+在包含其他待提交改动的当前工作区，以本地固定 `build/verification/base/mite-0.1.10.jar` 为依赖，执行 `./gradlew.bat build runGameTestServer -PmiteJar=build/verification/base/mite-0.1.10.jar`，**14 项 JUnit、105 项 GameTest 全部通过**，配方与标签解析错误为 0。发布包 `build/libs/modern-ite-0.1.9.jar` 的 158 个生产类逐项匹配当前编译产物，包含预判 Mixin，不含测试类、本体类或嵌套 JAR；包检查记录为 `build/verification/predictive-archery-package.json`。
+
+提交前从 `322bc1e` 单独提取本次弓箭手代码、测试和文档，在 `build/verification/archery-commit-scope/snapshot` 验证候选提交：构建、**14 项 JUnit、67 项 GameTest 全部通过**，三种难度的静止测试仍全部为 100/100。候选保留基线版本及其他功能，显式使用上述固定本体包的绝对路径；日志为 `build/verification/archery-commit-check.log`。此前 105 项结果属于混合工作区验证。
+
 ## 彩石及相关方块移除（2026-10-18）
 
 移除 16 色彩石、彩石砖、台阶、楼梯、墙和缓冲彩光石，共 96 个方块及其物品注册；删除 720 个专用资源文件，清理配方、掉落、挖掘标签、中英文名称、素材来源记录及生成脚本。

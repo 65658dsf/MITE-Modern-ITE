@@ -19,6 +19,47 @@
     "recipe_errors": 0,
     "tag_errors": 0
   },
+  "predictive_archery": {
+    "verified_date": "2026-10-18",
+    "archer_types": 13,
+    "difficulties": [
+      "easy",
+      "normal",
+      "hard"
+    ],
+    "stationary_ranges": [
+      6,
+      15,
+      30
+    ],
+    "height_offsets_at_15_blocks": [
+      -5,
+      5
+    ],
+    "shots_per_scenario": 100,
+    "stationary_scenarios": 195,
+    "stationary_shots": 19500,
+    "stationary_hits": 19500,
+    "minimum_stationary_hit_percent": 100,
+    "moving_player_speed": 0.215,
+    "minimum_moving_hit_percent_asserted": 85,
+    "minimum_gain_over_unled_shots_asserted": 60,
+    "real_native_arrow_collision": true,
+    "seeded_arrow_random": true,
+    "stop_reversal_teleport_tracking_passed": true,
+    "pigman_bow_goal_passed": true,
+    "cover_and_native_flight_passed": true,
+    "environment": "Unobstructed air, standing survival player",
+    "log": "build/verification/predictive-archery-final.log",
+    "isolated_commit_check": {
+      "parent": "322bc1e",
+      "build_passed": true,
+      "junit_passed": 14,
+      "gametest_passed": 67,
+      "minimum_stationary_hit_percent": 100,
+      "log": "build/verification/archery-commit-check.log"
+    }
+  },
   "client": {
     "status": "passed",
     "failures": [],

@@ -22,7 +22,7 @@ public final class PigmanBowGoal extends Goal {
         AbstractArrow arrow=item.createArrow(pig.level(),ammo,pig,pig.getMainHandItem());
         int power=io.github.ningmeng123.mite.enchantment.R196Enchantments.level(pig.getMainHandItem(),pig.level(),"minecraft:power")+1;
         arrow.setBaseDamage(2+pig.level().getDifficulty().getId()*.11+power*2+1);
-        var direction=target.getEyePosition().subtract(arrow.position());arrow.shoot(direction.x,direction.y+Math.sqrt(direction.horizontalDistanceSqr())*.2,direction.z,1.6F,14-pig.level().getDifficulty().getId()*4);
+        if(!PredictiveBowAiming.shoot(pig,arrow,target,1.6F))return;
         if(MobAbilities.day(pig.level())>196)arrow.setRemainingFireTicks(100);arrow.pickup=AbstractArrow.Pickup.DISALLOWED;pig.level().addFreshEntity(arrow);
         pig.playSound(net.minecraft.sounds.SoundEvents.SKELETON_SHOOT,1,1);pig.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
     }
