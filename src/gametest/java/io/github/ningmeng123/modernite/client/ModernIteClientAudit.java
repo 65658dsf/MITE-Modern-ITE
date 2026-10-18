@@ -87,6 +87,7 @@ public final class ModernIteClientAudit {
         attempt(report, "menu screen factories", () -> menus(report));
         attempt(report, "all registered item models and sprites", () -> items(mc, report));
         attempt(report, "all custom effect sprites", () -> effects(mc, report));
+        attempt(report, "compiled cosmic armor shader", () -> report.add("cosmic_shader",VibraniumGildingPreviews.verifyShaderReady()));
         finish(mc, report);
     }
 
@@ -114,6 +115,20 @@ public final class ModernIteClientAudit {
         Field field = EntityRenderDispatcher.class.getDeclaredField("renderers");
         field.setAccessible(true);
         Map<EntityType<?>, EntityRenderer<?>> instances = (Map<EntityType<?>, EntityRenderer<?>>)field.get(mc.getEntityRenderDispatcher());
+        Field playersField = EntityRenderDispatcher.class.getDeclaredField("playerRenderers");
+        playersField.setAccessible(true);
+        Map<?, EntityRenderer<?>> players = (Map<?, EntityRenderer<?>>)playersField.get(mc.getEntityRenderDispatcher());
+        Field layersField = LivingEntityRenderer.class.getDeclaredField("layers"); layersField.setAccessible(true);
+        int gildings=0;
+        Set<EntityRenderer<?>> unique=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        unique.addAll(instances.values());unique.addAll(players.values());
+        for(EntityRenderer<?> renderer:unique)if(renderer instanceof LivingEntityRenderer<?,?> living
+                &&living.getModel() instanceof net.minecraft.client.model.HumanoidModel<?>) {
+            long count=((java.util.List<?>)layersField.get(living)).stream().filter(layer->layer instanceof io.github.ningmeng123.modernite.client.entity.VibraniumGildingLayer<?,?>).count();
+            check(count==1,"Each humanoid and player renderer needs exactly one vibranium gilding layer: "+renderer.getClass().getName());gildings++;
+        }
+        check(players.size()==2,"Both ordinary and slim player skins are audited");
+        report.addProperty("gilding_humanoid_renderers",gildings);report.addProperty("gilding_player_skins",players.size());
         JsonArray entries = new JsonArray(); report.add("renderers", entries);
         Set<EntityType<?>> creatures = new HashSet<>();
         check(ExtremeKind.values().length == 45, "Expected 45 creature identities after the three removals");

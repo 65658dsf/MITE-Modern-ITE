@@ -6,6 +6,7 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
+import io.github.ningmeng123.modernite.entity.ArmorAuraRules;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMob;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
@@ -18,26 +19,32 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-/** Native model and particle previews inside the disposable GPU audit world. @author NingMeng123 */
+/** Native mob particles and cosmic armor light wings inside the disposable GPU audit world. @author NingMeng123 */
 final class MobAuraPreviews {
     private static final int WIDTH=640, HEIGHT=720, FEET=580;
     private static final float SCALE=180;
+    private static final EquipmentSlot[] ARMOR={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
     private static final ExtremeKind[] KINDS={ExtremeKind.SKELETON_BLAZE,ExtremeKind.SKELETON_LIGHTNING,
             ExtremeKind.SKELETON_FLOATING,ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.UNDYING_ZOMBIE_EMPEROR};
-    private static final String[] LABELS={"烈焰骷髅","闪电骷髅","漂浮骷髅","湮灭骷髅","不朽尸王"};
+    private static final String[] LABELS={"烈焰骷髅","闪电骷髅","漂浮骷髅","湮灭骷髅","不朽尸王","振金保护 V · 星空光翼"};
     private static final String[] DETAILS={"火焰环绕 · 熔岩火星","电光环绕 · 电弧火花","脚下云朵 · 漂浮气流",
-            "虚空紫环 · 暗影烟雾","猩红灵焰 · 黑红冠冕"};
+            "虚空紫环 · 暗影烟雾","猩红灵焰 · 星空振金光翼","整甲动态星空 · 背部发光双翼"};
     private MobAuraPreviews() {}
 
     static JsonArray capture(Minecraft mc) throws Exception {
@@ -58,15 +65,24 @@ final class MobAuraPreviews {
             mc.gameRenderer.lightTexture().tick();
             mc.gameRenderer.lightTexture().updateLightTexture(1);
             for(var slot:equipment.keySet())mc.player.setItemSlot(slot,ItemStack.EMPTY);
-            for(int index=0;index<KINDS.length;index++) {
-                Mob mob=ExtremeMobs.type(KINDS[index]).create(mc.level);
-                if(mob==null)throw new IllegalStateException("Cannot create aura preview "+KINDS[index]);
-                MobAbilities.initialize(mob,(ExtremeMob)mob);
-                mob.setNoAi(true);
-                mob.setPos(mc.player.position().add(2,0,0));
-                mc.level.addEntity(mob);
-                LivingEntity living=mob;
-                String id=KINDS[index].id();
+            for(int index=0;index<6;index++) {
+                LivingEntity living;
+                Mob mob=null;
+                String id;
+                if(index<KINDS.length) {
+                    mob=ExtremeMobs.type(KINDS[index]).create(mc.level);
+                    if(mob==null)throw new IllegalStateException("Cannot create aura preview "+KINDS[index]);
+                    MobAbilities.initialize(mob,(ExtremeMob)mob);
+                    mob.setNoAi(true);
+                    mob.setPos(mc.player.position().add(2,0,0));
+                    mc.level.addEntity(mob);
+                    living=mob;
+                    id=KINDS[index].id();
+                } else {
+                    living=mc.player;
+                    equipProtectionFive(mc);
+                    id="player_protection_v";
+                }
                 try {
                     neutralPose(living);
                     // setLevel clears both active and pending particles while keeping the loaded native providers/atlas.
@@ -75,12 +91,13 @@ final class MobAuraPreviews {
                         for(int frame=0;frame<40;frame++) {
                             // Offset the entity phase with its actual id so every sample shows the same positive clock.
                             living.tickCount=120+frame-Math.floorMod(living.getId()*7,120);
-                            ExtremeMobParticles.tick(new ClientTickEvent.Post());
+                            if(mob!=null)ExtremeMobParticles.tick(new ClientTickEvent.Post());
                             mc.particleEngine.tick();
                         }
                         int count=Integer.parseInt(mc.particleEngine.countParticles());
-                        if(count==0)throw new IllegalStateException("Aura preview emitted no native particles: "+id);
-                        try(NativeImage image=render(mc,living,index,true)) {
+                        if(mob!=null&&count==0)throw new IllegalStateException("Aura preview emitted no native particles: "+id);
+                        if(mob==null&&count!=0)throw new IllegalStateException("Protection V cosmic armor and light wings must not emit external particles: "+count);
+                        try(NativeImage image=render(mc,living,index,mob!=null)) {
                             int changed=0,outsideModel=0;
                             for(int y=0;y<HEIGHT;y++)for(int x=0;x<WIDTH;x++) {
                                 int before=baseline.getPixelRGBA(x,y),after=image.getPixelRGBA(x,y);
@@ -90,24 +107,26 @@ final class MobAuraPreviews {
                                 }
                                 sheet.setPixelRGBA((index%2)*WIDTH+x,(index/2)*HEIGHT+y,after);
                             }
-                            if(outsideModel<20)throw new IllegalStateException("Native aura has no visible particles outside the model: "+id+" ("+outsideModel+")");
+                            if(mob!=null&&outsideModel<20)throw new IllegalStateException("Native aura has no visible particles outside the model: "+id+" ("+outsideModel+")");
                             Path file=folder.resolve("aura_"+id+".png");
                             image.writeToFile(file);
                             JsonObject result=new JsonObject();
                             result.addProperty("entity",id);result.addProperty("label",LABELS[index]);
                             result.addProperty("file",file.toString());result.addProperty("native_particle_count",count);
                             result.addProperty("changed_pixels",changed);result.addProperty("particle_pixels_outside_model",outsideModel);
-                            result.addProperty("native_equipment_initialized",true);
-                            result.addProperty("preview_mode","native_mob_particles");
+                            result.addProperty("native_equipment_initialized",mob!=null);
+                            result.addProperty("full_protection_v",ArmorAuraRules.fullProtectionFive(living));
+                            result.addProperty("preview_mode",mob==null?"cosmic_armor_light_wings":"native_mob_particles");
                             results.add(result);
                         }
                     }
                 } finally {
-                    mob.discard();
+                    if(mob!=null)mob.discard();
                     mc.particleEngine.setLevel(mc.level);
                 }
             }
             sheet.writeToFile(folder.resolve("aura-previews.png"));
+            results.addAll(VibraniumGildingPreviews.capture(mc,folder));
         } finally {
             for(var entry:equipment.entrySet())mc.player.setItemSlot(entry.getKey(),entry.getValue());
             playerState.restore(mc.player);
@@ -119,6 +138,21 @@ final class MobAuraPreviews {
             mc.particleEngine.setLevel(mc.level);
         }
         return results;
+    }
+
+    private static void equipProtectionFive(Minecraft mc) {
+        var protection=mc.level.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.PROTECTION);
+        Item[] pieces={vibranium("helmet"),vibranium("chestplate"),vibranium("leggings"),vibranium("boots")};
+        for(int index=0;index<ARMOR.length;index++) {
+            ItemStack stack=new ItemStack(pieces[index]);stack.enchant(protection,5);
+            mc.player.setItemSlot(ARMOR[index],stack);
+        }
+    }
+
+    private static Item vibranium(String piece) {
+        var id=ResourceLocation.fromNamespaceAndPath("mite","vibranium_"+piece);
+        if(!BuiltInRegistries.ITEM.containsKey(id))throw new IllegalStateException("Missing native vibranium armor: "+id);
+        return BuiltInRegistries.ITEM.get(id);
     }
 
     private static void neutralPose(LivingEntity living) {
@@ -159,7 +193,7 @@ final class MobAuraPreviews {
             graphics.drawCenteredString(mc.font,LABELS[index],WIDTH/4,17,0xFFF2F5FA);
             graphics.pose().popPose();
             graphics.drawCenteredString(mc.font,DETAILS[index],WIDTH/2,664,0xFFC3D1DD);
-            graphics.drawCenteredString(mc.font,"原版渲染器与真实粒子 · NingMeng123",WIDTH/2,690,0xFF8195A6);
+            graphics.drawCenteredString(mc.font,index<KINDS.length?"原版渲染器与真实粒子 · NingMeng123":"整甲动态星空与背部光翼 · NingMeng123",WIDTH/2,690,0xFF8195A6);
             graphics.flush();RenderSystem.enableDepthTest();
             return Screenshot.takeScreenshot(target);
         } finally {

@@ -44,10 +44,11 @@ if base_jar.exists():
 if jar.exists():
     with ZipFile(jar) as archive:
         names=archive.namelist()
-        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/','mezz/jei/')) or n.endswith('GameTests.class') or any(audit in n for audit in ['ModernIteClientAudit','MobRenderRegressionAudit','ForgeJeiClientAudit','MobAuraPreviews','LanternClientAudit'])]
+        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/','mezz/jei/')) or n.endswith('GameTests.class') or any(audit in n for audit in ['ModernIteClientAudit','MobRenderRegressionAudit','ForgeJeiClientAudit','MobAuraPreviews','SovereignGuardPreviews','VibraniumGildingPreviews','LanternClientAudit'])]
         if forbidden:raise SystemExit('Release includes forbidden runtime or test entries: '+str(forbidden))
         metadata=archive.read('META-INF/neoforge.mods.toml').decode()
         assert 'modId="modern_ite"' in metadata and 'versionRange="[0.1.10,)"' in metadata
+        assert f'version="{version}"' in metadata, 'Release version differs from gradle.properties'
         assert re.search(r'modId="jei"\s+type="optional".*?side="CLIENT"',metadata,re.S)
         assert all(s.name not in names for s in sources)
         compiled=ROOT/'build/classes/java/main'
@@ -55,29 +56,45 @@ if jar.exists():
         for path in classes:
             name=path.relative_to(compiled).as_posix()
             assert archive.read(name)==path.read_bytes(), 'Stale production class: '+name
+        shaders=list((RES/'assets/modern_ite/shaders').rglob('*'))
+        shaders=[path for path in shaders if path.is_file()]
+        for path in set(json_files+shaders):
+            name=path.relative_to(RES).as_posix()
+            assert archive.read(name)==path.read_bytes(), 'Stale packaged resource: '+name
         for retired in ['revenant_ghast','pillager','pillager_leader']:
             assert f'assets/modern_ite/models/item/{retired}_spawn_egg.json' not in names
             assert f'data/modern_ite/loot_table/entities/{retired}.json' not in names
+        assert not any('SovereignGuard' in name or name.endswith('/sovereign_guard.png') for name in names), 'Retired external protection effects remain in release'
+        assert not any('VibraniumGildingModel' in name or name.endswith('/vibranium_gilding.png') for name in names), 'Retired gold inlays remain in release'
+        assert all(f'assets/modern_ite/shaders/core/vibranium_cosmic.{suffix}' in names for suffix in ['vsh','fsh','json'])
+        assert all(f'io/github/ningmeng123/modernite/client/entity/{name}.class' in names for name in ['VibraniumCosmicShaders','VibraniumCosmicModel','VibraniumLightWings'])
     report['release_jar']={'path':str(jar),'sha256':sha256(jar.read_bytes()).hexdigest(),'bytes':jar.stat().st_size,'nested_jars':False,'old_runtime_classes':False,'base_classes_bundled':False,'test_classes_bundled':False}
-    report['release_jar'].update(compiled_production_classes_matched=len(classes),jei_bundled=False,removed_creature_resources_absent=True)
+    report['release_jar'].update(compiled_production_classes_matched=len(classes),packaged_json_resources_matched=len(json_files),packaged_shader_resources_matched=len(shaders),jei_bundled=False,removed_creature_resources_absent=True)
 tests=[]
 for p in (ROOT/'build/test-results/test').glob('TEST-*.xml'):
     t=ET.parse(p).getroot();tests.append({'suite':t.get('name'),'tests':int(t.get('tests')),'failures':int(t.get('failures')),'errors':int(t.get('errors'))})
 report['junit']=tests
 client=out/'client-audit.json'
 if client.exists():
-    data=json.loads(client.read_text());report['client']={k:data.get(k) for k in ['status','failures','creature_renderer_count','projectile_renderer_count','item_model_count','effect_sprite_count','world_created','server_connected','gameplay_verified']}
-    client_log=newest_log(out/'mob-update-client.log',ROOT/'extension-client.log')
+    data=json.loads(client.read_text());report['client']={k:data.get(k) for k in ['status','failures','creature_renderer_count','projectile_renderer_count','item_model_count','effect_sprite_count','world_created','server_connected','gameplay_verified','gilding_humanoid_renderers','gilding_player_skins','cosmic_shader']}
+    client_log=newest_log(out/'vibranium-flow-client.log',out/'cosmic-client.log',out/'mob-update-client.log',ROOT/'extension-client.log')
     latest=client_log.read_text(encoding='utf-8',errors='replace') if client_log.exists() else ''
     report['client']['latest_launch_confirmed']='MODERN_ITE_CLIENT_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['client']['latest_launch_confirmed']:report['client']['status']='latest_launch_not_verified'
 mob_render=out/'mob-render-audit.json'
 if mob_render.exists():
     report['mob_render']=json.loads(mob_render.read_text(encoding='utf-8'))
-    render_log=newest_log(out/'mob-aura-preview-render.log',out/'mob-update-render.log',ROOT/'extension-mob-render.log')
+    render_log=newest_log(out/'vibranium-flow-render.log',out/'cosmic-render.log',out/'mob-aura-preview-render.log',out/'mob-update-render.log',ROOT/'extension-mob-render.log')
     latest=render_log.read_text(encoding='utf-8',errors='replace') if render_log.exists() else ''
     report['mob_render']['latest_launch_confirmed']='MODERN_ITE_MOB_RENDER_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['mob_render']['latest_launch_confirmed']:report['mob_render']['status']='latest_launch_not_verified'
+preview=out/'cosmic-preview.json'
+if preview.exists():
+    data=json.loads(preview.read_text(encoding='utf-8'))
+    assert sha256(Path(data['path']).read_bytes()).hexdigest()==data['sha256'], 'Stale native animation preview'
+    assert data['frames']==200 and data['duration_ms']==20000 and data['source']=='native_gpu_frames'
+    assert data['fps']==10 and data['ticks_per_frame']==2 and data['capture_span_ticks']==400
+    report['cosmic_preview']=data
 forge_jei=out/'forge-jei-audit.json'
 if forge_jei.exists():
     report['forge_jei']=json.loads(forge_jei.read_text(encoding='utf-8'))
@@ -92,9 +109,9 @@ if lantern.exists():
     latest=lantern_log.read_text(encoding='utf-8',errors='replace') if lantern_log.exists() else ''
     report['lantern_client']['latest_launch_confirmed']='MODERN_ITE_MOB_RENDER_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['lantern_client']['latest_launch_confirmed']:report['lantern_client']['status']='latest_launch_not_verified'
-log=newest_log(out/'launch-gametest.log',out/'lantern-final.log',out/'lantern-gametest.log',out/'mob-update-gametest.log',ROOT/'extension-render-gametest.log',ROOT/'extension-final.log',ROOT/'extension-gametest.log')
+log=newest_log(out/'cosmic-gametest.log',out/'launch-gametest.log',out/'lantern-final.log',out/'lantern-gametest.log',out/'mob-update-gametest.log',ROOT/'extension-render-gametest.log',ROOT/'extension-final.log',ROOT/'extension-gametest.log')
 if log.exists():
     text=log.read_text(encoding='utf-8',errors='replace');match=re.search(r'All (\d+) required tests passed',text)
-    report['gametest']={'passed':int(match[1]) if match else None,'recipe_errors':len(re.findall('Parsing error loading recipe',text)),'tag_errors':len(re.findall("Couldn.t load tag",text))}
+    report['gametest']={'source_log':str(log),'passed':int(match[1]) if match else None,'recipe_errors':len(re.findall('Parsing error loading recipe',text)),'tag_errors':len(re.findall("Couldn.t load tag",text))}
 (out/'release-audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print(json.dumps({k:v for k,v in report.items() if k not in ['assets','junit']},ensure_ascii=False,indent=2))
