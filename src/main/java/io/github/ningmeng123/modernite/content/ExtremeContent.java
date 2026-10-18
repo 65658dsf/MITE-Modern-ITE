@@ -47,7 +47,12 @@ public final class ExtremeContent {
     public static final DeferredItem<DynamicCoreItem> MITHRIL_CORE = lantern("mithril", DynamicCoreItem.Material.MITHRIL);
     public static final DeferredItem<DynamicCoreItem> ADAMANTIUM_CORE = lantern("adamantium", DynamicCoreItem.Material.ADAMANTIUM);
     public static final DeferredItem<DynamicCoreItem> VIBRANIUM_CORE = lantern("vibranium", DynamicCoreItem.Material.VIBRANIUM);
-    public static final DeferredItem<ArmorItem> BUCKET_HELMET = ITEMS.registerItem("iron_bucket_helmet", p -> new ArmorItem(ArmorMaterials.IRON, ArmorItem.Type.HELMET, p.durability(1280)));
+    public static final DeferredItem<ArmorItem> BUCKET_HELMET = ITEMS.registerItem("iron_bucket_helmet", p -> new ArmorItem(ArmorMaterials.IRON, ArmorItem.Type.HELMET, p.durability(1280)) {
+        @Override public ResourceLocation getArmorTexture(ItemStack stack, net.minecraft.world.entity.Entity entity,
+                net.minecraft.world.entity.EquipmentSlot slot, ArmorMaterial.Layer layer, boolean innerModel) {
+            return ResourceLocation.withDefaultNamespace("textures/block/iron_block.png");
+        }
+    });
     public static final DeferredBlock<Block> RESURRECTION = block("resurrection_array", () -> new ResurrectionBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN).strength(2F, 60000F).noOcclusion()));
     public static final DeferredBlock<RedDiamondOreBlock> RED_ORE = block("fancy_red_ore", () -> new RedDiamondOreBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_ORE).strength(3F).requiresCorrectToolForDrops()));
     public static final DeferredBlock<DropExperienceBlock> NETHER_ADAMANTIUM = block("nether_adamantium_ore", () -> new DropExperienceBlock(UniformInt.of(3, 7), BlockBehaviour.Properties.ofFullCopy(Blocks.ANCIENT_DEBRIS).strength(4F).requiresCorrectToolForDrops()));

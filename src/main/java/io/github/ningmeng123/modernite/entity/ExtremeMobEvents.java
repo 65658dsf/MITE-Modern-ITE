@@ -26,7 +26,7 @@ import net.neoforged.neoforge.event.level.*;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import static io.github.ningmeng123.modernite.entity.ExtremeKind.*;
 
-/** Server authority for hit effects, source encounters and the two native pillager entry routes. @author NingMeng123 */
+/** Server authority for hit effects, source encounters and death inventory recovery. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class ExtremeMobEvents {
     private ExtremeMobEvents(){}
@@ -34,6 +34,11 @@ public final class ExtremeMobEvents {
     public static void join(EntityJoinLevelEvent event){
         if(event.getLevel().isClientSide||event.isCanceled())return;
         if(event.getEntity() instanceof Mob mob&&mob instanceof ExtremeMob extreme){boolean loaded=extreme.extremeMemory().initialized;MobAbilities.initialize(mob,extreme);if(loaded)MobAbilities.configureGoals(mob,extreme.extremeKind());}
+        if(event.getEntity() instanceof Pillager pillager&&pillager.getPersistentData().getBoolean("modern_ite:upgrade_crossbow")){
+            pillager.getPersistentData().remove("modern_ite:upgrade_crossbow");
+            ItemStack weapon=pillager.getMainHandItem();
+            if(weapon.is(Items.CROSSBOW))pillager.setItemSlot(EquipmentSlot.MAINHAND,weapon.transmuteCopy(io.github.ningmeng123.modernite.content.ExtremeContent.CROSSBOW.get()));
+        }
         if(event.getEntity() instanceof AbstractSkeleton skeleton&&!skeleton.getPersistentData().getBoolean("modern_ite:legacy_rolls")){
             skeleton.getPersistentData().putBoolean("modern_ite:legacy_rolls",true);
             skeleton.getPersistentData().putBoolean("modern_ite:triple",skeleton.getRandom().nextInt(100)>85);
@@ -62,14 +67,9 @@ public final class ExtremeMobEvents {
         if(event.isCanceled()||event.isSpawnCancelled()||event.getEntity() instanceof ExtremeMob)return;
         if(!(event.getLevel().getLevel() instanceof ServerLevel level))return;
         Mob original=event.getEntity();
-        if(original.getType()==EntityType.PILLAGER&&original instanceof Pillager pillager&&MobAbilities.day(level)>=33
-                &&(event.getSpawnType()==MobSpawnType.PATROL||event.getSpawnType()==MobSpawnType.STRUCTURE)){
-            ExtremeKind kind=pillager.isPatrolLeader()&&MobAbilities.day(level)>=65?PILLAGER_LEADER:PILLAGER;
-            Mob replacement=ExtremeMobs.type(kind).create(level);if(!(replacement instanceof Pillager next))return;
-            next.moveTo(original.position());next.setYRot(original.getYRot());next.setPatrolLeader(pillager.isPatrolLeader());
-            if(pillager.getPatrolTarget()!=null)next.setPatrolTarget(pillager.getPatrolTarget());
-            net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(next,level,event.getDifficulty(),event.getSpawnType(),event.getSpawnData());
-            event.setSpawnCancelled(true);level.addFreshEntity(next);
+        if(original.getType()==EntityType.PILLAGER&&original instanceof Pillager&&MobAbilities.day(level)>=33){
+            // Keep vanilla patrol/raid identity and AI while retaining a survival source for the addon weapon.
+            original.getPersistentData().putBoolean("modern_ite:upgrade_crossbow",true);
         }else if(original.getType()==EntityType.ZOMBIFIED_PIGLIN&&original.getRandom().nextInt(5)==0){
             Mob replacement=ExtremeMobs.type(ZOMBIE_PIGMAN_LORD).create(level);if(replacement==null)return;
             replacement.moveTo(original.position());replacement.setYRot(original.getYRot());
@@ -79,7 +79,9 @@ public final class ExtremeMobEvents {
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void incoming(LivingIncomingDamageEvent event){
-        if(event.isCanceled()||!(event.getEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state))return;
+        if(event.isCanceled())return;
+        if(witch(event.getEntity())&&witch(attacker(event.getSource()))){event.setCanceled(true);return;}
+        if(!(event.getEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state))return;
         var k=state.extremeKind();var s=state.extremeMemory();DamageSource damage=event.getSource();
         if(k.fireproof()&&damage.is(DamageTypeTags.IS_FIRE)){event.setCanceled(true);return;}
         if(k==PHASE_CREEPER&&MobAbilities.evade(mob,s,damage)){event.setCanceled(true);return;}
@@ -108,7 +110,7 @@ public final class ExtremeMobEvents {
         if(attacker instanceof ExtremeMob e&&event.getNewDamage()>0){
             MobAbilities.hit(attacker,e,event.getEntity());
             if(e.extremeKind()==ZOMBIE_BOSS)event.getEntity().getPersistentData().putLong("modern_ite:boss_melee_grace",attacker.level().getGameTime()+30);
-            if(e.extremeKind()==SKELETON_LIGHTNING&&attacker.level() instanceof ServerLevel level){LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.setVisualOnly(true);bolt.moveTo(event.getEntity().position());level.addFreshEntity(bolt);}}
+            if(e.extremeKind()==SKELETON_LIGHTNING&&event.getSource().getDirectEntity() instanceof AbstractArrow&&attacker.level() instanceof ServerLevel level){LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.setVisualOnly(true);bolt.moveTo(event.getEntity().position());level.addFreshEntity(bolt);}}
         }
         if(event.getEntity() instanceof ExtremeMob state&&state.extremeKind()==ZOMBIE_BOSS&&event.getSource().getEntity() instanceof Player player)
             state.extremeMemory().contribution.merge(player.getUUID(),event.getNewDamage(),Float::sum);
@@ -117,17 +119,17 @@ public final class ExtremeMobEvents {
         if(source.getEntity() instanceof Mob mob)return mob;
         if(source.getDirectEntity() instanceof Projectile p&&p.getOwner() instanceof Mob mob)return mob;return null;
     }
+    private static boolean witch(Entity entity){return entity instanceof Witch||entity instanceof ExtremeMob e&&e.extremeKind().family==Family.WITCH;}
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void witchTarget(LivingChangeTargetEvent event){
+        if(witch(event.getEntity())&&witch(event.getNewAboutToBeSetTarget()))event.setNewAboutToBeSetTarget(null);
+    }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void death(LivingDeathEvent event){
         if(event.isCanceled()||event.getEntity().level().isClientSide)return;
-        if(event.getEntity() instanceof ServerPlayer player){
-            var mimic=ExtremeMobs.type(MIMIC_ZOMBIE).create(player.serverLevel());if(mimic instanceof ExtremeMob e){
-                mimic.moveTo(player.position());e.extremeMemory().mimicName=player.getGameProfile().getName();
-                mimic.setCustomName(Component.literal(e.extremeMemory().mimicName));mimic.setCustomNameVisible(true);mimic.setPersistenceRequired();player.serverLevel().addFreshEntity(mimic);
-            }
-        }
         if(event.getEntity() instanceof Mob mob){
             if(mob instanceof ExtremeMob state){
+                if(invisibleCreeper(state.extremeKind()))mob.removeEffect(MobEffects.INVISIBILITY);
                 if(state.extremeKind().mirrors()||state.extremeKind()==MIMIC_ZOMBIE||state.extremeKind()==UNDYING_ZOMBIE_EMPEROR)
                     for(var slot:EquipmentSlot.values())mob.setItemSlot(slot,ItemStack.EMPTY);
                 if(state.extremeKind()==ZOMBIE_BOSS)bossReward(mob,state.extremeMemory());
@@ -158,9 +160,13 @@ public final class ExtremeMobEvents {
         for(int i=0;i<Math.min(5,ranked.size());i++){var row=ranked.get(i);var player=level.getServer().getPlayerList().getPlayer(row.getKey());MobAbilities.announce(boss,(i+1)+". "+(player==null?row.getKey():player.getGameProfile().getName())+"："+String.format(java.util.Locale.ROOT,"%.2f",row.getValue()));}
     }
     private static void give(Player player,ItemStack stack){if(!player.getInventory().add(stack))player.drop(stack,false);}
-    @SubscribeEvent public static void drops(LivingDropsEvent event){
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void drops(LivingDropsEvent event){
+        if(event.isCanceled()||event.getEntity().level().isClientSide)return;
+        if(event.getEntity() instanceof ServerPlayer player){playerMimic(event,player);return;}
         if(!(event.getEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state))return;
         ExtremeKind k=state.extremeKind();boolean player=event.isRecentlyHit();int day=MobAbilities.day(mob.level());
+        if(k==MIMIC_ZOMBIE)PlayerMimicInventory.release(mob,event.getDrops());
         if(player)switch(k){
             case MIRROR_SKELETON,MIRROR_ZOMBIE,ZOMBIE_DOOR -> drop(event,"minecraft:emerald",Math.min(day/32,3));
             case MINER_ZOMBIE -> drop(event,"minecraft:iron_nugget",Math.min(day/32,3));
@@ -171,7 +177,6 @@ public final class ExtremeMobEvents {
             case UNDYING_ZOMBIE_EMPEROR -> {drop(event,"minecraft:diamond",2+mob.getRandom().nextInt(3));drop(event,"mite:mithril_ingot",2);drop(event,"mite:adamantium_ingot",1);drop(event,"mite:vibranium_nugget",1+mob.getRandom().nextInt(4));}
             case ANNIHILATION_SKELETON -> {drop(event,"mite:vibranium_nugget",2);drop(event,"minecraft:diamond",2);}
             case DARK_IRON_GOLEM -> {drop(event,"minecraft:diamond",1+mob.getRandom().nextInt(2));drop(event,"mite:adamantium_nugget",1+mob.getRandom().nextInt(8));}
-            case PILLAGER_LEADER -> drop(event,"minecraft:emerald",2+mob.getRandom().nextInt(3));
             case ZOMBIE_CALLER -> {drop(event,"minecraft:rotten_flesh",2+mob.getRandom().nextInt(2));drop(event,"minecraft:iron_nugget",1+mob.getRandom().nextInt(8));drop(event,new String[]{"minecraft:bread","minecraft:apple","minecraft:cooked_beef","minecraft:cooked_chicken","minecraft:pumpkin_pie"}[mob.getRandom().nextInt(5)],1);}
             case BLACK_INFERNAL_CREEPER -> drop(event,"modern_ite:resurrection_array",1);
             default -> {}
@@ -181,10 +186,16 @@ public final class ExtremeMobEvents {
         if(k==WITCH_LORD||k==WANDERING_WITCH){drop(event,"mite:adamantium_nugget",1+mob.getRandom().nextInt(3));drop(event,"minecraft:nether_wart",4);}
         if(k==SKELETON_ZOMBIE&&mob.getRandom().nextFloat()<(player?.5F:.25F))drop(event,"minecraft:rotten_flesh",1);
         if(k==WITHER_SKELETON_ARROW){int coal=mob.getRandom().nextInt(3)-1;if(!player&&coal>0)coal-=mob.getRandom().nextInt(coal+1);drop(event,"minecraft:coal",coal);if(player&&mob.getRandom().nextInt(100)<5)drop(event,"minecraft:wither_skeleton_skull",1);}
-        if(k==REVENANT_GHAST){drop(event,"minecraft:ghast_tear",1);drop(event,"minecraft:gunpowder",mob.getRandom().nextInt(3));}
         if(k==ZOMBIE_GHAST&&mob.getRandom().nextFloat()<.08)drop(event,"minecraft:ghast_tear",1);
         if(k==SKELETON_BLAZE&&mob.getRandom().nextFloat()<.05)drop(event,"minecraft:blaze_powder",1);
-        if(k.family==Family.PILLAGER&&mob.getRandom().nextFloat()<.1)drop(event,"mite:iron_arrow",1);
+    }
+    private static void playerMimic(LivingDropsEvent event,ServerPlayer player){
+        Mob mimic=ExtremeMobs.type(MIMIC_ZOMBIE).create(player.serverLevel());if(!(mimic instanceof ExtremeMob e))return;
+        MobAbilities.initialize(mimic,e);mimic.moveTo(player.position());e.extremeMemory().mimicName=player.getGameProfile().getName();
+        mimic.setCustomName(Component.literal(e.extremeMemory().mimicName));mimic.setCustomNameVisible(true);mimic.setPersistenceRequired();mimic.setCanPickUpLoot(false);
+        PlayerMimicInventory.capture(mimic,event.getDrops());
+        // Failed or canceled joins must leave the original player drops available.
+        if(player.serverLevel().addFreshEntity(mimic))event.getDrops().clear();
     }
     private static void drop(LivingDropsEvent event,String id,int count){if(count<=0)return;var stack=MobAbilities.item(id);if(stack.isEmpty())return;stack.setCount(count);var m=event.getEntity();event.getDrops().add(new net.minecraft.world.entity.item.ItemEntity(m.level(),m.getX(),m.getY(),m.getZ(),stack));}
     @SubscribeEvent(priority=EventPriority.LOWEST)
@@ -199,11 +210,27 @@ public final class ExtremeMobEvents {
         boss.moveTo(pos.getX()+.5,pos.getY(),pos.getZ()+.5,0,0);boss.setTarget(player);level.addFreshEntity(boss);boss.spawnAnim();
         MobAbilities.summon(boss,WITCH_LORD,1);
     }
-    @SubscribeEvent public static void blast(ExplosionEvent.Start event){
-        if(!(event.getExplosion().getDirectSourceEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state)||state.extremeKind()!=BLACK_INFERNAL_CREEPER
-                ||mob.getPersistentData().getBoolean("modern_ite:processing_blast"))return;
+    @SubscribeEvent(priority=EventPriority.LOWEST,receiveCanceled=true)
+    public static void blast(ExplosionEvent.Start event){
+        if(!(event.getExplosion().getDirectSourceEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state))return;
+        // Vanilla creepers copy active potions into a lingering cloud after exploding.
+        if(invisibleCreeper(state.extremeKind()))mob.removeEffect(MobEffects.INVISIBILITY);
+        if(event.isCanceled())return;
+        if(state.extremeKind()!=BLACK_INFERNAL_CREEPER||mob.getPersistentData().getBoolean("modern_ite:processing_blast"))return;
         event.setCanceled(true);mob.getPersistentData().putBoolean("modern_ite:processing_blast",true);
         try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new R196ExplosionCalculator(mob,34.375F),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),37.5F,false,Level.ExplosionInteraction.MOB);}
         finally{mob.getPersistentData().remove("modern_ite:processing_blast");}
+    }
+    private static boolean invisibleCreeper(ExtremeKind kind){return kind==INVISIBLE_CREEPER||kind==INVISIBLE_REVERSED_CREEPER;}
+    @SubscribeEvent
+    public static void creeperBlastEffects(ExplosionEvent.Detonate event){
+        if(event.getLevel().isClientSide||!(event.getExplosion().getDirectSourceEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state))return;
+        ExtremeKind kind=state.extremeKind();if(kind!=FLASH_CREEPER&&kind!=WITHER_CREEPER)return;
+        var center=event.getExplosion().center();double radius=event.getExplosion().radius()*2D;
+        for(Entity entity:event.getAffectedEntities())if(entity instanceof Player player&&player.isAlive()&&!player.isSpectator()&&!player.isCreative()
+                &&player.distanceToSqr(center)<=radius*radius&&Explosion.getSeenPercent(center,player)>0){
+            if(kind==FLASH_CREEPER)MobAbilities.effect(player,"flash",100,0);
+            else player.addEffect(new MobEffectInstance(MobEffects.WITHER,160),mob);
+        }
     }
 }

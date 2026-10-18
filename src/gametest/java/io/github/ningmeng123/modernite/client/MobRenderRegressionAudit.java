@@ -10,6 +10,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.logging.LogUtils;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.client.entity.BucketHelmetModel;
+import io.github.ningmeng123.modernite.client.entity.SpeciesHeadLayer;
+import io.github.ningmeng123.modernite.client.entity.VariantCreeperModel;
+import io.github.ningmeng123.modernite.client.entity.VariantZombieModel;
+import io.github.ningmeng123.modernite.content.ExtremeContent;
+import io.github.ningmeng123.modernite.content.ExtremeEffects;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import java.lang.reflect.Field;
@@ -22,6 +28,11 @@ import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.ZombieModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -35,8 +46,13 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Ghast;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
@@ -50,6 +66,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -59,7 +76,10 @@ import org.joml.Vector3f;
 public final class MobRenderRegressionAudit {
     private static final int SIZE=320;
     private static final List<ExtremeKind> FOCUS=List.of(ExtremeKind.WITCH_LORD,ExtremeKind.WANDERING_WITCH,
-            ExtremeKind.REVENANT_GHAST,ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.ZOMBIE_PIGMAN_LORD);
+            ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.ZOMBIE_PIGMAN_LORD,ExtremeKind.ZOMBIE_FLY_AWAY,
+            ExtremeKind.ZOMBIE_GHAST,ExtremeKind.DRAGON_ZOMBIE,ExtremeKind.ZOMBIE_DOOR,ExtremeKind.ZOMBIE_IRON_BUCKET,
+            ExtremeKind.FISHING_ROD_ZOMBIE,ExtremeKind.WITHER_SKELETON_ARROW,ExtremeKind.RUN_CREEPER,
+            ExtremeKind.PHASE_CREEPER,ExtremeKind.CHAOS_CREEPER);
     private static boolean baked,started,finished,capturing,postRenderSeen,startupReady;
     private static int waiting,readyTicks,firstServerTick=-1;
     private static String worldName;
@@ -150,16 +170,58 @@ public final class MobRenderRegressionAudit {
                 }catch(Throwable failure){fail("texture lookup "+kind.id(),failure);}
             }
             report.addProperty("entity_texture_lookup_count",identities.size());
-            check(identities.size()==48,"Expected all 48 registered source identities");
+            check(identities.size()==45,"Expected 45 active identities after removing the ghast and duplicate pillagers");
             JsonArray samples=new JsonArray();report.add("native_gpu_samples",samples);
             for(ExtremeKind kind:FOCUS) {
                 JsonObject facts=new JsonObject();samples.add(facts);facts.addProperty("entity",kind.id());
                 try{sample(mc,kind,facts);}catch(Throwable failure){fail("native GPU render "+kind.id(),failure);}
             }
             report.addProperty("focused_gpu_sample_count",samples.size());
+            verifyPlayerHead(mc);
+            verifyParticleAuras(mc);
+            report.add("aura_previews",MobAuraPreviews.capture(mc));
             report.add("lanterns",LanternClientAudit.capture(mc));
         }catch(Throwable failure){fail("render audit",failure);}
         finally{finish(mc);}
+    }
+
+    @SuppressWarnings({"rawtypes","unchecked"})
+    private static void verifyPlayerHead(Minecraft mc){
+        LivingEntityRenderer renderer=(LivingEntityRenderer)mc.getEntityRenderDispatcher().getRenderer(mc.player);
+        HumanoidModel model=(HumanoidModel)renderer.getModel();
+        var effect=ExtremeEffects.VALUES.get("big_head");
+        MobEffectInstance prior=mc.player.getEffect(effect);MobEffectInstance saved=prior==null?null:new MobEffectInstance(prior);
+        JsonObject facts=new JsonObject();report.add("player_big_head",facts);
+        try{
+            mc.player.addEffect(new MobEffectInstance(effect,200));
+            model.setupAnim(mc.player,0,0,0,0,0);
+            facts.addProperty("effect_head_scale",model.head.xScale);facts.addProperty("effect_hat_scale",model.hat.xScale);
+            check(model.head.xScale==2&&model.hat.xScale==2,"The real player renderer must enlarge both head layers after setupAnim");
+            mc.player.removeEffect(effect);model.setupAnim(mc.player,0,0,0,0,0);
+            facts.addProperty("cleared_head_scale",model.head.xScale);facts.addProperty("cleared_hat_scale",model.hat.xScale);
+            check(model.head.xScale==1&&model.hat.xScale==1,"Removing big_head must restore the shared player model");
+        }finally{
+            mc.player.removeEffect(effect);if(saved!=null)mc.player.addEffect(saved);
+            model.setupAnim(mc.player,0,0,0,0,0);
+        }
+    }
+
+    private static void verifyParticleAuras(Minecraft mc) {
+        JsonObject facts=new JsonObject();report.add("particle_auras",facts);
+        for(var kind:new ExtremeKind[]{ExtremeKind.UNDYING_ZOMBIE_EMPEROR,ExtremeKind.SKELETON_LIGHTNING,
+                ExtremeKind.SKELETON_FLOATING,ExtremeKind.SKELETON_BLAZE,ExtremeKind.ANNIHILATION_SKELETON}) {
+            Mob mob=create(mc,kind);mob.setPos(mc.player.position().add(2,0,0));
+            mob.tickCount=-mob.getId()*7;
+            mc.level.addEntity(mob);
+            try {
+                int before=Integer.parseInt(mc.particleEngine.countParticles());
+                io.github.ningmeng123.modernite.client.ExtremeMobParticles.tick(new ClientTickEvent.Post());
+                mc.particleEngine.tick();
+                int added=Integer.parseInt(mc.particleEngine.countParticles())-before;
+                facts.addProperty(kind.id(),added);
+                check(added>0,"The actual client particle event must emit the requested aura: "+kind);
+            } finally {mob.discard();}
+        }
     }
 
     private static Mob create(Minecraft mc,ExtremeKind kind) {
@@ -181,12 +243,40 @@ public final class MobRenderRegressionAudit {
     private static void sample(Minecraft mc,ExtremeKind kind,JsonObject facts)throws Exception {
         Mob mob=create(mc,kind);
         try {
+            if(kind==ExtremeKind.ZOMBIE_DOOR)mob.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.IRON_DOOR));
+            if(kind==ExtremeKind.ZOMBIE_IRON_BUCKET)mob.setItemSlot(EquipmentSlot.HEAD,new ItemStack(ExtremeContent.BUCKET_HELMET.get()));
             ResourceLocation normal=texture(mc,mob,facts,"texture");
             try(NativeImage actual=capture(mc,mob)) {
                 PixelStats stats=stats(actual);facts.add("pixels",stats.json());
                 check(stats.body>200,"GPU output contains too few non-background body pixels");
                 Path png=screenshots().resolve(kind.id()+".png");Files.createDirectories(png.getParent());actual.writeToFile(png);
                 facts.addProperty("screenshot",png.toString());
+                if(kind==ExtremeKind.ZOMBIE_FLY_AWAY) {
+                    var renderer=mc.getEntityRenderDispatcher().getRenderer(mob);
+                    check(renderer instanceof LivingEntityRenderer<?,?> living&&living.getModel() instanceof HumanoidModel<?>,"The fly-away zombie uses its humanoid body model");
+                    var model=(HumanoidModel<?>)((LivingEntityRenderer<?,?>)renderer).getModel();
+                    check(uvOutOfRange(model,facts,"actual_body_uv")==0,"The actual head, torso, arms and legs must all stay within normalized texture UVs");
+                    double actualMaximumV=maximumV(facts.getAsJsonObject("actual_body_uv"));facts.addProperty("actual_maximum_v",actualMaximumV);
+                    check(Math.abs(actualMaximumV-.5D)<.0001D,"The compressed source image uses the64-high logical mesh, with body UV maxV0.5");
+                    Field cubes=ModelPart.class.getDeclaredField("cubes");cubes.setAccessible(true);
+                    int hatCubes=((List<?>)cubes.get(model.hat)).size();facts.addProperty("actual_hat_cubes",hatCubes);
+                    check(hatCubes==0,"The modern adaptation must remove the opaque, incorrectly placed outer head shell");
+                    try(NativeImage head=headOnly(mc,mob);NativeImage hat=plain64HatControl(mc,mob)) {
+                        int black=blackPixels(head),covered=blackPixels(hat);
+                        facts.addProperty("head_black_eye_pixels",black);facts.addProperty("plain64_hat_head_black_pixels",covered);
+                        Path headPng=screenshots().resolve("zombie_fly_away_head.png"),hatPng=screenshots().resolve("negative-control-plain64-hat-zombie_fly_away.png");
+                        head.writeToFile(headPng);hat.writeToFile(hatPng);facts.addProperty("head_screenshot",headPng.toString());facts.addProperty("plain64_hat_negative_control",hatPng.toString());
+                        check(black>8,"The actual head-only native render must show the source's black eyes");
+                        check(covered<black*.5D,"A plain64-high mesh retaining the opaque hat must occlude the black eyes in the negative control");
+                    }
+                    try(NativeImage bad=legacyZombie32Control(mc,mob,facts)) {
+                        int changed=changedBody(actual,bad);double fraction=changed/(double)stats.body;
+                        facts.addProperty("legacy32_body_pixels_changed",changed);facts.addProperty("legacy32_body_changed_fraction",fraction);
+                        Path badPng=screenshots().resolve("negative-control-legacy32-zombie_fly_away.png");bad.writeToFile(badPng);
+                        facts.addProperty("legacy32_negative_control",badPng.toString());
+                        check(fraction>.20D,"The former 32-high UV model must visibly differ across more than20 percent of the fixed body: "+fraction);
+                    }
+                }
                 if(kind==ExtremeKind.WITCH_LORD||kind==ExtremeKind.WANDERING_WITCH||kind==ExtremeKind.ANNIHILATION_SKELETON) {
                     // Reference uses the same real renderer, pose and GPU path, with layers removed only
                     // during this isolated sample, then restored in finally. No equipment is present.
@@ -213,22 +303,85 @@ public final class MobRenderRegressionAudit {
                         }
                     }
                 }
-                if(mob instanceof Ghast ghast) {
-                    check(stats.white/(double)stats.body<.20D,"Ghast body is saturated white; possible additive full-body glow mask");
-                    ghast.setCharging(true);ResourceLocation charging=texture(mc,mob,facts,"charging_texture");
-                    check(!normal.equals(charging),"Native ghast charging must select its shooting texture");
-                    try(NativeImage charged=capture(mc,mob)) {
-                        PixelStats chargeStats=stats(charged);facts.add("charging_pixels",chargeStats.json());
-                        Path chargedPng=screenshots().resolve("revenant_ghast_charging.png");charged.writeToFile(chargedPng);
-                        facts.addProperty("charging_screenshot",chargedPng.toString());
-                        int changed=changedAll(actual,charged);facts.addProperty("charging_changed_pixels",changed);
-                        check(chargeStats.body>200&&changed>0,"Actual GPU output must change when the ghast charges");
-                        check(chargeStats.white/(double)chargeStats.body<.20D,"Charging ghast body is saturated white");
-                    }
-                }
+                verifyVariant(mc,mob,kind,actual,facts);
                 facts.addProperty("native_draw_succeeded",true);
             }
         }finally{mob.discard();}
+    }
+
+    @SuppressWarnings({"rawtypes","unchecked"})
+    private static void verifyVariant(Minecraft mc,Mob mob,ExtremeKind kind,NativeImage actual,JsonObject facts)throws Exception {
+        LivingEntityRenderer renderer=(LivingEntityRenderer)mc.getEntityRenderDispatcher().getRenderer(mob);
+        Object model=renderer.getModel();facts.addProperty("model",model.getClass().getName());
+        if(kind==ExtremeKind.ZOMBIE_GHAST||kind==ExtremeKind.DRAGON_ZOMBIE){
+            check(model instanceof VariantZombieModel,"Species head requires the dedicated headless humanoid");
+            Field cubes=ModelPart.class.getDeclaredField("cubes");cubes.setAccessible(true);
+            check(((List)cubes.get(((VariantZombieModel)model).head)).isEmpty(),"The ordinary zombie head must be removed");
+            Field layers=LivingEntityRenderer.class.getDeclaredField("layers");layers.setAccessible(true);
+            check(((List<?>)layers.get(renderer)).stream().anyMatch(SpeciesHeadLayer.class::isInstance),"A real species head layer must be installed");
+            try(NativeImage without=withoutLayers(mc,mob)){
+                int changed=changedAll(actual,without);facts.addProperty("species_head_changed_pixels",changed);
+                check(changed>100,"The ghast or dragon head must produce visible native pixels");
+            }
+        }
+        if(kind==ExtremeKind.ZOMBIE_DOOR){
+            try(NativeImage without=withoutLayers(mc,mob)){
+                int changed=changedAll(actual,without);facts.addProperty("door_shield_changed_pixels",changed);
+                check(changed>100,"The full two-panel door shield must be visible");
+            }
+        }
+        if(kind==ExtremeKind.ZOMBIE_IRON_BUCKET){
+            ItemStack bucket=mob.getItemBySlot(EquipmentSlot.HEAD);
+            var replacement=IClientItemExtensions.of(bucket).getHumanoidArmorModel(mob,bucket,EquipmentSlot.HEAD,(HumanoidModel<?>)model);
+            check(replacement instanceof BucketHelmetModel,"The wearable bucket must replace the vanilla iron helmet model");
+            var bucketTexture=bucket.getItem().getArmorTexture(bucket,mob,EquipmentSlot.HEAD,ArmorMaterials.IRON.value().layers().getFirst(),false);
+            check(bucketTexture!=null,"The bucket needs its own opaque metal texture rather than a helmet's face cutouts");
+            facts.addProperty("bucket_armor_texture",bucketTexture.toString());
+            try(var stream=mc.getResourceManager().getResourceOrThrow(bucketTexture).open();var metal=NativeImage.read(stream)){
+                int transparent=0;
+                for(int y=0;y<metal.getHeight();y++)for(int x=0;x<metal.getWidth();x++)if((metal.getPixelRGBA(x,y)>>>24)==0)transparent++;
+                facts.addProperty("bucket_texture_transparent_pixels",transparent);
+                check(transparent==0,"The bucket side walls and roof must remain opaque");
+            }
+            mob.setItemSlot(EquipmentSlot.HEAD,new ItemStack(Items.IRON_HELMET));
+            try(NativeImage iron=capture(mc,mob)){
+                int changed=changedAll(actual,iron);facts.addProperty("bucket_vs_helmet_changed_pixels",changed);
+                check(changed>50,"The native bucket silhouette must visibly differ from an iron helmet");
+            }finally{mob.setItemSlot(EquipmentSlot.HEAD,bucket);}
+        }
+        if(kind==ExtremeKind.FISHING_ROD_ZOMBIE){
+            check(model instanceof VariantZombieModel,"The big-head zombie requires its dedicated model");
+            var zombie=(VariantZombieModel)model;zombie.setupAnim((Zombie)mob,0,0,0,0,0);
+            facts.addProperty("head_scale",zombie.head.xScale);
+            check(zombie.head.xScale==2&&zombie.hat.xScale==2,"The zombie's actual head and outer head must both double");
+        }
+        if(kind==ExtremeKind.ZOMBIE_FLY_AWAY){
+            var strong=(VariantZombieModel)model;strong.attackTime=.5F;strong.setupAnim((Zombie)mob,0,0,0,0,0);
+            facts.addProperty("uppercut_right_arm",strong.rightArm.xRot);facts.addProperty("uppercut_left_arm",strong.leftArm.xRot);
+            check(strong.rightArm.xRot==strong.leftArm.xRot&&strong.rightArm.xRot< -2,"Both arms must perform the golem uppercut together");
+            float priorAttack=mob.attackAnim,priorOldAttack=mob.oAttackAnim;
+            mob.attackAnim=mob.oAttackAnim=.5F;
+            try(NativeImage uppercut=capture(mc,mob)){
+                int changed=changedAll(actual,uppercut);facts.addProperty("uppercut_changed_pixels",changed);
+                check(changed>100,"The native strong-zombie uppercut must visibly change both arms");
+                Path uppercutPng=screenshots().resolve("zombie_fly_away_uppercut.png");uppercut.writeToFile(uppercutPng);
+                facts.addProperty("uppercut_screenshot",uppercutPng.toString());
+            }finally{mob.attackAnim=priorAttack;mob.oAttackAnim=priorOldAttack;strong.attackTime=0;}
+        }
+        if(kind==ExtremeKind.WITHER_SKELETON_ARROW)check(renderer.getTextureLocation(mob).toString().equals("minecraft:textures/entity/skeleton/wither_skeleton.png"),"The wither archer requires the native wither skeleton skin");
+        if(kind==ExtremeKind.RUN_CREEPER||kind==ExtremeKind.PHASE_CREEPER||kind==ExtremeKind.CHAOS_CREEPER){
+            check(model instanceof VariantCreeperModel,"The creeper variant must use its distinct geometry and animation");
+            if(kind==ExtremeKind.PHASE_CREEPER||kind==ExtremeKind.CHAOS_CREEPER)try(NativeImage without=withoutLayers(mc,mob)){
+                int changed=changedAll(actual,without);facts.addProperty("variant_effect_layer_pixels",changed);
+                check(changed>20,"The glowing phase eyes or rotating chaos arrow must be visible");
+            }
+            if(kind==ExtremeKind.CHAOS_CREEPER){
+                var chaos=(VariantCreeperModel)model;var entity=(net.minecraft.world.entity.monster.Creeper)mob;
+                chaos.setupAnim(entity,0,0,0,0,0);float before=chaos.chaosArrow().yRot;
+                chaos.setupAnim(entity,0,0,20,0,0);float after=chaos.chaosArrow().yRot;
+                check(before!=after,"The visible chaos arrow must rotate with time");facts.addProperty("arrow_rotation_at_tick20",after);
+            }
+        }
     }
 
     @SuppressWarnings({"rawtypes","unchecked"})
@@ -253,6 +406,49 @@ public final class MobRenderRegressionAudit {
         });
         try{return capture(mc,mob);}finally{layers.clear();layers.addAll(saved);}
     }
+    private static NativeImage legacyZombie32Control(Minecraft mc,Mob mob,JsonObject facts)throws Exception {
+        var renderer=mc.getEntityRenderDispatcher().getRenderer(mob);
+        Field field=LivingEntityRenderer.class.getDeclaredField("model");field.setAccessible(true);Object saved=field.get(renderer);
+        var legacy=new ZombieModel<Zombie>(LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE,0),64,32).bakeRoot());
+        check(uvOutOfRange(legacy,facts,"legacy32_body_uv")==0,"The old32-high mesh has legal normalized UVs; its vertical basis is the source of the mismatch");
+        double oldMaximumV=maximumV(facts.getAsJsonObject("legacy32_body_uv"));facts.addProperty("legacy32_maximum_v",oldMaximumV);
+        check(Math.abs(oldMaximumV-1D)<.0001D,"The old32-high control must normalize body coordinates to maxV1.0");
+        field.set(renderer,legacy);try{return capture(mc,mob);}finally{field.set(renderer,saved);}
+    }
+    private static double maximumV(JsonObject parts){return parts.entrySet().stream().mapToDouble(entry->entry.getValue().getAsJsonObject().get("max_v").getAsDouble()).max().orElseThrow();}
+    private static NativeImage plain64HatControl(Minecraft mc,Mob mob)throws Exception {
+        var renderer=mc.getEntityRenderDispatcher().getRenderer(mob);Field field=LivingEntityRenderer.class.getDeclaredField("model");field.setAccessible(true);Object saved=field.get(renderer);
+        field.set(renderer,new ZombieModel<Zombie>(LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE,0),64,64).bakeRoot()));
+        try{return headOnly(mc,mob);}finally{field.set(renderer,saved);}
+    }
+    private static NativeImage headOnly(Minecraft mc,Mob mob)throws Exception {
+        var model=(HumanoidModel<?>)((LivingEntityRenderer<?,?>)mc.getEntityRenderDispatcher().getRenderer(mob)).getModel();
+        ModelPart[] parts={model.head,model.hat,model.body,model.rightArm,model.leftArm,model.rightLeg,model.leftLeg};boolean[] saved=new boolean[parts.length];
+        for(int i=0;i<parts.length;i++){saved[i]=parts[i].visible;parts[i].visible=i<2;}
+        try{return capture(mc,mob);}finally{for(int i=0;i<parts.length;i++)parts[i].visible=saved[i];}
+    }
+    private static int blackPixels(NativeImage image){int count=0;for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++){int p=image.getPixelRGBA(x,y);if((p&255)<=12&&(p>>>8&255)<=12&&(p>>>16&255)<=12)count++;}return count;}
+    private static int uvOutOfRange(HumanoidModel<?> model,JsonObject facts,String key)throws Exception {
+        Field cubesField=ModelPart.class.getDeclaredField("cubes");cubesField.setAccessible(true);
+        Field polygonsField=ModelPart.Cube.class.getDeclaredField("polygons");polygonsField.setAccessible(true);
+        JsonObject parts=new JsonObject();facts.add(key,parts);int invalid=0;
+        var body=java.util.Map.of("head",model.head,"torso",model.body,"right_arm",model.rightArm,"left_arm",model.leftArm,"right_leg",model.rightLeg,"left_leg",model.leftLeg);
+        for(var part:body.entrySet()) {
+            int vertices=0,bad=0;float minimumU=Float.POSITIVE_INFINITY,minimumV=Float.POSITIVE_INFINITY,maximumU=Float.NEGATIVE_INFINITY,maximumV=Float.NEGATIVE_INFINITY;
+            for(Object cube:(List<?>)cubesField.get(part.getValue()))for(Object polygon:(Object[])polygonsField.get(cube)) {
+                Field verticesField=polygon.getClass().getDeclaredField("vertices");verticesField.setAccessible(true);
+                for(Object vertex:(Object[])verticesField.get(polygon)) {
+                    Field uField=vertex.getClass().getDeclaredField("u"),vField=vertex.getClass().getDeclaredField("v");uField.setAccessible(true);vField.setAccessible(true);
+                    float u=uField.getFloat(vertex),v=vField.getFloat(vertex);vertices++;
+                    minimumU=Math.min(minimumU,u);maximumU=Math.max(maximumU,u);minimumV=Math.min(minimumV,v);maximumV=Math.max(maximumV,v);
+                    if(!Float.isFinite(u)||!Float.isFinite(v)||u<0||v<0||u>1||v>1)bad++;
+                }
+            }
+            check(vertices>0,"The actual body part must contain baked geometry: "+part.getKey());
+            JsonObject result=new JsonObject();parts.add(part.getKey(),result);result.addProperty("vertices",vertices);result.addProperty("outside_normalized_uv",bad);
+            result.addProperty("min_u",minimumU);result.addProperty("max_u",maximumU);result.addProperty("min_v",minimumV);result.addProperty("max_v",maximumV);invalid+=bad;
+        }return invalid;
+    }
     private static NativeImage capture(Minecraft mc,Mob mob){return capture(mc,mob,false);}
     private static NativeImage capture(Minecraft mc,Mob mob,boolean dim) {
         TextureTarget target=new TextureTarget(SIZE,SIZE,true,Minecraft.ON_OSX);
@@ -265,7 +461,7 @@ public final class MobRenderRegressionAudit {
             var graphics=new GuiGraphics(mc,mc.renderBuffers().bufferSource());
             renderedMob=mob;postRenderSeen=false;
             var rotation=new Quaternionf().rotationZ((float)Math.PI).rotateY((float)Math.PI+.35F);
-            if(!dim)InventoryScreen.renderEntityInInventory(graphics,SIZE/2F,SIZE-35F,mob instanceof Ghast?32F:110F,new Vector3f(),rotation,null,mob);
+            if(!dim)InventoryScreen.renderEntityInInventory(graphics,SIZE/2F,SIZE-35F,110F,new Vector3f(),rotation,null,mob);
             else {
                 // InventoryScreen's exact native transform/lighting/dispatch sequence, with packed
                 // light0 instead of its hard-coded full light. This distinguishes source-identical
@@ -305,7 +501,7 @@ public final class MobRenderRegressionAudit {
     }
     private static JsonObject initialReport() {
         JsonObject j=new JsonObject();j.addProperty("author","NingMeng123");j.addProperty("timestamp",Instant.now().toString());
-        j.addProperty("scope","real ClientLevel; all 48 native texture lookups; five native InventoryScreen GPU draws; alpha/body pixel regression; ghast charge rendering");
+        j.addProperty("scope","real ClientLevel; all 45 active texture lookups; fourteen native InventoryScreen GPU draws; alpha/body and zombie UV controls; variant heads, shield, wearable bucket and attack poses");
         j.addProperty("property","modern_ite.mobRenderAudit=true");j.addProperty("existing_world_loaded",false);j.addProperty("multiplayer_connected",false);
         j.addProperty("render_target_width",SIZE);j.addProperty("render_target_height",SIZE);j.add("failures",new JsonArray());return j;
     }

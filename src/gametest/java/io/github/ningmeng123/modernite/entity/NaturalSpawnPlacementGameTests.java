@@ -102,10 +102,8 @@ public final class NaturalSpawnPlacementGameTests {
     }
 
     @GameTest(template = "gear_empty")
-    public static void flyingGhastKeepsAirPlacementAndSummonedGroundMobsKeepTheirSpawnReasons(GameTestHelper helper) {
+    public static void summonedGroundMobsKeepTheirSpawnReasons(GameTestHelper helper) {
         try (Site site = new Site(helper)) {
-            helper.assertTrue(SpawnPlacements.isSpawnPositionOk(ExtremeMobs.type(ExtremeKind.REVENANT_GHAST), site.level, site.pos),
-                    "The actual flying family retains unrestricted air placement");
             Mob zombie = site.mob(ExtremeKind.ZOMBIE_IRON_BUCKET);
             for (MobSpawnType reason : List.of(MobSpawnType.SPAWN_EGG, MobSpawnType.COMMAND,
                     MobSpawnType.MOB_SUMMONED, MobSpawnType.CONVERSION)) {

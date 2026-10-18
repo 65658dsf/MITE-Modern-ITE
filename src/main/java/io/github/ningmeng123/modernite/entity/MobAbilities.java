@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.entity.SourceRangedAttackGoal;
+import io.github.ningmeng123.mite.entity.SourceMeleeGoal;
 import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasion;
 import io.github.ningmeng123.modernite.ModernIte;
@@ -13,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.*;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
@@ -35,6 +37,10 @@ import static io.github.ningmeng123.modernite.entity.ExtremeKind.*;
 
 /** Literal ability families translated to modern entities, with persistent stage transitions. @author NingMeng123 */
 public final class MobAbilities {
+    private static final double DARK_GOLEM_LAUNCH_SPEED=15;
+    // Half the apex height of speed 15 with vanilla air gravity .08 and drag (double).98F.
+    // Halving the velocity instead would reach only 37.68% of the golem's height.
+    private static final double ZOMBIE_LAUNCH_SPEED=9.105464833;
     private MobAbilities(){}
     public static int day(Level level){return level instanceof ServerLevel server?(int)Math.min(Integer.MAX_VALUE,BloodMoonInvasion.highestDay(server)):(int)(level.getDayTime()/24000+1);}
     public static boolean underground(Level level){return level.dimension().location().getPath().equals("underworld");}
@@ -43,8 +49,8 @@ public final class MobAbilities {
         boolean nether=l.dimension()==Level.NETHER,under=underground(l),over=l.dimension()==Level.OVERWORLD;
         if(k==ANNIHILATION_SKELETON&&over&&day(l)<33)return false;
         if(!over&&!nether&&!under)return false;
-        if(k==REVENANT_GHAST)return under;
-        if(k==DARK_IRON_GOLEM||k==SKELETON_KNOCKBACK||k==SKELETON_FLOATING||k==SKELETON_LIGHTNING)return under||nether;
+        if(k==SKELETON_FLOATING)return under;
+        if(k==DARK_IRON_GOLEM||k==SKELETON_KNOCKBACK||k==SKELETON_LIGHTNING)return under||nether;
         if(k==WITHER_SKELETON_ARROW)return nether;
         if(k==BLACK_INFERNAL_CREEPER)return over;
         if(k==UNDYING_ZOMBIE_EMPEROR||k==WITCH_LORD||k==WANDERING_WITCH||k==MINER_ZOMBIE)return over||under;
@@ -54,7 +60,6 @@ public final class MobAbilities {
     public static boolean spawnRules(Mob mob,ExtremeKind k,LevelAccessor level,MobSpawnType reason){
         if(reason==MobSpawnType.SPAWN_EGG||reason==MobSpawnType.COMMAND||reason==MobSpawnType.MOB_SUMMONED||reason==MobSpawnType.CONVERSION)return true;
         if(!(mob.level() instanceof ServerLevel server)||!maySpawn(k,server,mob.blockPosition())||level.getDifficulty()==Difficulty.PEACEFUL)return false;
-        if(k==REVENANT_GHAST&&mob.getRandom().nextInt(4)!=0)return false;
         if(k==DARK_IRON_GOLEM&&mob.getRandom().nextInt(9)>=7)return false;
         if(k.family==Family.WITCH&&mob.getRandom().nextInt(100)>=(underground(server)?50:33))return false;
         if(k==ANNIHILATION_SKELETON&&server.dimension()==Level.OVERWORLD
@@ -87,10 +92,7 @@ public final class MobAbilities {
             case ZOMBIE_PIGMAN_LORD -> {health=50;attack=12;}
             case WANDERING_WITCH -> {health=100;speed=.3;}
             case WITCH_LORD -> {health=370;speed=.3;}
-            case PILLAGER -> {health=40;attack=8;speed=.35;}
-            case PILLAGER_LEADER -> {health=320;attack=16;speed=.35;}
-            case DARK_IRON_GOLEM -> {health=(45+raw/6D)*4;attack=30+raw/20D;}
-            case REVENANT_GHAST -> {health=15;attack=6;}
+            case DARK_IRON_GOLEM -> {health=(45+raw/6D)*4;attack=(30+raw/20D)*2;}
             case RED_GHOUL -> {health=20;attack=5;speed=.28;}
             case ZOMBIE_KNOCKBACK -> speed=.3;
             case FISHING_ROD_ZOMBIE -> speed=.27;
@@ -108,6 +110,7 @@ public final class MobAbilities {
     private static void equip(Mob m,EquipmentSlot slot,String...ids){m.setItemSlot(slot,firstItem(ids));}
     public static void enchant(Mob mob,ItemStack s,String id,int level){
         if(s.isEmpty())return;
+        if(s.get(DataComponents.ENCHANTMENTS)==null)s.set(DataComponents.ENCHANTMENTS,ItemEnchantments.EMPTY);
         mob.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolder(ResourceLocation.parse(id)).ifPresent(h->s.enchant(h,level));
     }
     public static int enchantment(ItemStack stack,LivingEntity entity,String suffix){
@@ -122,7 +125,7 @@ public final class MobAbilities {
         }
     }
     public static void initialize(Mob mob,ExtremeMob state){
-        var k=state.extremeKind();var s=state.extremeMemory();if(s.initialized)return;s.initialized=true;
+        var k=state.extremeKind();var s=state.extremeMemory();if(s.initialized){upgradeSavedCombat(mob,k);return;}s.initialized=true;
         s.phaseMaximum=s.phaseCharges=mob.getRandom().nextInt(3)+2;
         if(mob instanceof Zombie zombie)zombie.setCanBreakDoors(true);
         if(k.family==Family.SKELETON)equip(mob,EquipmentSlot.MAINHAND,"minecraft:bow");
@@ -142,12 +145,11 @@ public final class MobAbilities {
             case SKELETON_BLAZE -> enchant(mob,mob.getMainHandItem(),"minecraft:flame",2);
             case WITHER_SKELETON_ARROW -> {equip(mob,EquipmentSlot.MAINHAND,"mite:ancient_metal_bow","minecraft:bow");enchant(mob,mob.getMainHandItem(),"minecraft:punch",2);}
             case SKELETON_ZOMBIE -> {s.spare=firstItem("mite:rusted_iron_sword","minecraft:iron_sword");armor(mob,tier(day(mob.level())),false);}
-            case FISHING_ROD_ZOMBIE -> equip(mob,EquipmentSlot.MAINHAND,"mite:ancient_metal_fishing_rod","minecraft:fishing_rod");
-            case RANDOM_ZOMBIE -> {String[] tiers={"copper","iron","ancient_metal","mithril","adamantium","vibranium"};String material=tiers[mob.getRandom().nextInt(tiers.length)];armor(mob,material,false);equip(mob,EquipmentSlot.MAINHAND,"mite:"+material+"_sword","minecraft:iron_sword");for(var stack:mob.getAllSlots())if(stack.isDamageableItem())stack.setDamageValue(mob.getRandom().nextInt(Math.max(1,stack.getMaxDamage()/2)));}
+            case FISHING_ROD_ZOMBIE -> mob.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
+            case RANDOM_ZOMBIE -> randomEquipment(mob);
             case UNDYING_ZOMBIE_EMPEROR -> {equip(mob,EquipmentSlot.MAINHAND,"modern_ite:club_vibranium","mite:vibranium_sword");enchant(mob,mob.getMainHandItem(),"minecraft:sharpness",5);}
             case ANNIHILATION_SKELETON -> {armor(mob,"adamantium",false);equip(mob,EquipmentSlot.MAINHAND,"mite:vibranium_dagger","minecraft:iron_sword");enchant(mob,mob.getMainHandItem(),"minecraft:knockback",5);}
             case ZOMBIE_PUMPKIN -> equip(mob,EquipmentSlot.HEAD,"minecraft:carved_pumpkin");
-            case PILLAGER_LEADER -> {armor(mob,tier(day(mob.level())),false);mob.setItemSlot(EquipmentSlot.HEAD,net.minecraft.world.entity.raid.Raid.getLeaderBannerInstance(mob.registryAccess().lookupOrThrow(Registries.BANNER_PATTERN)));}
             case MIMIC_ZOMBIE,ZOMBIE_CHAOS,ZOMBIE_INVISIBLE_LOOK_UP -> {for(var slot:EquipmentSlot.values())if(slot!=EquipmentSlot.BODY)mob.setItemSlot(slot,ItemStack.EMPTY);}
             default -> {}
         }
@@ -156,15 +158,55 @@ public final class MobAbilities {
         if(k==INVISIBLE_CREEPER||k==INVISIBLE_REVERSED_CREEPER)mob.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY,Integer.MAX_VALUE,0,false,false));
         configureGoals(mob,k);
         if(k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)mob.setPersistenceRequired();
+        mob.getPersistentData().putInt("modern_ite:combat_revision",1);
+    }
+    private static void upgradeSavedCombat(Mob mob,ExtremeKind kind){
+        var data=mob.getPersistentData();if(data.getInt("modern_ite:combat_revision")>=1)return;
+        if(kind==FISHING_ROD_ZOMBIE&&mob.getMainHandItem().getItem() instanceof FishingRodItem)mob.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
+        if(kind==UNDYING_ZOMBIE_EMPEROR){
+            EquipmentSlot[] slots={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
+            String[] pieces={"helmet","chestplate","leggings","boots"};
+            for(int i=0;i<slots.length;i++){
+                ItemStack armor=mob.getItemBySlot(slots[i]);
+                if(armor.isEmpty()){armor=firstItem("mite:vibranium_"+pieces[i],"minecraft:iron_"+pieces[i]);mob.setItemSlot(slots[i],armor);}
+                enchant(mob,armor,"minecraft:protection",5);
+            }
+        }
+        if(kind==DARK_IRON_GOLEM)stat(mob,Attributes.ATTACK_DAMAGE,(30+day(mob.level())/20D)*2);
+        if(kind==ZOMBIE_LORD){mob.setNoAi(false);mob.setInvulnerable(false);configureGoals(mob,kind);}
+        data.putInt("modern_ite:combat_revision",1);
     }
     private static String tier(int d){return d>=320?"vibranium":d>=192?"adamantium":d>=128?"mithril":d>=64?"ancient_metal":"iron";}
+    private static void randomEquipment(Mob mob){
+        String[] materials={"copper","iron","ancient_metal","mithril","adamantium","vibranium"};
+        EquipmentSlot[] slots={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET,EquipmentSlot.MAINHAND};
+        String[] pieces={"helmet","chestplate","leggings","boots","sword"};
+        for(int i=0;i<slots.length;i++){
+            // Each slot rolls its own presence and material; an unrolled slot stays empty.
+            ItemStack stack=ItemStack.EMPTY;
+            if(mob.getRandom().nextFloat()<(slots[i]==EquipmentSlot.MAINHAND?.7F:.5F)){
+                String material=materials[mob.getRandom().nextInt(materials.length)];
+                stack=firstItem("mite:"+material+"_"+pieces[i],"minecraft:iron_"+pieces[i]);
+                if(stack.isDamageableItem())stack.setDamageValue(mob.getRandom().nextInt(Math.max(1,stack.getMaxDamage()/2)));
+            }
+            mob.setItemSlot(slots[i],stack);
+        }
+    }
     public static void configureGoals(Mob mob,ExtremeKind k){
-        if(mob instanceof Zombie zombie&&io.github.ningmeng123.mite.entity.R196DiggerGoal.first(zombie)==null)
-            zombie.goalSelector.addGoal(1,new io.github.ningmeng123.mite.entity.R196DiggerGoal(zombie));
+        if(mob instanceof Zombie zombie){
+            if(io.github.ningmeng123.mite.entity.R196DiggerGoal.first(zombie)==null)
+                zombie.goalSelector.addGoal(1,new io.github.ningmeng123.mite.entity.R196DiggerGoal(zombie));
+            zombie.goalSelector.removeAllGoals(g->g instanceof MeleeAttackGoal);
+            if(SourceMeleeGoal.first(zombie)==null)zombie.goalSelector.addGoal(2,new SourceMeleeGoal(zombie,1,true));
+        }
         if(mob instanceof AbstractSkeleton skeleton){
-            skeleton.goalSelector.removeAllGoals(g->g instanceof RangedBowAttackGoal<?>||g instanceof RangedAttackGoal||g instanceof MeleeAttackGoal||g instanceof SourceRangedAttackGoal);
-            if(mob.getMainHandItem().getItem() instanceof BowItem)skeleton.goalSelector.addGoal(4,new SourceRangedAttackGoal(skeleton,1,k==SKELETON_FAST_ARROW?30:60,15));
-            else skeleton.goalSelector.addGoal(4,new MeleeAttackGoal(skeleton,1.15,false));
+            boolean bow=mob.getMainHandItem().getItem() instanceof BowItem;
+            skeleton.goalSelector.removeAllGoals(g->g instanceof RangedBowAttackGoal<?>||g instanceof RangedAttackGoal||g instanceof MeleeAttackGoal
+                ||bow&&g instanceof SourceMeleeGoal||!bow&&g instanceof SourceRangedAttackGoal);
+            if(bow){
+                if(skeleton.goalSelector.getAvailableGoals().stream().noneMatch(g->g.getGoal() instanceof SourceRangedAttackGoal))
+                    skeleton.goalSelector.addGoal(4,new SourceRangedAttackGoal(skeleton,1,k==SKELETON_FAST_ARROW?30:60,15));
+            }else if(SourceMeleeGoal.first(skeleton)==null)skeleton.goalSelector.addGoal(4,new SourceMeleeGoal(skeleton,1.15,true));
         }
         if(mob instanceof Witch witch){
             witch.goalSelector.removeAllGoals(g->g instanceof RangedAttackGoal||g instanceof SourceRangedAttackGoal);
@@ -191,14 +233,11 @@ public final class MobAbilities {
         if(s.cooldown>0&&k!=ZOMBIE_BOSS)s.cooldown--;if(s.fleeingPotion>0)s.fleeingPotion--;
         if(!(mob.level() instanceof ServerLevel level))return;
         LivingEntity target=mob.getTarget();
-        if(k==REVENANT_GHAST&&mob instanceof Ghast ghast)
-            ghast.setCharging(target!=null&&target.isAlive()&&mob.distanceToSqr(target)<=4096
-                &&mob.getSensing().hasLineOfSight(target)&&s.cooldown>0&&s.cooldown<10);
+        if(k==ZOMBIE_SIEGE)for(var passenger:mob.getPassengers())if(passenger instanceof Zombie rider){rider.getPersistentData().putBoolean("modern_ite:siege_rider",true);if(!rider.isBaby())rider.setBaby(true);}
         if(!s.entourage){
             s.entourage=true;
             if(k==UNDYING_ZOMBIE_EMPEROR){summon(mob,ZOMBIE_LORD,2);summon(mob,WANDERING_WITCH,2);}
-            if(k==PILLAGER_LEADER)summon(mob,PILLAGER,3);
-            if(k==ZOMBIE_SIEGE){Zombie baby=EntityType.ZOMBIE.create(level);if(baby!=null){baby.setBaby(true);baby.moveTo(mob.position());level.addFreshEntity(baby);baby.startRiding(mob,true);}}
+            if(k==ZOMBIE_SIEGE){Zombie baby=EntityType.ZOMBIE.create(level);if(baby!=null){baby.getPersistentData().putBoolean("modern_ite:siege_rider",true);baby.setBaby(true);baby.moveTo(mob.position());level.addFreshEntity(baby);baby.startRiding(mob,true);}}
         }
         if(k==PHASE_CREEPER){if(s.clock%100==0&&s.phaseCharges<s.phaseMaximum)s.phaseCharges++;if(target!=null&&s.clock%10==0&&mob.getRandom().nextInt(3)==0&&mob.distanceToSqr(target)>9)teleportNear(mob,target);}
         if(k==ANNIHILATION_SKELETON&&s.stage>0&&++s.summons>=3600){mob.spawnAnim();mob.discard();return;}
@@ -213,9 +252,9 @@ public final class MobAbilities {
         }
         if(k.mirrors()&&target instanceof Player&&s.clock%20==0)mirror(mob,target,s);
         if(k==DRAGON_ZOMBIE&&s.clock%20==0)for(var zombie:level.getEntitiesOfClass(Zombie.class,mob.getBoundingBox().inflate(16,8,16),z->z!=mob)){zombie.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,40));zombie.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,40));}
+        if(k==DRAGON_ZOMBIE&&s.cooldown==0&&mob.distanceToSqr(target)<=36&&mob.getSensing().hasLineOfSight(target)){dragonBreath(mob,target);s.cooldown=100;}
         if(k==FISHING_ROD_ZOMBIE&&s.clock%20==0&&mob.distanceToSqr(target)<=225&&mob.getSensing().hasLineOfSight(target))effect(target,"big_head",100,0);
-        if(k==ZOMBIE_GHAST&&mob.distanceToSqr(target)<=4096&&mob.getSensing().hasLineOfSight(target)&&s.cooldown==0){for(int i=0;i<(level.dimension()==Level.NETHER?5:1);i++)InfernalFireball.shoot(mob,target,false,level.dimension()==Level.NETHER?1.5:0);s.cooldown=60;}
-        if(k==REVENANT_GHAST&&mob.distanceToSqr(target)<=4096&&mob.getSensing().hasLineOfSight(target)&&s.cooldown==0){InfernalFireball.shoot(mob,target,true,0);s.cooldown=60;}
+        if(k==ZOMBIE_GHAST&&mob.distanceToSqr(target)<=4096&&mob.getSensing().hasLineOfSight(target)&&s.cooldown==0){mob.playSound(SoundEvents.GHAST_WARN,1.5F,1F);mob.playSound(SoundEvents.GHAST_SHOOT,1F,1F);for(int i=0;i<(level.dimension()==Level.NETHER?5:1);i++)InfernalFireball.shoot(mob,target,false,level.dimension()==Level.NETHER?1.5:0);s.cooldown=60;}
         if(k==ZOMBIE_DOOR){
             if(!s.exchangerTried){s.exchangerTried=true;if(mob.getRandom().nextInt(10)==0)summon(mob,EXCHANGER,1);}
             if(s.cooldown==0&&s.summons<10){summonZombie(mob,1);s.summons++;s.cooldown=200;}
@@ -248,13 +287,43 @@ public final class MobAbilities {
     }
     private static void mirror(Mob mob,LivingEntity player,MobMemory s){
         if(!s.mirrored){if(player.getMaxHealth()>mob.getMaxHealth()){stat(mob,Attributes.MAX_HEALTH,player.getMaxHealth());mob.setHealth(mob.getMaxHealth());}s.mirrored=true;}
-        for(var slot:new EquipmentSlot[]{EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET,EquipmentSlot.MAINHAND}){mob.setItemSlot(slot,player.getItemBySlot(slot).copy());mob.setDropChance(slot,0);}
+        for(var slot:new EquipmentSlot[]{EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET,EquipmentSlot.MAINHAND}){if(!ItemStack.isSameItemSameComponents(mob.getItemBySlot(slot),player.getItemBySlot(slot)))mob.setItemSlot(slot,player.getItemBySlot(slot).copy());mob.setDropChance(slot,0);}
         for(var p:player.getActiveEffects())mob.addEffect(new MobEffectInstance(p));configureGoals(mob,((ExtremeMob)mob).extremeKind());
     }
     public static void startCaller(Mob mob,MobMemory s){if(s.stage!=0)return;s.stage=1;s.clock=0;summonZombie(mob,4);}
+    public static void dragonBreath(Mob mob,LivingEntity target){
+        if(!(mob.level() instanceof ServerLevel level))return;
+        Vec3 mouth=mob.getEyePosition(),end=target.position();
+        Vec3 delta=end.subtract(mouth);
+        // A short visible spray ends in a dragon cloud whose radius never grows past 1.5 blocks.
+        for(int i=0;i<=12;i++){
+            Vec3 point=mouth.add(delta.scale(i/12D));
+            level.sendParticles(ParticleTypes.DRAGON_BREATH,point.x,point.y,point.z,3,.08,.08,.08,.01);
+        }
+        AreaEffectCloud cloud=new AreaEffectCloud(level,end.x,end.y+.05,end.z);
+        cloud.setOwner(mob);cloud.setParticle(ParticleTypes.DRAGON_BREATH);cloud.setRadius(1.5F);
+        cloud.setRadiusPerTick(0);cloud.setRadiusOnUse(0);cloud.setWaitTime(10);cloud.setDuration(80);
+        cloud.addEffect(new MobEffectInstance(MobEffects.HARM,1,1));level.addFreshEntity(cloud);
+        mob.playSound(SoundEvents.ENDER_DRAGON_SHOOT,1,.85F);
+    }
+    public static void witchSupportTick(Mob witch){
+        if(!(witch.level() instanceof ServerLevel level)||!(witch.getTarget() instanceof Player target)
+                ||!target.isAlive()||witch.distanceToSqr(target)>1024)return;
+        long now=level.getGameTime();var data=witch.getPersistentData();
+        if(data.getLong("modern_ite:witch_next_summon")>now)return;
+        data.putLong("modern_ite:witch_next_summon",now+160);
+        var minions=level.getEntitiesOfClass(Mob.class,witch.getBoundingBox().inflate(48,24,48),m->m.isAlive()
+            &&m.getPersistentData().hasUUID("modern_ite:summoner")&&m.getPersistentData().getUUID("modern_ite:summoner").equals(witch.getUUID()));
+        int room=8-minions.size();
+        for(int i=0;i<Math.min(room,4);i++){
+            String type=i%2==0?"mite:vampire_bat":witch.getRandom().nextBoolean()?"minecraft:spider":"minecraft:cave_spider";
+            summonId(witch,type,1);
+        }
+        for(var minion:minions)if(minion.getTarget()!=target)minion.setTarget(target);
+    }
     private static void witchTick(Mob mob,LivingEntity target,MobMemory s){
         if(mob.distanceToSqr(target)<16&&s.fleeingPotion==0){target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,20+mob.getRandom().nextInt(30)));throwPotion(mob,target);s.fleeingPotion=80;}
-        if(mob.getLastHurtByMob() instanceof Player&&s.bats<8&&s.cooldown==0){int count=8-s.bats;for(int i=0;i<count;i++)summonId(mob,mob.getRandom().nextInt(10)>8?"mite:nightwing":"mite:giant_vampire_bat",1);s.bats=8;s.cooldown=160;}
+        witchSupportTick(mob);
         if(!s.cursed&&target instanceof ServerPlayer player&&mob.distanceToSqr(player)<1024&&player.hasLineOfSight(mob)){
             if(mob instanceof Witch witch){
                 io.github.ningmeng123.mite.curse.PlayerCurses.schedule(player,witch,
@@ -321,13 +390,23 @@ public final class MobAbilities {
             case WITHER_CREEPER -> target.addEffect(new MobEffectInstance(MobEffects.WITHER,160));
             case WITHER_SKELETON_ARROW -> target.addEffect(new MobEffectInstance(MobEffects.WITHER,300));
             case SKELETON_FLOATING -> target.addEffect(new MobEffectInstance(MobEffects.LEVITATION,200));
-            case ZOMBIE_FLY_AWAY -> knock(mob,target,2,Math.min(1+Math.floor(day(mob.level())/32D)*.4,4));
-            case ZOMBIE_KNOCKBACK -> knock(mob,target,3.2,.16);
-            case SKELETON_KNOCKBACK -> knock(mob,target,.45,1.25);
-            case DARK_IRON_GOLEM -> knock(mob,target,.25,15);
+            case SKELETON_KNOCKBACK -> knock(mob,target,.6,3.2);
             default -> {}
         }
     }
-    private static void knock(Mob mob,LivingEntity target,double horizontal,double vertical){Vec3 d=target.position().subtract(mob.position()).multiply(1,0,1).normalize();if(d.lengthSqr()<.001)d=mob.getLookAngle().multiply(1,0,1).normalize();target.setDeltaMovement(target.getDeltaMovement().add(d.scale(horizontal)).add(0,vertical,0));target.hurtMarked=true;}
+    /** Apply after native hurt, weapon knockback and iron-golem lift have all finished. */
+    public static void afterMeleeHit(Mob mob,ExtremeMob state,LivingEntity target){
+        if(mob.level().isClientSide||!target.isAlive())return;
+        var kind=state.extremeKind();
+        if(kind!=ZOMBIE_FLY_AWAY&&kind!=ZOMBIE_KNOCKBACK&&kind!=DARK_IRON_GOLEM)return;
+        if(kind==ZOMBIE_FLY_AWAY){mob.swing(InteractionHand.MAIN_HAND);mob.playSound(SoundEvents.IRON_GOLEM_ATTACK,1,.85F);}
+        Vec3 away=target.position().subtract(mob.position()).multiply(1,0,1).normalize();
+        if(away.lengthSqr()<.001)away=mob.getLookAngle().multiply(1,0,1).normalize();
+        // Keep a small separation from the attacker; existing sprint/fall speed cannot turn this into a horizontal throw.
+        target.setDeltaMovement(away.x*.25,kind==DARK_IRON_GOLEM?DARK_GOLEM_LAUNCH_SPEED:ZOMBIE_LAUNCH_SPEED,away.z*.25);
+        target.hurtMarked=true;
+        if(target instanceof ServerPlayer player)LaunchVelocityPayload.queue(player);
+    }
+    private static void knock(Mob mob,LivingEntity target,double horizontal,double vertical){Vec3 d=target.position().subtract(mob.position()).multiply(1,0,1).normalize();if(d.lengthSqr()<.001)d=mob.getLookAngle().multiply(1,0,1).normalize();target.setDeltaMovement(target.getDeltaMovement().add(d.scale(horizontal)).add(0,vertical,0));target.hurtMarked=true;if(target instanceof ServerPlayer player)LaunchVelocityPayload.queue(player);}
     public static void announce(Mob boss,String message){if(boss.level() instanceof ServerLevel level)for(var p:level.players())p.sendSystemMessage(Component.literal(message));}
 }

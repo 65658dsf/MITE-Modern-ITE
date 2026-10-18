@@ -147,6 +147,8 @@ public final class ExtremeNativeMobs {
     @SubscribeEvent public static void tick(EntityTickEvent.Post event){
         if(event.getEntity() instanceof Player p&&!p.level().isClientSide&&p.getPersistentData().getLong("modern_ite:boss_strength_suppression")>p.level().getGameTime())p.removeEffect(MobEffects.DAMAGE_BOOST);
         if(!(event.getEntity() instanceof Mob m)||!(m.level() instanceof ServerLevel level)||!m.isAlive())return;
+        if(m instanceof Zombie zombie&&m.getPersistentData().getBoolean("modern_ite:siege_rider")&&!zombie.isBaby())zombie.setBaby(true);
+        if(m instanceof Witch&&!(m instanceof ExtremeMob))MobAbilities.witchSupportTick(m);
         if(m instanceof WitherBoss wither){
             var t=m.getPersistentData();int invul=wither.getInvulnerableTicks();
             if(invul>0){t.putBoolean("modern_ite:wither_charging",true);if(m.tickCount%10==0)wither.heal(10);}

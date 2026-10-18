@@ -22,8 +22,7 @@ public enum ExtremeKind {
     INVISIBLE_REVERSED_CREEPER("隐形颠倒苦力怕", Family.CREEPER, 0, 2), BLACK_INFERNAL_CREEPER("黑暗地狱苦力怕", Family.CREEPER, 0, 2),
     FLASH_CREEPER("闪光苦力怕", Family.CREEPER, 0, 3), WITHER_CREEPER("凋零苦力怕", Family.CREEPER, 0, 5),
     WITCH_LORD("女巫领主", Family.WITCH, 96, 1), RED_GHOUL("红色食尸鬼", Family.ZOMBIE, 0, 10),
-    REVENANT_GHAST("亡灵恶魂", Family.GHAST, 128, 1), DARK_IRON_GOLEM("暗黑铁傀儡", Family.GOLEM, 0, 1),
-    PILLAGER("掠夺者", Family.PILLAGER, 33, 0), PILLAGER_LEADER("掠夺者首领", Family.PILLAGER, 65, 0),
+    DARK_IRON_GOLEM("暗黑铁傀儡", Family.GOLEM, 0, 1),
     ZOMBIE_LORD("僵尸领主", Family.ZOMBIE, 0, 2), WANDERING_WITCH("流浪女巫", Family.WITCH, 65, 1),
     ZOMBIE_PIGMAN_LORD("僵尸猪人领主", Family.PIGMAN, 0, 1), ANNIHILATION_SKELETON("湮灭骷髅", Family.SKELETON, 0, 1);
 
@@ -37,14 +36,14 @@ public enum ExtremeKind {
     public String id() { return name().toLowerCase(java.util.Locale.ROOT); }
     public boolean boss() { return switch (this) {
         case ZOMBIE_BOSS, ZOMBIE_ELITE_LORD, UNDYING_ZOMBIE_EMPEROR, SKELETON_ELITE_LORD,
-                WITCH_LORD, PILLAGER_LEADER, ANNIHILATION_SKELETON -> true;
+                WITCH_LORD, ANNIHILATION_SKELETON -> true;
         default -> false;
     }; }
     public boolean mirrors() { return this == MIRROR_ZOMBIE || this == MIRROR_SKELETON; }
     public boolean fireproof() { return boss() || switch (this) {
         case EXCHANGER, ZOMBIE_DOOR, DRAGON_ZOMBIE, ZOMBIE_PUMPKIN, FISHING_ROD_ZOMBIE,
                 SKELETON_BLAZE, SKELETON_LIGHTNING, WITHER_SKELETON_ARROW, BLACK_INFERNAL_CREEPER,
-                REVENANT_GHAST, DARK_IRON_GOLEM, ZOMBIE_LORD, ZOMBIE_PIGMAN_LORD -> true;
+                DARK_IRON_GOLEM, ZOMBIE_LORD, ZOMBIE_PIGMAN_LORD -> true;
         default -> false;
     }; }
 }

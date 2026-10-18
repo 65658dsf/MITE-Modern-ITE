@@ -3,35 +3,7 @@
   "minVersion": "0.8",
   "package": "io.github.ningmeng123.modernite.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [
-    "GearWearMixin",
-    "PlayerShieldWearMixin",
-    "MobShieldWearMixin",
-    "ExtensionMiningMixin",
-    "EnchantedGuardItemMixin",
-    "ExtremeEconomyMixin",
-    "EconomyProfessionMixin",
-    "SourceBeaconCraftingMixin",
-    "SourceCraftingSpeedMixin",
-    "SourceSpawnerSpeedMixin",
-    "entity.SourceDisarmImmunityMixin",
-    "entity.ElementalMaterialMixin",
-    "entity.DragonCombatMixin",
-    "entity.SourceMobIdentityMixin",
-    "entity.SourceMobAiMixin",
-    "entity.PredictiveSkeletonAimingMixin",
-    "entity.MinerDiggingMixin",
-    "entity.WitherCombatMixin",
-    "FurnaceProfilesMixin"
-  ],
-  "client": [
-    "client.ControlLookMixin",
-    "client.LanternLightTextureMixin",
-    "entity.client.ElementalTextureMixin",
-    "client.JeiForgeSidebarMixin",
-    "client.JeiFurnaceClickAreaMixin"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  }
+  "mixins": ["GearWearMixin", "PlayerShieldWearMixin", "MobShieldWearMixin", "FurnaceProfilesMixin", "ExtensionMiningMixin", "EnchantedGuardItemMixin", "ExtremeEconomyMixin", "EconomyProfessionMixin", "SourceBeaconCraftingMixin", "SourceCraftingSpeedMixin", "SourceSpawnerSpeedMixin", "entity.SiegeRiderAgeMixin", "entity.PillagerCrossbowMixin", "entity.PredictiveSkeletonAimingMixin", "entity.SourceDisarmImmunityMixin", "entity.ElementalMaterialMixin", "entity.DragonCombatMixin", "entity.SourceMobIdentityMixin", "entity.SourceMobAiMixin", "entity.MinerDiggingMixin", "entity.WitherCombatMixin"],
+  "client": ["client.ControlLookMixin", "client.BigHeadModelMixin", "client.LanternLightTextureMixin", "client.JeiForgeSidebarMixin", "client.JeiFurnaceClickAreaMixin", "entity.client.ElementalTextureMixin"],
+  "injectors": { "defaultRequire": 1 }
 }

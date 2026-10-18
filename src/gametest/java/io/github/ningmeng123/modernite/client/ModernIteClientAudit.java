@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.resources.metadata.animation.AnimationMetadataSection;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -115,7 +116,7 @@ public final class ModernIteClientAudit {
         Map<EntityType<?>, EntityRenderer<?>> instances = (Map<EntityType<?>, EntityRenderer<?>>)field.get(mc.getEntityRenderDispatcher());
         JsonArray entries = new JsonArray(); report.add("renderers", entries);
         Set<EntityType<?>> creatures = new HashSet<>();
-        check(ExtremeKind.values().length == 48, "Expected the selected 48 source creature identities");
+        check(ExtremeKind.values().length == 45, "Expected 45 creature identities after the three removals");
         for (ExtremeKind kind : ExtremeKind.values()) {
             EntityType<?> type = ExtremeMobs.type(kind);
             creatures.add(type);
@@ -163,6 +164,19 @@ public final class ModernIteClientAudit {
                 check(cached != null && cached != missing, "Missing native item-renderer model cache: " + id);
                 Set<String> sprites = new HashSet<>();
                 sprite(model.getParticleIcon(), sprites, id);
+                if (id.getPath().equals("club_vibranium")) {
+                    var contents = model.getParticleIcon().contents();
+                    long frames = contents.getUniqueFrames().count();
+                    var animation = contents.metadata().getSection(AnimationMetadataSection.SERIALIZER).orElseThrow();
+                    check(contents.width() == 128 && contents.height() == 128,
+                        "Vibranium club must stitch one square frame, not the entire animation strip");
+                    check(frames == 8 && animation.getDefaultFrameTime() == 3,
+                        "Vibranium club must retain all eight source frames at three ticks per frame");
+                    facts.addProperty("animation_frame_width", contents.width());
+                    facts.addProperty("animation_frame_height", contents.height());
+                    facts.addProperty("animation_frames", frames);
+                    facts.addProperty("animation_frame_ticks", animation.getDefaultFrameTime());
+                }
                 int quads = quadSprites(model, null, sprites, id);
                 for (Direction face : Direction.values()) quads += quadSprites(model, face, sprites, id);
                 facts.addProperty("model", model.getClass().getName());

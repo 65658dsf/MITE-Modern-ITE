@@ -168,12 +168,12 @@ public final class ResourceContentGameTests {
         var leaves=ExtremeContent.MAPLE_LEAVES.get().defaultBlockState();BlockPos pos=h.absolutePos(new BlockPos(1,1,1));int saplings=0;
         for(int i=0;i<400;i++)for(ItemStack drop:Block.getDrops(leaves,h.getLevel(),pos,null))if(drop.is(ExtremeContent.MAPLE_SAPLING.get().asItem()))saplings+=drop.getCount();
         h.assertTrue(saplings>0,"Actual natural maple-leaf loot can renew the tree from saplings");
-        for(ExtremeKind kind:new ExtremeKind[]{ExtremeKind.PILLAGER,ExtremeKind.ZOMBIE_IRON_BUCKET}) {
+        for(ExtremeKind kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_IRON_BUCKET}) {
             var mob=ExtremeMobs.type(kind).create(h.getLevel());MobAbilities.initialize(mob,(ExtremeMob)mob);
-            boolean pillager=kind==ExtremeKind.PILLAGER;var slot=pillager?EquipmentSlot.MAINHAND:EquipmentSlot.HEAD;
-            h.assertTrue(mob.getItemBySlot(slot).is(pillager?ExtremeContent.CROSSBOW.get():ExtremeContent.BUCKET_HELMET.get()),"Non-craftable equipment is really equipped by its natural source creature");
+            var slot=EquipmentSlot.HEAD;
+            h.assertTrue(mob.getItemBySlot(slot).is(ExtremeContent.BUCKET_HELMET.get()),"Non-craftable equipment is really equipped by its natural source creature");
             var saved=new CompoundTag();mob.saveWithoutId(saved);
-            h.assertTrue(saved.getList(pillager?"HandDropChances":"ArmorDropChances",Tag.TAG_FLOAT).getFloat(pillager?0:3)>0,"Source creature retains a positive natural equipment drop chance");mob.discard();
+            h.assertTrue(saved.getList("ArmorDropChances",Tag.TAG_FLOAT).getFloat(3)>0,"Source creature retains a positive natural equipment drop chance");mob.discard();
         }h.succeed();
     }
 }

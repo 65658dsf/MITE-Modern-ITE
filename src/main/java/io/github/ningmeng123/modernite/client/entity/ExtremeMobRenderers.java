@@ -11,11 +11,14 @@ import net.minecraft.client.model.WitchModel;
 import net.minecraft.client.model.SkeletonModel;
 import net.minecraft.client.model.ZombieModel;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.dragon.DragonHeadModel;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.*;
+import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.IronGolem;
@@ -30,12 +33,34 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 public final class ExtremeMobRenderers {
     private static final ModelLayerLocation CALLER=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"zombie_caller"),"main");
     private static final ModelLayerLocation LEGACY_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"legacy_zombie"),"main");
+    private static final ModelLayerLocation STRONG_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"zombie_fly_away_uv64"),"main");
     private static final ModelLayerLocation SKELETON_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"skeleton_zombie"),"main");
+    private static final ModelLayerLocation HEADLESS_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"headless_zombie"),"main");
+    private static final ModelLayerLocation GHAST_HEAD=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"zombie_ghast_head"),"main");
+    private static final ModelLayerLocation DRAGON_HEAD=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"zombie_dragon_head"),"main");
+    private static final ModelLayerLocation RUN_CREEPER=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"run_creeper"),"main");
+    private static final ModelLayerLocation PHASE_CREEPER=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"phase_creeper"),"main");
+    private static final ModelLayerLocation CHAOS_CREEPER=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"chaos_creeper"),"main");
     private ExtremeMobRenderers(){}
     @SubscribeEvent public static void layers(EntityRenderersEvent.RegisterLayerDefinitions event){
         event.registerLayerDefinition(CALLER,CallerModel::layer);
         event.registerLayerDefinition(LEGACY_ZOMBIE,()->LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE,0),64,32));
+        event.registerLayerDefinition(STRONG_ZOMBIE,ExtremeMobRenderers::strongZombieLayer);
         event.registerLayerDefinition(SKELETON_ZOMBIE,()->LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE,0),64,64));
+        event.registerLayerDefinition(HEADLESS_ZOMBIE,VariantZombieModel::headlessLayer);
+        event.registerLayerDefinition(GHAST_HEAD,SpeciesHeadLayer::ghastLayer);
+        event.registerLayerDefinition(DRAGON_HEAD,DragonHeadModel::createHeadLayer);
+        event.registerLayerDefinition(RUN_CREEPER,()->VariantCreeperModel.layer(ExtremeKind.RUN_CREEPER));
+        event.registerLayerDefinition(PHASE_CREEPER,()->VariantCreeperModel.layer(ExtremeKind.PHASE_CREEPER));
+        event.registerLayerDefinition(CHAOS_CREEPER,()->VariantCreeperModel.layer(ExtremeKind.CHAOS_CREEPER));
+    }
+    private static LayerDefinition strongZombieLayer(){
+        // The source ModelZombie uses 64-high UVs even though this PNG is only 32 pixels tall.
+        var mesh=HumanoidModel.createMesh(CubeDeformation.NONE,0);
+        // The source skin's opaque green outer head would cover its actual face and eyes.
+        // Keep the required hat node empty; separately rendered armor helmets still work.
+        mesh.getRoot().addOrReplaceChild("hat",CubeListBuilder.create(),PartPose.ZERO);
+        return LayerDefinition.create(mesh,64,64);
     }
     private static ResourceLocation texture(String name){return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"textures/entity/source/"+name+".png");}
     private static String source(ExtremeKind k){return switch(k){
@@ -56,7 +81,17 @@ public final class ExtremeMobRenderers {
                 case ZOMBIE -> new ZombieRenderer(context){
                     {
                         if(kind==ExtremeKind.ZOMBIE_CALLER)this.model=new CallerModel(context.bakeLayer(CALLER));
-                        if(kind==ExtremeKind.ZOMBIE_FLY_AWAY||kind==ExtremeKind.RED_GHOUL)this.model=new ZombieModel<>(context.bakeLayer(LEGACY_ZOMBIE));
+                        if(kind==ExtremeKind.ZOMBIE_FLY_AWAY)this.model=new VariantZombieModel(context.bakeLayer(STRONG_ZOMBIE),kind);
+                        if(kind==ExtremeKind.FISHING_ROD_ZOMBIE||kind==ExtremeKind.ZOMBIE_DOOR)this.model=new VariantZombieModel(context.bakeLayer(ModelLayers.ZOMBIE),kind);
+                        if(kind==ExtremeKind.ZOMBIE_GHAST||kind==ExtremeKind.DRAGON_ZOMBIE){
+                            this.model=new VariantZombieModel(context.bakeLayer(HEADLESS_ZOMBIE),kind);
+                            addLayer(new SpeciesHeadLayer(this,kind,context.bakeLayer(kind==ExtremeKind.ZOMBIE_GHAST?GHAST_HEAD:DRAGON_HEAD)));
+                        }
+                        if(kind==ExtremeKind.ZOMBIE_DOOR){
+                            layers.removeIf(layer->layer instanceof ItemInHandLayer);
+                            addLayer(new DoorShieldLayer(this));
+                        }
+                        if(kind==ExtremeKind.RED_GHOUL)this.model=new ZombieModel<>(context.bakeLayer(LEGACY_ZOMBIE));
                         if(kind==ExtremeKind.ZOMBIE_CHAOS||kind==ExtremeKind.ZOMBIE_INVISIBLE_LOOK_UP)this.model=new ZombieModel<Zombie>(context.bakeLayer(ModelLayers.ZOMBIE)){
                             @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,0x0DFFFFFF);}
                         };
@@ -74,15 +109,24 @@ public final class ExtremeMobRenderers {
                         if(kind==ExtremeKind.ZOMBIE_JUMP){pose.translate(0,mob.getBbHeight()+.1,0);pose.mulPose(Axis.ZP.rotationDegrees(180));}
                     }
                 };
-                case SKELETON -> new SkeletonRenderer(context){
+                case SKELETON -> new SkeletonRenderer<AbstractSkeleton>(context,
+                        kind==ExtremeKind.WITHER_SKELETON_ARROW?ModelLayers.WITHER_SKELETON:ModelLayers.SKELETON,
+                        kind==ExtremeKind.WITHER_SKELETON_ARROW?ModelLayers.WITHER_SKELETON_INNER_ARMOR:ModelLayers.SKELETON_INNER_ARMOR,
+                        kind==ExtremeKind.WITHER_SKELETON_ARROW?ModelLayers.WITHER_SKELETON_OUTER_ARMOR:ModelLayers.SKELETON_OUTER_ARMOR){
                     {if(kind==ExtremeKind.SKELETON_ZOMBIE)this.model=new SkeletonModel<>(context.bakeLayer(SKELETON_ZOMBIE));if(kind==ExtremeKind.ANNIHILATION_SKELETON)addLayer(new SourceGlowLayer<AbstractSkeleton,SkeletonModel<AbstractSkeleton>>(this,skeleton->texture("skeleton/annihilation_skeleton_glow")));}
-                    @Override public ResourceLocation getTextureLocation(AbstractSkeleton skeleton){return source(kind)==null?super.getTextureLocation(skeleton):texture(source(kind));}
+                    @Override public ResourceLocation getTextureLocation(AbstractSkeleton skeleton){return kind==ExtremeKind.WITHER_SKELETON_ARROW?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/wither_skeleton.png"):source(kind)==null?super.getTextureLocation(skeleton):texture(source(kind));}
+                    @Override protected void scale(AbstractSkeleton skeleton,PoseStack pose,float partial){super.scale(skeleton,pose,partial);if(kind==ExtremeKind.WITHER_SKELETON_ARROW)pose.scale(1.2F,1.2F,1.2F);}
                 };
                 case CREEPER -> new CreeperRenderer(context){
-                    {if(kind==ExtremeKind.INVISIBLE_CREEPER||kind==ExtremeKind.INVISIBLE_REVERSED_CREEPER)this.model=new CreeperModel<Creeper>(context.bakeLayer(ModelLayers.CREEPER)){
+                    {
+                    if(kind==ExtremeKind.RUN_CREEPER||kind==ExtremeKind.PHASE_CREEPER||kind==ExtremeKind.CHAOS_CREEPER)
+                        this.model=new VariantCreeperModel(context.bakeLayer(kind==ExtremeKind.RUN_CREEPER?RUN_CREEPER:kind==ExtremeKind.PHASE_CREEPER?PHASE_CREEPER:CHAOS_CREEPER),kind);
+                    if(kind==ExtremeKind.PHASE_CREEPER)addLayer(new SourceGlowLayer<Creeper,CreeperModel<Creeper>>(this,creeper->ResourceLocation.withDefaultNamespace("textures/entity/enderman/enderman_eyes.png")));
+                    if(kind==ExtremeKind.CHAOS_CREEPER)addLayer(new ChaosArrowLayer(this));
+                    if(kind==ExtremeKind.INVISIBLE_CREEPER||kind==ExtremeKind.INVISIBLE_REVERSED_CREEPER)this.model=new CreeperModel<Creeper>(context.bakeLayer(ModelLayers.CREEPER)){
                         @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,0x0DFFFFFF);}
                     };}
-                    @Override public ResourceLocation getTextureLocation(Creeper creeper){return texture(source(kind));}
+                    @Override public ResourceLocation getTextureLocation(Creeper creeper){return kind==ExtremeKind.PHASE_CREEPER?ResourceLocation.withDefaultNamespace("textures/block/black_concrete.png"):texture(source(kind));}
                     @Override protected RenderType getRenderType(Creeper creeper,boolean visible,boolean translucent,boolean outline){
                         return kind==ExtremeKind.INVISIBLE_CREEPER||kind==ExtremeKind.INVISIBLE_REVERSED_CREEPER?RenderType.entityTranslucent(getTextureLocation(creeper)):super.getRenderType(creeper,visible,translucent,outline);
                     }

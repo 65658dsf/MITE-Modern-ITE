@@ -9,5 +9,5 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(MouseHandler.class)
 public abstract class ControlLookMixin {
     @ModifyArgs(method="turnPlayer",at=@At(value="INVOKE",target="Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"))
-    private void modernite$sensitivity(Args args){var player=Minecraft.getInstance().player;if(player!=null&&player.hasEffect(ExtremeEffects.VALUES.get("fast_sensitivity"))){args.set(0,(double)args.get(0)*5);args.set(1,(double)args.get(1)*5);}}
+    private void modernite$sensitivity(Args args){var player=Minecraft.getInstance().player;if(player!=null&&player.hasEffect(ExtremeEffects.VALUES.get("fast_sensitivity"))){args.set(0,(double)args.get(0)*12);args.set(1,(double)args.get(1)*12);}}
 }

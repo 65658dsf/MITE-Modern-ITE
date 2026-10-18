@@ -21,7 +21,7 @@ public final class ExtremeMobGameTests {
     private ExtremeMobGameTests(){}
     private static Mob mob(GameTestHelper h,ExtremeKind k){var m=ExtremeMobs.type(k).create(h.getLevel());h.assertTrue(m!=null,"Registered mob creates: "+k);m.moveTo(h.absolutePos(new BlockPos(1,2,1)).getCenter());MobAbilities.initialize(m,(ExtremeMob)m);return m;}
     @GameTest(template="gear_empty")
-    public static void allFortyEightIdentitiesPersistTheirActualCombatState(GameTestHelper h){
+    public static void allFortyFiveIdentitiesPersistTheirActualCombatState(GameTestHelper h){
         UUID player=UUID.randomUUID();int count=0;
         for(var kind:ExtremeKind.values()){
             Mob m=mob(h,kind);MobMemory memory=((ExtremeMob)m).extremeMemory();
@@ -34,7 +34,7 @@ public final class ExtremeMobGameTests {
             h.assertTrue(read.phaseCharges==1&&read.phaseMaximum==4&&read.spare.getDamageValue()==13&&read.contribution.get(player)==57.25F,"Charge, weapon and contribution survive: "+kind);
             h.assertTrue(copy.getAttribute(Attributes.MAX_HEALTH)!=null&&copy.getMaxHealth()>0,"Every real identity has attributes: "+kind);count++;
         }
-        h.assertTrue(count==48,"44 Extreme identities plus 4 production ITE prerequisites");h.succeed();
+        h.assertTrue(count==45,"41 Extreme identities plus 4 production ITE prerequisites");h.succeed();
     }
     @GameTest(template="gear_empty")
     public static void mirrorCopiesEquipmentWithoutSharingOrDroppingPlayerItems(GameTestHelper h){
@@ -82,15 +82,11 @@ public final class ExtremeMobGameTests {
         h.assertTrue(read.normalPower()==18&&!read.isPickable()&&!read.hurt(h.getLevel().damageSources().generic(),4),"Dragon boost, no deflection and impact profile survive a save");h.succeed();
     }
     @GameTest(template="gear_empty")
-    public static void bothPillagersActuallyFireTheRegisteredAddonCrossbow(GameTestHelper h){
-        for(var kind:new ExtremeKind[]{ExtremeKind.PILLAGER,ExtremeKind.PILLAGER_LEADER}){
-            var pillager=(ExtremeMobs.PillagerVariant)mob(h,kind);var target=h.makeMockPlayer(GameType.SURVIVAL);target.moveTo(pillager.position().add(6,0,0));pillager.setTarget(target);
-            ItemStack weapon=pillager.getMainHandItem();
-            h.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(weapon.getItem()).equals(ResourceLocation.parse("modern_ite:crossbow")),"Uses the actual addon crossbow");
-            h.assertTrue(pillager.canFireProjectileWeapon((ProjectileWeaponItem)weapon.getItem()),"Custom crossbows pass the mob weapon gate");
-            weapon.set(DataComponents.CHARGED_PROJECTILES,ChargedProjectiles.of(new ItemStack(Items.ARROW)));pillager.performRangedAttack(target,1);
-            h.assertTrue(weapon.getOrDefault(DataComponents.CHARGED_PROJECTILES,ChargedProjectiles.EMPTY).isEmpty(),"The actual shooting API consumes the loaded projectile component");
-            h.assertTrue(!h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.projectile.AbstractArrow.class,pillager.getBoundingBox().inflate(32),arrow->arrow.getOwner()==pillager).isEmpty(),"An owned arrow is spawned for "+kind);
-        }h.succeed();
+    public static void retiredCreaturesAndEggsAreAbsentFromTheRegistries(GameTestHelper h){
+        for (String path : new String[]{"revenant_ghast", "pillager", "pillager_leader"}) {
+            h.assertFalse(net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.containsKey(ResourceLocation.fromNamespaceAndPath("modern_ite",path)),"Removed entity: "+path);
+            h.assertFalse(net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(ResourceLocation.fromNamespaceAndPath("modern_ite",path+"_spawn_egg")),"Removed spawn egg: "+path);
+        }
+        h.assertTrue(EntityType.PILLAGER.create(h.getLevel())!=null,"Vanilla pillagers remain available");h.succeed();
     }
 }

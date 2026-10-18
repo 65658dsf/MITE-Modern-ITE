@@ -30,7 +30,7 @@ import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/** Forty-four Extreme identities and the four production ITE prerequisites. @author NingMeng123 */
+/** Forty-one Extreme identities and the four production ITE prerequisites. @author NingMeng123 */
 public final class ExtremeMobs {
     private static final DeferredRegister<EntityType<?>> TYPES=DeferredRegister.create(Registries.ENTITY_TYPE,ModernIte.MOD_ID);
     private static final DeferredRegister.Items ITEMS=DeferredRegister.createItems(ModernIte.MOD_ID);
@@ -101,6 +101,11 @@ public final class ExtremeMobs {
         private final ExtremeKind kind;private final MobMemory memory=new MobMemory();
         public ZombieVariant(EntityType<? extends ZombieVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
+        @Override public boolean doHurtTarget(Entity target){
+            boolean landed=super.doHurtTarget(target);
+            if(landed&&target instanceof LivingEntity living)MobAbilities.afterMeleeHit(this,this,living);
+            return landed;
+        }
         @Override public void setBaby(boolean baby){super.setBaby(false);}
         @Override protected boolean convertsInWater(){return false;}
         @Override protected SoundEvent getAmbientSound(){return kind==ExtremeKind.ZOMBIE_CALLER?CALLER_SAY.get():super.getAmbientSound();}
@@ -152,6 +157,11 @@ public final class ExtremeMobs {
         private final ExtremeKind kind;private final MobMemory memory=new MobMemory();
         public GolemVariant(EntityType<? extends GolemVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
+        @Override public boolean doHurtTarget(Entity target){
+            boolean landed=super.doHurtTarget(target);
+            if(landed&&target instanceof LivingEntity living)MobAbilities.afterMeleeHit(this,this,living);
+            return landed;
+        }
         @Override public boolean checkSpawnRules(LevelAccessor l,MobSpawnType reason){return MobAbilities.spawnRules(this,kind,l,reason);}
         @Override public void addAdditionalSaveData(CompoundTag t){super.addAdditionalSaveData(t);memory.write(t,registryAccess());}
         @Override public void readAdditionalSaveData(CompoundTag t){super.readAdditionalSaveData(t);memory.read(t,registryAccess());}
