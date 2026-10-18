@@ -1,8 +1,0 @@
-{
-  "parent": "minecraft:block/inner_stairs",
-  "textures": {
-    "bottom": "modern_ite:block/magenta_colorful",
-    "top": "modern_ite:block/magenta_colorful",
-    "side": "modern_ite:block/magenta_colorful"
-  }
-}

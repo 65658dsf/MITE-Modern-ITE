@@ -4,6 +4,12 @@
 
 此文件区分自动验证和实际游玩，0.1.1 最终运行结果以工程根目录 `extension-render-gametest.log`、`extension-client.log`、`extension-mob-render.log`、`build/verification/client-audit.json` 和 `build/verification/mob-render-audit.json` 为准。早期迭代日志不作为最终构建的通过依据。
 
+## 彩石及相关方块移除（2026-10-18）
+
+移除 16 色彩石、彩石砖、台阶、楼梯、墙和缓冲彩光石，共 96 个方块及其物品注册；删除 720 个专用资源文件，清理配方、掉落、挖掘标签、中英文名称、素材来源记录及生成脚本。
+
+在包含其他待提交开发改动的当前工作区中，使用本地已验证的 `build/verification/base/mite-0.1.10.jar` 作为依赖，`build runGameTestServer` 通过，8 项 JUnit 和 97 项 GameTest 全部通过；配方解析错误与标签加载错误均为 0。该工作区源码与发布 JAR 均无已移除内容的代码或资源引用。日志与专项报告分别为 `build/verification/remove-colorful-build-gametest.log`、`build/verification/colorful-removal-audit.json`。
+
 ## 自动验证范围
 
 - JUnit：日历边界、累计血月数、深浅额度、生命门槛、强化运算和经济抽取规则。

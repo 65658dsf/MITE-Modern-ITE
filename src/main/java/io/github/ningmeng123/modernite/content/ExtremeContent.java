@@ -70,15 +70,6 @@ public final class ExtremeContent {
             ITEM_ENTRIES.put("club_"+material, ITEMS.registerItem("club_"+material, p -> new R196ToolItem(definition,p)));
         }
         MiteExtensions.registerExternalArmor(new MiteArmorContent.Definition("modern_ite:iron_bucket_helmet",-1,"iron",ArmorItem.Type.HELMET,5,false,false,256,15,30,Quality.LEGENDARY,0,1280));
-        for (DyeColor color : DyeColor.values()) {
-            String name=color.getName();
-            var stone=block(name+"_colorful", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(color)));
-            var brick=block(name+"_colorful_bricks", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(color)));
-            block(name+"_colorful_slab", () -> new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_SLAB).mapColor(color)));
-            block(name+"_colorful_stairs", () -> new StairBlock(stone.get().defaultBlockState(),BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_STAIRS).mapColor(color)));
-            block(name+"_colorful_wall", () -> new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.COBBLESTONE_WALL).mapColor(color)));
-            block(name+"_gotcha", () -> new CushionLightBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0F).mapColor(color).lightLevel(s -> 15)));
-        }
         TABS.register("content", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.modern_ite")).icon(() -> new ItemStack(FANCY_RED.get())).displayItems((p,out) -> {
             var seen = new HashSet<Item>();
             net.minecraft.core.registries.BuiltInRegistries.ITEM.forEach(item -> { if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).getNamespace().equals(ModernIte.MOD_ID) && seen.add(item)) out.accept(item); });

@@ -9,8 +9,6 @@ REF = ROOT.parent / 'miteto1.21.1neoforge/.reference'
 EX = ZipFile(REF / '[极难柳昊定制]Extreme-lh-0.6.6 (3).jar')
 ITE = ZipFile(REF / '[MITE不可能这么简单]MITE-ITE-2.0.28.jar')
 zh, en, provenance = {}, {}, []
-colors = ['white','orange','magenta','light_blue','yellow','lime','pink','gray','light_gray','cyan','purple','blue','brown','green','red','black']
-chinese = ['白色','橙色','品红色','淡蓝色','黄色','黄绿色','粉红色','灰色','淡灰色','青色','紫色','蓝色','棕色','绿色','红色','黑色']
 def save(path, value):
     p = RES / path; p.parent.mkdir(parents=True,exist_ok=True)
     p.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
@@ -60,12 +58,6 @@ def slab(id, base):
     t='modern_ite:block/'+base
     for suffix,parent in [('', 'slab'),('_top','slab_top')]:block_model(id+suffix,'minecraft:block/'+parent,{'bottom':t,'top':t,'side':t})
     state(id,{'variants':{'type=bottom':{'model':'modern_ite:block/'+id},'type=top':{'model':'modern_ite:block/'+id+'_top'},'type=double':{'model':'modern_ite:block/'+base}}});block_item(id);loot(id,double_slab=True)
-def wall(id, base):
-    for suffix,parent in [('_post','template_wall_post'),('_side','template_wall_side'),('_side_tall','template_wall_side_tall'),('_inventory','wall_inventory')]:block_model(id+suffix,'minecraft:block/'+parent,{'wall':'modern_ite:block/'+base})
-    parts=[{'when':{'up':'true'},'apply':{'model':'modern_ite:block/'+id+'_post'}}]
-    for direction,rot in [('north',0),('east',90),('south',180),('west',270)]:
-      for height,suffix in [('low','_side'),('tall','_side_tall')]:parts.append({'when':{direction:height},'apply':{'model':'modern_ite:block/'+id+suffix,'y':rot,'uvlock':True}})
-    state(id,{'multipart':parts});save(f'assets/modern_ite/models/item/{id}.json',{'parent':'modern_ite:block/'+id+'_inventory'});loot(id)
 
 simple={
  'fancy_red':('红钻','Red Diamond'), 'diamond_chunk':('钻石碎块','Diamond Chunk'),
@@ -106,23 +98,6 @@ block_model('maple_sapling','minecraft:block/cross',{'cross':'modern_ite:block/m
 for id,cn in [('log','原木'),('planks','木板'),('leaves','树叶'),('sapling','树苗'),('slab','台阶'),('stairs','楼梯')]:named('maple_'+id,'枫木'+cn,'Maple '+id.title(),True)
 silk={'condition':'minecraft:match_tool','predicate':{'predicates':{'minecraft:enchantments':[{'enchantments':'minecraft:silk_touch','levels':{'min':1}}]}}}
 save('data/modern_ite/loot_table/blocks/maple_leaves.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:alternatives','children':[{'type':'minecraft:item','name':'modern_ite:maple_leaves','conditions':[{'condition':'minecraft:any_of','terms':[silk,{'condition':'minecraft:match_tool','predicate':{'items':'minecraft:shears'}}]}]},{'type':'minecraft:item','name':'modern_ite:maple_sapling','conditions':[{'condition':'minecraft:survives_explosion'},{'condition':'minecraft:table_bonus','enchantment':'minecraft:fortune','chances':[.05,.0625,.083333336,.1]}]}]}]}]})
-for color,cn in zip(colors,chinese):
-    tex(EX,f'assets/extreme/textures/blocks/colorful/colorful_{color}.png',f'block/{color}_colorful')
-    tex(EX,f'assets/extreme/textures/blocks/colorful_brick/colorful_brick_{color}.png',f'block/{color}_colorful_bricks')
-    tex(EX,f'assets/extreme/textures/blocks/gotcha_{color}.png',f'block/{color}_gotcha')
-    cube(color+'_colorful');cube(color+'_colorful_bricks');cube(color+'_gotcha');slab(color+'_colorful_slab',color+'_colorful');stairs(color+'_colorful_stairs',color+'_colorful');wall(color+'_colorful_wall',color+'_colorful')
-    for suffix,n in [('colorful','彩石'),('colorful_bricks','彩石砖'),('colorful_slab','彩石台阶'),('colorful_stairs','彩石楼梯'),('colorful_wall','彩石墙'),('gotcha','缓冲彩光石')]:named(color+'_'+suffix,cn+n,color.replace('_',' ').title()+' '+suffix.replace('_',' ').title(),True)
-    # Initial access recipes are modern adaptations; source only supplied recoloring loops.
-    shaped(color+'_colorful',['SSS','SDS','SSS'],{'S':'minecraft:stone','D':'minecraft:'+color+'_dye'},count=8)
-    shaped(color+'_colorful_bricks',['SS','SS'],{'S':'modern_ite:'+color+'_colorful'},count=4)
-    shaped(color+'_gotcha',[' G ','GSG',' G '],{'G':'minecraft:glowstone_dust','S':'modern_ite:'+color+'_colorful'})
-    shaped(color+'_colorful_slab',['SSS'],{'S':'modern_ite:'+color+'_colorful'},count=6)
-    shaped(color+'_colorful_stairs',['S  ','SS ','SSS'],{'S':'modern_ite:'+color+'_colorful'},count=4)
-    shaped(color+'_colorful_wall',['SSS','SSS'],{'S':'modern_ite:'+color+'_colorful'},count=6)
-    nxt=colors[(colors.index(color)+1)%16]
-    for suffix in ['colorful','colorful_bricks','colorful_slab','colorful_stairs','colorful_wall','gotcha']:
-        n=1 if suffix=='gotcha' else 9
-        shapeless(f'recolor/{color}_{suffix}', ['modern_ite:'+color+'_'+suffix]*n,'modern_ite:'+nxt+'_'+suffix,n)
 for side in ['side','top','front_on','front_off']:tex(ITE,f'assets/miteite/textures/blocks/furnace/vibranium/{side}.png','block/vibranium_furnace_'+side)
 for lit in [False,True]:block_model('vibranium_furnace'+('_on' if lit else ''),'minecraft:block/orientable',{'top':'modern_ite:block/vibranium_furnace_top','front':'modern_ite:block/vibranium_furnace_front_'+('on' if lit else 'off'),'side':'modern_ite:block/vibranium_furnace_side'})
 state('vibranium_furnace',{'variants':{f'facing={f},lit={str(lit).lower()}':{'model':'modern_ite:block/vibranium_furnace'+('_on' if lit else ''),'y':y} for f,y in [('north',0),('east',90),('south',180),('west',270)] for lit in [False,True]}});block_item('vibranium_furnace');loot('vibranium_furnace');named('vibranium_furnace','振金熔炉','Vibranium Furnace',True)
@@ -158,7 +133,7 @@ smelt('fancy_red','modern_ite:fancy_red_ore','modern_ite:fancy_red',1)
 smelt('nether_adamantium_ingot','modern_ite:nether_adamantium_ore','mite:adamantium_ingot',1)
 smelt('maple_charcoal','modern_ite:maple_log','minecraft:charcoal',.15)
 tag('minecraft','item','logs',['modern_ite:maple_log']);tag('minecraft','item','logs_that_burn',['modern_ite:maple_log']);tag('minecraft','item','planks',['modern_ite:maple_planks']);tag('minecraft','block','logs',['modern_ite:maple_log']);tag('minecraft','block','logs_that_burn',['modern_ite:maple_log']);tag('minecraft','block','leaves',['modern_ite:maple_leaves']);tag('minecraft','block','saplings',['modern_ite:maple_sapling']);tag('minecraft','item','saplings',['modern_ite:maple_sapling'])
-stone=['resurrection_array','fancy_red_ore','nether_adamantium_ore','vibranium_furnace']+[c+'_'+s for c in colors for s in ['colorful','colorful_bricks','colorful_slab','colorful_stairs','colorful_wall']]
+stone=['resurrection_array','fancy_red_ore','nether_adamantium_ore','vibranium_furnace']
 tag('minecraft','block','mineable/pickaxe',['modern_ite:'+s for s in stone]);tag('minecraft','block','mineable/axe',['modern_ite:maple_'+s for s in ['log','planks','slab','stairs']]+['modern_ite:vibranium_chest']);tag('minecraft','block','needs_diamond_tool',['modern_ite:fancy_red_ore','modern_ite:nether_adamantium_ore']);tag('modern_ite','worldgen/structure','fortresses',['minecraft:fortress'])
 tag('minecraft','block','beacon_base_blocks',['mite:vibranium_block']);tag('minecraft','item','beacon_payment_items',['mite:vibranium_ingot'])
 for ore,base,ymin,ymax,size,count,biomes in [('fancy_red_ore','minecraft:stone_ore_replaceables',131,274,3,1,['mite:underworld']),('nether_adamantium_ore','minecraft:base_stone_nether',0,128,3,4,'#minecraft:is_nether')]:
@@ -192,5 +167,5 @@ for locale in ['zh_cn','en_us']:
     merged={}
     for fragment in sorted((RES/'modern_ite').glob('*-lang-'+locale+'.json')):merged.update(json.loads(fragment.read_text(encoding='utf-8')))
     save(f'assets/modern_ite/lang/{locale}.json',merged)
-save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Initial colorful stone and cushion-light recipes supplement source recoloring-only entries.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
+save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
 print(f'Packaged {len(provenance)} source textures; merged all language fragments.')
