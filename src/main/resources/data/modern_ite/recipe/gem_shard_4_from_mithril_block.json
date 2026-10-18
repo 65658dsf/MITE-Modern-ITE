@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "mite:mithril_block"
+  },
+  "result": {
+    "id": "modern_ite:gem_shard_4"
+  },
+  "experience": 0,
+  "cookingtime": 200
+}

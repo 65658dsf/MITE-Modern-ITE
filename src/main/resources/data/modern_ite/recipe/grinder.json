@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MMM",
+    "MRM",
+    "MMM"
+  ],
+  "key": {
+    "M": {
+      "item": "mite:mithril_ingot"
+    },
+    "R": {
+      "item": "modern_ite:fancy_red"
+    }
+  },
+  "result": {
+    "id": "modern_ite:grinder",
+    "count": 1
+  }
+}

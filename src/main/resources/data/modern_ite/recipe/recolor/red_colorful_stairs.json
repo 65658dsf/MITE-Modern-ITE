@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    },
+    {
+      "item": "modern_ite:red_colorful_stairs"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:black_colorful_stairs",
+    "count": 9
+  }
+}

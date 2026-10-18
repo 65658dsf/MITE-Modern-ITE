@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:gem_fireproof_5"
+    },
+    {
+      "item": "modern_ite:gem_shard_6"
+    },
+    {
+      "item": "modern_ite:gem_shard_6"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:gem_fireproof_6",
+    "count": 1
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "modern_ite:block/magenta_colorful",
+    "top": "modern_ite:block/magenta_colorful",
+    "side": "modern_ite:block/magenta_colorful"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "modern_ite:white_colorful"
+    }
+  },
+  "result": {
+    "id": "modern_ite:white_colorful_slab",
+    "count": 6
+  }
+}

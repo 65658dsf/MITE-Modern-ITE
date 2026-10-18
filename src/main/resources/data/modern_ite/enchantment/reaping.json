@@ -1,0 +1,22 @@
+{
+  "anvil_cost": 2,
+  "description": {
+    "translate": "enchantment.modern_ite.reaping"
+  },
+  "effects": {},
+  "max_cost": {
+    "base": 2147483647,
+    "per_level_above_first": 0
+  },
+  "max_level": 1,
+  "min_cost": {
+    "base": 21,
+    "per_level_above_first": 10
+  },
+  "primary_items": "#modern_ite:enchantable/reaping",
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#modern_ite:enchantable/reaping",
+  "weight": 25
+}

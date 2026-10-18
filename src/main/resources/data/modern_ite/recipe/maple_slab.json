@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PPP"
+  ],
+  "key": {
+    "P": {
+      "item": "modern_ite:maple_planks"
+    }
+  },
+  "result": {
+    "id": "modern_ite:maple_slab",
+    "count": 6
+  }
+}

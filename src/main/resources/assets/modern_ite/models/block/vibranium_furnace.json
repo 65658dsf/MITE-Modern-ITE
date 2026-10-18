@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "modern_ite:block/vibranium_furnace_top",
+    "front": "modern_ite:block/vibranium_furnace_front_off",
+    "side": "modern_ite:block/vibranium_furnace_side"
+  }
+}

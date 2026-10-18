@@ -1,0 +1,107 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:golden_sword",
+    "minecraft:iron_sword",
+    {
+      "id": "mite:adamantium_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:adamantium_sword",
+      "required": false
+    },
+    {
+      "id": "mite:adamantium_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:ancient_metal_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:ancient_metal_sword",
+      "required": false
+    },
+    {
+      "id": "mite:ancient_metal_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:copper_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:copper_sword",
+      "required": false
+    },
+    {
+      "id": "mite:copper_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:golden_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:golden_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:iron_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:iron_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:mithril_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:mithril_sword",
+      "required": false
+    },
+    {
+      "id": "mite:mithril_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:rusted_iron_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:rusted_iron_sword",
+      "required": false
+    },
+    {
+      "id": "mite:rusted_iron_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:silver_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:silver_sword",
+      "required": false
+    },
+    {
+      "id": "mite:silver_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_sword",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_war_hammer",
+      "required": false
+    }
+  ]
+}

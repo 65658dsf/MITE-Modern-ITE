@@ -1,0 +1,39 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/nausea",
+      "sprite": "modern_ite:chaos"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/glowing",
+      "sprite": "modern_ite:flash"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/blindness",
+      "sprite": "modern_ite:occlusion"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/unluck",
+      "sprite": "modern_ite:reversed"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/speed",
+      "sprite": "modern_ite:fast_sensitivity"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/levitation",
+      "sprite": "modern_ite:look_up"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/health_boost",
+      "sprite": "modern_ite:big_head"
+    }
+  ]
+}

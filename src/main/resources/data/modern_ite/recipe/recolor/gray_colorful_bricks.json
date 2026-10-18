@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    },
+    {
+      "item": "modern_ite:gray_colorful_bricks"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:light_gray_colorful_bricks",
+    "count": 9
+  }
+}

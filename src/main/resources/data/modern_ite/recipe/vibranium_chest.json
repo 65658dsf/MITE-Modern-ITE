@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "VVV",
+    "V V",
+    "VVV"
+  ],
+  "key": {
+    "V": {
+      "item": "mite:vibranium_ingot"
+    }
+  },
+  "result": {
+    "id": "modern_ite:vibranium_chest",
+    "count": 1
+  }
+}

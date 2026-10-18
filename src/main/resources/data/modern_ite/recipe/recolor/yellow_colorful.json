@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    },
+    {
+      "item": "modern_ite:yellow_colorful"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:lime_colorful",
+    "count": 9
+  }
+}

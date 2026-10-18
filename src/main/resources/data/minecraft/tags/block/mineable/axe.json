@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "modern_ite:maple_log",
+    "modern_ite:maple_planks",
+    "modern_ite:maple_slab",
+    "modern_ite:maple_stairs",
+    "modern_ite:vibranium_chest"
+  ]
+}

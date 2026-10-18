@@ -1,0 +1,18 @@
+{
+  "entity.zombie_caller.hurt": {
+    "sounds": [
+      "modern_ite:mob/zombie_caller/hurt"
+    ]
+  },
+  "entity.zombie_caller.ambient": {
+    "sounds": [
+      "modern_ite:mob/zombie_caller/say"
+    ]
+  },
+  "entity.zombie_caller.death": {
+    "sounds": [
+      "modern_ite:mob/zombie_caller/death1",
+      "modern_ite:mob/zombie_caller/death2"
+    ]
+  }
+}

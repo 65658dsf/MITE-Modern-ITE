@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:diamond_chunk"
+    },
+    {
+      "item": "modern_ite:diamond_chunk"
+    },
+    {
+      "item": "modern_ite:diamond_chunk"
+    },
+    {
+      "item": "modern_ite:diamond_chunk"
+    }
+  ],
+  "result": {
+    "id": "minecraft:diamond",
+    "count": 1
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "value": "minecraft:entities/creeper",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    }
+  ]
+}

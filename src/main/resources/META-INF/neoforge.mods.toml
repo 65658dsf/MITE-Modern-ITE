@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="All Rights Reserved"
+[[mods]]
+modId="modern_ite"
+version="${version}"
+displayName="MITE: Modern ITE"
+authors="NingMeng123"
+displayURL="https://github.com/65658dsf"
+description='''MITE-ITE and Extreme LH gameplay rebuilt together for MITE: Modern on Minecraft 1.21.1.'''
+[[mixins]]
+config="modern_ite.mixins.json"
+[[dependencies.modern_ite]]
+modId="neoforge"
+type="required"
+versionRange="[21.1.259,21.2)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.modern_ite]]
+modId="minecraft"
+type="required"
+versionRange="[1.21.1]"
+ordering="NONE"
+side="BOTH"
+[[dependencies.modern_ite]]
+modId="mite"
+type="required"
+versionRange="[0.1.9,)"
+ordering="AFTER"
+side="BOTH"

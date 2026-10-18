@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "modern_ite:block/maple_leaves"
+  },
+  "render_type": "minecraft:cutout_mipped"
+}

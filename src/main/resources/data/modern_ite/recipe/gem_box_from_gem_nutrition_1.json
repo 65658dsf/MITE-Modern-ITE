@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:gem_nutrition_1"
+    },
+    {
+      "item": "modern_ite:gem_nutrition_1"
+    },
+    {
+      "item": "modern_ite:gem_nutrition_1"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:gem_box",
+    "count": 1
+  }
+}

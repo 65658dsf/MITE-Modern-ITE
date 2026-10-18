@@ -1,0 +1,61 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "mite:vibranium_axe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_battle_axe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_dagger",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_hatchet",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_hoe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_knife",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_pickaxe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_scythe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_shears",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_shovel",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_sword",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_war_hammer",
+      "required": false
+    },
+    {
+      "id": "modern_ite:club_vibranium",
+      "required": false
+    }
+  ]
+}

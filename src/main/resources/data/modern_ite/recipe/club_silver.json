@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#*#",
+    "#*#",
+    " * "
+  ],
+  "key": {
+    "#": {
+      "item": "mite:silver_nugget"
+    },
+    "*": {
+      "item": "mite:silver_ingot"
+    }
+  },
+  "result": {
+    "id": "modern_ite:club_silver",
+    "count": 1
+  }
+}

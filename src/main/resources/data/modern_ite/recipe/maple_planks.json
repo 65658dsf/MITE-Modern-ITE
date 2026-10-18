@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:maple_log"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:maple_planks",
+    "count": 4
+  }
+}

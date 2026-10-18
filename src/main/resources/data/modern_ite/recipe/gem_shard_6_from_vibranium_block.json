@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "mite:vibranium_block"
+  },
+  "result": {
+    "id": "modern_ite:gem_shard_6"
+  },
+  "experience": 0,
+  "cookingtime": 200
+}

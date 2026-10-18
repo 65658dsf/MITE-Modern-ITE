@@ -1,0 +1,10 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": [
+    "mite:underworld"
+  ],
+  "features": [
+    "modern_ite:fancy_red_ore"
+  ],
+  "step": "underground_ores"
+}

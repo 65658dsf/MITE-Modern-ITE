@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "modern_ite:fixed",
+    "modern_ite:chain",
+    "modern_ite:slowdown",
+    "modern_ite:plucking",
+    "modern_ite:reaping",
+    "modern_ite:defenced",
+    "modern_ite:crit",
+    "modern_ite:extend",
+    "modern_ite:emergency",
+    "modern_ite:conqueror",
+    "modern_ite:beheading",
+    "modern_ite:experience"
+  ]
+}

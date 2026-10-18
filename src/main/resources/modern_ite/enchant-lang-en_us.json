@@ -1,0 +1,15 @@
+{
+  "enchantment.modern_ite.fixed": "Fixed",
+  "enchantment.modern_ite.chain": "Chain",
+  "enchantment.modern_ite.slowdown": "Slowing",
+  "enchantment.modern_ite.plucking": "Plucking",
+  "enchantment.modern_ite.reaping": "Reaping",
+  "enchantment.modern_ite.defenced": "Defence",
+  "enchantment.modern_ite.crit": "Critical",
+  "enchantment.modern_ite.extend": "Extend",
+  "enchantment.modern_ite.emergency": "Emergency",
+  "enchantment.modern_ite.conqueror": "Conqueror",
+  "enchantment.modern_ite.beheading": "Beheading",
+  "enchantment.modern_ite.experience": "Experience",
+  "tooltip.modern_ite.emergency_cooldown": "Emergency cooldown: %s seconds"
+}

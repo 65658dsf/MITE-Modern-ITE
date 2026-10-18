@@ -1,0 +1,58 @@
+{
+  "author": "NingMeng123",
+  "component_schema": {
+    "version": 1,
+    "ids": ["modern_ite:gem_sockets_v1", "modern_ite:grindings_v1", "modern_ite:forge_grade_v1"]
+  },
+  "sources": [
+    "Extreme-lh 0.6.6",
+    "MITE-ITE 2.0.28"
+  ],
+  "health": {
+    "level_base": "min(60,6+2*floor(max(level,0)/5))",
+    "maximum_health_gems": 24,
+    "day_caps": {
+      "before_96": 20,
+      "96_to_127": 30,
+      "128_to_169": 40,
+      "170_and_later": null
+    },
+    "day_source": "BloodMoonInvasion.highestDay",
+    "player_level_cap": null
+  },
+  "gem_sockets": 8,
+  "gem_tiers": 6,
+  "gem_types": 10,
+  "grinding_maximum": 3,
+  "forging": {
+    "material_maximums": {
+      "iron": 3,
+      "ancient_metal": 3,
+      "mithril": 5,
+      "adamantium": 7,
+      "vibranium": 10
+    },
+    "growth_level_independent": true,
+    "failure_base_percent": [
+      35,
+      55,
+      65
+    ],
+    "universal_stone_failure_base_percent": 50,
+    "tool_failure_reduction_per_tier": {
+      "axe": 2,
+      "hammer": 3
+    },
+    "enhance_factor": "pow(1.028,grade*2.28)-1",
+    "experience_bonus": "grade*(grade+1)*0.025",
+    "failure_durability": "5 percent remaining before grade7;10 percent thereafter",
+    "failure_downgrade": false,
+    "quality_reward_preserves_better_existing_quality": true
+  },
+  "adaptations": [
+    "Nutrition capacity retains current limit20",
+    "Forging grade does not alter current growth maximum; grinding adds up to3",
+    "Universal enhancement stone substitutes for typed enhancement stones",
+    "Gem wear preserves baseline unbreaking as an independent source"
+  ]
+}

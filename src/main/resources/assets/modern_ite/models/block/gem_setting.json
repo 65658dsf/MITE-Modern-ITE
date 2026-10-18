@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "bottom": "minecraft:block/oak_planks",
+    "top": "modern_ite:block/gem_setting_top",
+    "side": "modern_ite:block/gem_setting_side",
+    "front": "modern_ite:block/gem_setting_front"
+  }
+}

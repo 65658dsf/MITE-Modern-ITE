@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " G ",
+    "GSG",
+    " G "
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    },
+    "S": {
+      "item": "modern_ite:yellow_colorful"
+    }
+  },
+  "result": {
+    "id": "modern_ite:yellow_gotcha",
+    "count": 1
+  }
+}

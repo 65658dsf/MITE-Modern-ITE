@@ -1,0 +1,41 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "mite:adamantium_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:ancient_metal_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:copper_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:golden_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:iron_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:mithril_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:rusted_iron_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:silver_mattock",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_mattock",
+      "required": false
+    }
+  ]
+}

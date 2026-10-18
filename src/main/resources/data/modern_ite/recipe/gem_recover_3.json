@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:gem_recover_2"
+    },
+    {
+      "item": "modern_ite:gem_shard_3"
+    },
+    {
+      "item": "modern_ite:gem_shard_3"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:gem_recover_3",
+    "count": 1
+  }
+}

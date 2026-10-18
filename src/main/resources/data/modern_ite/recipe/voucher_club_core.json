@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:voucher_fishing"
+    },
+    {
+      "item": "modern_ite:voucher_planting"
+    },
+    {
+      "item": "modern_ite:voucher_villager"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:voucher_club_core",
+    "count": 1
+  }
+}

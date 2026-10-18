@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    },
+    {
+      "item": "modern_ite:light_blue_colorful_wall"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:yellow_colorful_wall",
+    "count": 9
+  }
+}

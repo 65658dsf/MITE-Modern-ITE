@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SS",
+    "SS"
+  ],
+  "key": {
+    "S": {
+      "item": "modern_ite:blue_colorful"
+    }
+  },
+  "result": {
+    "id": "modern_ite:blue_colorful_bricks",
+    "count": 4
+  }
+}

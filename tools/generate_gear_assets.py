@@ -1,0 +1,148 @@
+"""Reproducible source-texture and recipe packaging. Author: NingMeng123."""
+from pathlib import Path
+import json
+import zipfile
+
+ROOT = Path(__file__).resolve().parents[1]
+RES = ROOT / 'src/main/resources'
+REF = ROOT.parent / 'miteto1.21.1neoforge/.reference'
+EX = zipfile.ZipFile(REF / '[极难柳昊定制]Extreme-lh-0.6.6 (3).jar')
+ITE = zipfile.ZipFile(REF / '[MITE不可能这么简单]MITE-ITE-2.0.28.jar')
+zh, en = {}, {}
+
+def save(path, value):
+    path = RES / path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+def texture(jar, source, target):
+    out = RES / f'assets/modern_ite/textures/{target}.png'
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(jar.read(source))
+
+def named(id, chinese, english, block=False):
+    key = ('block' if block else 'item') + '.modern_ite.' + id
+    zh[key], en[key] = chinese, english
+
+def model(id, tex=None):
+    save(f'assets/modern_ite/models/item/{id}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'modern_ite:item/{tex or id}'}})
+
+def ingredient(id):
+    return {'item': id}
+
+def recipe(id, value):
+    save(f'data/modern_ite/recipe/{id}.json', value)
+
+def shapeless(id, result, ingredients, count=1):
+    recipe(id, {'type': 'minecraft:crafting_shapeless', 'category': 'misc', 'ingredients': [ingredient(i) for i in ingredients], 'result': {'id': result, 'count': count}})
+
+def shaped(id, pattern, keys, result=None, count=1):
+    recipe(id, {'type': 'minecraft:crafting_shaped', 'category': 'misc', 'pattern': pattern,
+                'key': {k: ingredient(v) for k, v in keys.items()}, 'result': {'id': result or f'modern_ite:{id}', 'count': count}})
+
+types = [('damage','攻击','Damage'), ('health','生命','Health'), ('protection','保护','Protection'),
+         ('recover','恢复','Recovery'), ('effect','效率','Efficiency'), ('durable','耐久','Durability'),
+         ('speed','速度','Speed'), ('fireproof','防火','Fireproof'), ('explosionproof','防爆','Blast Protection'), ('nutrition','饱食','Nutrition')]
+shapes = ['三角','四角','五角','六角','七角','八角']
+for kind, chinese, english in types:
+    zh[f'gem.modern_ite.{kind}'], en[f'gem.modern_ite.{kind}'] = chinese, english
+    for rank in range(1, 7):
+        id = f'gem_{kind}_{rank}'
+        old = 'explosionProof' if kind == 'explosionproof' else kind
+        texture(EX, f'assets/extreme/textures/items/gem/enhance_gem_phase{rank}_{old}.png', f'item/{id}')
+        named(id, f'{shapes[rank-1]}{chinese}宝石', f'{english} Gem {rank}'); model(id)
+        if rank > 1:
+            shapeless(id, f'modern_ite:{id}', [f'modern_ite:gem_{kind}_{rank-1}', f'modern_ite:gem_shard_{rank}', f'modern_ite:gem_shard_{rank}'])
+        shapeless(f'gem_box_from_{id}', 'modern_ite:gem_box', [f'modern_ite:{id}'] * 3)
+
+for rank in range(2, 7):
+    id = f'gem_shard_{rank}'
+    texture(EX, f'assets/extreme/textures/items/gem/gem_shard_{rank-2}.png', f'item/{id}')
+    named(id, f'朴素{shapes[rank-1]}宝石', f'Plain Gem {rank}'); model(id)
+
+for id, source, chinese, english in [('gem_box', 'enhance_gem_box_phase', '三角宝石箱', 'Triangular Gem Box'),
+        ('protection_tome', 'protection_tome', '防护宝典', 'Protection Tome')]:
+    texture(EX, f'assets/extreme/textures/items/{source}.png', f'item/{id}'); named(id, chinese, english); model(id)
+
+for material, chinese in [('iron','铁'),('mithril','秘银'),('adamantium','艾德曼'),('universal','万能')]:
+    id = f'{material}_enhance_stone'
+    texture(ITE, f'assets/miteite/textures/items/enhance_stone/{material}.png', f'item/{id}')
+    named(id, f'{chinese}强化石', f'{material.title()} Enhancement Stone'); model(id)
+
+for id, chinese, english in [('gem_setting','宝石镶嵌台','Gem Setting Table'),('grinder','磨具','Grinding Stone')] + [
+        (f'{m}_forging_table', f'{c}强化锻造台', f'{m.title()} Forging Table') for m,c in [('iron','铁'),('mithril','秘银'),('adamantium','艾德曼'),('vibranium','振金')]]:
+    named(id, chinese, english, True)
+    if id == 'gem_setting':
+        for part in ['front','side','top']:
+            texture(EX, f'assets/extreme/textures/blocks/gem_setting/tool_armor_setting/{part}.png', f'block/{id}_{part}')
+        textures = {'bottom':'minecraft:block/oak_planks', 'top':f'modern_ite:block/{id}_top',
+                    'side':f'modern_ite:block/{id}_side', 'front':f'modern_ite:block/{id}_front'}
+        parent = 'minecraft:block/orientable'
+    elif id == 'grinder':
+        texture(EX, 'assets/extreme/textures/blocks/block_enhance_levelup.png', f'block/{id}')
+        textures = {'all':f'modern_ite:block/{id}'}; parent = 'minecraft:block/cube_all'
+    else:
+        material = id.removesuffix('_forging_table')
+        for part in ['bottom','side','top']:
+            texture(ITE, f'assets/miteite/textures/blocks/forging_table/{material}/{part}.png', f'block/{id}_{part}')
+        textures = {p:f'modern_ite:block/{id}_{p}' for p in ['bottom','side','top']}; parent='minecraft:block/cube_bottom_top'
+    save(f'assets/modern_ite/models/block/{id}.json', {'parent':parent,'textures':textures})
+    save(f'assets/modern_ite/models/item/{id}.json', {'parent':f'modern_ite:block/{id}'})
+    save(f'assets/modern_ite/blockstates/{id}.json', {'variants':{'':{'model':f'modern_ite:block/{id}'}}})
+    save(f'data/modern_ite/loot_table/blocks/{id}.json', {'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':f'modern_ite:{id}'}], 'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
+
+for material, result in [('copper','gem_box'),('silver','gem_box'),('gold','gem_box'),('iron','gem_shard_2'),
+        ('ancient_metal','gem_shard_3'),('mithril','gem_shard_4'),('adamantium','gem_shard_5'),('vibranium','gem_shard_6')]:
+    input = f'minecraft:{material}_block' if material in ['copper','gold','iron'] else f'mite:{material}_block'
+    recipe(f'{result}_from_{material}_block', {'type':'minecraft:smelting','category':'misc','ingredient':ingredient(input),
+            'result':{'id':f'modern_ite:{result}'},'experience':0,'cookingtime':200})
+
+shapeless('protection_tome', 'modern_ite:protection_tome', ['modern_ite:gem_protection_1'] * 2 + ['minecraft:book'])
+recipe('apply_protection_tome', {'type':'modern_ite:protection_tome','category':'equipment'})
+for kind, _, _ in types:
+    shaped(f'gem_setting_from_{kind}', ['III','PGP','PPP'], {'I':'minecraft:iron_ingot','P':'minecraft:oak_planks','G':f'modern_ite:gem_{kind}_1'}, 'modern_ite:gem_setting')
+shaped('grinder', ['MMM','MRM','MMM'], {'M':'mite:mithril_ingot','R':'modern_ite:fancy_red'})
+shaped('iron_enhance_stone', [' C ','SIS',' C '], {'C':'minecraft:copper_ingot','S':'mite:silver_ingot','I':'minecraft:iron_ingot'})
+shaped('mithril_enhance_stone', [' I ','GMG',' I '], {'I':'minecraft:iron_ingot','G':'minecraft:gold_ingot','M':'mite:mithril_ingot'})
+shaped('adamantium_enhance_stone', [' D ','MAM',' R '], {'D':'minecraft:diamond','M':'mite:mithril_ingot','A':'mite:adamantium_ingot','R':'minecraft:redstone_block'})
+shaped('universal_enhance_stone', ['gDg','bTb','BEB'], {'g':'minecraft:glowstone_dust','D':'mite:bottle_of_disenchanting','b':'minecraft:blaze_powder','T':'minecraft:ghast_tear','B':'minecraft:book','E':'minecraft:ender_pearl'})
+shaped('iron_forging_table', ['WIT',' A ','OOO'], {'W':'minecraft:oak_planks','I':'minecraft:iron_ingot','T':'mite:iron_crafting_table','A':'minecraft:anvil','O':'minecraft:obsidian'})
+for old, new in [('iron','mithril'),('mithril','adamantium'),('adamantium','vibranium')]:
+    shaped(f'{new}_forging_table', ['III',' T '], {'I':f'mite:{new}_ingot','T':f'modern_ite:{old}_forging_table'})
+
+messages = {
+ 'tooltip.modern_ite.gem_damage': ('主手工具或武器：攻击伤害 +%s', 'Main-hand tool or weapon: +%s attack damage'),
+ 'tooltip.modern_ite.gem_health': ('穿着护甲：生命 +%s（受历史日上限约束）', 'Worn armor: +%s health, within the historical-day cap'),
+ 'tooltip.modern_ite.gem_protection': ('穿着护甲：护甲值 +%s', 'Worn armor: +%s armor'),
+ 'tooltip.modern_ite.gem_recover': ('穿着护甲：自然恢复量 +%s%%', 'Worn armor: +%s%% natural regeneration'),
+ 'tooltip.modern_ite.gem_effect': ('有效工具：基础挖掘速度 +%s', 'Effective tool: +%s mining speed'),
+ 'tooltip.modern_ite.gem_durable': ('装备：%s%% 概率免除此点耐久消耗', 'Equipment: %s%% chance to avoid each durability cost'),
+ 'tooltip.modern_ite.gem_speed': ('鞋子：基础移动速度 +%s%%', 'Boots: +%s%% base movement speed'),
+ 'tooltip.modern_ite.gem_fireproof': ('胸甲：火焰伤害减少 %s%%', 'Chestplate: %s%% less fire damage'),
+ 'tooltip.modern_ite.gem_explosionproof': ('护腿：爆炸伤害减少 %s%%', 'Leggings: %s%% less explosion damage'),
+ 'tooltip.modern_ite.gem_nutrition': ('穿着护甲：营养容量 +%s（最多 20）', 'Worn armor: +%s nutrition capacity, at most 20'),
+ 'tooltip.modern_ite.gem_highest': ('同件装备相同类型仅最高阶生效，可在镶嵌台取出', 'Highest rank of each type per item applies. Remove at a gem table.'),
+ 'tooltip.modern_ite.enhance_stone': ('用于独立强化锻造台，查看强化按钮可见本次需求', 'Used at a forging table; hover Forge for the required materials.'),
+ 'tooltip.modern_ite.universal_stone': ('可替代任意强化石，基础失败率 50％', 'Replaces any enhancement stone; base failure chance 50 percent.'),
+ 'tooltip.modern_ite.forge_grade': ('独立锻造等级：%s（增强 %s%%）', 'Forging grade: %s (%s%% enhancement)'),
+ 'tooltip.modern_ite.grindings': ('磨具拓展：%s/3 成长等级', 'Grinding extensions: %s/3 growth levels'),
+ 'tooltip.modern_ite.socket': ('镶嵌：%s %s', 'Socketed: %s %s'),
+ 'tooltip.modern_ite.forge_failure': ('失败概率：%s%%；失败消耗材料与部分耐久，锻造等级不下降', 'Failure: %s%%. Materials and durability are consumed; grade is retained.'),
+ 'message.modern_ite.grinder_full': ('这件装备已使用过 3 次磨具', 'This item already has three grinding extensions.'),
+ 'message.modern_ite.grinder_used': ('成长上限增加 1（磨具 %s/3）', 'Growth level cap increased by 1 (%s/3).'),
+ 'container.modern_ite.gem_setting': ('宝石镶嵌台', 'Gem Setting'),
+ 'container.modern_ite.forging': ('独立强化锻造', 'Equipment Forging'),
+ 'container.modern_ite.equipment': ('装备', 'Gear'), 'container.modern_ite.sockets': ('8 个可拆卸宝石孔', '8 gem sockets'),
+ 'container.modern_ite.materials': ('材料（鼠标悬停按钮查看）', 'Materials (hover button)'),
+ 'container.modern_ite.axe': ('斧', 'Axe'), 'container.modern_ite.hammer': ('战锤', 'Hammer'),
+ 'button.modern_ite.forge': ('强化', 'Forge'),
+ 'forge.modern_ite.status_0': ('放入装备、斧、战锤和材料', 'Add gear, tools and materials'),
+ 'forge.modern_ite.status_1': ('锻造进行中，物品已锁定', 'Forging; inventory locked'),
+ 'forge.modern_ite.status_2': ('强化成功，领取右侧装备', 'Success! Collect the output.'),
+ 'forge.modern_ite.status_3': ('强化失败，等级保留', 'Failed; grade retained'),
+ 'forge.modern_ite.status_4': ('材料不足、锻造台等级不足或已满级', 'Check costs, tier and grade'),
+}
+for key,(chinese,english) in messages.items(): zh[key], en[key] = chinese, english
+save('modern_ite/gear-lang-zh_cn.json', zh); save('modern_ite/gear-lang-en_us.json', en)
+EX.close(); ITE.close()
+print(f'Generated gear resources: 60 gems, 5 shards, 4 stones, 6 stations; {len(zh)} translations per locale.')

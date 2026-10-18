@@ -1,0 +1,7 @@
+{
+  "message.modern_ite.teleport_five_minutes": "五分钟后将被地底符文随机传送，请做好准备。",
+  "message.modern_ite.teleport_one_minute": "一分钟后将被地底符文随机传送。",
+  "message.modern_ite.teleport_countdown": "地底符文随机传送倒计时：%s 秒",
+  "message.modern_ite.teleport_complete": "地底符文随机传送已完成。",
+  "message.modern_ite.teleport_no_landing": "未找到安全落点，十秒后重试。"
+}

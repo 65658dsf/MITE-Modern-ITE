@@ -1,0 +1,7 @@
+{
+  "message.modern_ite.teleport_five_minutes": "Underworld rune teleport in five minutes. Prepare to move.",
+  "message.modern_ite.teleport_one_minute": "Underworld rune teleport in one minute.",
+  "message.modern_ite.teleport_countdown": "Underworld rune teleport in %s seconds.",
+  "message.modern_ite.teleport_complete": "Underworld rune teleport complete.",
+  "message.modern_ite.teleport_no_landing": "No safe landing found. Retrying in ten seconds."
+}

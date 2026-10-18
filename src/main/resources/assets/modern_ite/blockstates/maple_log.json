@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "modern_ite:block/maple_log"
+    },
+    "axis=x": {
+      "model": "modern_ite:block/maple_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z": {
+      "model": "modern_ite:block/maple_log",
+      "x": 90
+    }
+  }
+}

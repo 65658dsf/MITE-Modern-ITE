@@ -1,0 +1,43 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:golden_axe",
+    "minecraft:iron_axe",
+    {
+      "id": "mite:adamantium_axe",
+      "required": false
+    },
+    {
+      "id": "mite:ancient_metal_axe",
+      "required": false
+    },
+    {
+      "id": "mite:copper_axe",
+      "required": false
+    },
+    {
+      "id": "mite:flint_axe",
+      "required": false
+    },
+    {
+      "id": "mite:mithril_axe",
+      "required": false
+    },
+    {
+      "id": "mite:obsidian_axe",
+      "required": false
+    },
+    {
+      "id": "mite:rusted_iron_axe",
+      "required": false
+    },
+    {
+      "id": "mite:silver_axe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_axe",
+      "required": false
+    }
+  ]
+}

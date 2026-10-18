@@ -1,0 +1,15 @@
+{
+  "enchantment.modern_ite.fixed": "固定",
+  "enchantment.modern_ite.chain": "连锁",
+  "enchantment.modern_ite.slowdown": "缓慢",
+  "enchantment.modern_ite.plucking": "采摘",
+  "enchantment.modern_ite.reaping": "收割",
+  "enchantment.modern_ite.defenced": "格挡",
+  "enchantment.modern_ite.crit": "暴击",
+  "enchantment.modern_ite.extend": "延伸",
+  "enchantment.modern_ite.emergency": "紧急守备",
+  "enchantment.modern_ite.conqueror": "征服者",
+  "enchantment.modern_ite.beheading": "斩首",
+  "enchantment.modern_ite.experience": "阅历",
+  "tooltip.modern_ite.emergency_cooldown": "紧急守备冷却：%s 秒"
+}

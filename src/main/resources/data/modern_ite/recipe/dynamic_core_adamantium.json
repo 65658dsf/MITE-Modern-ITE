@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ADA",
+    "BCB",
+    "ADA"
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:glowstone"
+    },
+    "B": {
+      "item": "mite:vibranium_ingot"
+    },
+    "C": {
+      "item": "modern_ite:dynamic_core_mithril"
+    },
+    "D": {
+      "item": "mite:adamantium_ingot"
+    }
+  },
+  "result": {
+    "id": "modern_ite:dynamic_core_adamantium",
+    "count": 1
+  }
+}

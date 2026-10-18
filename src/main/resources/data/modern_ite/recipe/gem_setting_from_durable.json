@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "PGP",
+    "PPP"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "P": {
+      "item": "minecraft:oak_planks"
+    },
+    "G": {
+      "item": "modern_ite:gem_durable_1"
+    }
+  },
+  "result": {
+    "id": "modern_ite:gem_setting",
+    "count": 1
+  }
+}

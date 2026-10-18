@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "modern_ite:red_colorful"
+    }
+  },
+  "result": {
+    "id": "modern_ite:red_colorful_wall",
+    "count": 6
+  }
+}

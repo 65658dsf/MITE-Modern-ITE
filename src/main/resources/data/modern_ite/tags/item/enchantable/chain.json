@@ -1,0 +1,42 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:iron_pickaxe",
+    {
+      "id": "mite:adamantium_pickaxe",
+      "required": false
+    },
+    {
+      "id": "mite:adamantium_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:ancient_metal_pickaxe",
+      "required": false
+    },
+    {
+      "id": "mite:ancient_metal_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:iron_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:mithril_pickaxe",
+      "required": false
+    },
+    {
+      "id": "mite:mithril_war_hammer",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_pickaxe",
+      "required": false
+    },
+    {
+      "id": "mite:vibranium_war_hammer",
+      "required": false
+    }
+  ]
+}

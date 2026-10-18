@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    },
+    {
+      "item": "modern_ite:cyan_colorful"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:purple_colorful",
+    "count": 9
+  }
+}

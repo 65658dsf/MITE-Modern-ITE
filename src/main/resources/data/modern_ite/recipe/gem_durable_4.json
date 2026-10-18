@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:gem_durable_3"
+    },
+    {
+      "item": "modern_ite:gem_shard_4"
+    },
+    {
+      "item": "modern_ite:gem_shard_4"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:gem_durable_4",
+    "count": 1
+  }
+}

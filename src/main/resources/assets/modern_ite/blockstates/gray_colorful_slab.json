@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "modern_ite:block/gray_colorful_slab"
+    },
+    "type=top": {
+      "model": "modern_ite:block/gray_colorful_slab_top"
+    },
+    "type=double": {
+      "model": "modern_ite:block/gray_colorful"
+    }
+  }
+}

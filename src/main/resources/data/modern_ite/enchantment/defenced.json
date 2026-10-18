@@ -1,0 +1,22 @@
+{
+  "anvil_cost": 2,
+  "description": {
+    "translate": "enchantment.modern_ite.defenced"
+  },
+  "effects": {},
+  "max_cost": {
+    "base": 2147483647,
+    "per_level_above_first": 0
+  },
+  "max_level": 1,
+  "min_cost": {
+    "base": 51,
+    "per_level_above_first": 20
+  },
+  "primary_items": "#modern_ite:enchantable/defenced",
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#modern_ite:enchantable/defenced",
+  "weight": 10
+}

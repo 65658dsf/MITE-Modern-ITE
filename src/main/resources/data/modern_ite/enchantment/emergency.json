@@ -1,0 +1,22 @@
+{
+  "anvil_cost": 2,
+  "description": {
+    "translate": "enchantment.modern_ite.emergency"
+  },
+  "effects": {},
+  "max_cost": {
+    "base": 2147483647,
+    "per_level_above_first": 0
+  },
+  "max_level": 1,
+  "min_cost": {
+    "base": 36,
+    "per_level_above_first": 15
+  },
+  "primary_items": "#modern_ite:enchantable/emergency",
+  "slots": [
+    "armor"
+  ],
+  "supported_items": "#modern_ite:enchantable/emergency",
+  "weight": 10
+}

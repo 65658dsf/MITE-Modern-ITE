@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    " T "
+  ],
+  "key": {
+    "I": {
+      "item": "mite:mithril_ingot"
+    },
+    "T": {
+      "item": "modern_ite:iron_forging_table"
+    }
+  },
+  "result": {
+    "id": "modern_ite:mithril_forging_table",
+    "count": 1
+  }
+}

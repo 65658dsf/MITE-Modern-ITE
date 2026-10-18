@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#*#",
+    "#*#",
+    " * "
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:iron_nugget"
+    },
+    "*": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "id": "modern_ite:club_iron",
+    "count": 1
+  }
+}

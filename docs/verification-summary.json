@@ -1,0 +1,53 @@
+{
+  "author": "NingMeng123",
+  "verification_date": "2026-10-18",
+  "minecraft": "1.21.1",
+  "neoforge": "21.1.259",
+  "base_mod_version": "0.1.9",
+  "extension_version": "0.1.0",
+  "base_regression": {
+    "junit_passed": 1590,
+    "gametest_passed": 2054
+  },
+  "extension_junit": {
+    "passed": 8,
+    "failures": 0,
+    "errors": 0
+  },
+  "extension_gametest": {
+    "passed": 44,
+    "recipe_errors": 0,
+    "tag_errors": 0
+  },
+  "client": {
+    "status": "passed",
+    "failures": [],
+    "creature_renderer_count": 48,
+    "projectile_renderer_count": 2,
+    "item_model_count": 253,
+    "effect_sprite_count": 7,
+    "world_created": false,
+    "server_connected": false,
+    "gameplay_verified": false,
+    "latest_launch_confirmed": true
+  },
+  "release_jar": {
+    "sha256": "29848edb024d9d474db7c33cdc59fda3b3b9d0ae379544a4652f029df9b37eac",
+    "bytes": 1664021,
+    "nested_jars": false,
+    "old_runtime_classes": false,
+    "base_classes_bundled": false,
+    "test_classes_bundled": false
+  },
+  "source_archives": {
+    "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar": "594c152bb7cfe655f9b0744aea2ed45d71696779cd842c71be2501189c540d98",
+    "[MITE不可能这么简单]MITE-ITE-2.0.28.jar": "b891dc495379e0d503207d1a44eb01a9661db42dba31831d77a32dd5162ff798"
+  },
+  "audited_assets": 213,
+  "json_files_checked": 1185,
+  "manual_verification_pending": [
+    "Full combat and behavior verification for all 48 mobs",
+    "Multiplayer behavior and long-term balance",
+    "Visual menu acceptance and world-generation distribution"
+  ]
+}

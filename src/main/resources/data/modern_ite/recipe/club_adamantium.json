@@ -1,0 +1,24 @@
+{
+  "type": "mite:vibranium_upgrade",
+  "category": "misc",
+  "pattern": [
+    "#*#",
+    "#*#",
+    " A "
+  ],
+  "key": {
+    "#": {
+      "item": "mite:adamantium_nugget"
+    },
+    "*": {
+      "item": "mite:adamantium_ingot"
+    },
+    "A": {
+      "item": "modern_ite:club_mithril"
+    }
+  },
+  "result": {
+    "id": "modern_ite:club_adamantium",
+    "count": 1
+  }
+}

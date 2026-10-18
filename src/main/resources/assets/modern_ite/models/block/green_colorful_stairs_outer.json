@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "modern_ite:block/green_colorful",
+    "top": "modern_ite:block/green_colorful",
+    "side": "modern_ite:block/green_colorful"
+  }
+}

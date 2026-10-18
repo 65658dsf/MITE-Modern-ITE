@@ -1,0 +1,524 @@
+{
+  "author": "NingMeng123",
+  "assets": [
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/fancy_red.png",
+      "target": "assets/modern_ite/textures/item/fancy_red.png",
+      "sha256": "ca74da296706ea2a144d85c38a8e34ed5fff01eeb3cc073eecae71750fec0432"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/nether_ender_eye.png",
+      "target": "assets/modern_ite/textures/item/nether_ender_eye.png",
+      "sha256": "53ad6ebfbfedd0f5f59c633dbc307ecf2bc040e3cf0c27eda6656bb56967c02c"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/stack_torch.png",
+      "target": "assets/modern_ite/textures/item/stack_torch.png",
+      "sha256": "0f516050730151157d51f08f5c0c634e3159a417761c329a0bea92aaa5f3d1d4"
+    },
+    {
+      "jar": "[MITE不可能这么简单]MITE-ITE-2.0.28.jar",
+      "source": "assets/miteite/textures/items/diamond_chunk.png",
+      "target": "assets/modern_ite/textures/item/diamond_chunk.png",
+      "sha256": "0a55f60498511058ef5d2fbd0d7c27929c068a440ba21c71ee53f70f5463e956"
+    },
+    {
+      "jar": "[MITE不可能这么简单]MITE-ITE-2.0.28.jar",
+      "source": "assets/miteite/textures/items/blaze_coal_powder.png",
+      "target": "assets/modern_ite/textures/item/blaze_coal_powder.png",
+      "sha256": "f663f17ba311319c297dd6425c7cc39db91fa77c25448cb69a95be1b683b9f74"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/dynamic_core/dynamic_core_3.png",
+      "target": "assets/modern_ite/textures/item/dynamic_core_mithril.png",
+      "sha256": "a3b43e30fe5cb3564cc193945929d1db5b6c0fb610200a70e8c6ac188583a012"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/dynamic_core/dynamic_core_5.png",
+      "target": "assets/modern_ite/textures/item/dynamic_core_adamantium.png",
+      "sha256": "692f7d99b0385769acff377da60f04abb0a9e4a5d51b4d609124f4c96114b5a0"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/models/armor/ironBucket_layer_1.png",
+      "target": "assets/modern_ite/textures/models/armor/iron_bucket_layer_1.png",
+      "sha256": "00ef30084045d6a9a517b0040d52384d823c37850da84bfb14befd0282502157"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/voucher/voucher_fishing.png",
+      "target": "assets/modern_ite/textures/item/voucher_fishing.png",
+      "sha256": "ac65ca3ed2eb45579c900b2a6f6591a49d3fc4013b48b8e1e0cc533fa85e0149"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/voucher/voucher_planting.png",
+      "target": "assets/modern_ite/textures/item/voucher_planting.png",
+      "sha256": "bcd8850500db1eaf7dd3f50c6030d6c0da65fcd7633d7a154ff8580a6b9046f8"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/voucher/voucher_villager.png",
+      "target": "assets/modern_ite/textures/item/voucher_villager.png",
+      "sha256": "3bf2d2d6ba66360763d78a0beed28aebe4472bb8d55f7689646f4b79101e61d2"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/voucher/voucher_club_core.png",
+      "target": "assets/modern_ite/textures/item/voucher_club_core.png",
+      "sha256": "80fc9a8c78d5286d2e4b8e9e2f09c6d003c40036a50796a71079b2d9a4d028c7"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/copper_club.png",
+      "target": "assets/modern_ite/textures/item/club_copper.png",
+      "sha256": "f56c0b83f4578abea4811fea9cf15feec4e2700ae7807cd441d9bf8aa6b296d8"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/silver_club.png",
+      "target": "assets/modern_ite/textures/item/club_silver.png",
+      "sha256": "9a33b7a72b76889fe0ba5cb1ed95c404ce14c6a3c4d7a223df5428a1b2954830"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/gold_club.png",
+      "target": "assets/modern_ite/textures/item/club_gold.png",
+      "sha256": "fee2cacdc501c8ffc8fb9a8a2fd57314dd9c055496007ea7bee0571148f821de"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/iron_club.png",
+      "target": "assets/modern_ite/textures/item/club_iron.png",
+      "sha256": "31cf65e667aca781bb5b7dc1bfea02c362e2e12f28f9fe0f7cac7c5d50df5b05"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/ancient_metal_club.png",
+      "target": "assets/modern_ite/textures/item/club_ancient_metal.png",
+      "sha256": "6b0ecac59123a67ed7ed16337f092ba595003d9ea0b1cdc6ae384d153464e4cd"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/mithril_club.png",
+      "target": "assets/modern_ite/textures/item/club_mithril.png",
+      "sha256": "ba690ce8c172687b49d6b07522f34a97f5a2ab0e63321ba61a65c288e4ad6d37"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/adamantium_club.png",
+      "target": "assets/modern_ite/textures/item/club_adamantium.png",
+      "sha256": "d4196c9dc1661e7d0037cf736fc3703726fedb6cdadd5834cdb540e9e470812d"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/club/vibranium_club.png",
+      "target": "assets/modern_ite/textures/item/club_vibranium.png",
+      "sha256": "7f73c8b035287e858018950d36eeef9ed338e44e5945ac98e52c3133c9ca9bd5"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/crossbow/crossbow_standby.png",
+      "target": "assets/modern_ite/textures/item/crossbow.png",
+      "sha256": "e1bddad32a6ad647b08608b982ea509f424312ee41ce2558c5abd0387b0fd337"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/crossbow/crossbow_pulling_0.png",
+      "target": "assets/modern_ite/textures/item/crossbow_pulling_0.png",
+      "sha256": "716662b863051be15b12663bfd5e3f8c42a5d1644391231b0dc9e4f91ebfeeaa"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/crossbow/crossbow_pulling_1.png",
+      "target": "assets/modern_ite/textures/item/crossbow_pulling_1.png",
+      "sha256": "d87fbce426974543a554d415b00e7330776d67fe97f0468f72ea9a0136bed4fb"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/crossbow/crossbow_pulling_2.png",
+      "target": "assets/modern_ite/textures/item/crossbow_pulling_2.png",
+      "sha256": "2caed197e426915a0e2fab8db20f258657be2b8ad62905016ce6933c513416da"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/items/crossbow/crossbow_arrow.png",
+      "target": "assets/modern_ite/textures/item/crossbow_arrow.png",
+      "sha256": "43bbd6b947fb70806ddcafeba44cfc26b46407d4da6f68aecd93bad57a0b7428"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/block_spawn.png",
+      "target": "assets/modern_ite/textures/block/resurrection_array.png",
+      "sha256": "d4aca20c02f6543232431204b9cc73889ce04895618ea20ffa6157cbdfd1e54c"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/fancy_red.png",
+      "target": "assets/modern_ite/textures/block/fancy_red_ore.png",
+      "sha256": "83aedf7e18db1ac8197a5f438775424e37fbfdc46f4d61e79d4865ea18f94aa0"
+    },
+    {
+      "jar": "[MITE不可能这么简单]MITE-ITE-2.0.28.jar",
+      "source": "assets/miteite/textures/blocks/nether_adamantium_ore.png",
+      "target": "assets/modern_ite/textures/block/nether_adamantium_ore.png",
+      "sha256": "d93c51d68f5fd50a1ca2b809957b6d9fc27a2f6c183a11206f2fa11e9ebcb5f5"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/log_maple.png",
+      "target": "assets/modern_ite/textures/block/maple_log.png",
+      "sha256": "bdfa9809b357db2c4b5a88f1d0a863247447af57c1a053937520ad638257ff84"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/log_maple_top.png",
+      "target": "assets/modern_ite/textures/block/maple_log_top.png",
+      "sha256": "e6d42656f98e388833fe817b9c673b2bad8e2cfb81b60a0b12c2c1ba2a9d6459"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/leaves_maple.png",
+      "target": "assets/modern_ite/textures/block/maple_leaves.png",
+      "sha256": "195f670b90f74ca80aaa20d05daf7f0f8f64702fe1d65193441a99c13aa40cfa"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/planks_maple.png",
+      "target": "assets/modern_ite/textures/block/maple_planks.png",
+      "sha256": "fafeec3281a7b56d7f1068468c2170a6748fec9af59cbd205a0a03430d721ac0"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/sapling_maple.png",
+      "target": "assets/modern_ite/textures/block/maple_sapling.png",
+      "sha256": "a869b1b50c2696c7de7653a2a15716e4b51d802eab8c48ac605bc8a04b58a861"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_white.png",
+      "target": "assets/modern_ite/textures/block/white_colorful.png",
+      "sha256": "50ff381849b9186893ded63f2ee0fb664f20ba6d95e80be8a5136b4fa9d79fd2"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_white.png",
+      "target": "assets/modern_ite/textures/block/white_colorful_bricks.png",
+      "sha256": "bf8baeba52165d74b1e5fc0bb9a89cc0319360bfcc2b4c4234c81a4223885a37"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_white.png",
+      "target": "assets/modern_ite/textures/block/white_gotcha.png",
+      "sha256": "5c5cdd28e0fd93261787bec4b9a3549c6789ddc02c6ac4747e7423d0fc502dba"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_orange.png",
+      "target": "assets/modern_ite/textures/block/orange_colorful.png",
+      "sha256": "5177c66abccd4d4e6c34c2f6ac07c575dd95a18f4870446be865a4381c5056a6"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_orange.png",
+      "target": "assets/modern_ite/textures/block/orange_colorful_bricks.png",
+      "sha256": "9e7c139acd6b15945833797b9e6b551e5edb92767d74e54e8d793b38cd5f0b0d"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_orange.png",
+      "target": "assets/modern_ite/textures/block/orange_gotcha.png",
+      "sha256": "f872a7aa98ae1383505733e6c6c71479c74d7c8fd7d6c4b3fee2a2f009515a25"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_magenta.png",
+      "target": "assets/modern_ite/textures/block/magenta_colorful.png",
+      "sha256": "a840317e25665578131946e3c66ca5bf86486709565bfe3dfaad53935f65314f"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_magenta.png",
+      "target": "assets/modern_ite/textures/block/magenta_colorful_bricks.png",
+      "sha256": "456199b599dc5317081e409caecf05a84e274b4f665380f40aa801eac77e3402"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_magenta.png",
+      "target": "assets/modern_ite/textures/block/magenta_gotcha.png",
+      "sha256": "502b9c3f27a0da2d08154f005da61beb22422f96cbf583535d964f283238de6f"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_light_blue.png",
+      "target": "assets/modern_ite/textures/block/light_blue_colorful.png",
+      "sha256": "9090d69c9ac480c552142b0f2e38fb4ae974879102215da3e82fd9ffdb4c259e"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_light_blue.png",
+      "target": "assets/modern_ite/textures/block/light_blue_colorful_bricks.png",
+      "sha256": "23b27cb5815cd71f709825a31f1c20212d6f20a408fb2e06af143dad61a87a1c"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_light_blue.png",
+      "target": "assets/modern_ite/textures/block/light_blue_gotcha.png",
+      "sha256": "101454b8c6a9bfd60688ca21ef2c6a5466a2057e9a57db94a4493fda9c8e7184"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_yellow.png",
+      "target": "assets/modern_ite/textures/block/yellow_colorful.png",
+      "sha256": "6949492d7a4e341ab05648bcf1cca9eed4d6b77401d0f21fc6c63b81ab1c84b5"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_yellow.png",
+      "target": "assets/modern_ite/textures/block/yellow_colorful_bricks.png",
+      "sha256": "863849bc998d64b4556bdcce5642cf00a1832a60e9a00cfed10f1fdfc93d26f7"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_yellow.png",
+      "target": "assets/modern_ite/textures/block/yellow_gotcha.png",
+      "sha256": "c57e11a9c533e79680d1940bb65ca2fd29f997c3ce78fe2e90117486fa92b2e6"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_lime.png",
+      "target": "assets/modern_ite/textures/block/lime_colorful.png",
+      "sha256": "bcac9cd4580af30c2a041e2b00ca6a3dff607be71a8a8616daf72a8a3019c47a"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_lime.png",
+      "target": "assets/modern_ite/textures/block/lime_colorful_bricks.png",
+      "sha256": "c82d5a04a8358ead183d6cf7844480908e7a1e03933bf92693295eefa8f0a3ac"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_lime.png",
+      "target": "assets/modern_ite/textures/block/lime_gotcha.png",
+      "sha256": "bbbb72232eb509a8166de20d620a6598cb3688b860fd3dda30826dac09f8e795"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_pink.png",
+      "target": "assets/modern_ite/textures/block/pink_colorful.png",
+      "sha256": "f3c385740345e9ab3792712d5aeebf176eaca8913719eea8da092ced555f257b"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_pink.png",
+      "target": "assets/modern_ite/textures/block/pink_colorful_bricks.png",
+      "sha256": "500ff07f3f9ebd0c45a7a082faaa6522b0fd6ad7f555c58f217061c849fcb020"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_pink.png",
+      "target": "assets/modern_ite/textures/block/pink_gotcha.png",
+      "sha256": "231e218fb6c8412e92b02f17269293c83e8674164fd6ffe46f9c36d139c2608a"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_gray.png",
+      "target": "assets/modern_ite/textures/block/gray_colorful.png",
+      "sha256": "fd06e5e22001f8829144e208c009cdc219d547d912993cf0a5a5a0b37c72b871"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_gray.png",
+      "target": "assets/modern_ite/textures/block/gray_colorful_bricks.png",
+      "sha256": "3b67e3eab97861f1758a3d604f87b2fd8374bb32e064908c35bab2b476696601"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_gray.png",
+      "target": "assets/modern_ite/textures/block/gray_gotcha.png",
+      "sha256": "7441c1f8c4bdd0aece7683f15dd200e80af69bdefb0f2a7b3485edc7533d2e31"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_light_gray.png",
+      "target": "assets/modern_ite/textures/block/light_gray_colorful.png",
+      "sha256": "df3bbdc99017ed8f67187611df181ee05a7fe669d7048746ce0c9f8f0e3d89c6"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_light_gray.png",
+      "target": "assets/modern_ite/textures/block/light_gray_colorful_bricks.png",
+      "sha256": "4ef6634e2a13aaf322b60df9734f2d28dd8172810dc44cd9f6f08093d42604e4"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_light_gray.png",
+      "target": "assets/modern_ite/textures/block/light_gray_gotcha.png",
+      "sha256": "651e619ebcc90adaa4c3d3ba4be86567404dd92ef3be896f1474a49634be3134"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_cyan.png",
+      "target": "assets/modern_ite/textures/block/cyan_colorful.png",
+      "sha256": "70ea2cff723e69bfa73a02e577e129d8b2112ef6cdaa17731729bb3aa501dd35"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_cyan.png",
+      "target": "assets/modern_ite/textures/block/cyan_colorful_bricks.png",
+      "sha256": "df768e6b696ff43b5575a2eef88a1c90747debc863e654a9a961065c8fbd8c8f"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_cyan.png",
+      "target": "assets/modern_ite/textures/block/cyan_gotcha.png",
+      "sha256": "287923c6ba38e17afefe1c0eb9fa4ea72033e2598ff71757d0d42475f272b1d2"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_purple.png",
+      "target": "assets/modern_ite/textures/block/purple_colorful.png",
+      "sha256": "600d84d82acccb3bf1e194409bb8fc2b3641aa35fe9356310b0b8ccc0eade2e8"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_purple.png",
+      "target": "assets/modern_ite/textures/block/purple_colorful_bricks.png",
+      "sha256": "a998830aa620e59d2318146c21a7b9ccbb397661c1ef538e322f748327741b8d"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_purple.png",
+      "target": "assets/modern_ite/textures/block/purple_gotcha.png",
+      "sha256": "5b169861951cb8846fa8e6bda85e01899e71230ed07f150d9319a3c1f28d7963"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_blue.png",
+      "target": "assets/modern_ite/textures/block/blue_colorful.png",
+      "sha256": "97634a2dc69c854c227ad687b2c4befaff2dba9c8e143a4f07226a15eec63c70"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_blue.png",
+      "target": "assets/modern_ite/textures/block/blue_colorful_bricks.png",
+      "sha256": "c2254018d01ed9d1ca8ddf7c368c4955a04f91e039878fb36bc90e74595dcee5"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_blue.png",
+      "target": "assets/modern_ite/textures/block/blue_gotcha.png",
+      "sha256": "4d5e1634a872337b02e0dd982fe1b721b95b539cce442f53b3f81cdd0d743462"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_brown.png",
+      "target": "assets/modern_ite/textures/block/brown_colorful.png",
+      "sha256": "25f8bb6e32bf4aa89643920c49a2b27c398efeb62ea5b28afeb3e99556dd1c34"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_brown.png",
+      "target": "assets/modern_ite/textures/block/brown_colorful_bricks.png",
+      "sha256": "c5b1daacc4f0289369fa4cbe85493d67d7831b497c543784e0acf376d7157ae2"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_brown.png",
+      "target": "assets/modern_ite/textures/block/brown_gotcha.png",
+      "sha256": "5cfb2981bbff6b0356c81d23e8baa8079924b2e2394b52f3a658f4bfd996e914"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_green.png",
+      "target": "assets/modern_ite/textures/block/green_colorful.png",
+      "sha256": "3c1cda3bcf419a83dd1a96561d463c69fc6d3da9eb8f5dbc67438ee5e138f272"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_green.png",
+      "target": "assets/modern_ite/textures/block/green_colorful_bricks.png",
+      "sha256": "071d4aefe012f3f7bf70195d09090869a439102fef3fbf41c50088e037b33195"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_green.png",
+      "target": "assets/modern_ite/textures/block/green_gotcha.png",
+      "sha256": "52e586f5a20855fd8a889b662981c3a8f437b41940d802430b9c7aa3ee2a8ff1"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_red.png",
+      "target": "assets/modern_ite/textures/block/red_colorful.png",
+      "sha256": "036777fc40d019d3709d00aa79c5e27d711ee4bed60c9f211a34a8785fd51324"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_red.png",
+      "target": "assets/modern_ite/textures/block/red_colorful_bricks.png",
+      "sha256": "983b045301957ab2c18e1ffcb7a77dacf3ba063ab13adc8e17698842547ee15c"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_red.png",
+      "target": "assets/modern_ite/textures/block/red_gotcha.png",
+      "sha256": "f57ad7eab316938bff84d3c75a6a91c27640a0b76af0150972feaa3476521be0"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful/colorful_black.png",
+      "target": "assets/modern_ite/textures/block/black_colorful.png",
+      "sha256": "caaed9cbc8170bbe2861a655fab5a84ae0022742a862f888dd5517f0394ba076"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/colorful_brick/colorful_brick_black.png",
+      "target": "assets/modern_ite/textures/block/black_colorful_bricks.png",
+      "sha256": "bc1e521bfcd0fe6aea338156fca673fa711dab0ec86994a733c2595eea1ede0c"
+    },
+    {
+      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
+      "source": "assets/extreme/textures/blocks/gotcha_black.png",
+      "target": "assets/modern_ite/textures/block/black_gotcha.png",
+      "sha256": "bba9f76e6372c6f8ef2a9d2dca6fd6a51a08e33ea87f22d578e8db55f4d6738a"
+    },
+    {
+      "jar": "[MITE不可能这么简单]MITE-ITE-2.0.28.jar",
+      "source": "assets/miteite/textures/blocks/furnace/vibranium/side.png",
+      "target": "assets/modern_ite/textures/block/vibranium_furnace_side.png",
+      "sha256": "8976f795ed63dcaf501a2ad692b9fa33764e8d717f8cca9e35a25b414ca56f04"
+    },
+    {
+      "jar": "[MITE不可能这么简单]MITE-ITE-2.0.28.jar",
+      "source": "assets/miteite/textures/blocks/furnace/vibranium/top.png",
+      "target": "assets/modern_ite/textures/block/vibranium_furnace_top.png",
+      "sha256": "0d036deaa0ebe1911d0c1f58104c52e39a6a5d83b8be0cc2180bac60a48a4917"
+    },
+    {
+      "jar": "[MITE不可能这么简单]MITE-ITE-2.0.28.jar",
+      "source": "assets/miteite/textures/blocks/furnace/vibranium/front_on.png",
+      "target": "assets/modern_ite/textures/block/vibranium_furnace_front_on.png",
+      "sha256": "6755c60ef5a47d40e8fb2b0705cfa54a7659dc8f9bd30af5909b74d91d1ca1fe"
+    },
+    {
+      "jar": "[MITE不可能这么简单]MITE-ITE-2.0.28.jar",
+      "source": "assets/miteite/textures/blocks/furnace/vibranium/front_off.png",
+      "target": "assets/modern_ite/textures/block/vibranium_furnace_front_off.png",
+      "sha256": "dc2f609f26ecdc32404a6a7ae8bd1cef9122cd9ea68dfc0eaa3ddcaeb0d857f9"
+    }
+  ],
+  "adaptations": [
+    "Modern namespaced identities replace old metadata subtypes.",
+    "Existing cherry wood, beds and lantern retain modern identities.",
+    "Initial colorful stone and cushion-light recipes supplement source recoloring-only entries.",
+    "Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.",
+    "Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.",
+    "Torch bundles unpack one at a time because modern MITE torches stack to sixteen.",
+    "Nether adamantium and red diamond heights are mapped to modern dimensions."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "type": "mite:vibranium_upgrade",
+  "category": "misc",
+  "pattern": [
+    "#*#",
+    "#*#",
+    " A "
+  ],
+  "key": {
+    "#": {
+      "item": "mite:ancient_metal_nugget"
+    },
+    "*": {
+      "item": "mite:ancient_metal_ingot"
+    },
+    "A": {
+      "item": "modern_ite:club_iron"
+    }
+  },
+  "result": {
+    "id": "modern_ite:club_ancient_metal",
+    "count": 1
+  }
+}

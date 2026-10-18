@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    },
+    {
+      "item": "modern_ite:gray_colorful"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:light_gray_colorful",
+    "count": 9
+  }
+}

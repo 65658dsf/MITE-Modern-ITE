@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "VOA",
+    "DND",
+    "AOV"
+  ],
+  "key": {
+    "V": {
+      "item": "mite:vibranium_ingot"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    },
+    "A": {
+      "item": "mite:adamantium_ingot"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "N": {
+      "item": "mite:netherrack_furnace"
+    }
+  },
+  "result": {
+    "id": "modern_ite:vibranium_furnace",
+    "count": 1
+  }
+}

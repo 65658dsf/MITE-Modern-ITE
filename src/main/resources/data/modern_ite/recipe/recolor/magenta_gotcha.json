@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:magenta_gotcha"
+    }
+  ],
+  "result": {
+    "id": "modern_ite:light_blue_gotcha",
+    "count": 1
+  }
+}

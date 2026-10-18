@@ -1,0 +1,32 @@
+{
+  "author": "NingMeng123",
+  "source": "Extreme-lh0.6.6 EXLootTable, EXTrading, EntityVillagerMixin",
+  "fishing": {
+    "added_weight_total": 180,
+    "retained_modern_fish_bridge_weight": 100,
+    "voucher_weight": 36,
+    "food_weights": 16,
+    "lower_nugget_weights": 8,
+    "higher_nugget_weights": 4,
+    "preserved": [
+      "bait",
+      "bite timing",
+      "offshore fish",
+      "treasure",
+      "junk",
+      "fishing XP"
+    ]
+  },
+  "trading": {
+    "existing_native_and_R196_offers": "preserved",
+    "new_attempts": "one per attained villager level",
+    "maximum_uses": 7,
+    "voucher_chance": 0.15,
+    "voucher_roll_cooldown_ticks": 40,
+    "normal_books": "level*5 + random(0..9)",
+    "single_level_special_books": "35 + random(0..9)",
+    "extend_book_level_cap": 1,
+    "fortune_book_level_cap": 3,
+    "prices_split_at_actual_item_stack_limit": true
+  }
+}
