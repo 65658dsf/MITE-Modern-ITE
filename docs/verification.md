@@ -2,11 +2,31 @@
 
 开发署名：NingMeng123。
 
-此文件区分本次候选提交的独立验证与历史混合工作区记录。提交版本为 **0.1.10**，本次隔离构建、14 项 JUnit、102 项 GameTest、标题页、实际 GPU 检查及发布包核对全部通过。下文早期版本的日志、截图和通过数字保留为当时工作区的历史证据，不能替代本轮隔离验证。
+当前版本为 **0.1.12**，源码提交纳入全套振金保护V星空和动态光翼；本轮构建、GameTest源码编译、标题页、实际GPU、GIF与包一致性检查通过。14项JUnit复用既有通过结果；108项服务端GameTest是相同玩法与触发门槛代码在0.1.11的历史验证，本轮未重跑。已推送的 **0.1.10** 保留独立14项JUnit、102项GameTest及发布包证据；各范围分别记录。
 
-## 0.1.10 候选提交独立验收（2026-10-18）
+## 0.1.12：振金配色与根部向尖端流光
 
-从候选树 `874bedee6d35186435001997ed02b62613868651` 建立 `build/verification/commit-prep/snapshot`，独立完成构建、**14 项 JUnit 和 102 项 GameTest**，失败和错误均为0，配方与标签解析错误均为0。102项是本次隔离提交范围的测试，与历史混合工作区的108项分别记录；最终文档仅补充实测证据，不改变已验证的代码和资源。
+触发门槛保持为玩家或僵尸四个正确槽位均穿振金，每件普通保护附魔或MITE保护成长词缀至少V，可跨部件混用；同件两类等级不相加。甲面继续只使用原生护甲贴图alpha，RGB不用来上色；程序化星空采用原振金锭底色 `#404058`、`#4A5C8A`、`#6E6E86` 与高光 `#77CEFB`、`#D8D8D8`，保留面孔、裸前臂及透明开口。Re-Avaritia固定提交的渲染方法参考与独立程序化资源说明沿用下方记录。
+
+4对、共8片阶梯像素光翼跟随最终身体姿态及幼年模型缩放。黄→绿→青色带以 `FLOW_PERIOD_TICKS=80`（4秒）由根部向尖端平移，亮屑沿翼移动；完整星空周期仍为400 tick（20秒），时间来自实体tick，额外粒子为0。固定姿态GPU审计分别比较0、5、10、80 tick，并用归一化色比排除单纯亮度脉冲：玩家两侧5／10 tick分别向外平移12／23像素，僵尸两侧为13／25像素；80 tick回归，轮廓IoU均超过0.95。
+
+**本轮渲染范围验收通过。** 构建、GameTest源码编译、标题页与实际GPU检查通过；14项JUnit复用既有通过结果，服务端108项GameTest未重跑，历史来源明确为0.1.11的 `build/verification/cosmic-gametest.log`。新预览 `build/verification/mob-render-audit/cosmic-vibranium-flow.gif` 为200个原生GPU帧、10fps、20秒，SHA-256为 `25afd9c67ae946467963ee6eeaecb66094822762df769b97e645b1a48aa187dc`。
+
+本地包 `build/libs/modern-ite-0.1.12.jar` 为1,077,523字节，SHA-256为 `675a8b1ea22c2915c048ee4efd05a20e3d9fcca0cbc0df5897bf7ba665a772b1`；160个生产类、528份资源JSON及3份shader资源均与编译输出或源码逐字节一致，无测试类、本体类、旧运行时类、嵌套JAR或JEI实现混入。日志为 `build/verification/vibranium-flow-build.log`、`vibranium-flow-client.log`、`vibranium-flow-render.log`，当前完整核对为 `build/verification/release-audit.json`。0.1.12源码提交包含全套振金保护V星空和动态光翼；下方独立0.1.10发布范围保留为历史证据，真实多人实战仍待验证。
+
+## 0.1.11 历史本地版本：星空甲面与八片光刃
+
+四个正确槽位均为振金护甲，且每件普通保护附魔或MITE保护成长词缀至少V时，玩家和僵尸共用星空甲面及背部光刃；两类来源可在不同部件混用。混入其他材质、缺件、错槽或一件不足V均不触发，同一件普通IV与成长IV不相加。原生护甲纹理只用于alpha覆盖区域，RGB不参与最终颜色；头、胸、腿、靴的可见甲面统一替换为星空，保留原生面孔、裸前臂与透明开口。
+
+实现参考 [Re-Avaritia的固定cosmic.fsh](https://github.com/Nova-Committee/Re-Avaritia/blob/43fdb64ceacf07662c39c1e82cc07fdc322163ef/src/main/resources/assets/avaritia/shaders/core/cosmic.fsh) 的视线与分层星空方法，适配本项目NeoForge 1.21.1原生shader管线。星云、星点和颜色均独立程序化生成，没有复制上游星图或美术资源。每个实体的shader pass立即绘制，时间来自实体tick，不使用真实墙钟；400 tick（20秒）循环可用于固定时刻GPU复验。
+
+参考图的背部结构落实为4对、共8片阶梯像素光刃，浅金经黄绿到翡翠绿流光；安装座和光刃跟随最终身体姿态，幼年模型采用对应身体分支缩放。星空与光刃共用400 tick周期，额外粒子数量为0。最终动态预览目标为 `build/verification/mob-render-audit/cosmic-light-wings-dynamic.gif`：40个实际GPU帧，每帧500毫秒，总长20秒。
+
+**0.1.11历史状态：本地最终验收通过。** 最后亮度调整后构建、14项JUnit、108项GameTest、标题页及实际GPU检查全部通过，配方和标签错误为0。GPU控制覆盖完整星空甲面、皮肤开口、背部光刃连接、姿态与动态变化；40帧GIF已核对总长20秒，SHA-256为 `b35bc5f3547dd9fc3bb5562e2ca8c5cd8b9bfa4c2edcb1a4a335abc1c415aa4e`。发布包 `build/libs/modern-ite-0.1.11.jar` 为1,076,512字节，SHA-256为 `08726d0481484031538b7b553a5eae17c61692c1162c80d1c15ee6505d506e0f`；160个生产类与编译输出逐字节匹配，528份资源JSON及3份shader资源与源码逐字节一致，无测试类、本体类、嵌套JAR或JEI实现混入。日志为 `build/verification/cosmic-build.log`、`cosmic-gametest.log`、`cosmic-client.log`、`cosmic-render.log`；该版本历史核对摘要保存在 `docs/verification-summary.json` 的 `local_validation_0_1_11`；同名 `release-audit.json` 当前已更新至0.1.12。0.1.11当时未作为独立版本提交或推送，其后续实现纳入0.1.12源码提交；真实多人实战仍待验证。
+
+## 0.1.10 已推送版本独立验收（2026-10-18）
+
+该范围已随提交 `c03abc3f25cc6971a0127e1b264aee0fff3f3f11` 推送GitHub。验证时从候选树 `874bedee6d35186435001997ed02b62613868651` 建立 `build/verification/commit-prep/snapshot`，独立完成构建、**14 项 JUnit 和 102 项 GameTest**，失败和错误均为0，配方与标签解析错误均为0。102项是本次隔离提交范围的测试，与历史混合工作区的108项分别记录；最终文档仅补充实测证据，不改变已验证的代码和资源。
 
 标题页检查通过45个生物渲染器、2个弹体、160个物品模型、7个状态效果图标和2个菜单工厂；振金棒以128×128单帧尺寸加载8帧动画，每帧3 tick。实际GPU检查通过45种纹理、14个重点模型、玩家大头添加／移除，以及5组生物粒子预览；所有检查仅使用隔离目录和自动新建测试世界，未进入用户存档。可选JEI实际界面检查仍是下文历史证据，本轮未重新运行。
 
