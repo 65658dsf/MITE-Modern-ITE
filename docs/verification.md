@@ -15,6 +15,12 @@
 
 仓库保留可审阅的精简结果 [verification-summary.json](verification-summary.json)。构建日志、运行存档和 `build/` 下的完整报告只在本地保存，不进入 Git 历史。
 
+## 盾牌耐久消耗调整
+
+仅安装 ITE 时生效：成功格挡后的玩家盾牌耐久消耗为本体的三倍，怪物为本体的一半并向下取整。例如耐久损伤预算为 4 时，本体扣 5 点，ITE 玩家扣 15 点、怪物扣 2 点。倍率在原生耐久附魔结算前应用；预算低于 3、取消事件、零预算、绕背不消耗和盾牌破损回调保留。本体源码不包含此倍率调整。
+
+2026-10-18 验证：ITE 构建和 8 项 JUnit、54 项组合 GameTest 全部通过。新增 `ShieldWearGameTests` 的 4 项用例覆盖所有已注册盾材质、玩家/怪物、主副手、事件改写预算及末点破损。日志为 `build/verification/shield-wear-build.log` 与 `build/verification/shield-wear-gametest.log`。本体单独运行的 23 项相关 JUnit、34 项盾牌 GameTest 也全部通过，日志为 `../miteto1.21.1neoforge/build/verification/shield-wear-baseline.log`。
+
 ## 0.1.1 生物渲染修复
 
 - 流浪女巫、女巫领主、湮灭骷髅的来源发光图在全透明像素里保留白色 RGB。原版 `RenderType.eyes` 使用加法混合，不按这些像素的 alpha 遮罩绘制，导致全身发白；改为丢弃透明像素的自发光层，保持来源 PNG 原样。
