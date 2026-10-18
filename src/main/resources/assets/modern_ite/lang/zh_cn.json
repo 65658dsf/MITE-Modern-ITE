@@ -5,8 +5,8 @@
   "item.modern_ite.blaze_coal_powder": "烈焰煤粉",
   "item.modern_ite.nether_ender_eye": "堡垒之眼",
   "item.modern_ite.stack_torch": "捆装火把",
-  "item.modern_ite.dynamic_core_mithril": "秘银光源核心",
-  "item.modern_ite.dynamic_core_adamantium": "艾德曼光源核心",
+  "item.modern_ite.dynamic_core_mithril": "秘银灯笼",
+  "item.modern_ite.dynamic_core_adamantium": "艾德曼灯笼",
   "item.modern_ite.iron_bucket_helmet": "铁桶头盔",
   "item.modern_ite.crossbow": "极难弩",
   "item.modern_ite.voucher_fishing": "钓鱼凭证",
@@ -281,5 +281,13 @@
   "message.modern_ite.teleport_one_minute": "一分钟后将被地底符文随机传送。",
   "message.modern_ite.teleport_countdown": "地底符文随机传送倒计时：%s 秒",
   "message.modern_ite.teleport_complete": "地底符文随机传送已完成。",
-  "message.modern_ite.teleport_no_landing": "未找到安全落点，十秒后重试。"
+  "message.modern_ite.teleport_no_landing": "未找到安全落点，十秒后重试。",
+  "item.modern_ite.dynamic_core_copper": "铜灯笼",
+  "item.modern_ite.dynamic_core_silver": "银灯笼",
+  "item.modern_ite.dynamic_core_gold": "金灯笼",
+  "item.modern_ite.dynamic_core_iron": "铁灯笼",
+  "item.modern_ite.dynamic_core_ancient_metal": "古代金属灯笼",
+  "item.modern_ite.dynamic_core_vibranium": "振金灯笼",
+  "tooltip.modern_ite.lantern.offhand": "仅放在副手时生效。",
+  "tooltip.modern_ite.lantern.durability": "照明时消耗耐久，耐久耗尽后停止生效。"
 }

@@ -9,6 +9,9 @@ ROOT=Path(__file__).resolve().parents[1]
 RES=ROOT/'src/main/resources'
 REF=ROOT.parent/'miteto1.21.1neoforge/.reference'
 out=ROOT/'build/verification';out.mkdir(parents=True,exist_ok=True)
+def newest_log(*paths):
+    existing=[path for path in paths if path.exists()]
+    return max(existing,key=lambda path:path.stat().st_mtime) if existing else paths[0]
 sources=[REF/'[极难柳昊定制]Extreme-lh-0.6.6 (3).jar',REF/'[MITE不可能这么简单]MITE-ITE-2.0.28.jar']
 lookup={};source_hashes={}
 for jar in sources:
@@ -30,7 +33,7 @@ report={'author':'NingMeng123','version':version,'source_archives':source_hashes
 if jar.exists():
     with ZipFile(jar) as archive:
         names=archive.namelist()
-        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/')) or n.endswith('GameTests.class') or 'ModernIteClientAudit' in n or 'MobRenderRegressionAudit' in n]
+        forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/')) or n.endswith('GameTests.class') or 'ModernIteClientAudit' in n or 'MobRenderRegressionAudit' in n or 'LanternClientAudit' in n]
         if forbidden:raise SystemExit('Release includes forbidden runtime or test entries: '+str(forbidden))
         metadata=archive.read('META-INF/neoforge.mods.toml').decode()
         assert 'modId="modern_ite"' in metadata and 'versionRange="[0.1.9,)"' in metadata
@@ -54,9 +57,14 @@ if mob_render.exists():
     latest=render_log.read_text(encoding='utf-8',errors='replace') if render_log.exists() else ''
     report['mob_render']['latest_launch_confirmed']='MODERN_ITE_MOB_RENDER_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
     if not report['mob_render']['latest_launch_confirmed']:report['mob_render']['status']='latest_launch_not_verified'
-log=ROOT/'extension-render-gametest.log'
-if not log.exists():log=ROOT/'extension-final.log'
-if not log.exists():log=ROOT/'extension-gametest.log'
+lantern=out/'lantern-client-audit.json'
+if lantern.exists():
+    report['lantern_client']=json.loads(lantern.read_text(encoding='utf-8'))
+    lantern_log=out/'lantern-client.log'
+    latest=lantern_log.read_text(encoding='utf-8',errors='replace') if lantern_log.exists() else ''
+    report['lantern_client']['latest_launch_confirmed']='MODERN_ITE_MOB_RENDER_AUDIT passed' in latest and 'BUILD SUCCESSFUL' in latest
+    if not report['lantern_client']['latest_launch_confirmed']:report['lantern_client']['status']='latest_launch_not_verified'
+log=newest_log(out/'lantern-final.log',out/'lantern-gametest.log',ROOT/'extension-render-gametest.log',ROOT/'extension-final.log',ROOT/'extension-gametest.log')
 if log.exists():
     text=log.read_text(encoding='utf-8',errors='replace');match=re.search(r'All (\d+) required tests passed',text)
     report['gametest']={'passed':int(match[1]) if match else None,'recipe_errors':len(re.findall('Parsing error loading recipe',text)),'tag_errors':len(re.findall("Couldn.t load tag",text))}

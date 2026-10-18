@@ -39,8 +39,14 @@ public final class ExtremeContent {
     public static final DeferredItem<Item> TORCH_BUNDLE = item("stack_torch", new Item.Properties().stacksTo(16));
     public static final DeferredItem<CrossbowItem> CROSSBOW = ITEMS.registerItem("crossbow", CrossbowItem::new, new Item.Properties().durability(326));
     public static final DeferredItem<FortressEyeItem> FORTRESS_EYE = ITEMS.registerItem("nether_ender_eye", FortressEyeItem::new);
-    public static final DeferredItem<DynamicCoreItem> MITHRIL_CORE = ITEMS.registerItem("dynamic_core_mithril", p -> new DynamicCoreItem(3, p));
-    public static final DeferredItem<DynamicCoreItem> ADAMANTIUM_CORE = ITEMS.registerItem("dynamic_core_adamantium", p -> new DynamicCoreItem(5, p));
+    public static final DeferredItem<DynamicCoreItem> COPPER_CORE = lantern("copper", DynamicCoreItem.Material.COPPER);
+    public static final DeferredItem<DynamicCoreItem> SILVER_CORE = lantern("silver", DynamicCoreItem.Material.SILVER);
+    public static final DeferredItem<DynamicCoreItem> GOLD_CORE = lantern("gold", DynamicCoreItem.Material.GOLD);
+    public static final DeferredItem<DynamicCoreItem> IRON_CORE = lantern("iron", DynamicCoreItem.Material.IRON);
+    public static final DeferredItem<DynamicCoreItem> ANCIENT_METAL_CORE = lantern("ancient_metal", DynamicCoreItem.Material.ANCIENT_METAL);
+    public static final DeferredItem<DynamicCoreItem> MITHRIL_CORE = lantern("mithril", DynamicCoreItem.Material.MITHRIL);
+    public static final DeferredItem<DynamicCoreItem> ADAMANTIUM_CORE = lantern("adamantium", DynamicCoreItem.Material.ADAMANTIUM);
+    public static final DeferredItem<DynamicCoreItem> VIBRANIUM_CORE = lantern("vibranium", DynamicCoreItem.Material.VIBRANIUM);
     public static final DeferredItem<ArmorItem> BUCKET_HELMET = ITEMS.registerItem("iron_bucket_helmet", p -> new ArmorItem(ArmorMaterials.IRON, ArmorItem.Type.HELMET, p.durability(1280)));
     public static final DeferredBlock<Block> RESURRECTION = block("resurrection_array", () -> new ResurrectionBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN).strength(2F, 60000F).noOcclusion()));
     public static final DeferredBlock<RedDiamondOreBlock> RED_ORE = block("fancy_red_ore", () -> new RedDiamondOreBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_ORE).strength(3F).requiresCorrectToolForDrops()));
@@ -59,7 +65,7 @@ public final class ExtremeContent {
     private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ModernIte.MOD_ID);
     static {
         ITEM_ENTRIES.put("crossbow", CROSSBOW); ITEM_ENTRIES.put("nether_ender_eye", FORTRESS_EYE);
-        ITEM_ENTRIES.put("dynamic_core_mithril", MITHRIL_CORE); ITEM_ENTRIES.put("dynamic_core_adamantium", ADAMANTIUM_CORE); ITEM_ENTRIES.put("iron_bucket_helmet", BUCKET_HELMET);
+        ITEM_ENTRIES.put("iron_bucket_helmet", BUCKET_HELMET);
         String[] metals = {"copper", "silver", "gold", "iron", "ancient_metal", "mithril", "adamantium", "vibranium"};
         float[] durability = {4,4,4,8,16,64,256,512}; float[] damages = {6,6,5,7,7,8,9,12};
         int[] enchantability = {30,30,50,30,40,100,40,120};
@@ -76,6 +82,12 @@ public final class ExtremeContent {
         }).build());
     }
     public static ResourceLocation id(String path) { return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,path); }
+    private static DeferredItem<DynamicCoreItem> lantern(String material, DynamicCoreItem.Material tier) {
+        String name = "dynamic_core_" + material;
+        var item = ITEMS.registerItem(name, p -> new DynamicCoreItem(tier, p));
+        ITEM_ENTRIES.put(name, item);
+        return item;
+    }
     private static DeferredItem<Item> item(String name,Item.Properties properties) { var item=ITEMS.registerSimpleItem(name,properties); ITEM_ENTRIES.put(name,item); return item; }
     private static <T extends Block> DeferredBlock<T> block(String name,Supplier<T> factory) { var block=BLOCKS.register(name,factory); BLOCK_ENTRIES.put(name,block); ITEM_ENTRIES.put(name, ITEMS.registerSimpleBlockItem(block)); return block; }
     public static void register(IEventBus bus) { ITEMS.register(bus); BLOCKS.register(bus); TYPES.register(bus); TABS.register(bus); ExtremeEffects.register(bus); bus.addListener(ExtremeCapabilities::register); }

@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "modern_ite:item/template_material_lantern",
   "textures": {
-    "layer0": "modern_ite:item/dynamic_core_mithril"
+    "metal": "mite:block/mithril_block"
   }
 }

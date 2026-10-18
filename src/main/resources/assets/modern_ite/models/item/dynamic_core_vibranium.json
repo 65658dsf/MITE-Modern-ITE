@@ -1,0 +1,6 @@
+{
+  "parent": "modern_ite:item/template_material_lantern",
+  "textures": {
+    "metal": "mite:block/vibranium_block"
+  }
+}

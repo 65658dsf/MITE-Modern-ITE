@@ -5,8 +5,8 @@
   "item.modern_ite.blaze_coal_powder": "Blaze Coal Powder",
   "item.modern_ite.nether_ender_eye": "Fortress Eye",
   "item.modern_ite.stack_torch": "Torch Bundle",
-  "item.modern_ite.dynamic_core_mithril": "Mithril Light Core",
-  "item.modern_ite.dynamic_core_adamantium": "Adamantium Light Core",
+  "item.modern_ite.dynamic_core_mithril": "Mithril Lantern",
+  "item.modern_ite.dynamic_core_adamantium": "Adamantium Lantern",
   "item.modern_ite.iron_bucket_helmet": "Iron Bucket Helmet",
   "item.modern_ite.crossbow": "Extreme Crossbow",
   "item.modern_ite.voucher_fishing": "Fishing Voucher",
@@ -281,5 +281,13 @@
   "message.modern_ite.teleport_one_minute": "Underworld rune teleport in one minute.",
   "message.modern_ite.teleport_countdown": "Underworld rune teleport in %s seconds.",
   "message.modern_ite.teleport_complete": "Underworld rune teleport complete.",
-  "message.modern_ite.teleport_no_landing": "No safe landing found. Retrying in ten seconds."
+  "message.modern_ite.teleport_no_landing": "No safe landing found. Retrying in ten seconds.",
+  "item.modern_ite.dynamic_core_copper": "Copper Lantern",
+  "item.modern_ite.dynamic_core_silver": "Silver Lantern",
+  "item.modern_ite.dynamic_core_gold": "Gold Lantern",
+  "item.modern_ite.dynamic_core_iron": "Iron Lantern",
+  "item.modern_ite.dynamic_core_ancient_metal": "Ancient Metal Lantern",
+  "item.modern_ite.dynamic_core_vibranium": "Vibranium Lantern",
+  "tooltip.modern_ite.lantern.offhand": "Only active while held in the offhand.",
+  "tooltip.modern_ite.lantern.durability": "Consumes durability while lighting; stops when depleted."
 }

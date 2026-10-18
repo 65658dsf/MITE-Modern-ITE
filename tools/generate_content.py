@@ -19,6 +19,49 @@ def named(id, cn, english, block=False):
     k=('block' if block else 'item')+'.modern_ite.'+id;zh[k]=cn;en[k]=english
 def model(id, texture=None, parent='minecraft:item/generated'):
     save(f'assets/modern_ite/models/item/{id}.json',{'parent':parent,'textures':{'layer0':'modern_ite:item/'+(texture or id)}})
+
+def lantern_models(metals, names):
+    # Original held-lantern geometry by NingMeng123; reuse native light and metal textures.
+    def box(start, end, texture='#metal', uv=None, **extra):
+        faces={direction:{'texture':texture,**({'uv':uv} if uv else {})} for direction in ['down','up','north','south','west','east']}
+        return {'from':start,'to':end,'faces':faces,**extra}
+    elements=[
+        box([4.5,1,4.5],[11.5,2,11.5]),
+        box([5.25,2,5.25],[10.75,8,10.75],'#light',[1,3,5,8],shade=False),
+        box([4.5,8,4.5],[11.5,9,11.5]),
+        box([5.5,9,5.5],[10.5,10,10.5]),
+        box([6.5,10,6.5],[9.5,11,9.5]),
+    ]
+    for x in [4.75,10.5]:
+        for z in [4.75,10.5]:elements.append(box([x,2,z],[x+.75,8,z+.75]))
+    # A solid open handle stays legible from either hand and in inventory.
+    elements.extend([
+        box([5.75,10.5,7.5],[6.75,13.5,8.5]),
+        box([9.25,10.5,7.5],[10.25,13.5,8.5]),
+        box([6.75,13,7.5],[9.25,14,8.5]),
+    ])
+    save('assets/modern_ite/models/item/template_material_lantern.json',{
+        'credit':'NingMeng123','parent':'minecraft:block/block','ambientocclusion':False,
+        'textures':{'particle':'#metal','light':'minecraft:block/lantern'},
+        'elements':elements,
+        'display':{
+            'gui':{'rotation':[25,225,0],'translation':[0,.5,0],'scale':[1,1,1]},
+            'ground':{'rotation':[0,0,0],'translation':[0,2,0],'scale':[.5,.5,.5]},
+            'fixed':{'rotation':[0,180,0],'translation':[0,0,0],'scale':[.75,.75,.75]},
+            'thirdperson_righthand':{'rotation':[0,0,0],'translation':[0,-3,0],'scale':[.6,.6,.6]},
+            'thirdperson_lefthand':{'rotation':[0,0,0],'translation':[0,-3,0],'scale':[.6,.6,.6]},
+            'firstperson_righthand':{'rotation':[0,-45,0],'translation':[0,-2,-1],'scale':[.7,.7,.7]},
+            'firstperson_lefthand':{'rotation':[0,45,0],'translation':[0,-2,-1],'scale':[.7,.7,.7]},
+        },
+    })
+    for metal,cn in zip(metals,names):
+        id='dynamic_core_'+metal
+        named(id,cn+'灯笼',metal.replace('_',' ').title()+' Lantern')
+        namespace='minecraft' if metal in ['copper','gold','iron'] else 'mite'
+        save(f'assets/modern_ite/models/item/{id}.json',{
+            'parent':'modern_ite:item/template_material_lantern',
+            'textures':{'metal':namespace+':block/'+metal+'_block'},
+        })
 def block_item(id):save(f'assets/modern_ite/models/item/{id}.json',{'parent':'modern_ite:block/'+id})
 def block_model(id, parent, textures, **extra):save(f'assets/modern_ite/models/block/{id}.json',{'parent':parent,'textures':textures,**extra})
 def state(id, value):save(f'assets/modern_ite/blockstates/{id}.json',value)
@@ -62,19 +105,18 @@ def slab(id, base):
 simple={
  'fancy_red':('红钻','Red Diamond'), 'diamond_chunk':('钻石碎块','Diamond Chunk'),
  'blaze_coal_powder':('烈焰煤粉','Blaze Coal Powder'), 'nether_ender_eye':('堡垒之眼','Fortress Eye'),
- 'stack_torch':('捆装火把','Torch Bundle'), 'dynamic_core_mithril':('秘银光源核心','Mithril Light Core'),
- 'dynamic_core_adamantium':('艾德曼光源核心','Adamantium Light Core'), 'iron_bucket_helmet':('铁桶头盔','Iron Bucket Helmet'),
+ 'stack_torch':('捆装火把','Torch Bundle'), 'iron_bucket_helmet':('铁桶头盔','Iron Bucket Helmet'),
  'crossbow':('极难弩','Extreme Crossbow')}
 for id,(cn,eng) in simple.items():named(id,cn,eng);model(id)
 for id in ['fancy_red','nether_ender_eye','stack_torch']:tex(EX,f'assets/extreme/textures/items/{id}.png','item/'+id)
 for id in ['diamond_chunk','blaze_coal_powder']:tex(ITE,f'assets/miteite/textures/items/{id}.png','item/'+id)
-for level,mat in [(3,'mithril'),(5,'adamantium')]:tex(EX,f'assets/extreme/textures/items/dynamic_core/dynamic_core_{level}.png',f'item/dynamic_core_{mat}')
 # The source helmet has an armor layer but no independent inventory sprite.
 save('assets/modern_ite/models/item/iron_bucket_helmet.json',{'parent':'minecraft:item/generated','textures':{'layer0':'minecraft:item/bucket'}})
 tex(EX,'assets/extreme/textures/models/armor/ironBucket_layer_1.png','models/armor/iron_bucket_layer_1')
 for id,cn,eng in [('fishing','钓鱼','Fishing'),('planting','种植','Planting'),('villager','村民','Villager'),('club_core','金属棒核心','Club Core')]:
     name='voucher_'+id;named(name,cn+'凭证',eng+' Voucher');model(name);tex(EX,f'assets/extreme/textures/items/voucher/{name}.png','item/'+name)
 metals=['copper','silver','gold','iron','ancient_metal','mithril','adamantium','vibranium'];metal_cn=['铜','银','金','铁','古代金属','秘银','艾德曼','振金']
+lantern_models(metals,metal_cn)
 for metal,cn in zip(metals,metal_cn):
     id='club_'+metal;named(id,cn+'棒',metal.replace('_',' ').title()+' Club');model(id,parent='minecraft:item/handheld');tex(EX,f'assets/extreme/textures/items/club/{metal}_club.png','item/'+id)
 for suffix,source in [('', 'standby'),('_pulling_0','pulling_0'),('_pulling_1','pulling_1'),('_pulling_2','pulling_2'),('_arrow','arrow')]:
@@ -105,8 +147,9 @@ state('vibranium_chest',{'variants':{'':{'model':'minecraft:block/chest'}}});sav
 shaped('resurrection_array',['ABA','BCB','ABA'],{'A':'mite:mithril_ingot','B':'minecraft:diamond','C':'minecraft:ender_pearl'})
 shaped('vibranium_furnace',['VOA','DND','AOV'],{'V':'mite:vibranium_ingot','O':'minecraft:obsidian','A':'mite:adamantium_ingot','D':'minecraft:diamond','N':'mite:netherrack_furnace'})
 shaped('vibranium_chest',['VVV','V V','VVV'],{'V':'mite:vibranium_ingot'})
-shaped('dynamic_core_mithril',['ADA','BCB','ADA'],{'A':'mite:adamantium_ingot','B':'minecraft:blaze_rod','C':'minecraft:nether_star','D':'minecraft:ghast_tear'})
-shaped('dynamic_core_adamantium',['ADA','BCB','ADA'],{'A':'minecraft:glowstone','B':'mite:vibranium_ingot','C':'modern_ite:dynamic_core_mithril','D':'mite:adamantium_ingot'})
+for metal in metals:
+    namespace='minecraft' if metal in ['copper','gold','iron'] else 'mite'
+    shaped('dynamic_core_'+metal,[' I ','IGI','ITI'],{'I':namespace+':'+metal+'_ingot','G':'minecraft:glass','T':'minecraft:torch'})
 shapeless('voucher_club_core',['modern_ite:voucher_'+v for v in ['fishing','planting','villager']])
 shapeless('nether_ender_eye',['mite:mithril_ingot','minecraft:ender_pearl'])
 for binding in ['minecraft:string','mite:sinew']:
@@ -150,6 +193,8 @@ for id,cn,eng in effects:zh['effect.modern_ite.'+id]=cn;en['effect.modern_ite.'+
 save('assets/minecraft/atlases/mob_effects.json',{'sources':[{'type':'minecraft:single','resource':'minecraft:mob_effect/'+native,'sprite':'modern_ite:'+id} for id,native in [('chaos','nausea'),('flash','glowing'),('occlusion','blindness'),('reversed','unluck'),('fast_sensitivity','speed'),('look_up','levitation'),('big_head','health_boost')]]})
 messages={
  'itemGroup.modern_ite':('MITE: Modern ITE','MITE: Modern ITE'),
+ 'tooltip.modern_ite.lantern.offhand':('仅放在副手时生效。','Only active while held in the offhand.'),
+ 'tooltip.modern_ite.lantern.durability':('照明时消耗耐久，耐久耗尽后停止生效。','Consumes durability while lighting; stops when depleted.'),
  'message.modern_ite.underworld_penalty':('你在地底停留过久，离开一天后可恢复。','You have stayed in the Underworld too long. Leave for a day to recover.'),
  'message.modern_ite.underworld_recovered':('地底停留惩罚已消退。','The Underworld penalty has worn off.'),
  'message.modern_ite.array_used':('复活传送阵已消耗，你失去了全部经验。','The resurrection array was consumed. All experience was lost.'),
@@ -167,5 +212,5 @@ for locale in ['zh_cn','en_us']:
     merged={}
     for fragment in sorted((RES/'modern_ite').glob('*-lang-'+locale+'.json')):merged.update(json.loads(fragment.read_text(encoding='utf-8')))
     save(f'assets/modern_ite/lang/{locale}.json',merged)
-save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
+save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; legacy mithril and adamantium core identities remain compatible.','Eight material lantern recipes use five matching ingots, glass and a torch; lanterns only light from the offhand and consume material-scaled durability.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
 print(f'Packaged {len(provenance)} source textures; merged all language fragments.')

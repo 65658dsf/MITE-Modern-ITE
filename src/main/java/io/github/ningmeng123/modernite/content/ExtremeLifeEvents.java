@@ -32,11 +32,21 @@ import org.slf4j.LoggerFactory;
 public final class ExtremeLifeEvents {
     public static final String ANCHOR="modern_ite:resurrection", PENALTY="modern_ite:underworld_penalty";
     public static int coreLevel(Player player) {
-        int result=0;for(var stack:player.getInventory().items)if(stack.getItem() instanceof DynamicCoreItem core&&stack.getDamageValue()<stack.getMaxDamage()-2)result=Math.max(result,core.level);
-        if(player.getOffhandItem().getItem() instanceof DynamicCoreItem core&&player.getOffhandItem().getDamageValue()<player.getOffhandItem().getMaxDamage()-2)result=Math.max(result,core.level);return result;
+        ItemStack offhand = player.getOffhandItem();
+        return !player.isSpectator() && DynamicCoreItem.hasFuel(offhand)
+                ? ((DynamicCoreItem) offhand.getItem()).level : 0;
+    }
+    public static void tickLantern(Player player) {
+        if (player.level().isClientSide || player.isSpectator() || player.isCreative()
+                || player.tickCount % 10 != 0 || coreLevel(player) == 0) return;
+        ItemStack offhand = player.getOffhandItem();
+        // Keep an exhausted lantern, and spend the final one or two points as well.
+        offhand.setDamageValue(Math.min(offhand.getMaxDamage(), offhand.getDamageValue() + 2));
+        player.getInventory().setChanged();
     }
     @SubscribeEvent public static void tick(PlayerTickEvent.Post event) {
         if(!(event.getEntity() instanceof ServerPlayer player)||player.isSpectator()||player.isCreative())return;
+        tickLantern(player);
         var data=player.getPersistentData();var penalty=data.getCompound(PENALTY);boolean under=R196MobSpawning.underworld(player.serverLevel());
         int elapsed=penalty.getInt("elapsed"), recovery=penalty.getInt("recovery");boolean active=penalty.getBoolean("active");
         if(under){ elapsed=(int)Math.min(Integer.MAX_VALUE,(long)elapsed+1);recovery=0; if(elapsed>=54000)active=true;
@@ -44,14 +54,6 @@ public final class ExtremeLifeEvents {
             if(active&&!penalty.getBoolean("warned")){player.sendSystemMessage(Component.translatable("message.modern_ite.underworld_penalty"));penalty.putBoolean("warned",true);}
         }else if(active&&++recovery>=24000){elapsed=0;recovery=0;active=false;penalty.putBoolean("warned",false);player.sendSystemMessage(Component.translatable("message.modern_ite.underworld_recovered"));}
         penalty.putInt("elapsed",elapsed);penalty.putInt("recovery",recovery);penalty.putBoolean("active",active);penalty.putInt("version",1);data.put(PENALTY,penalty);
-        if(player.tickCount%10==0){
-            int best=coreLevel(player);if(best>0){
-                var old=player.getEffect(MobEffects.NIGHT_VISION);if(old==null||old.getDuration()<=220)player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION,220,0,true,false));
-                ItemStack selected=ItemStack.EMPTY;for(var stack:player.getInventory().items)if(stack.getItem() instanceof DynamicCoreItem core&&core.level==best&&stack.getDamageValue()<stack.getMaxDamage()-2){selected=stack;break;}
-                if(selected.isEmpty()&&player.getOffhandItem().getItem() instanceof DynamicCoreItem)selected=player.getOffhandItem();
-                if(!selected.isEmpty()){selected.setDamageValue(Math.min(selected.getMaxDamage(),selected.getDamageValue()+2));player.getInventory().setChanged();}
-            }
-        }
     }
     @SubscribeEvent(priority=EventPriority.LOW) public static void resurrect(LivingDeathEvent event) {
         if(event.isCanceled()||!(event.getEntity() instanceof ServerPlayer player))return;

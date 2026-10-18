@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " I ",
+    "IGI",
+    "ITI"
+  ],
+  "key": {
+    "I": {
+      "item": "mite:vibranium_ingot"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "T": {
+      "item": "minecraft:torch"
+    }
+  },
+  "result": {
+    "id": "modern_ite:dynamic_core_vibranium",
+    "count": 1
+  }
+}

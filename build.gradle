@@ -34,6 +34,12 @@ neoForge {
                 systemProperty 'modern_ite.mobRenderAudit', 'true'
                 systemProperty 'modern_ite.mobRenderAuditOutput', file('build/verification/mob-render-audit.json').absolutePath
             }
+            if (providers.gradleProperty('modernIteLanternAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('run-lantern-audit')
+                systemProperty 'modern_ite.mobRenderAudit', 'true'
+                systemProperty 'modern_ite.lanternAudit', 'true'
+                systemProperty 'modern_ite.mobRenderAuditOutput', file('build/verification/lantern-client-audit.json').absolutePath
+            }
         }
         server { server(); gameDirectory = file('run-server'); programArgument '--nogui' }
         gameTestServer {
@@ -51,7 +57,9 @@ neoForge {
 def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
     doLast {
         def audit = providers.gradleProperty('modernIteMobRenderAudit').getOrElse('false').toBoolean()
-        def config = file("${audit ? 'run-mob-render-audit' : 'run-client'}/config/fml.toml")
+        def lanternAudit = providers.gradleProperty('modernIteLanternAudit').getOrElse('false').toBoolean()
+        def directory = lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : 'run-client'
+        def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()
         def existing = config.exists() ? config.getText('UTF-8') : ''
         def setting = 'earlyWindowControl = false'

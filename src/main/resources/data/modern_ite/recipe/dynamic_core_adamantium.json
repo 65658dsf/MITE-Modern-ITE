@@ -2,22 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "ADA",
-    "BCB",
-    "ADA"
+    " I ",
+    "IGI",
+    "ITI"
   ],
   "key": {
-    "A": {
-      "item": "minecraft:glowstone"
-    },
-    "B": {
-      "item": "mite:vibranium_ingot"
-    },
-    "C": {
-      "item": "modern_ite:dynamic_core_mithril"
-    },
-    "D": {
+    "I": {
       "item": "mite:adamantium_ingot"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "T": {
+      "item": "minecraft:torch"
     }
   },
   "result": {

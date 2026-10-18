@@ -135,6 +135,11 @@ public final class MobRenderRegressionAudit {
         capturing=true;
         try {
             check(ownedWorld(mc),"Only the newly created audit world may be rendered");
+            if (Boolean.getBoolean("modern_ite.lanternAudit")) {
+                report.addProperty("scope", "Eight material lantern models, native GPU item displays and instant local lightmap switching");
+                report.add("lanterns", LanternClientAudit.capture(mc));
+                return;
+            }
             JsonArray identities=new JsonArray();report.add("texture_lookups",identities);
             for(ExtremeKind kind:ExtremeKind.values()) {
                 JsonObject facts=new JsonObject();identities.add(facts);facts.addProperty("entity",kind.id());
@@ -152,6 +157,7 @@ public final class MobRenderRegressionAudit {
                 try{sample(mc,kind,facts);}catch(Throwable failure){fail("native GPU render "+kind.id(),failure);}
             }
             report.addProperty("focused_gpu_sample_count",samples.size());
+            report.add("lanterns",LanternClientAudit.capture(mc));
         }catch(Throwable failure){fail("render audit",failure);}
         finally{finish(mc);}
     }

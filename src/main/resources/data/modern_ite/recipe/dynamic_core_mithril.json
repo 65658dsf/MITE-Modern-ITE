@@ -2,22 +2,19 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "ADA",
-    "BCB",
-    "ADA"
+    " I ",
+    "IGI",
+    "ITI"
   ],
   "key": {
-    "A": {
-      "item": "mite:adamantium_ingot"
+    "I": {
+      "item": "mite:mithril_ingot"
     },
-    "B": {
-      "item": "minecraft:blaze_rod"
+    "G": {
+      "item": "minecraft:glass"
     },
-    "C": {
-      "item": "minecraft:nether_star"
-    },
-    "D": {
-      "item": "minecraft:ghast_tear"
+    "T": {
+      "item": "minecraft:torch"
     }
   },
   "result": {

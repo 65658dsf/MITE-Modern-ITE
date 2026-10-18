@@ -33,18 +33,6 @@
     },
     {
       "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
-      "source": "assets/extreme/textures/items/dynamic_core/dynamic_core_3.png",
-      "target": "assets/modern_ite/textures/item/dynamic_core_mithril.png",
-      "sha256": "a3b43e30fe5cb3564cc193945929d1db5b6c0fb610200a70e8c6ac188583a012"
-    },
-    {
-      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
-      "source": "assets/extreme/textures/items/dynamic_core/dynamic_core_5.png",
-      "target": "assets/modern_ite/textures/item/dynamic_core_adamantium.png",
-      "sha256": "692f7d99b0385769acff377da60f04abb0a9e4a5d51b4d609124f4c96114b5a0"
-    },
-    {
-      "jar": "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar",
       "source": "assets/extreme/textures/models/armor/ironBucket_layer_1.png",
       "target": "assets/modern_ite/textures/models/armor/iron_bucket_layer_1.png",
       "sha256": "00ef30084045d6a9a517b0040d52384d823c37850da84bfb14befd0282502157"
@@ -227,6 +215,8 @@
   "adaptations": [
     "Modern namespaced identities replace old metadata subtypes.",
     "Existing cherry wood, beds and lantern retain modern identities.",
+    "Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; legacy mithril and adamantium core identities remain compatible.",
+    "Eight material lantern recipes use five matching ingots, glass and a torch; lanterns only light from the offhand and consume material-scaled durability.",
     "Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.",
     "Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.",
     "Torch bundles unpack one at a time because modern MITE torches stack to sixteen.",

@@ -72,10 +72,11 @@ public final class ResourceContentGameTests {
 
     @GameTest(template="gear_empty")
     public static void loadedSourceCraftingRecipesMatchCoreClubFurnaceChestAndMapleInputs(GameTestHelper h) {
-        craft(h,"dynamic_core_mithril","modern_ite:dynamic_core_mithril",1,new String[]{"ADA","BCB","ADA"},
-                Map.of('A',"mite:adamantium_ingot",'B',"minecraft:blaze_rod",'C',"minecraft:nether_star",'D',"minecraft:ghast_tear"));
-        craft(h,"dynamic_core_adamantium","modern_ite:dynamic_core_adamantium",1,new String[]{"ADA","BCB","ADA"},
-                Map.of('A',"minecraft:glowstone",'B',"mite:vibranium_ingot",'C',"modern_ite:dynamic_core_mithril",'D',"mite:adamantium_ingot"));
+        for (String metal : new String[]{"copper","silver","gold","iron","ancient_metal","mithril","adamantium","vibranium"}) {
+            String ns = Set.of("copper","gold","iron").contains(metal) ? "minecraft:" : "mite:";
+            craft(h,"dynamic_core_"+metal,"modern_ite:dynamic_core_"+metal,1,new String[]{" I ","IGI","ITI"},
+                    Map.of('I',ns+metal+"_ingot",'G',"minecraft:glass",'T',"minecraft:torch"));
+        }
         for (String metal : new String[]{"copper","silver","gold","iron"}) {
             String ns = metal.equals("silver") ? "mite:" : "minecraft:";
             String nugget = metal.equals("copper") ? "mite:copper_nugget" : ns + metal + "_nugget";
