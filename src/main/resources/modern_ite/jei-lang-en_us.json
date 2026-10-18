@@ -1,0 +1,12 @@
+{
+  "jei.modern_ite.forging_step": "Strengthening: +%s → +%s",
+  "jei.modern_ite.forge_normal": "Normal stone",
+  "jei.modern_ite.forge_tools": "Tools remain unless their durability is exhausted.",
+  "jei.modern_ite.forge_wear": "Tool durability: %s on success; %s on failure",
+  "jei.modern_ite.forge_time": "Time: %s–%s s (depends on tools)",
+  "jei.modern_ite.forge_failure": "Failure: %s%%–%s%% (depends on tools)",
+  "jei.modern_ite.forge_quality": "Quality reward: %s, up to the equipment quality limit",
+  "jei.modern_ite.forge_preservation": "Preserves enchantments, sockets, experience and existing damage.",
+  "jei.modern_ite.forge_failure_rules": "Failure consumes materials, half the tool wear and some remaining equipment durability; the strengthening grade is kept.",
+  "jei.modern_ite.forging": "Equipment Strengthening"
+}

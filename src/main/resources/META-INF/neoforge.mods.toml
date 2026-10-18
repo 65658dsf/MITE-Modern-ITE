@@ -25,6 +25,12 @@ side="BOTH"
 [[dependencies.modern_ite]]
 modId="mite"
 type="required"
-versionRange="[0.1.9,)"
+versionRange="[0.1.10,)"
 ordering="AFTER"
 side="BOTH"
+[[dependencies.modern_ite]]
+modId="jei"
+type="optional"
+versionRange="[19.57.0.451,20)"
+ordering="AFTER"
+side="CLIENT"
