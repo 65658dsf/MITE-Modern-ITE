@@ -155,6 +155,14 @@ public final class MobRenderRegressionAudit {
         capturing=true;
         try {
             check(ownedWorld(mc),"Only the newly created audit world may be rendered");
+            if (Boolean.getBoolean("modern_ite.forgingAudit")) {
+                report.addProperty("scope", "Forging UI hammer animation, impact sparks and inactive-state GPU controls");
+                JsonObject forging = ForgingClientAudit.capture(mc);
+                report.add("forging", forging);
+                report.addProperty("render_target_width", forging.get("render_width").getAsInt());
+                report.addProperty("render_target_height", forging.get("render_height").getAsInt());
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.lanternAudit")) {
                 report.addProperty("scope", "Eight material lantern models, native GPU item displays and instant local lightmap switching");
                 report.add("lanterns", LanternClientAudit.capture(mc));

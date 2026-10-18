@@ -114,8 +114,12 @@ public final class GearStationEntity extends RandomizableContainerBlockEntity {
         status = 1; setChanged();
     }
     public static void serverTick(Level level, BlockPos pos, BlockState state, GearStationEntity station) {
-        if (!station.running()) return;
+        if (level.isClientSide || station.isGemStation() || !station.running()) return;
         if (++station.progress >= (station.doomed ? station.failAt : station.total)) station.finish(!station.doomed);
+        else if (ForgingAnimation.isImpactTick(station.progress)) {
+            level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, .45F,
+                    .95F + (station.progress / ForgingAnimation.CYCLE_TICKS % 3) * .04F);
+        }
         station.setChanged();
     }
     private void finish(boolean success) {

@@ -35,6 +35,8 @@ public final class GearStationScreen extends AbstractContainerScreen<GearStation
             int total = menu.data.get(2), progress = menu.data.get(1);
             graphics.fill(leftPos + 111, topPos + 57, leftPos + 134, topPos + 63, 0xFF66736A);
             if (total > 0) graphics.fill(leftPos + 111, topPos + 57, leftPos + 111 + Math.min(23, 23 * progress / total), topPos + 63, 0xFFBB8B38);
+            if (menu.locked() && total > 0) ForgingScreenAnimation.render(graphics, leftPos + 111, topPos + 16,
+                    menu.getSlot(5).getItem(), menu.getSlot(7).getItem(), progress + partialTick);
         }
     }
     @Override protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
