@@ -6,6 +6,9 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import io.github.ningmeng123.mite.progression.GearProgress;
+import io.github.ningmeng123.mite.progression.GearProgression;
 import io.github.ningmeng123.modernite.entity.ArmorAuraRules;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMob;
@@ -19,7 +22,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import net.minecraft.client.Minecraft;
+import net.minecraft.Util;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -28,7 +34,9 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.component.DataComponents;
@@ -54,7 +62,6 @@ import org.lwjgl.opengl.GL20;
 final class VibraniumGildingPreviews {
     private static final int WIDTH=768,HEIGHT=864,FEET=715;
     private static final float SCALE=250;
-    private static final float WING_SCALE=190;
     private static final int BACKGROUND=0xFF201810;
     private static final EquipmentSlot[] ARMOR={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
     private static final String[] PIECES={"helmet","chestplate","leggings","boots"};
@@ -116,245 +123,121 @@ final class VibraniumGildingPreviews {
         return changed;
     }
 
-    private static JsonObject fullArmorCoverageControl(NativeImage baseline,NativeImage actual) {
+    private static JsonObject nativeMaterialControl(NativeImage baseline,NativeImage actual) {
         String[] names={"helmet","chest_and_arms","leggings_and_boots"};
         int[] edges={100,360,545,770};
-        JsonObject result=new JsonObject();int total=0,totalChanged=0;
+        JsonObject result=new JsonObject();int total=0,totalQuiet=0,totalStars=0;
         for(int region=0;region<names.length;region++) {
-            int pixels=0,changed=0;
+            int pixels=0,quiet=0,stars=0,edgesSeen=0,edgesRetained=0;
+            double sumBefore=0,sumAfter=0,sumBeforeSquared=0,sumAfterSquared=0,cross=0;
             for(int y=edges[region];y<edges[region+1];y++)for(int x=100;x<WIDTH-100;x++) {
-                int color=baseline.getPixelRGBA(x,y),red=color&255,green=color>>>8&255,blue=color>>>16&255;
-                // Blue armor and its cyan highlights differ from the greenish skin undersleeves.
-                if(blue>red*1.1F&&blue>green*1.05F&&green>30) {
-                    pixels++;if(delta(color,actual.getPixelRGBA(x,y))>24)changed++;
+                int before=baseline.getPixelRGBA(x,y),after=actual.getPixelRGBA(x,y);
+                if(!nativeArmorPixel(before))continue;
+                pixels++;
+                if(delta(before,after)>45&&brightness(after)>brightness(before)+18)stars++;
+                // The diffuse cloud is faint; native colors away from bright stars must remain close.
+                if(delta(before,after)<=48) {
+                    quiet++;double a=brightness(before),b=brightness(after);
+                    sumBefore+=a;sumAfter+=b;sumBeforeSquared+=a*a;sumAfterSquared+=b*b;cross+=a*b;
+                    int nextBefore=baseline.getPixelRGBA(x+1,y),nextAfter=actual.getPixelRGBA(x+1,y);
+                    if(nativeArmorPixel(nextBefore)&&delta(nextBefore,nextAfter)<=48&&delta(before,nextBefore)>=18) {
+                        edgesSeen++;
+                        double originalEdge=brightness(nextBefore)-a,newEdge=brightness(nextAfter)-b;
+                        if(Math.abs(originalEdge)>=6&&originalEdge*newEdge>0
+                                &&Math.abs(newEdge)>=Math.abs(originalEdge)*.5&&Math.abs(newEdge)<=Math.abs(originalEdge)*1.6)edgesRetained++;
+                        else if(Math.abs(originalEdge)<6&&Math.abs(newEdge-originalEdge)<8)edgesRetained++;
+                    }
                 }
             }
-            require(pixels>300,"Full-armor GPU control found too few native armor pixels: "+names[region]+" "+pixels);
-            require(changed>=pixels*.9F,"Animated cosmic surface does not visibly cover native armor: "+names[region]+" "+changed+"/"+pixels);
+            double covariance=cross-sumBefore*sumAfter/Math.max(1,quiet);
+            double varianceBefore=sumBeforeSquared-sumBefore*sumBefore/Math.max(1,quiet);
+            double varianceAfter=sumAfterSquared-sumAfter*sumAfter/Math.max(1,quiet);
+            double correlation=covariance/Math.sqrt(Math.max(.000001,varianceBefore*varianceAfter));
+            require(pixels>300,"Material GPU control found too few native armor pixels: "+names[region]+" "+pixels);
+            require(quiet>=pixels*.6,"Starfield replaces too much native armor color: "+names[region]+" "+quiet+"/"+pixels);
+            require(correlation>.90,"Native armor texture/shading correlation was lost: "+names[region]+" "+correlation);
+            require(edgesSeen>30&&edgesRetained>=edgesSeen*.8,"Native armor texture edges were lost: "+names[region]+" "+edgesRetained+"/"+edgesSeen);
+            require(stars>15,"No visible star highlights were added to "+names[region]+": "+stars);
             JsonObject facts=new JsonObject();facts.addProperty("native_blue_and_cyan_armor_pixels",pixels);
-            facts.addProperty("replaced_pixels",changed);facts.addProperty("replaced_fraction",changed/(double)pixels);
-            result.add(names[region],facts);total+=pixels;totalChanged+=changed;
+            facts.addProperty("near_native_color_pixels",quiet);facts.addProperty("near_native_color_fraction",quiet/(double)pixels);
+            facts.addProperty("native_texture_brightness_correlation",correlation);
+            facts.addProperty("native_texture_edges",edgesSeen);facts.addProperty("retained_texture_edges",edgesRetained);
+            facts.addProperty("retained_texture_edge_fraction",edgesRetained/(double)edgesSeen);
+            facts.addProperty("visible_star_highlight_pixels",stars);
+            result.add(names[region],facts);total+=pixels;totalQuiet+=quiet;totalStars+=stars;
         }
-        result.addProperty("total_native_armor_pixels",total);result.addProperty("total_replaced_fraction",totalChanged/(double)total);
-        result.addProperty("complete_cosmic_surface",true);return result;
+        require(totalStars>100,"Native-material control passed without enough visible star highlights: "+totalStars);
+        result.addProperty("total_native_armor_pixels",total);result.addProperty("total_near_native_color_fraction",totalQuiet/(double)total);
+        result.addProperty("total_visible_star_highlights",totalStars);result.addProperty("native_material_and_texture_preserved",true);
+        result.addProperty("visible_star_overlay",true);return result;
     }
 
-    private static JsonObject armorCoverageWithoutHeldItems(Minecraft mc,LivingEntity living,String title,String detail,
-            NativeImage baseline,NativeImage actual)throws Exception {
-        ItemStack main=living.getMainHandItem(),off=living.getOffhandItem();
-        if(main.isEmpty()&&off.isEmpty())return fullArmorCoverageControl(baseline,actual);
-        // An emperor's blue weapon is not an armor surface and may occlude its helmet/chest.
+    private static boolean nativeArmorPixel(int color) {
+        int red=color&255,green=color>>>8&255,blue=color>>>16&255;
+        return blue>red*1.1F&&blue>green*1.05F&&green>30;
+    }
+
+    private static double brightness(int color){return ((color&255)+(color>>>8&255)+(color>>>16&255))/3D;}
+
+    private static JsonObject nativeMaterialWithoutHeldItems(Minecraft mc,LivingEntity living,String title,String detail)throws Exception {
+        var saved=equipment(living);
+        // Exclude the emperor's blue weapon and vanilla's independent purple enchantment glint.
         living.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);living.setItemSlot(EquipmentSlot.OFFHAND,ItemStack.EMPTY);
+        for(var slot:ARMOR) {
+            ItemStack stack=living.getItemBySlot(slot).copy();stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE,false);
+            living.setItemSlot(slot,stack);
+        }
         try(NativeImage clearActual=render(mc,living,false,title,detail);
             NativeImage clearBaseline=withoutGilding(mc,living,title,detail)) {
-            JsonObject result=fullArmorCoverageControl(clearBaseline,clearActual);
-            result.addProperty("held_items_excluded_from_armor_sampling",true);return result;
-        } finally {living.setItemSlot(EquipmentSlot.MAINHAND,main);living.setItemSlot(EquipmentSlot.OFFHAND,off);}
+            JsonObject result=nativeMaterialControl(clearBaseline,clearActual);
+            result.addProperty("held_items_excluded_from_armor_sampling",true);result.addProperty("native_item_glint_isolated",true);return result;
+        } finally {restoreEquipment(living,saved);}
     }
 
-    private static JsonObject wingAudit(Minecraft mc,LivingEntity living,Path folder,String id)throws Exception {
+    private static JsonObject backSurfaceAudit(Minecraft mc,LivingEntity living,Path folder,String id)throws Exception {
         SavedPose pose=new SavedPose(living);SavedWalk walk=new SavedWalk(living.walkAnimation);
-        String title="振金星海 · 渐变光翼",detail="背面 · 双侧光翼与背部连接验收";
+        String title="振金星空盔甲",detail="背面 · 原生振金材质 · 动态星光叠加";
         try {
             neutral(living);
             try(NativeImage baseline=withoutGilding(mc,living,true,title,detail);
                 NativeImage actual=render(mc,living,true,title,detail)) {
-                JsonObject result=wingGeometryControl(baseline,actual);
+                JsonObject result=armorSilhouetteControl(baseline,actual);
                 actual.writeToFile(folder.resolve("cosmic-protection-v-"+id+"-back.png"));
                 baseline.writeToFile(folder.resolve("cosmic-"+id+"-back-without-layer.png"));
-                result.addProperty("hero_scale",WING_SCALE);result.addProperty("status","passed");return result;
+                result.addProperty("portrait_scale",SCALE);result.addProperty("status","passed");return result;
             }
         } finally {pose.restore(living);walk.restore(living.walkAnimation);}
     }
 
-    private static JsonObject wingGeometryControl(NativeImage baseline,NativeImage actual) {
-        Bounds wearer=wearerBounds(baseline);
-        int left=0,right=0,clipped=0;
+    private static JsonObject armorSilhouetteControl(NativeImage baseline,NativeImage actual) {
+        // Cosmic armor is inflated 0.01 model pixels beyond native armor: under one screen pixel
+        // at this scale. One additional pixel covers rasterization at the alpha-cutout boundary.
+        int margin=(int)Math.ceil(SCALE*.01F/16)+1;
+        int nativePixels=0,newFringe=0,outside=0,clipped=0;
         for(int y=90;y<770;y++)for(int x=0;x<WIDTH;x++) {
-            int before=baseline.getPixelRGBA(x,y),after=actual.getPixelRGBA(x,y);
-            if(foreground(after)&&(x<12||x>=WIDTH-12))clipped++;
-            if(delta(before,BACKGROUND)<18&&delta(before,after)>24) {
-                if(x<wearer.minX()-3)left++;
-                if(x>wearer.maxX()+3)right++;
+            if(foreground(baseline.getPixelRGBA(x,y)))nativePixels++;
+            if(!foreground(actual.getPixelRGBA(x,y)))continue;
+            if(x<12||x>=WIDTH-12)clipped++;
+            if(foreground(baseline.getPixelRGBA(x,y)))continue;
+            newFringe++;boolean touchesNative=false;
+            for(int dy=-margin;dy<=margin&&!touchesNative;dy++)for(int dx=-margin;dx<=margin;dx++) {
+                int nx=x+dx,ny=y+dy;
+                if(nx>=0&&nx<WIDTH&&ny>=90&&ny<770&&foreground(baseline.getPixelRGBA(nx,ny))) {
+                    touchesNative=true;break;
+                }
             }
+            if(!touchesNative)outside++;
         }
-        require(left>250&&right>250,"Both luminous back wings must extend visibly beyond the wearer: "+left+" / "+right);
-        require(clipped==0,"The wide hero portrait clips luminous wings at the image edge: "+clipped);
-
-        // Flood the rendered foreground from the torso. Both wing cores must connect to
-        // this same silhouette; separately floating decorations do not satisfy attachment.
-        int seed=-1;double nearest=Double.POSITIVE_INFINITY;
-        double centerY=FEET-WING_SCALE*1.05;
-        for(int y=90;y<770;y++)for(int x=WIDTH/2-30;x<=WIDTH/2+30;x++) {
-            if(!foreground(baseline.getPixelRGBA(x,y))||!foreground(actual.getPixelRGBA(x,y)))continue;
-            double distance=(x-WIDTH/2D)*(x-WIDTH/2D)+(y-centerY)*(y-centerY);
-            if(distance<nearest){nearest=distance;seed=y*WIDTH+x;}
-        }
-        require(seed>=0,"Cannot locate the actual wearer torso in the wing portrait");
-        boolean[] seen=new boolean[WIDTH*HEIGHT];int[] queue=new int[WIDTH*HEIGHT];int begin=0,end=0;
-        queue[end++]=seed;seen[seed]=true;
-        int connectedLeft=0,connectedRight=0;
-        while(begin<end) {
-            int pixel=queue[begin++],x=pixel%WIDTH,y=pixel/WIDTH;
-            if(delta(baseline.getPixelRGBA(x,y),BACKGROUND)<18) {
-                if(x<wearer.minX()-3)connectedLeft++;
-                if(x>wearer.maxX()+3)connectedRight++;
-            }
-            for(int dy=-1;dy<=1;dy++)for(int dx=-1;dx<=1;dx++) {
-                if(dx==0&&dy==0)continue;
-                int nextX=x+dx,nextY=y+dy;
-                if(nextX<0||nextX>=WIDTH||nextY<90||nextY>=770)continue;
-                int next=nextY*WIDTH+nextX;
-                if(!seen[next]&&foreground(actual.getPixelRGBA(nextX,nextY))) {seen[next]=true;queue[end++]=next;}
-            }
-        }
-        require(connectedLeft>Math.max(100,left*.15)&&connectedRight>Math.max(100,right*.15),
-                "Luminous wing cores must connect to the actual back/body silhouette: "+connectedLeft+" / "+connectedRight);
-        JsonObject result=new JsonObject();result.addProperty("left_wing_pixels_outside_wearer",left);
-        result.addProperty("right_wing_pixels_outside_wearer",right);
-        result.addProperty("left_wing_pixels_connected_to_body",connectedLeft);result.addProperty("right_wing_pixels_connected_to_body",connectedRight);
-        result.addProperty("clipped_edge_pixels",clipped);result.addProperty("bilateral_back_attached_geometry",true);
-        result.addProperty("external_geometry_is_intentional",true);return result;
-    }
-
-    private static int outsideWearerChanges(NativeImage baseline,NativeImage first,NativeImage later) {
-        Bounds wearer=wearerBounds(baseline);int changed=0;
-        for(int y=90;y<770;y++)for(int x=12;x<WIDTH-12;x++)if((x<wearer.minX()-3||x>wearer.maxX()+3)
-                &&delta(first.getPixelRGBA(x,y),later.getPixelRGBA(x,y))>18)changed++;
-        return changed;
-    }
-
-    private static Bounds wearerBounds(NativeImage image) {
-        int minX=WIDTH,maxX=-1,minY=HEIGHT,maxY=-1;
-        for(int y=90;y<770;y++)for(int x=12;x<WIDTH-12;x++)if(foreground(image.getPixelRGBA(x,y))) {
-            minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
-        }
-        require(maxX>=minX&&maxY>=minY,"The baseline portrait has no visible wearer");return new Bounds(minX,maxX,minY,maxY);
+        require(nativePixels>1000,"No native wearer silhouette was available for the geometry control");
+        require(outside==0,"Cosmic armor renders geometry beyond the native armor silhouette: "+outside);
+        require(clipped==0,"Armor portrait clips the wearer at the image edge: "+clipped);
+        JsonObject result=new JsonObject();result.addProperty("native_silhouette_pixels",nativePixels);
+        result.addProperty("raster_and_inflation_margin_pixels",margin);result.addProperty("new_pixels_within_margin",newFringe);
+        result.addProperty("pixels_beyond_native_silhouette",outside);result.addProperty("clipped_edge_pixels",clipped);
+        result.addProperty("no_additional_back_geometry",true);return result;
     }
 
     private static boolean foreground(int color){return delta(color,BACKGROUND)>24;}
-
-    private record Bounds(int minX,int maxX,int minY,int maxY) {}
-
-    /** Observe real rendered hue transport; a uniform flash cannot improve a spatially shifted match. */
-    private static JsonObject wingColorFlowAudit(Minecraft mc,LivingEntity living,Path folder,String id)throws Exception {
-        String title="振金星海 · 渐变光翼",detail="固定姿态 · 翼面色带从根部流向翼尖";
-        try(NativeImage baseline=withoutGilding(mc,living,true,title,detail);
-            NativeImage zero=clockedRender(mc,living,true,title,detail,0);
-            NativeImage five=clockedRender(mc,living,true,title,detail,5);
-            NativeImage ten=clockedRender(mc,living,true,title,detail,10);
-            NativeImage repeat=clockedRender(mc,living,true,title,detail,80)) {
-            Bounds wearer=wearerBounds(baseline);float[] fixed=parentPose(mc,living);
-            require(living.tickCount==160&&living.walkAnimation.speed()==0,"Color-flow audit requires a frozen native pose");
-            JsonObject result=new JsonObject();JsonArray sides=new JsonArray();
-            for(int side:new int[]{-1,1}) {
-                WingColors start=wingColors(baseline,zero,wearer,side);
-                WingColors next=wingColors(baseline,five,wearer,side);
-                WingColors later=wingColors(baseline,ten,wearer,side);
-                WingColors loop=wingColors(baseline,repeat,wearer,side);
-                FlowMatch first=flowMatch(start,next,42),second=flowMatch(start,later,54);
-                FlowMatch continuous=flowMatch(next,later,42),repeated=flowMatch(start,loop,3);
-                String name=side<0?"left":"right";
-                require(first.shift()>=3&&continuous.shift()>=3,
-                        "Wing hue must advance outward rather than flash in place: "+name+" "+first+" / "+continuous);
-                require(second.shift()>first.shift()+2&&second.shift()<=first.shift()*2.8+5,
-                        "Wing hue transport must progress continuously between 0/5/10 ticks: "+name+" "+first+" / "+second);
-                require(first.improvement()>.12&&second.improvement()>.20&&continuous.improvement()>.12,
-                        "Spatial transport must explain wing colors better than a stationary brightness change: "+name);
-                require(repeated.error()<Math.max(.0035,second.stationaryError()*.45),
-                        "Wing palette must return after its complete 80-tick color cycle: "+name+" "+repeated);
-                JsonObject facts=new JsonObject();facts.addProperty("side",name);
-                facts.addProperty("chromatic_wing_pixels_at_tick_0",start.pixels());
-                facts.add("tick_0_to_5",first.json());facts.add("tick_0_to_10",second.json());
-                facts.add("tick_5_to_10",continuous.json());facts.add("tick_0_to_80",repeated.json());
-                double overlapFive=wingMaskOverlap(baseline,zero,five,wearer,side);
-                double overlapTen=wingMaskOverlap(baseline,zero,ten,wearer,side);
-                require(overlapFive>.80&&overlapTen>.80,"Color flow must preserve the wing silhouette: "+name+" "+overlapFive+" / "+overlapTen);
-                facts.addProperty("silhouette_iou_at_tick_5",overlapFive);facts.addProperty("silhouette_iou_at_tick_10",overlapTen);
-                sides.add(facts);
-            }
-            require(equalPose(fixed,parentPose(mc,living)),"Color-flow capture moved the native skeleton");
-            zero.writeToFile(folder.resolve("cosmic-"+id+"-flow-tick-000.png"));
-            five.writeToFile(folder.resolve("cosmic-"+id+"-flow-tick-005.png"));
-            ten.writeToFile(folder.resolve("cosmic-"+id+"-flow-tick-010.png"));
-            repeat.writeToFile(folder.resolve("cosmic-"+id+"-flow-tick-080.png"));
-            result.add("wing_sides",sides);result.addProperty("color_period_ticks",80);
-            result.addProperty("observed_root_to_tip_hue_advection",true);
-            result.addProperty("brightness_normalized",true);result.addProperty("near_white_glints_excluded",true);
-            result.addProperty("fixed_parent_pose",true);result.addProperty("status","passed");return result;
-        }
-    }
-
-    private static WingColors wingColors(NativeImage baseline,NativeImage actual,Bounds wearer,int side) {
-        int edge=side<0?wearer.minX():wearer.maxX();
-        double[] red=new double[WIDTH/2],blue=new double[WIDTH/2];int[] samples=new int[WIDTH/2];int pixels=0;
-        for(int distance=5;distance<red.length;distance++) {
-            int x=edge+side*distance;if(x<12||x>=WIDTH-12)break;
-            for(int y=90;y<770;y++) {
-                if(delta(baseline.getPixelRGBA(x,y),BACKGROUND)>=18)continue;
-                int color=actual.getPixelRGBA(x,y),r=color&255,g=color>>>8&255,b=color>>>16&255;
-                int high=Math.max(r,Math.max(g,b)),low=Math.min(r,Math.min(g,b));
-                // Bright, chromatic blade cores; exclude dark shells, background and near-white flecks.
-                if(g<95||high-low<35||r>g+25||b>g+25)continue;
-                red[distance]+=r/(double)g;blue[distance]+=b/(double)g;samples[distance]++;pixels++;
-            }
-            if(samples[distance]>0){red[distance]/=samples[distance];blue[distance]/=samples[distance];}
-        }
-        require(pixels>250,"Too few actual chromatic wing pixels to measure palette transport: "+pixels);
-        double[] smoothRed=new double[red.length],smoothBlue=new double[blue.length];int[] smoothCount=new int[samples.length];
-        int columns=0;double meanRed=0,meanBlue=0;
-        for(int index=7;index<red.length-2;index++) {
-            if(samples[index]<3)continue;
-            for(int offset=-2;offset<=2;offset++)if(samples[index+offset]>=3) {
-                smoothRed[index]+=red[index+offset];smoothBlue[index]+=blue[index+offset];smoothCount[index]++;
-            }
-            smoothRed[index]/=smoothCount[index];smoothBlue[index]/=smoothCount[index];
-            meanRed+=smoothRed[index];meanBlue+=smoothBlue[index];columns++;
-        }
-        require(columns>=35,"Too few wing-profile columns to observe spatial color transport: "+columns);
-        meanRed/=columns;meanBlue/=columns;double variance=0;
-        for(int index=0;index<red.length;index++)if(smoothCount[index]>0)
-            variance+=square(smoothRed[index]-meanRed)+square(smoothBlue[index]-meanBlue);
-        require(variance/columns>.004,"Wing hue is nearly uniform; a clear spatial gradient is required");
-        return new WingColors(smoothRed,smoothBlue,smoothCount,pixels,columns);
-    }
-
-    private static FlowMatch flowMatch(WingColors first,WingColors later,int maximumShift) {
-        FlowMatch best=null;
-        for(int shift=-maximumShift;shift<=maximumShift;shift++) {
-            double error=0,stationary=0;int samples=0;
-            for(int index=7;index<first.red().length-2;index++) {
-                int shifted=index+shift;
-                if(shifted<7||shifted>=later.red().length-2||first.counts()[index]==0||later.counts()[index]==0||later.counts()[shifted]==0)continue;
-                error+=square(first.red()[index]-later.red()[shifted])+square(first.blue()[index]-later.blue()[shifted]);
-                stationary+=square(first.red()[index]-later.red()[index])+square(first.blue()[index]-later.blue()[index]);samples++;
-            }
-            if(samples<Math.max(30,Math.min(first.columns(),later.columns())*.45))continue;
-            FlowMatch match=new FlowMatch(shift,error/samples,stationary/samples,samples);
-            if(best==null||match.error()<best.error())best=match;
-        }
-        require(best!=null,"Wing color profiles have insufficient spatial overlap");return best;
-    }
-
-    private static double wingMaskOverlap(NativeImage baseline,NativeImage first,NativeImage later,Bounds wearer,int side) {
-        int intersection=0,union=0;
-        for(int y=90;y<770;y++)for(int x=12;x<WIDTH-12;x++) {
-            if(side<0?x>=wearer.minX()-3:x<=wearer.maxX()+3)continue;
-            if(delta(baseline.getPixelRGBA(x,y),BACKGROUND)>=18)continue;
-            boolean before=foreground(first.getPixelRGBA(x,y)),after=foreground(later.getPixelRGBA(x,y));
-            if(before||after)union++;if(before&&after)intersection++;
-        }
-        require(union>250,"Wing silhouette is missing from the color-flow audit");return intersection/(double)union;
-    }
-
-    private static double square(double value){return value*value;}
-    private record WingColors(double[] red,double[] blue,int[] counts,int pixels,int columns) {}
-    private record FlowMatch(int shift,double error,double stationaryError,int samples) {
-        double improvement(){return 1-error/Math.max(.000001,stationaryError);}
-        JsonObject json(){JsonObject result=new JsonObject();result.addProperty("outward_shift_pixels",shift);
-            result.addProperty("transport_match_error",error);result.addProperty("stationary_match_error",stationaryError);
-            result.addProperty("error_reduction_after_transport",improvement());result.addProperty("matched_columns",samples);return result;}
-    }
 
     static JsonArray capture(Minecraft mc,Path folder)throws Exception {
         JsonArray results=new JsonArray();
@@ -366,8 +249,8 @@ final class VibraniumGildingPreviews {
             for(var slot:savedEquipment.keySet())mc.player.setItemSlot(slot,ItemStack.EMPTY);
             equip(mc,mc.player,5,true);neutral(mc.player);
             results.add(audit(mc,mc.player,folder,"player"));
-            try(NativeImage front=renderHero(mc,mc.player,false,"振金星海 · 渐变光翼","玩家 · 正面 · 蓝灰星空与背部光翼");
-                NativeImage rear=renderHero(mc,mc.player,true,"振金星海 · 渐变光翼","玩家 · 背面 · 背部连接的双侧渐变光翼")) {
+            try(NativeImage front=renderHero(mc,mc.player,false,"振金星空盔甲","玩家 · 原生振金材质 · 动态星光叠加");
+                NativeImage rear=renderHero(mc,mc.player,true,"振金星空盔甲","背面 · 原生振金材质 · 动态星光叠加")) {
                 front.writeToFile(folder.resolve("cosmic-protection-v-player.png"));
                 rear.writeToFile(folder.resolve("cosmic-protection-v-player-back.png"));
                 front.writeToFile(folder.resolve("vibranium-protection-v-player.png"));
@@ -388,7 +271,7 @@ final class VibraniumGildingPreviews {
                 neutral(emperor);
                 require(ArmorAuraRules.fullProtectionFive(emperor),"Native emperor must wear full vibranium protection V");
                 results.add(audit(mc,emperor,folder,"emperor"));
-                try(NativeImage image=renderHero(mc,emperor,false,"不朽尸王 · 振金星海","原生振金全套保护 V · 蓝灰星空与渐变光翼")) {
+                try(NativeImage image=renderHero(mc,emperor,false,"不朽尸王 · 振金星海","原生振金材质 · 动态星光叠加")) {
                     image.writeToFile(folder.resolve("cosmic-protection-v-emperor.png"));
                     image.writeToFile(folder.resolve("vibranium-protection-v-emperor.png"));
                 }
@@ -400,7 +283,7 @@ final class VibraniumGildingPreviews {
     }
 
     private static JsonObject audit(Minecraft mc,LivingEntity living,Path folder,String id)throws Exception {
-        String title="振金全套保护 V · 深空护甲",detail="甲面星空 · 真实着色器与装备条件验收";
+        String title="振金星空盔甲",detail="原生振金材质 · 动态星光叠加";
         JsonObject result=new JsonObject();result.addProperty("entity","vibranium_gilding_"+id);
         result.addProperty("gpu_capture",true);result.addProperty("author","NingMeng123");
         long count=layers(mc,living).stream().filter(VibraniumGildingPreviews::gilding).count();
@@ -417,7 +300,7 @@ final class VibraniumGildingPreviews {
                 result.add("full_v_layer_difference",visible.json());
                 if(id.equals("player"))result.add("exposed_skin_gpu_control",exposedSkinControl(without,actual));
                 result.add("standing_parent_pose",verifyParentPose(mc,living));
-                result.add("full_armor_coverage_gpu_control",armorCoverageWithoutHeldItems(mc,living,title,detail,without,actual));
+                result.add("native_material_preservation_gpu_control",nativeMaterialWithoutHeldItems(mc,living,title,detail));
                 actual.writeToFile(folder.resolve("vibranium-protection-v-"+id+"-geometry.png"));
                 without.writeToFile(folder.resolve("vibranium-protection-v-"+id+"-without-layer.png"));
 
@@ -448,7 +331,7 @@ final class VibraniumGildingPreviews {
                     require(movement.changed()>1000,"Native walking and head turning did not visibly alter the wearer: "+movement);
                     try(NativeImage movingWithout=withoutGilding(mc,living,title,detail)) {
                         PixelDifference attached=difference(movingWithout,moving);
-                        require(attached.changed()>600,"Walking cosmic armor and wings are not visible: "+attached);
+                        require(attached.changed()>600,"Walking cosmic armor is not visible: "+attached);
                         result.add("walking_gilding_difference",attached.json());
                     }
                     result.add("native_walk_and_turn_difference",movement.json());
@@ -457,14 +340,162 @@ final class VibraniumGildingPreviews {
                 }
             }
         } finally {restoreEquipment(living,saved);neutral(living);walk.restore(living.walkAnimation);}
-        result.add("back_attached_wings_gpu_control",wingAudit(mc,living,folder,id));
+        result.add("back_surface_geometry_gpu_control",backSurfaceAudit(mc,living,folder,id));
         result.add("fixed_pose_animation",animationAudit(mc,living,folder,id));
+        result.add("native_armor_glint_gpu_control",glintAudit(mc,living,folder,id));
         result.addProperty("status","passed");return result;
+    }
+
+    private static JsonObject glintAudit(Minecraft mc,LivingEntity living,Path folder,String id)throws Exception {
+        var saved=equipment(living);SavedPose pose=new SavedPose(living);SavedWalk walk=new SavedWalk(living.walkAnimation);
+        float savedAlpha=RenderSystem.getShaderGlintAlpha();
+        long fixedNanos=Util.getNanos();
+        JsonObject result=new JsonObject();
+        try {
+            neutral(living);
+            living.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
+            living.setItemSlot(EquipmentSlot.OFFHAND,ItemStack.EMPTY);
+            RenderSystem.setShaderGlintAlpha(1F);
+            result.add("ordinary_protection_v",glintSourceAudit(mc,living,folder,id,false,fixedNanos));
+            result.add("growth_protection_v",glintSourceAudit(mc,living,folder,id,true,fixedNanos));
+            var clock=Util.timeSource;
+            try {
+                Util.timeSource=()->fixedNanos;
+                equip(mc,living,4,true);
+                result.add("ordinary_iv_unchanged",disabledControl(mc,living,"附魔光效门槛对照","全套保护IV · 原版光效保持"));
+                equipGrowth(living,4);
+                result.add("growth_iv_unchanged",disabledControl(mc,living,"附魔光效门槛对照","成长保护IV · 无额外光效"));
+                equip(mc,living,5,false);
+                result.add("iron_v_unchanged",disabledControl(mc,living,"附魔光效门槛对照","铁套保护V · 原版光效保持"));
+            } finally {Util.timeSource=clock;}
+            result.addProperty("native_glint_clock_frozen_only_during_test_draws",true);
+            result.addProperty("native_util_clock_restored_after_each_draw",true);
+            result.addProperty("fixed_cosmic_tick",160);
+            result.addProperty("held_items_excluded",true);
+            result.addProperty("single_native_glint_after_starlight",true);
+            result.addProperty("status","passed");
+        } finally {
+            RenderSystem.setShaderGlintAlpha(savedAlpha);
+            restoreEquipment(living,saved);pose.restore(living);walk.restore(living.walkAnimation);
+        }
+        return result;
+    }
+
+    private static JsonObject glintSourceAudit(Minecraft mc,LivingEntity living,Path folder,String id,
+            boolean growth,long fixedNanos)throws Exception {
+        String source=growth?"growth":"ordinary";
+        if(growth)equipGrowth(living,5);else equip(mc,living,5,true);
+        require(ArmorAuraRules.fullProtectionFive(living),"Glint positive control needs full vibranium protection V");
+        for(var slot:ARMOR)require(living.getItemBySlot(slot).hasFoil()!=growth,
+                "Ordinary V must have native foil; growth-only V must exercise the no-native-foil path");
+        JsonObject result=new JsonObject();
+        try(NativeImage enabled=glintRender(mc,living,fixedNanos,0)) {
+            for(var slot:ARMOR)living.getItemBySlot(slot).set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE,false);
+            require(ArmorAuraRules.fullProtectionFive(living),"Explicit foil suppression must keep the starlight gate active");
+            try(NativeImage disabled=glintRender(mc,living,fixedNanos,0);
+                NativeImage oneNativePass=glintRender(mc,living,fixedNanos,1);
+                NativeImage twoNativePasses=glintRender(mc,living,fixedNanos,2)) {
+                PixelDifference visible=difference(disabled,enabled);
+                require(visible.changed()>250,"No visible native glint over "+source+" protection V: "+visible);
+                PixelDifference one=difference(oneNativePass,enabled),two=difference(twoNativePasses,enabled);
+                require(one.changed()<20,"Protection V glint must match exactly one native armor glint after starlight: "+source+" "+one);
+                require(two.changed()>250,"Duplicate-glint negative control does not distinguish a second native pass: "+source+" "+two);
+                RenderSystem.setShaderGlintAlpha(0F);
+                try(NativeImage trulyNoGlint=glintRender(mc,living,fixedNanos,0)) {
+                    PixelDifference suppressed=difference(trulyNoGlint,disabled);
+                    require(suppressed.changed()<20,"ENCHANTMENT_GLINT_OVERRIDE=false still adds glint: "+source+" "+suppressed);
+                    result.add("override_false_vs_zero_glint_alpha",suppressed.json());
+                } finally {RenderSystem.setShaderGlintAlpha(1F);}
+                String prefix="cosmic-protection-v-"+id+"-"+source+"-glint";
+                enabled.writeToFile(folder.resolve(prefix+"-on.png"));
+                disabled.writeToFile(folder.resolve(prefix+"-off.png"));
+                oneNativePass.writeToFile(folder.resolve(prefix+"-native-single-reference.png"));
+                twoNativePasses.writeToFile(folder.resolve(prefix+"-native-double-negative-control.png"));
+                try(NativeImage comparison=sideBySide(disabled,enabled)) {
+                    comparison.writeToFile(folder.resolve(prefix+"-comparison.png"));
+                }
+                result.add("visible_native_glint",visible.json());
+                result.add("difference_from_one_native_pass_after_starlight",one.json());
+                result.add("difference_from_two_native_passes",two.json());
+                result.addProperty("comparison",folder.resolve(prefix+"-comparison.png").toString());
+                result.addProperty("comparison_columns","left: explicit glint override false; right: original native glint enabled");
+                result.addProperty("native_has_foil_without_override",!growth);
+                result.addProperty("starlight_gate_kept_enabled_when_glint_hidden",true);
+                result.addProperty("status","passed");
+            }
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"rawtypes","unchecked"})
+    private static NativeImage glintRender(Minecraft mc,LivingEntity living,long fixedNanos,int referencePasses)throws Exception {
+        List<Object> layers=layers(mc,living);
+        Object reference=null;
+        if(referencePasses>0) {
+            RenderLayer armor=(RenderLayer)layers.stream().filter(layer->layer instanceof HumanoidArmorLayer<?,?,?>).findFirst().orElseThrow();
+            RenderLayerParent renderer=(RenderLayerParent)mc.getEntityRenderDispatcher().getRenderer(living);
+            reference=new NativeGlintReferenceLayer(renderer,armor,referencePasses);layers.add(reference);
+        }
+        var clock=Util.timeSource;
+        try {
+            Util.timeSource=()->fixedNanos;
+            return render(mc,living,false,"振金星光 · 原版附魔光效","同姿态 · 同星空时刻 · 原版紫色附魔光效");
+        } finally {Util.timeSource=clock;if(reference!=null)layers.remove(reference);}
+    }
+
+    /** Independent reference: native armor's own slot/model/glint path, submitted after starlight. */
+    private static final class NativeGlintReferenceLayer extends RenderLayer<LivingEntity,HumanoidModel<LivingEntity>> {
+        private final RenderLayer<LivingEntity,HumanoidModel<LivingEntity>> nativeArmor;
+        private final int passes;
+        NativeGlintReferenceLayer(RenderLayerParent<LivingEntity,HumanoidModel<LivingEntity>> parent,
+                RenderLayer<LivingEntity,HumanoidModel<LivingEntity>> nativeArmor,int passes) {
+            super(parent);this.nativeArmor=nativeArmor;this.passes=passes;
+        }
+        @Override public void render(PoseStack pose,MultiBufferSource buffers,int light,LivingEntity living,
+                float limbSwing,float amount,float partialTick,float age,float yaw,float pitch) {
+            require(buffers instanceof MultiBufferSource.BufferSource,"Native glint reference needs the actual immediate inventory buffer");
+            var output=(MultiBufferSource.BufferSource)buffers;
+            // A deliberately unknown wrapper keeps the production deferral hook out of this
+            // reference. Only vanilla's own armorEntityGlint vertices reach the real GPU.
+            MultiBufferSource glintOnly=type->type==RenderType.armorEntityGlint()?output.getBuffer(type):DiscardVertices.INSTANCE;
+            var saved=new EnumMap<EquipmentSlot,ItemStack>(EquipmentSlot.class);
+            for(var slot:ARMOR) {
+                saved.put(slot,living.getItemBySlot(slot));
+                ItemStack stack=living.getItemBySlot(slot).copy();stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE,true);
+                living.setItemSlot(slot,stack);
+            }
+            try {
+                output.endBatch();
+                for(int pass=0;pass<passes;pass++) {
+                    nativeArmor.render(pose,glintOnly,light,living,limbSwing,amount,partialTick,age,yaw,pitch);
+                    output.endBatch(RenderType.armorEntityGlint());
+                }
+            } finally {restoreEquipment(living,saved);}
+        }
+    }
+
+    private enum DiscardVertices implements VertexConsumer {
+        INSTANCE;
+        @Override public VertexConsumer addVertex(float x,float y,float z){return this;}
+        @Override public VertexConsumer setColor(int r,int g,int b,int a){return this;}
+        @Override public VertexConsumer setUv(float u,float v){return this;}
+        @Override public VertexConsumer setUv1(int u,int v){return this;}
+        @Override public VertexConsumer setUv2(int u,int v){return this;}
+        @Override public VertexConsumer setNormal(float x,float y,float z){return this;}
+    }
+
+    private static void equipGrowth(LivingEntity living,int level) {
+        for(int index=0;index<ARMOR.length;index++) {
+            ItemStack stack=new ItemStack(vibranium(index));
+            stack.set(GearProgression.PROGRESS.get(),new GearProgress(new UUID(0,index+1),5,0L,
+                    Map.of(ResourceLocation.withDefaultNamespace("protection"),level),1));
+            living.setItemSlot(ARMOR[index],stack);
+        }
     }
 
     private static JsonObject animationAudit(Minecraft mc,LivingEntity living,Path folder,String id)throws Exception {
         JsonObject result=new JsonObject();
-        String title="振金星海 · 渐变光翼",detail="固定姿态 · 蓝灰星空与流动渐变";
+        String title="振金星空盔甲",detail="原生振金材质 · 动态星光叠加";
         var saved=equipment(living);SavedPose pose=new SavedPose(living);SavedWalk walk=new SavedWalk(living.walkAnimation);
         try {
             neutral(living);
@@ -512,14 +543,14 @@ final class VibraniumGildingPreviews {
                         actual.writeToFile(folder.resolve("cosmic-"+id+"-tick-"+String.format(java.util.Locale.ROOT,"%03d",animationTick)+".png"));
                         try(NativeImage backBaseline=withoutGilding(mc,living,true,title,detail);
                             NativeImage back=clockedRender(mc,living,true,title,detail,animationTick)) {
-                            sample.add("back_wings",wingGeometryControl(backBaseline,back));
-                            require(equalPose(originalPose,parentPose(mc,living)),"Back-wing animation changed the frozen skeleton");
+                            sample.add("back_surface_geometry",armorSilhouetteControl(backBaseline,back));
+                            require(equalPose(originalPose,parentPose(mc,living)),"Back-surface animation changed the frozen skeleton");
                             if(firstBack==null) {
                                 firstBack=new NativeImage(WIDTH,HEIGHT,false);firstBack.copyFrom(back);
                             } else {
-                                int wingChanges=outsideWearerChanges(backBaseline,firstBack,back);
-                                require(wingChanges>50,"Back wings do not visibly animate at tick "+animationTick+": "+wingChanges);
-                                sample.addProperty("animated_wing_pixels_outside_wearer",wingChanges);
+                                int backChanges=difference(firstBack,back).changed();
+                                require(backChanges>100,"Back armor starfield does not visibly animate at tick "+animationTick+": "+backChanges);
+                                sample.addProperty("animated_back_armor_pixels",backChanges);
                             }
                             back.writeToFile(folder.resolve("cosmic-"+id+"-back-tick-"+String.format(java.util.Locale.ROOT,"%03d",animationTick)+".png"));
                         }
@@ -532,15 +563,14 @@ final class VibraniumGildingPreviews {
             result.addProperty("native_item_glint_isolated",true);
             result.addProperty("animation_clock_only_changes_inside_native_gilding_layer",true);
             result.addProperty("fixed_parent_pose",true);
-            result.addProperty("external_geometry","back_attached_light_wings");
-            result.addProperty("back_wings_attached_to_body",true);
-            result.add("observed_wing_color_flow",wingColorFlowAudit(mc,living,folder,id));
+            result.addProperty("external_geometry","none");
+            result.addProperty("no_additional_back_geometry",true);
             if(id.equals("player")) {
                 Path animation=folder.resolve("cosmic-animation");Files.createDirectories(animation);
                 for(int frame=0;frame<200;frame++) {
                     int animationTick=frame*2;
-                    try(NativeImage front=clockedRender(mc,living,false,title,"正面 · 固定姿态 · 蓝灰振金星空",animationTick,true);
-                        NativeImage rear=clockedRender(mc,living,true,title,"背面 · 固定姿态 · 渐变色带沿翼刃流动",animationTick,true);
+                    try(NativeImage front=clockedRender(mc,living,false,title,"正面 · 原生振金材质 · 动态星光叠加",animationTick,true);
+                        NativeImage rear=clockedRender(mc,living,true,title,"背面 · 原生振金材质 · 动态星光叠加",animationTick,true);
                         NativeImage combined=sideBySide(front,rear)) {
                         require(equalPose(originalPose,parentPose(mc,living)),"Animation output moved the fixed skeleton at frame "+frame);
                         combined.writeToFile(animation.resolve(String.format(java.util.Locale.ROOT,"frame%03d.png",frame)));
@@ -620,12 +650,17 @@ final class VibraniumGildingPreviews {
     }
 
     private static JsonObject disabledControl(Minecraft mc,LivingEntity living,String title,String detail)throws Exception {
-        try(NativeImage actual=render(mc,living,false,title,detail);
-            NativeImage without=withoutGilding(mc,living,title,detail)) {
-            PixelDifference difference=difference(without,actual);
-            require(difference.changed()<20,"Disabled vibranium gilding still renders geometry: "+difference);
-            JsonObject result=difference.json();result.addProperty("gilding_enabled",false);return result;
-        }
+        var clock=Util.timeSource;long fixedNanos=Util.getNanos();
+        try {
+            Util.timeSource=()->fixedNanos;
+            try(NativeImage actual=render(mc,living,false,title,detail);
+                NativeImage without=withoutGilding(mc,living,title,detail)) {
+                PixelDifference difference=difference(without,actual);
+                require(difference.changed()<20,"Disabled vibranium gilding still renders geometry: "+difference);
+                JsonObject result=difference.json();result.addProperty("gilding_enabled",false);
+                result.addProperty("same_native_glint_clock",true);return result;
+            }
+        } finally {Util.timeSource=clock;}
     }
 
     @SuppressWarnings("unchecked")
@@ -677,11 +712,11 @@ final class VibraniumGildingPreviews {
     }
 
     private static NativeImage render(Minecraft mc,LivingEntity living,boolean rear,String title,String detail) {
-        return render(mc,living,rear,title,detail,rear?WING_SCALE:SCALE);
+        return render(mc,living,rear,title,detail,SCALE);
     }
 
     private static NativeImage renderHero(Minecraft mc,LivingEntity living,boolean rear,String title,String detail) {
-        return render(mc,living,rear,title,detail,WING_SCALE);
+        return render(mc,living,rear,title,detail,SCALE);
     }
 
     private static NativeImage render(Minecraft mc,LivingEntity living,boolean rear,String title,String detail,float viewScale) {
@@ -704,7 +739,7 @@ final class VibraniumGildingPreviews {
             graphics.pose().pushPose();graphics.pose().scale(2,2,2);
             graphics.drawCenteredString(mc.font,title,WIDTH/4,20,0xFFFFEAB3);graphics.pose().popPose();
             graphics.drawCenteredString(mc.font,detail,WIDTH/2,785,0xFFE8D5A2);
-            graphics.drawCenteredString(mc.font,"整甲动态星空 · 背部发光双翼 · NingMeng123",WIDTH/2,818,0xFF8D9DAC);
+            graphics.drawCenteredString(mc.font,"原生振金材质 · 动态星光叠加 · NingMeng123",WIDTH/2,818,0xFF8D9DAC);
             graphics.flush();RenderSystem.enableDepthTest();
             requireNoGlError("cosmic armor inventory draw");
             NativeImage image=Screenshot.takeScreenshot(target);requireNoGlError("cosmic armor framebuffer read");return image;

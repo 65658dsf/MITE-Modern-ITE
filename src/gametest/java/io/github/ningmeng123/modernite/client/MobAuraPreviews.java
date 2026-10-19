@@ -35,16 +35,16 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-/** Native mob particles and cosmic armor light wings inside the disposable GPU audit world. @author NingMeng123 */
+/** Native mob particles and cosmic armor inside the disposable GPU audit world. @author NingMeng123 */
 final class MobAuraPreviews {
     private static final int WIDTH=640, HEIGHT=720, FEET=580;
     private static final float SCALE=180;
     private static final EquipmentSlot[] ARMOR={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
     private static final ExtremeKind[] KINDS={ExtremeKind.SKELETON_BLAZE,ExtremeKind.SKELETON_LIGHTNING,
             ExtremeKind.SKELETON_FLOATING,ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.UNDYING_ZOMBIE_EMPEROR};
-    private static final String[] LABELS={"烈焰骷髅","闪电骷髅","漂浮骷髅","湮灭骷髅","不朽尸王","振金保护 V · 星空光翼"};
+    private static final String[] LABELS={"烈焰骷髅","闪电骷髅","漂浮骷髅","湮灭骷髅","不朽尸王","振金星空盔甲"};
     private static final String[] DETAILS={"火焰环绕 · 熔岩火星","电光环绕 · 电弧火花","脚下云朵 · 漂浮气流",
-            "虚空紫环 · 暗影烟雾","猩红灵焰 · 星空振金光翼","整甲动态星空 · 背部发光双翼"};
+            "虚空紫环 · 暗影烟雾","猩红灵焰 · 振金星空盔甲","原生振金材质 · 动态星光叠加"};
     private MobAuraPreviews() {}
 
     static JsonArray capture(Minecraft mc) throws Exception {
@@ -96,7 +96,7 @@ final class MobAuraPreviews {
                         }
                         int count=Integer.parseInt(mc.particleEngine.countParticles());
                         if(mob!=null&&count==0)throw new IllegalStateException("Aura preview emitted no native particles: "+id);
-                        if(mob==null&&count!=0)throw new IllegalStateException("Protection V cosmic armor and light wings must not emit external particles: "+count);
+                        if(mob==null&&count!=0)throw new IllegalStateException("Protection V cosmic armor must not emit external particles: "+count);
                         try(NativeImage image=render(mc,living,index,mob!=null)) {
                             int changed=0,outsideModel=0;
                             for(int y=0;y<HEIGHT;y++)for(int x=0;x<WIDTH;x++) {
@@ -116,7 +116,7 @@ final class MobAuraPreviews {
                             result.addProperty("changed_pixels",changed);result.addProperty("particle_pixels_outside_model",outsideModel);
                             result.addProperty("native_equipment_initialized",mob!=null);
                             result.addProperty("full_protection_v",ArmorAuraRules.fullProtectionFive(living));
-                            result.addProperty("preview_mode",mob==null?"cosmic_armor_light_wings":"native_mob_particles");
+                            result.addProperty("preview_mode",mob==null?"cosmic_armor":"native_mob_particles");
                             results.add(result);
                         }
                     }
@@ -193,7 +193,7 @@ final class MobAuraPreviews {
             graphics.drawCenteredString(mc.font,LABELS[index],WIDTH/4,17,0xFFF2F5FA);
             graphics.pose().popPose();
             graphics.drawCenteredString(mc.font,DETAILS[index],WIDTH/2,664,0xFFC3D1DD);
-            graphics.drawCenteredString(mc.font,index<KINDS.length?"原版渲染器与真实粒子 · NingMeng123":"整甲动态星空与背部光翼 · NingMeng123",WIDTH/2,690,0xFF8195A6);
+            graphics.drawCenteredString(mc.font,index<KINDS.length?"原版渲染器与真实粒子 · NingMeng123":"原生振金材质与动态星光 · NingMeng123",WIDTH/2,690,0xFF8195A6);
             graphics.flush();RenderSystem.enableDepthTest();
             return Screenshot.takeScreenshot(target);
         } finally {

@@ -36,6 +36,11 @@ neoForge {
                 systemProperty 'modern_ite.clientAudit', 'true'
                 systemProperty 'modern_ite.clientAuditOutput', file('build/verification/client-audit.json').absolutePath
             }
+            if (providers.gradleProperty('modernIteRuneAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('run-rune-audit')
+                systemProperty 'modern_ite.runeAudit', 'true'
+                systemProperty 'modern_ite.runeAuditOutput', file('build/verification/vibranium-rune-audit.json').absolutePath
+            }
             if (providers.gradleProperty('modernIteMobRenderAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('run-mob-render-audit')
                 systemProperty 'modern_ite.mobRenderAudit', 'true'
@@ -78,7 +83,8 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def jeiAudit = providers.gradleProperty('modernIteJeiAudit').getOrElse('false').toBoolean()
         def lanternAudit = providers.gradleProperty('modernIteLanternAudit').getOrElse('false').toBoolean()
         def forgingAudit = providers.gradleProperty('modernIteForgingAudit').getOrElse('false').toBoolean()
-        def directory = forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : 'run-client'
+        def runeAudit = providers.gradleProperty('modernIteRuneAudit').getOrElse('false').toBoolean()
+        def directory = forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : 'run-client'
         def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()
         def existing = config.exists() ? config.getText('UTF-8') : ''

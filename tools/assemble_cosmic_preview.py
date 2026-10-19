@@ -13,7 +13,7 @@ TICKS_PER_FRAME = 2
 
 
 def main():
-    # One palette keeps static surfaces stable while the real shader and wing clock advance.
+    # One palette keeps static surfaces stable while the real armor shader clock advances.
     # Read the native frames twice rather than retaining 200 full-size RGB images in memory.
     samples = Image.new("RGB", (192 * 8, 108 * ((FRAME_COUNT + 7) // 8)))
     paths = [FOLDER / f"cosmic-animation/frame{index:03d}.png" for index in range(FRAME_COUNT)]
@@ -27,7 +27,7 @@ def main():
     for path in paths:
         with Image.open(path) as source:
             encoded.append(source.convert("RGB").quantize(palette=palette, dither=Image.Dither.NONE))
-    path = FOLDER / "cosmic-vibranium-flow.gif"
+    path = FOLDER / "cosmic-vibranium-armor.gif"
     encoded[0].save(path, save_all=True, append_images=encoded[1:], duration=FRAME_DURATION_MS,
                     loop=0, disposal=1, optimize=False)
     with Image.open(path) as preview:
