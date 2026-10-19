@@ -2,9 +2,23 @@
 
 开发署名：NingMeng123。
 
-2026-10-19 的 0.2.0 振金符文、15 种简易武器动画、单层原版流光验证见 [符文与流光验收](vibranium-runes-and-glint.md)；大头效果的最新增量验证见下节。下方 0.2.0 材质叠加包的字节数与 SHA 为本轮之前的历史构建。
+2026-10-19 的 0.2.0 振金符文、15 种简易武器动画、单层原版流光验证见 [符文与流光验收](vibranium-runes-and-glint.md)；灯笼与大头效果的最新增量验证见下方对应节。下方 0.2.0 材质叠加包的字节数与 SHA 为本轮之前的历史构建。
 
 当前版本为 **0.2.0**，已移除背部光翼及安装座，保留振金原纹理并在甲面叠加星光，全套振金每件保护至少V的触发门槛保持。本轮构建、14项JUnit、标题页、实际GPU及包一致性检查通过，源码按功能分类提交。以下0.1.12及更早的通过结果、包哈希和光翼预览均为历史证据，不能作为0.2.0验收结果。
+
+## 0.2.0 灯笼提携动画与耐久（2026-10-19）
+
+第一人称绘制真实玩家手臂和袖子，手掌握住提环，前臂从侧面伸入，灯体向下悬挂；站立轻晃、行走摆动并保留装备切换和挥手过渡。第三人称提臂姿态、掌心锚点和悬挂摆动同步支持左右惯用手及主副手。弓弩、盾、望远镜、游泳等动作保留原有手臂姿态。
+
+后续修复耐久同步引起的周期性抬手抖动：灯笼物品的原生换装备判断忽略单独的耐久变化，保持手持高度并立即更新渲染缓存；切换槽位、材质、空手和其他组件变化仍保留动画。构建与14项JUnit通过；原生客户端对八材质双手执行440次手持渲染器tick，连续耐久同步及最后一点耗尽均不降低手持高度，真实切换负对照正常。该回归与原有GPU／HUD／光照检查一起通过，日志为 `build/verification/lantern-wear-client.log`，结果位于客户端报告的 `lanterns.carry.durability_reequip`。
+
+八种灯笼最大耐久依材质减半为铜800、银1200、金1600、铁2400、古代金属3200、秘银4800、艾德曼8000、振金12800。耐久条满值也显示，双语提示新增剩余／总耐久，副手槽上方显示数值，低于等于四分之一变黄、耗尽变红；F1隐藏数值。照明效果、每10 tick消耗2点和耗尽后保留物品的规则沿用。
+
+使用固定本体 `build/verification/base/mite-0.1.10.jar`，独立输出构建、14项JUnit、6项灯笼GameTest全部通过。原生客户端专项通过40个物品显示样本及16个实际持灯样本，覆盖双惯用手、主副手、站立／行走、卸下后的共享模型恢复；另检查实际HUD满／半／空数值、F1与非灯笼负对照，以及原有照明和药水兼容。截图已人工检查。报告为 `build/verification/lantern-carry-client-audit.json`，姿态拼图及HUD截图在 `build/verification/mob-render-audit/lantern-carry-poses.png` 和 `lantern-durability-hud.png`。
+
+混合工作区全量GameTest为142/144通过，失败为既有的 `idleextremezombiecanretaliateagainstanirongolem` 与 `idleextremezombiecanattacktheselectedbatmount`；对应历史基线复现见下节。本次未修改僵尸AI。灯笼专项的最终独立日志为 `build/verification/lantern-carry-focused-gametest.log`，客户端日志为 `lantern-carry-client-final.log`。
+
+产物 `build/lantern-carry-build/libs/modern-ite-0.2.0.jar` 包含当前工作区其他待提交功能，170个生产类和528份JSON与编译输出／源码逐字节一致，无测试类、本体类、JEI实现或嵌套JAR。扣耐久抖动修复后的大小1,177,402字节，SHA-256为 `d46e1252e849a81af91962eccbb27acbb487dba751e31f82ead8974c886cd2c3`，最新包检查记录为 `build/verification/lantern-wear-package-audit.json`。
 
 ## 0.2.0 大头减速与镜头拉近（2026-10-19）
 

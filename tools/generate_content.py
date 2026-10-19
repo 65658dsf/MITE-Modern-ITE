@@ -199,6 +199,7 @@ save('assets/minecraft/atlases/mob_effects.json',{'sources':[{'type':'minecraft:
 messages={
  'itemGroup.modern_ite':('MITE: Modern ITE','MITE: Modern ITE'),
  'tooltip.modern_ite.lantern.offhand':('仅放在副手时生效。','Only active while held in the offhand.'),
+ 'tooltip.modern_ite.lantern.remaining':('耐久：%s / %s','Durability: %s / %s'),
  'tooltip.modern_ite.lantern.durability':('照明时消耗耐久，耐久耗尽后停止生效。','Consumes durability while lighting; stops when depleted.'),
  'message.modern_ite.underworld_penalty':('你在地底停留过久，离开一天后可恢复。','You have stayed in the Underworld too long. Leave for a day to recover.'),
  'message.modern_ite.underworld_recovered':('地底停留惩罚已消退。','The Underworld penalty has worn off.'),

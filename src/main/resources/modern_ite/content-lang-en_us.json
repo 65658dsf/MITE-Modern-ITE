@@ -46,6 +46,7 @@
   "effect.modern_ite.big_head": "Big Head",
   "itemGroup.modern_ite": "MITE: Modern ITE",
   "tooltip.modern_ite.lantern.offhand": "Only active while held in the offhand.",
+  "tooltip.modern_ite.lantern.remaining": "Durability: %s / %s",
   "tooltip.modern_ite.lantern.durability": "Consumes durability while lighting; stops when depleted.",
   "message.modern_ite.underworld_penalty": "You have stayed in the Underworld too long. Leave for a day to recover.",
   "message.modern_ite.underworld_recovered": "The Underworld penalty has worn off.",

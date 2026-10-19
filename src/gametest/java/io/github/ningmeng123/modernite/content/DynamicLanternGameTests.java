@@ -1,15 +1,22 @@
 package io.github.ningmeng123.modernite.content;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -36,7 +43,7 @@ public final class DynamicLanternGameTests {
 
     @GameTest(template = "gear_empty")
     public static void everyMaterialHasTheSameLightAndIncreasingLifetime(GameTestHelper h) {
-        int[] durability = {1600, 2400, 3200, 4800, 6400, 9600, 16000, 25600};
+        int[] durability = {800, 1200, 1600, 2400, 3200, 4800, 8000, 12800};
         Player player = h.makeMockPlayer(GameType.SURVIVAL);
         int previous = 0;
         for (int i = 0; i < MATERIALS.length; i++) {
@@ -53,6 +60,30 @@ public final class DynamicLanternGameTests {
                     "All lantern materials provide the same equipped illumination: " + MATERIALS[i]);
         }
         player.discard();
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void durabilityDisplayCoversFullPartialAndExhaustedLanterns(GameTestHelper h) {
+        for (String material : MATERIALS) {
+            ItemStack stack = lantern(material);
+            DynamicCoreItem item = (DynamicCoreItem) stack.getItem();
+            int maximum = stack.getMaxDamage();
+            for (int damage : new int[]{0, maximum / 2, maximum}) {
+                stack.setDamageValue(damage);
+                h.assertTrue(item.isBarVisible(stack),
+                        "Lantern durability remains visible at every fuel level: " + material);
+                h.assertValueEqual(item.getBarWidth(stack), Math.round(13F * (maximum - damage) / maximum),
+                        "The visible bar represents the remaining durability: " + material);
+                List<Component> tooltip = new ArrayList<>();
+                item.appendHoverText(stack, Item.TooltipContext.EMPTY, tooltip, TooltipFlag.NORMAL);
+                h.assertTrue(tooltip.stream().anyMatch(line ->
+                                line.getContents() instanceof TranslatableContents translated
+                                        && translated.getKey().equals("tooltip.modern_ite.lantern.remaining")
+                                        && Arrays.equals(translated.getArgs(), new Object[]{maximum - damage, maximum})),
+                        "The tooltip reports the remaining and maximum durability: " + material);
+            }
+        }
         h.succeed();
     }
 

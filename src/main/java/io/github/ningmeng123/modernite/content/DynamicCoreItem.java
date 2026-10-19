@@ -10,8 +10,8 @@ import net.minecraft.world.item.TooltipFlag;
 /** Portable offhand lantern; legacy core registry IDs remain valid. @author NingMeng123 */
 public final class DynamicCoreItem extends Item {
     public enum Material {
-        COPPER(1600), SILVER(2400), GOLD(3200), IRON(4800), ANCIENT_METAL(6400),
-        MITHRIL(9600), ADAMANTIUM(16000), VIBRANIUM(25600);
+        COPPER(800), SILVER(1200), GOLD(1600), IRON(2400), ANCIENT_METAL(3200),
+        MITHRIL(4800), ADAMANTIUM(8000), VIBRANIUM(12800);
 
         public final int durability;
         Material(int durability) { this.durability = durability; }
@@ -30,8 +30,24 @@ public final class DynamicCoreItem extends Item {
                 && stack.getDamageValue() < stack.getMaxDamage();
     }
 
+    @Override public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        if (slotChanged || !ItemStack.isSameItem(oldStack, newStack)) return true;
+        if (ItemStack.matches(oldStack, newStack)) return false;
+        // Fuel updates replace the client stack, but should not lower and raise the carrying hand.
+        ItemStack previous = oldStack.copy();
+        previous.setDamageValue(newStack.getDamageValue());
+        return !ItemStack.matches(previous, newStack);
+    }
+
+    @Override public boolean isBarVisible(ItemStack stack) {
+        return true;
+    }
+
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("tooltip.modern_ite.lantern.offhand").withStyle(ChatFormatting.YELLOW));
+        tooltip.add(Component.translatable("tooltip.modern_ite.lantern.remaining",
+                Math.max(0, stack.getMaxDamage() - stack.getDamageValue()), stack.getMaxDamage())
+                .withStyle(hasFuel(stack) ? ChatFormatting.GREEN : ChatFormatting.RED));
         tooltip.add(Component.translatable("tooltip.modern_ite.lantern.durability").withStyle(ChatFormatting.GRAY));
     }
 }

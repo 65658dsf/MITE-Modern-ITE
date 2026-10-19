@@ -60,7 +60,7 @@ final class LanternClientAudit {
         Files.createDirectories(folder);
         JsonObject result = new JsonObject();
         result.addProperty("author", "NingMeng123");
-        result.addProperty("scope", "Native baked geometry, five actual item-display GPU contexts, and local player lightmap pixels");
+        result.addProperty("scope", "Native baked geometry, five item-display GPU contexts, carried player/hand renders, and local player lightmap pixels");
         JsonArray models = new JsonArray();
         result.add("materials", models);
         try (NativeImage sheet = new NativeImage(WIDTH * CONTEXTS.length, HEIGHT * items.size(), false)) {
@@ -100,6 +100,7 @@ final class LanternClientAudit {
             result.addProperty("preview", path.toString());
         }
         result.addProperty("native_gpu_item_display_count", items.size() * CONTEXTS.length);
+        result.add("carry", LanternCarryClientAudit.capture(mc, new ItemStack(items.getFirst()), folder));
         result.add("lightmap", lightmap(mc, items));
         return result;
     }
