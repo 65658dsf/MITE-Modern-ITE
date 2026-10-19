@@ -1,10 +1,10 @@
 {
   "author": "NingMeng123",
-  "verification_date": "2026-10-18",
+  "verification_date": "2026-10-19",
   "minecraft": "1.21.1",
   "neoforge": "21.1.259",
   "base_mod_version": "0.1.10",
-  "extension_version": "0.1.12",
+  "extension_version": "0.2.0",
   "base_regression": {
     "junit_passed": 1590,
     "gametest_passed": 2054,
@@ -13,11 +13,12 @@
     "not_rerun_for_current_base": true
   },
   "extension_junit": {
-    "status": "passed_results_reused",
-    "version": "0.1.12",
+    "version": "0.2.0",
+    "status": "passed",
     "passed": 14,
     "failures": 0,
     "errors": 0,
+    "rerun_this_round": true,
     "suites": [
       {
         "suite": "io.github.ningmeng123.modernite.economy.EconomyRulesTest",
@@ -44,22 +45,16 @@
         "errors": 0
       }
     ],
-    "scope": "current_0_1_12_build_reuses_existing_passed_results",
-    "rerun_this_round": false,
-    "original_validation_version": "0.1.11",
-    "log": "build/verification/vibranium-flow-build.log"
+    "log": "build/verification/armor-overlay-build.log"
   },
   "extension_gametest": {
+    "version": "0.2.0",
     "status": "not_rerun_render_only_change",
-    "version": "0.1.12",
     "rerun_this_round": false,
     "previous_validation_version": "0.1.11",
     "previous_passed": 108,
-    "previous_recipe_errors": 0,
-    "previous_tag_errors": 0,
     "same_gameplay_and_activation_gate": true,
-    "source_log": "build/verification/cosmic-gametest.log",
-    "scope": "historical_0_1_11_server_validation_referenced_by_0_1_12"
+    "source_log": "build/verification/cosmic-gametest.log"
   },
   "predictive_archery": {
     "verified_date": "2026-10-18",
@@ -127,27 +122,26 @@
       "status": "passed"
     },
     "latest_launch_confirmed": true,
-    "version": "0.1.12",
-    "scope": "current_0_1_12",
-    "log": "build/verification/vibranium-flow-client.log"
+    "version": "0.2.0",
+    "log": "build/verification/armor-overlay-client.log"
   },
   "release_jar": {
-    "path": "build/libs/modern-ite-0.1.12.jar",
-    "sha256": "675a8b1ea22c2915c048ee4efd05a20e3d9fcca0cbc0df5897bf7ba665a772b1",
-    "bytes": 1077523,
+    "path": "build/libs/modern-ite-0.2.0.jar",
+    "sha256": "7ceb6213d69e8867adec7f998040c75d4d1e42aca7eae31291d7d7eda12c2e16",
+    "bytes": 1158761,
     "nested_jars": false,
     "old_runtime_classes": false,
     "base_classes_bundled": false,
     "test_classes_bundled": false,
-    "compiled_production_classes_matched": 160,
+    "compiled_production_classes_matched": 165,
     "packaged_json_resources_matched": 528,
     "packaged_shader_resources_matched": 3,
     "jei_bundled": false,
     "removed_creature_resources_absent": true,
-    "status": "passed",
-    "version": "0.1.12",
-    "source_json_files_checked": 528,
-    "source_delivery": "included_in_0_1_12_commits"
+    "light_wings_absent": true,
+    "packaged_simplyswords_rune_resources_matched": 30,
+    "artifact_record": "historical_verified_build_2026_10_19",
+    "historical_build_identified_by_sha256": true
   },
   "source_archives": {
     "[极难柳昊定制]Extreme-lh-0.6.6 (3).jar": "594c152bb7cfe655f9b0744aea2ed45d71696779cd842c71be2501189c540d98",
@@ -160,9 +154,620 @@
     "World-generation distribution"
   ],
   "mob_render": {
-    "status": "passed",
+    "author": "NingMeng123",
+    "timestamp": "2026-10-18T15:58:07.354994500Z",
+    "scope": "real ClientLevel; all 45 active texture lookups; fourteen native InventoryScreen GPU draws; alpha/body and zombie UV controls; variant heads, shield, wearable bucket and attack poses",
+    "property": "modern_ite.mobRenderAudit=true",
+    "existing_world_loaded": false,
+    "multiplayer_connected": false,
+    "render_target_width": 320,
+    "render_target_height": 320,
     "failures": [],
+    "original_render_distance": 12,
+    "original_simulation_distance": 12,
+    "original_pause_on_lost_focus": true,
+    "audit_render_distance": 2,
+    "audit_simulation_distance": 5,
+    "audit_pause_on_lost_focus": false,
+    "disposable_world": "modern-ite-render-audit-1792339087354-9fac2d24",
+    "created_only_new_world": true,
+    "game_directory": "run-mob-render-audit/.",
+    "client_ready_ticks_before_capture": 100,
+    "server_ready_ticks_before_capture": 132,
+    "texture_lookups": [
+      {
+        "entity": "zombie_door",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "miner_zombie",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_chaos",
+        "texture": "modern_ite:textures/entity/source/zombie_chaos.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_fly_away",
+        "texture": "modern_ite:textures/entity/source/zombie_fly_away.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_ghast",
+        "texture": "modern_ite:textures/entity/source/zombie_ghast.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_jump",
+        "texture": "modern_ite:textures/entity/source/zombie_jump.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_knockback",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_invisible_look_up",
+        "texture": "modern_ite:textures/entity/source/zombie_invisible_look_up.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_pumpkin",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_iron_bucket",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_siege",
+        "texture": "modern_ite:textures/entity/source/zombie_siege.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "dragon_zombie",
+        "texture": "modern_ite:textures/entity/source/dragon_zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "random_zombie",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "fishing_rod_zombie",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "mirror_zombie",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "mimic_zombie",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_caller",
+        "texture": "modern_ite:textures/entity/source/zombie_caller.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_boss",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_elite_lord",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "undying_zombie_emperor",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "exchanger",
+        "texture": "minecraft:textures/entity/skeleton/skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "mirror_skeleton",
+        "texture": "minecraft:textures/entity/skeleton/skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "skeleton_fast_arrow",
+        "texture": "modern_ite:textures/entity/source/skeleton_fast_arrow.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "skeleton_knockback",
+        "texture": "modern_ite:textures/entity/source/skeleton_knockback.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "skeleton_lightning",
+        "texture": "minecraft:textures/entity/skeleton/skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "skeleton_floating",
+        "texture": "minecraft:textures/entity/skeleton/skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "skeleton_blaze",
+        "texture": "modern_ite:textures/entity/source/skeleton_blaze.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "wither_skeleton_arrow",
+        "texture": "minecraft:textures/entity/skeleton/wither_skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "skeleton_elite_lord",
+        "texture": "minecraft:textures/entity/skeleton/skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "skeleton_zombie",
+        "texture": "modern_ite:textures/entity/source/zombies/skeleton_zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "run_creeper",
+        "texture": "modern_ite:textures/entity/source/run_creeper.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "phase_creeper",
+        "texture": "minecraft:textures/block/black_concrete.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "chaos_creeper",
+        "texture": "modern_ite:textures/entity/source/chaos_creeper.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "invisible_creeper",
+        "texture": "modern_ite:textures/entity/source/creeper_invisible.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "invisible_reversed_creeper",
+        "texture": "modern_ite:textures/entity/source/creeper_invisible.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "black_infernal_creeper",
+        "texture": "modern_ite:textures/entity/source/black_infernal_creeper.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "flash_creeper",
+        "texture": "modern_ite:textures/entity/source/creeper_flash.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "wither_creeper",
+        "texture": "modern_ite:textures/entity/source/wither_creeper.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "witch_lord",
+        "texture": "modern_ite:textures/entity/source/witch_lord.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$4",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "red_ghoul",
+        "texture": "modern_ite:textures/entity/source/red_ghoul.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "dark_iron_golem",
+        "texture": "modern_ite:textures/entity/source/dark_iron_golem.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$6",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_lord",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "wandering_witch",
+        "texture": "modern_ite:textures/entity/source/wandering_witch.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$4",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "zombie_pigman_lord",
+        "texture": "minecraft:textures/entity/piglin/zombified_piglin.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$7",
+        "lookup_succeeded": true
+      },
+      {
+        "entity": "annihilation_skeleton",
+        "texture": "modern_ite:textures/entity/source/skeleton/annihilation_skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "lookup_succeeded": true
+      }
+    ],
     "entity_texture_lookup_count": 45,
+    "native_gpu_samples": [
+      {
+        "entity": "witch_lord",
+        "texture": "modern_ite:textures/entity/source/witch_lord.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$4",
+        "pixels": {
+          "body": 15644,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/witch_lord.png",
+        "body_pixels_changed_by_layers": 168,
+        "body_layer_changed_fraction": 0.010738941447200204,
+        "legacy_eyes_negative_control_changed_fraction": 1.0,
+        "legacy_eyes_negative_control": "build/verification/mob-render-audit/negative-control-legacy-eyes-witch_lord.png",
+        "model": "net.minecraft.client.model.WitchModel",
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "wandering_witch",
+        "texture": "modern_ite:textures/entity/source/wandering_witch.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$4",
+        "pixels": {
+          "body": 19370,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/wandering_witch.png",
+        "body_pixels_changed_by_layers": 168,
+        "body_layer_changed_fraction": 0.00867320598864223,
+        "model": "net.minecraft.client.model.WitchModel",
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "annihilation_skeleton",
+        "texture": "modern_ite:textures/entity/source/skeleton/annihilation_skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "pixels": {
+          "body": 12748,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/annihilation_skeleton.png",
+        "body_pixels_changed_by_layers": 0,
+        "body_layer_changed_fraction": 0.0,
+        "dim_light_body_pixels_changed_by_layers": 182,
+        "dim_light_body_layer_changed_fraction": 0.014276749294006902,
+        "dim_screenshot": "build/verification/mob-render-audit/annihilation_skeleton_dim.png",
+        "legacy_eyes_negative_control_changed_fraction": 1.0,
+        "legacy_eyes_negative_control": "build/verification/mob-render-audit/negative-control-legacy-eyes-annihilation_skeleton.png",
+        "model": "net.minecraft.client.model.SkeletonModel",
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "zombie_pigman_lord",
+        "texture": "minecraft:textures/entity/piglin/zombified_piglin.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$7",
+        "pixels": {
+          "body": 19659,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/zombie_pigman_lord.png",
+        "model": "net.minecraft.client.model.PiglinModel",
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "zombie_fly_away",
+        "texture": "modern_ite:textures/entity/source/zombie_fly_away.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "pixels": {
+          "body": 16180,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/zombie_fly_away.png",
+        "actual_body_uv": {
+          "head": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.0,
+            "max_u": 0.5,
+            "min_v": 0.0,
+            "max_v": 0.25
+          },
+          "right_leg": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.0,
+            "max_u": 0.25,
+            "min_v": 0.25,
+            "max_v": 0.5
+          },
+          "left_leg": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.0,
+            "max_u": 0.25,
+            "min_v": 0.25,
+            "max_v": 0.5
+          },
+          "torso": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.25,
+            "max_u": 0.625,
+            "min_v": 0.25,
+            "max_v": 0.5
+          },
+          "left_arm": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.625,
+            "max_u": 0.875,
+            "min_v": 0.25,
+            "max_v": 0.5
+          },
+          "right_arm": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.625,
+            "max_u": 0.875,
+            "min_v": 0.25,
+            "max_v": 0.5
+          }
+        },
+        "actual_maximum_v": 0.5,
+        "actual_hat_cubes": 0,
+        "head_black_eye_pixels": 156,
+        "plain64_hat_head_black_pixels": 0,
+        "head_screenshot": "build/verification/mob-render-audit/zombie_fly_away_head.png",
+        "plain64_hat_negative_control": "build/verification/mob-render-audit/negative-control-plain64-hat-zombie_fly_away.png",
+        "legacy32_body_uv": {
+          "head": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.0,
+            "max_u": 0.5,
+            "min_v": 0.0,
+            "max_v": 0.5
+          },
+          "right_leg": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.0,
+            "max_u": 0.25,
+            "min_v": 0.5,
+            "max_v": 1.0
+          },
+          "left_leg": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.0,
+            "max_u": 0.25,
+            "min_v": 0.5,
+            "max_v": 1.0
+          },
+          "torso": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.25,
+            "max_u": 0.625,
+            "min_v": 0.5,
+            "max_v": 1.0
+          },
+          "left_arm": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.625,
+            "max_u": 0.875,
+            "min_v": 0.5,
+            "max_v": 1.0
+          },
+          "right_arm": {
+            "vertices": 24,
+            "outside_normalized_uv": 0,
+            "min_u": 0.625,
+            "max_u": 0.875,
+            "min_v": 0.5,
+            "max_v": 1.0
+          }
+        },
+        "legacy32_maximum_v": 1.0,
+        "legacy32_body_pixels_changed": 15029,
+        "legacy32_body_changed_fraction": 0.9288627935723115,
+        "legacy32_negative_control": "build/verification/mob-render-audit/negative-control-legacy32-zombie_fly_away.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantZombieModel",
+        "uppercut_right_arm": -3.5,
+        "uppercut_left_arm": -3.5,
+        "uppercut_changed_pixels": 6174,
+        "uppercut_screenshot": "build/verification/mob-render-audit/zombie_fly_away_uppercut.png",
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "zombie_ghast",
+        "texture": "modern_ite:textures/entity/source/zombie_ghast.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "pixels": {
+          "body": 18657,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/zombie_ghast.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantZombieModel",
+        "species_head_changed_pixels": 6756,
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "dragon_zombie",
+        "texture": "modern_ite:textures/entity/source/dragon_zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "pixels": {
+          "body": 17688,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/dragon_zombie.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantZombieModel",
+        "species_head_changed_pixels": 6225,
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "zombie_door",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "pixels": {
+          "body": 18811,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/zombie_door.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantZombieModel",
+        "door_shield_changed_pixels": 8487,
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "zombie_iron_bucket",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "pixels": {
+          "body": 21347,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/zombie_iron_bucket.png",
+        "model": "net.minecraft.client.model.ZombieModel",
+        "bucket_armor_texture": "minecraft:textures/block/iron_block.png",
+        "bucket_texture_transparent_pixels": 0,
+        "bucket_vs_helmet_changed_pixels": 8762,
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "fishing_rod_zombie",
+        "texture": "minecraft:textures/entity/zombie/zombie.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$1",
+        "pixels": {
+          "body": 27825,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/fishing_rod_zombie.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantZombieModel",
+        "head_scale": 2.0,
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "wither_skeleton_arrow",
+        "texture": "minecraft:textures/entity/skeleton/wither_skeleton.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$2",
+        "pixels": {
+          "body": 13707,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/wither_skeleton_arrow.png",
+        "model": "net.minecraft.client.model.SkeletonModel",
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "run_creeper",
+        "texture": "modern_ite:textures/entity/source/run_creeper.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "pixels": {
+          "body": 11649,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/run_creeper.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantCreeperModel",
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "phase_creeper",
+        "texture": "minecraft:textures/block/black_concrete.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "pixels": {
+          "body": 10970,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/phase_creeper.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantCreeperModel",
+        "variant_effect_layer_pixels": 266,
+        "native_draw_succeeded": true
+      },
+      {
+        "entity": "chaos_creeper",
+        "texture": "modern_ite:textures/entity/source/chaos_creeper.png",
+        "renderer": "io.github.ningmeng123.modernite.client.entity.ExtremeMobRenderers$3",
+        "pixels": {
+          "body": 14098,
+          "near_pure_white": 0,
+          "near_pure_white_fraction": 0.0
+        },
+        "screenshot": "build/verification/mob-render-audit/chaos_creeper.png",
+        "model": "io.github.ningmeng123.modernite.client.entity.VariantCreeperModel",
+        "variant_effect_layer_pixels": 1946,
+        "arrow_rotation_at_tick20": 2.8,
+        "native_draw_succeeded": true
+      }
+    ],
     "focused_gpu_sample_count": 14,
     "player_big_head": {
       "effect_head_scale": 2.0,
@@ -175,175 +780,1006 @@
       "skeleton_lightning": 5,
       "skeleton_floating": 3,
       "skeleton_blaze": 8,
-      "annihilation_skeleton": 13
+      "annihilation_skeleton": 11
     },
-    "latest_launch_confirmed": true,
-    "version": "0.1.12",
-    "scope": "current_0_1_12",
-    "timestamp": "2026-10-18T14:44:25.143927100Z",
-    "native_particle_previews": 5,
-    "cosmic_gpu_controls": 3,
-    "log": "build/verification/vibranium-flow-render.log",
-    "wing_color_flow_controls": [
+    "aura_previews": [
       {
-        "entity": "vibranium_gilding_player",
-        "wing_sides": [
+        "entity": "skeleton_blaze",
+        "label": "烈焰骷髅",
+        "file": "build/verification/mob-render-audit/aura_skeleton_blaze.png",
+        "native_particle_count": 76,
+        "changed_pixels": 28131,
+        "particle_pixels_outside_model": 18363,
+        "native_equipment_initialized": true,
+        "full_protection_v": false,
+        "preview_mode": "native_mob_particles"
+      },
+      {
+        "entity": "skeleton_lightning",
+        "label": "闪电骷髅",
+        "file": "build/verification/mob-render-audit/aura_skeleton_lightning.png",
+        "native_particle_count": 7,
+        "changed_pixels": 8455,
+        "particle_pixels_outside_model": 2166,
+        "native_equipment_initialized": true,
+        "full_protection_v": false,
+        "preview_mode": "native_mob_particles"
+      },
+      {
+        "entity": "skeleton_floating",
+        "label": "漂浮骷髅",
+        "file": "build/verification/mob-render-audit/aura_skeleton_floating.png",
+        "native_particle_count": 19,
+        "changed_pixels": 30732,
+        "particle_pixels_outside_model": 22978,
+        "native_equipment_initialized": true,
+        "full_protection_v": false,
+        "preview_mode": "native_mob_particles"
+      },
+      {
+        "entity": "annihilation_skeleton",
+        "label": "湮灭骷髅",
+        "file": "build/verification/mob-render-audit/aura_annihilation_skeleton.png",
+        "native_particle_count": 113,
+        "changed_pixels": 33878,
+        "particle_pixels_outside_model": 21314,
+        "native_equipment_initialized": true,
+        "full_protection_v": false,
+        "preview_mode": "native_mob_particles"
+      },
+      {
+        "entity": "undying_zombie_emperor",
+        "label": "不朽尸王",
+        "file": "build/verification/mob-render-audit/aura_undying_zombie_emperor.png",
+        "native_particle_count": 68,
+        "changed_pixels": 37655,
+        "particle_pixels_outside_model": 18492,
+        "native_equipment_initialized": true,
+        "full_protection_v": true,
+        "preview_mode": "native_mob_particles"
+      },
+      {
+        "entity": "player_protection_v",
+        "label": "振金星空盔甲",
+        "file": "build/verification/mob-render-audit/aura_player_protection_v.png",
+        "native_particle_count": 0,
+        "changed_pixels": 10392,
+        "particle_pixels_outside_model": 604,
+        "native_equipment_initialized": false,
+        "full_protection_v": true,
+        "preview_mode": "cosmic_armor"
+      },
+      {
+        "native_shader_programs": [
           {
-            "side": "left",
-            "chromatic_wing_pixels_at_tick_0": 2336,
-            "tick_0_to_5": {
-              "outward_shift_pixels": 12,
-              "transport_match_error": 0.0012028084132548777,
-              "stationary_match_error": 0.029677640277196608,
-              "error_reduction_after_transport": 0.959470887778801,
-              "matched_columns": 85
-            },
-            "tick_0_to_10": {
-              "outward_shift_pixels": 23,
-              "transport_match_error": 0.0018958321620215397,
-              "stationary_match_error": 0.06869624337520124,
-              "error_reduction_after_transport": 0.9724026807162222,
-              "matched_columns": 74
-            },
-            "tick_5_to_10": {
-              "outward_shift_pixels": 12,
-              "transport_match_error": 0.001052751985174089,
-              "stationary_match_error": 0.022754284031304646,
-              "error_reduction_after_transport": 0.9537338997911011,
-              "matched_columns": 85
-            },
-            "tick_0_to_80": {
-              "outward_shift_pixels": 0,
-              "transport_match_error": 9.010814568069187e-05,
-              "stationary_match_error": 9.010814568069187e-05,
-              "error_reduction_after_transport": 0.0,
-              "matched_columns": 97
-            },
-            "silhouette_iou_at_tick_5": 0.9779917469050894,
-            "silhouette_iou_at_tick_10": 0.9573233185387504
-          },
-          {
-            "side": "right",
-            "chromatic_wing_pixels_at_tick_0": 4604,
-            "tick_0_to_5": {
-              "outward_shift_pixels": 12,
-              "transport_match_error": 0.0018377993927413472,
-              "stationary_match_error": 0.024337101694015397,
-              "error_reduction_after_transport": 0.9244856920167585,
-              "matched_columns": 133
-            },
-            "tick_0_to_10": {
-              "outward_shift_pixels": 23,
-              "transport_match_error": 0.0026706200628790564,
-              "stationary_match_error": 0.058869840099450406,
-              "error_reduction_after_transport": 0.954635173828101,
-              "matched_columns": 122
-            },
-            "tick_5_to_10": {
-              "outward_shift_pixels": 12,
-              "transport_match_error": 0.002246274203547214,
-              "stationary_match_error": 0.018367417737723678,
-              "error_reduction_after_transport": 0.8777033203239161,
-              "matched_columns": 133
-            },
-            "tick_0_to_80": {
-              "outward_shift_pixels": 0,
-              "transport_match_error": 9.349463383942521e-06,
-              "stationary_match_error": 9.349463383942521e-06,
-              "error_reduction_after_transport": 0.0,
-              "matched_columns": 145
-            },
-            "silhouette_iou_at_tick_5": 0.9852166525063721,
-            "silhouette_iou_at_tick_10": 0.9766536964980544
+            "field": "shader",
+            "program_id": 201,
+            "gl_link_status": true
           }
         ],
-        "color_period_ticks": 80,
-        "observed_root_to_tip_hue_advection": true,
-        "brightness_normalized": true,
-        "near_white_glints_excluded": true,
-        "fixed_parent_pose": true,
+        "compiled_and_linked": true,
+        "gl_error": 0,
+        "status": "passed",
+        "entity": "vibranium_cosmic_shader"
+      },
+      {
+        "entity": "vibranium_gilding_player",
+        "gpu_capture": true,
+        "author": "NingMeng123",
+        "installed_gilding_layers": 1,
+        "full_v_layer_difference": {
+          "changed_pixels": 5494,
+          "pixels_outside_reference": 18,
+          "pixels_far_outside_wearer": 0
+        },
+        "exposed_skin_gpu_control": {
+          "face": {
+            "baseline_skin_pixels": 4505,
+            "changed_skin_pixels": 0,
+            "unchanged_skin_fraction": 1.0
+          },
+          "bare_forearms": {
+            "baseline_skin_pixels": 5135,
+            "changed_skin_pixels": 2,
+            "unchanged_skin_fraction": 0.9996105160662123
+          },
+          "open_face_and_bare_forearms_preserved": true
+        },
+        "standing_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": 0.0,
+          "head_y_rotation": 0.0,
+          "right_arm_x_rotation": -0.04891587,
+          "left_arm_x_rotation": 0.04891587,
+          "right_leg_x_rotation": 0.0,
+          "left_leg_x_rotation": -0.0,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "native_material_preservation_gpu_control": {
+          "helmet": {
+            "native_blue_and_cyan_armor_pixels": 17864,
+            "near_native_color_pixels": 16973,
+            "near_native_color_fraction": 0.9501231527093597,
+            "native_texture_brightness_correlation": 0.9990961764061249,
+            "native_texture_edges": 453,
+            "retained_texture_edges": 448,
+            "retained_texture_edge_fraction": 0.9889624724061811,
+            "visible_star_highlight_pixels": 869
+          },
+          "chest_and_arms": {
+            "native_blue_and_cyan_armor_pixels": 34444,
+            "near_native_color_pixels": 32343,
+            "near_native_color_fraction": 0.9390024387411451,
+            "native_texture_brightness_correlation": 0.9982304267011326,
+            "native_texture_edges": 1233,
+            "retained_texture_edges": 1230,
+            "retained_texture_edge_fraction": 0.9975669099756691,
+            "visible_star_highlight_pixels": 2032
+          },
+          "leggings_and_boots": {
+            "native_blue_and_cyan_armor_pixels": 28399,
+            "near_native_color_pixels": 26604,
+            "near_native_color_fraction": 0.9367935490686292,
+            "native_texture_brightness_correlation": 0.997100279101147,
+            "native_texture_edges": 1332,
+            "retained_texture_edges": 1328,
+            "retained_texture_edge_fraction": 0.996996996996997,
+            "visible_star_highlight_pixels": 1750
+          },
+          "total_native_armor_pixels": 80707,
+          "total_near_native_color_fraction": 0.9406866814526621,
+          "total_visible_star_highlights": 4651,
+          "native_material_and_texture_preserved": true,
+          "visible_star_overlay": true,
+          "held_items_excluded_from_armor_sampling": true,
+          "native_item_glint_isolated": true
+        },
+        "iron_v_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "mixed_material_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "missing_piece_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "one_piece_iv_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "walking_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": -0.20943952,
+          "head_y_rotation": 0.4886922,
+          "right_arm_x_rotation": 0.3659441,
+          "left_arm_x_rotation": -0.3659441,
+          "right_leg_x_rotation": -0.58080393,
+          "left_leg_x_rotation": 0.58080393,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "walking_gilding_difference": {
+          "changed_pixels": 5037,
+          "pixels_outside_reference": 13,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_and_turn_difference": {
+          "changed_pixels": 75525,
+          "pixels_outside_reference": 3541,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_speed": 1.0,
+        "back_surface_geometry_gpu_control": {
+          "native_silhouette_pixels": 98873,
+          "raster_and_inflation_margin_pixels": 2,
+          "new_pixels_within_margin": 58,
+          "pixels_beyond_native_silhouette": 0,
+          "clipped_edge_pixels": 0,
+          "no_additional_back_geometry": true,
+          "portrait_scale": 250.0,
+          "status": "passed"
+        },
+        "fixed_pose_animation": {
+          "clock_samples": [
+            {
+              "changed_pixels": 5350,
+              "pixels_outside_reference": 31,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 0,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 98873,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 63,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              }
+            },
+            {
+              "changed_pixels": 5413,
+              "pixels_outside_reference": 32,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 20,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10258,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10129,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 98873,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 47,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 11277
+            },
+            {
+              "changed_pixels": 5652,
+              "pixels_outside_reference": 27,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 40,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10436,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10326,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 98873,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 44,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 11263
+            }
+          ],
+          "external_particle_count": 0,
+          "native_item_glint_isolated": true,
+          "animation_clock_only_changes_inside_native_gilding_layer": true,
+          "fixed_parent_pose": true,
+          "external_geometry": "none",
+          "no_additional_back_geometry": true,
+          "frames": 200,
+          "ticks_per_frame": 2,
+          "capture_span_ticks": 400,
+          "suggested_frame_duration_ms": 100,
+          "columns": "front,rear",
+          "frame_width": 1536,
+          "frame_height": 864,
+          "frame_folder": "build/verification/mob-render-audit/cosmic-animation",
+          "status": "passed"
+        },
+        "native_armor_glint_gpu_control": {
+          "ordinary_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 4295,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 4277,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-player-ordinary-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": true,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "growth_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 4295,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 4277,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-player-growth-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": false,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "ordinary_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "growth_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "iron_v_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "native_glint_clock_frozen_only_during_test_draws": true,
+          "native_util_clock_restored_after_each_draw": true,
+          "fixed_cosmic_tick": 160,
+          "held_items_excluded": true,
+          "single_native_glint_after_starlight": true,
+          "status": "passed"
+        },
         "status": "passed"
       },
       {
         "entity": "vibranium_gilding_emperor",
-        "wing_sides": [
-          {
-            "side": "left",
-            "chromatic_wing_pixels_at_tick_0": 2341,
-            "tick_0_to_5": {
-              "outward_shift_pixels": 13,
-              "transport_match_error": 0.001279177022241247,
-              "stationary_match_error": 0.030706357445257078,
-              "error_reduction_after_transport": 0.9583416227560775,
-              "matched_columns": 83
-            },
-            "tick_0_to_10": {
-              "outward_shift_pixels": 25,
-              "transport_match_error": 0.0020714831047110535,
-              "stationary_match_error": 0.06762243506081732,
-              "error_reduction_after_transport": 0.9693669252985635,
-              "matched_columns": 71
-            },
-            "tick_5_to_10": {
-              "outward_shift_pixels": 13,
-              "transport_match_error": 0.0011631031964612223,
-              "stationary_match_error": 0.023343937079475217,
-              "error_reduction_after_transport": 0.9501753627718666,
-              "matched_columns": 83
-            },
-            "tick_0_to_80": {
-              "outward_shift_pixels": 0,
-              "transport_match_error": 6.285190841486706e-05,
-              "stationary_match_error": 6.285190841486706e-05,
-              "error_reduction_after_transport": 0.0,
-              "matched_columns": 96
-            },
-            "silhouette_iou_at_tick_5": 0.9741320626276379,
-            "silhouette_iou_at_tick_10": 0.9549763033175356
+        "gpu_capture": true,
+        "author": "NingMeng123",
+        "installed_gilding_layers": 1,
+        "full_v_layer_difference": {
+          "changed_pixels": 5190,
+          "pixels_outside_reference": 20,
+          "pixels_far_outside_wearer": 0
+        },
+        "standing_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": 0.0,
+          "head_y_rotation": 0.0,
+          "right_arm_x_rotation": -1.4451793,
+          "left_arm_x_rotation": -1.3473476,
+          "right_leg_x_rotation": 0.0,
+          "left_leg_x_rotation": -0.0,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "native_material_preservation_gpu_control": {
+          "helmet": {
+            "native_blue_and_cyan_armor_pixels": 24134,
+            "near_native_color_pixels": 22868,
+            "near_native_color_fraction": 0.9475428855556476,
+            "native_texture_brightness_correlation": 0.9992876104659756,
+            "native_texture_edges": 702,
+            "retained_texture_edges": 698,
+            "retained_texture_edge_fraction": 0.9943019943019943,
+            "visible_star_highlight_pixels": 1238
           },
-          {
-            "side": "right",
-            "chromatic_wing_pixels_at_tick_0": 4948,
-            "tick_0_to_5": {
-              "outward_shift_pixels": 13,
-              "transport_match_error": 0.001471554887312904,
-              "stationary_match_error": 0.024633531351780615,
-              "error_reduction_after_transport": 0.9402621221335148,
-              "matched_columns": 138
+          "chest_and_arms": {
+            "native_blue_and_cyan_armor_pixels": 25842,
+            "near_native_color_pixels": 24316,
+            "near_native_color_fraction": 0.9409488429688104,
+            "native_texture_brightness_correlation": 0.9979206402684788,
+            "native_texture_edges": 964,
+            "retained_texture_edges": 959,
+            "retained_texture_edge_fraction": 0.9948132780082988,
+            "visible_star_highlight_pixels": 1460
+          },
+          "leggings_and_boots": {
+            "native_blue_and_cyan_armor_pixels": 30539,
+            "near_native_color_pixels": 28660,
+            "near_native_color_fraction": 0.9384721176200923,
+            "native_texture_brightness_correlation": 0.9969956578545406,
+            "native_texture_edges": 1339,
+            "retained_texture_edges": 1336,
+            "retained_texture_edge_fraction": 0.9977595220313666,
+            "visible_star_highlight_pixels": 1829
+          },
+          "total_native_armor_pixels": 80515,
+          "total_near_native_color_fraction": 0.9419859653480718,
+          "total_visible_star_highlights": 4527,
+          "native_material_and_texture_preserved": true,
+          "visible_star_overlay": true,
+          "held_items_excluded_from_armor_sampling": true,
+          "native_item_glint_isolated": true
+        },
+        "iron_v_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "mixed_material_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "missing_piece_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "one_piece_iv_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "walking_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": -0.20943952,
+          "head_y_rotation": 0.4886922,
+          "right_arm_x_rotation": -1.4451793,
+          "left_arm_x_rotation": -1.3473476,
+          "right_leg_x_rotation": -0.58080393,
+          "left_leg_x_rotation": 0.58080393,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "walking_gilding_difference": {
+          "changed_pixels": 4489,
+          "pixels_outside_reference": 113,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_and_turn_difference": {
+          "changed_pixels": 55914,
+          "pixels_outside_reference": 492,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_speed": 1.0,
+        "back_surface_geometry_gpu_control": {
+          "native_silhouette_pixels": 107514,
+          "raster_and_inflation_margin_pixels": 2,
+          "new_pixels_within_margin": 43,
+          "pixels_beyond_native_silhouette": 0,
+          "clipped_edge_pixels": 0,
+          "no_additional_back_geometry": true,
+          "portrait_scale": 250.0,
+          "status": "passed"
+        },
+        "fixed_pose_animation": {
+          "clock_samples": [
+            {
+              "changed_pixels": 5448,
+              "pixels_outside_reference": 7,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 0,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 107514,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 41,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              }
             },
-            "tick_0_to_10": {
-              "outward_shift_pixels": 25,
-              "transport_match_error": 0.0019473513713350486,
-              "stationary_match_error": 0.059104315763350346,
-              "error_reduction_after_transport": 0.9670522981920286,
-              "matched_columns": 126
+            {
+              "changed_pixels": 5510,
+              "pixels_outside_reference": 23,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 20,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10369,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10196,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 107514,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 37,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 13624
             },
-            "tick_5_to_10": {
-              "outward_shift_pixels": 13,
-              "transport_match_error": 0.0017854157046940007,
-              "stationary_match_error": 0.01872826500941248,
-              "error_reduction_after_transport": 0.9046673194875936,
-              "matched_columns": 138
+            {
+              "changed_pixels": 5537,
+              "pixels_outside_reference": 24,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 40,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10432,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10243,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 107514,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 38,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 13498
+            }
+          ],
+          "external_particle_count": 0,
+          "native_item_glint_isolated": true,
+          "animation_clock_only_changes_inside_native_gilding_layer": true,
+          "fixed_parent_pose": true,
+          "external_geometry": "none",
+          "no_additional_back_geometry": true,
+          "status": "passed"
+        },
+        "native_armor_glint_gpu_control": {
+          "ordinary_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
             },
-            "tick_0_to_80": {
-              "outward_shift_pixels": 0,
-              "transport_match_error": 3.943953416433192e-05,
-              "stationary_match_error": 3.943953416433192e-05,
-              "error_reduction_after_transport": 0.0,
-              "matched_columns": 151
+            "visible_native_glint": {
+              "changed_pixels": 1908,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
             },
-            "silhouette_iou_at_tick_5": 0.9788710186061179,
-            "silhouette_iou_at_tick_10": 0.9698965192850423
-          }
-        ],
-        "color_period_ticks": 80,
-        "observed_root_to_tip_hue_advection": true,
-        "brightness_normalized": true,
-        "near_white_glints_excluded": true,
-        "fixed_parent_pose": true,
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 1863,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-emperor-ordinary-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": true,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "growth_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 1908,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 1863,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-emperor-growth-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": false,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "ordinary_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "growth_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "iron_v_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "native_glint_clock_frozen_only_during_test_draws": true,
+          "native_util_clock_restored_after_each_draw": true,
+          "fixed_cosmic_tick": 160,
+          "held_items_excluded": true,
+          "single_native_glint_after_starlight": true,
+          "status": "passed"
+        },
         "status": "passed"
       }
-    ]
+    ],
+    "lanterns": {
+      "author": "NingMeng123",
+      "scope": "Native baked geometry, five actual item-display GPU contexts, and local player lightmap pixels",
+      "materials": [
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_copper",
+          "material": "COPPER",
+          "durability": 1600,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        },
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_silver",
+          "material": "SILVER",
+          "durability": 2400,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        },
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_gold",
+          "material": "GOLD",
+          "durability": 3200,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        },
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_iron",
+          "material": "IRON",
+          "durability": 4800,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        },
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_ancient_metal",
+          "material": "ANCIENT_METAL",
+          "durability": 6400,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        },
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_mithril",
+          "material": "MITHRIL",
+          "durability": 9600,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        },
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_adamantium",
+          "material": "ADAMANTIUM",
+          "durability": 16000,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        },
+        {
+          "baked_quad_count": 72,
+          "geometry_dimensions": [
+            0.4375,
+            0.8125,
+            0.4375
+          ],
+          "gui_3d": true,
+          "item": "modern_ite:dynamic_core_vibranium",
+          "material": "VIBRANIUM",
+          "durability": 25600,
+          "gpu_item_displays": [
+            {
+              "context": "GUI",
+              "foreground_pixels": 6467
+            },
+            {
+              "context": "FIRST_PERSON_RIGHT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "FIRST_PERSON_LEFT_HAND",
+              "foreground_pixels": 6144
+            },
+            {
+              "context": "THIRD_PERSON_RIGHT_HAND",
+              "foreground_pixels": 4432
+            },
+            {
+              "context": "THIRD_PERSON_LEFT_HAND",
+              "foreground_pixels": 4432
+            }
+          ]
+        }
+      ],
+      "preview": "build/verification/mob-render-audit/lantern-eight-materials.png",
+      "native_gpu_item_display_count": 40,
+      "lightmap": {
+        "baseline_dark_pixel": 42,
+        "mainhand_and_inventory_inactive": true,
+        "all_material_pixels": [
+          {
+            "material": "COPPER",
+            "active_pixel": 756
+          },
+          {
+            "material": "SILVER",
+            "active_pixel": 756
+          },
+          {
+            "material": "GOLD",
+            "active_pixel": 756
+          },
+          {
+            "material": "IRON",
+            "active_pixel": 756
+          },
+          {
+            "material": "ANCIENT_METAL",
+            "active_pixel": 756
+          },
+          {
+            "material": "MITHRIL",
+            "active_pixel": 756
+          },
+          {
+            "material": "ADAMANTIUM",
+            "active_pixel": 756
+          },
+          {
+            "material": "VIBRANIUM",
+            "active_pixel": 756
+          }
+        ],
+        "instant_equipment_switch_without_lightmap_tick": true,
+        "no_injected_night_vision_effect": true,
+        "all_exhausted_materials_inactive": true,
+        "spectator_inactive_creative_active": true,
+        "fading_potion_unchanged": true,
+        "native_fading_potion_scale": 0.52367836,
+        "native_fading_potion_pixel": 417,
+        "same_brightness_as_vanilla_full_night_vision": true
+      }
+    },
+    "status": "passed",
+    "safe_client_shutdown_requested": true,
+    "only_audit_owned_world_used": true,
+    "latest_launch_confirmed": true
   },
   "forge_jei": {
     "status": "historical_mixed_workspace_evidence",
@@ -625,29 +2061,15 @@
     "candidate_tree_verified": true
   },
   "candidate_validation": {
-    "status": "passed_render_scope",
-    "version": "0.1.12",
-    "build_passed": true,
-    "compile_gametest_java_passed": true,
-    "junit_passed_results_reused": 14,
-    "server_gametest_rerun_this_round": false,
-    "historical_server_gametest_version": "0.1.11",
-    "historical_server_gametest_passed": 108,
-    "final_title_audit_passed": true,
-    "final_gpu_audit_passed": true,
-    "package_verified": true,
-    "gif_verified": true,
-    "source_json_resources_matched": 528,
-    "shader_resources_matched": 3,
-    "logs": [
-      "build/verification/vibranium-flow-build.log",
-      "build/verification/vibranium-flow-client.log",
-      "build/verification/vibranium-flow-render.log"
-    ],
-    "historical_gametest_log": "build/verification/cosmic-gametest.log",
-    "published_scope": "0.1.12 source commits include full vibranium Protection V cosmic armor and dynamic wings; GitHub commit c03abc3 preserves the separate historical 0.1.10 scope",
-    "evidence": "build/verification/release-audit.json",
-    "source_delivery": "included_in_0_1_12_commits"
+    "version": "0.2.0",
+    "status": "passed",
+    "source_delivery": "local_build_not_committed",
+    "build": true,
+    "junit": 14,
+    "native_gpu": true,
+    "client": true,
+    "package": true,
+    "server_gametest_rerun": false
   },
   "published_0_1_10": {
     "version": "0.1.10",
@@ -1989,5 +3411,1185 @@
     },
     "source_delivery": "included_in_0_1_12_commits"
   },
-  "source_delivery": "included_in_0_1_12_commits"
+  "source_delivery": "local_build_not_committed",
+  "published_validation_0_1_12": {
+    "version": "0.1.12",
+    "git_commit": "6939c99b480b84948910c7c0dddae07aa32b71d1",
+    "scope": "historical_source_release_with_light_wings",
+    "extension_junit": {
+      "status": "passed_results_reused",
+      "version": "0.1.12",
+      "passed": 14,
+      "failures": 0,
+      "errors": 0,
+      "suites": [
+        {
+          "suite": "io.github.ningmeng123.modernite.economy.EconomyRulesTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "suite": "io.github.ningmeng123.modernite.entity.PredictiveBowAimRulesTest",
+          "tests": 6,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "suite": "io.github.ningmeng123.modernite.ExtremeCalendarTest",
+          "tests": 2,
+          "failures": 0,
+          "errors": 0
+        },
+        {
+          "suite": "io.github.ningmeng123.modernite.gear.GearMathTest",
+          "tests": 4,
+          "failures": 0,
+          "errors": 0
+        }
+      ],
+      "scope": "current_0_1_12_build_reuses_existing_passed_results",
+      "rerun_this_round": false,
+      "original_validation_version": "0.1.11",
+      "log": "build/verification/vibranium-flow-build.log"
+    },
+    "extension_gametest": {
+      "status": "not_rerun_render_only_change",
+      "version": "0.1.12",
+      "rerun_this_round": false,
+      "previous_validation_version": "0.1.11",
+      "previous_passed": 108,
+      "previous_recipe_errors": 0,
+      "previous_tag_errors": 0,
+      "same_gameplay_and_activation_gate": true,
+      "source_log": "build/verification/cosmic-gametest.log",
+      "scope": "historical_0_1_11_server_validation_referenced_by_0_1_12"
+    },
+    "client": {
+      "status": "passed",
+      "failures": [],
+      "creature_renderer_count": 45,
+      "projectile_renderer_count": 2,
+      "item_model_count": 160,
+      "effect_sprite_count": 7,
+      "world_created": false,
+      "server_connected": false,
+      "gameplay_verified": false,
+      "gilding_humanoid_renderers": 62,
+      "gilding_player_skins": 2,
+      "cosmic_shader": {
+        "native_shader_programs": [
+          {
+            "field": "shader",
+            "program_id": 201,
+            "gl_link_status": true
+          }
+        ],
+        "compiled_and_linked": true,
+        "gl_error": 0,
+        "status": "passed"
+      },
+      "latest_launch_confirmed": true,
+      "version": "0.1.12",
+      "scope": "current_0_1_12",
+      "log": "build/verification/vibranium-flow-client.log"
+    },
+    "release_jar": {
+      "path": "build/libs/modern-ite-0.1.12.jar",
+      "sha256": "675a8b1ea22c2915c048ee4efd05a20e3d9fcca0cbc0df5897bf7ba665a772b1",
+      "bytes": 1077523,
+      "nested_jars": false,
+      "old_runtime_classes": false,
+      "base_classes_bundled": false,
+      "test_classes_bundled": false,
+      "compiled_production_classes_matched": 160,
+      "packaged_json_resources_matched": 528,
+      "packaged_shader_resources_matched": 3,
+      "jei_bundled": false,
+      "removed_creature_resources_absent": true,
+      "status": "passed",
+      "version": "0.1.12",
+      "source_json_files_checked": 528,
+      "source_delivery": "included_in_0_1_12_commits"
+    },
+    "mob_render": {
+      "status": "passed",
+      "failures": [],
+      "entity_texture_lookup_count": 45,
+      "focused_gpu_sample_count": 14,
+      "player_big_head": {
+        "effect_head_scale": 2.0,
+        "effect_hat_scale": 2.0,
+        "cleared_head_scale": 1.0,
+        "cleared_hat_scale": 1.0
+      },
+      "particle_auras": {
+        "undying_zombie_emperor": 11,
+        "skeleton_lightning": 5,
+        "skeleton_floating": 3,
+        "skeleton_blaze": 8,
+        "annihilation_skeleton": 13
+      },
+      "latest_launch_confirmed": true,
+      "version": "0.1.12",
+      "scope": "current_0_1_12",
+      "timestamp": "2026-10-18T14:44:25.143927100Z",
+      "native_particle_previews": 5,
+      "cosmic_gpu_controls": 3,
+      "log": "build/verification/vibranium-flow-render.log",
+      "wing_color_flow_controls": [
+        {
+          "entity": "vibranium_gilding_player",
+          "wing_sides": [
+            {
+              "side": "left",
+              "chromatic_wing_pixels_at_tick_0": 2336,
+              "tick_0_to_5": {
+                "outward_shift_pixels": 12,
+                "transport_match_error": 0.0012028084132548777,
+                "stationary_match_error": 0.029677640277196608,
+                "error_reduction_after_transport": 0.959470887778801,
+                "matched_columns": 85
+              },
+              "tick_0_to_10": {
+                "outward_shift_pixels": 23,
+                "transport_match_error": 0.0018958321620215397,
+                "stationary_match_error": 0.06869624337520124,
+                "error_reduction_after_transport": 0.9724026807162222,
+                "matched_columns": 74
+              },
+              "tick_5_to_10": {
+                "outward_shift_pixels": 12,
+                "transport_match_error": 0.001052751985174089,
+                "stationary_match_error": 0.022754284031304646,
+                "error_reduction_after_transport": 0.9537338997911011,
+                "matched_columns": 85
+              },
+              "tick_0_to_80": {
+                "outward_shift_pixels": 0,
+                "transport_match_error": 9.010814568069187e-05,
+                "stationary_match_error": 9.010814568069187e-05,
+                "error_reduction_after_transport": 0.0,
+                "matched_columns": 97
+              },
+              "silhouette_iou_at_tick_5": 0.9779917469050894,
+              "silhouette_iou_at_tick_10": 0.9573233185387504
+            },
+            {
+              "side": "right",
+              "chromatic_wing_pixels_at_tick_0": 4604,
+              "tick_0_to_5": {
+                "outward_shift_pixels": 12,
+                "transport_match_error": 0.0018377993927413472,
+                "stationary_match_error": 0.024337101694015397,
+                "error_reduction_after_transport": 0.9244856920167585,
+                "matched_columns": 133
+              },
+              "tick_0_to_10": {
+                "outward_shift_pixels": 23,
+                "transport_match_error": 0.0026706200628790564,
+                "stationary_match_error": 0.058869840099450406,
+                "error_reduction_after_transport": 0.954635173828101,
+                "matched_columns": 122
+              },
+              "tick_5_to_10": {
+                "outward_shift_pixels": 12,
+                "transport_match_error": 0.002246274203547214,
+                "stationary_match_error": 0.018367417737723678,
+                "error_reduction_after_transport": 0.8777033203239161,
+                "matched_columns": 133
+              },
+              "tick_0_to_80": {
+                "outward_shift_pixels": 0,
+                "transport_match_error": 9.349463383942521e-06,
+                "stationary_match_error": 9.349463383942521e-06,
+                "error_reduction_after_transport": 0.0,
+                "matched_columns": 145
+              },
+              "silhouette_iou_at_tick_5": 0.9852166525063721,
+              "silhouette_iou_at_tick_10": 0.9766536964980544
+            }
+          ],
+          "color_period_ticks": 80,
+          "observed_root_to_tip_hue_advection": true,
+          "brightness_normalized": true,
+          "near_white_glints_excluded": true,
+          "fixed_parent_pose": true,
+          "status": "passed"
+        },
+        {
+          "entity": "vibranium_gilding_emperor",
+          "wing_sides": [
+            {
+              "side": "left",
+              "chromatic_wing_pixels_at_tick_0": 2341,
+              "tick_0_to_5": {
+                "outward_shift_pixels": 13,
+                "transport_match_error": 0.001279177022241247,
+                "stationary_match_error": 0.030706357445257078,
+                "error_reduction_after_transport": 0.9583416227560775,
+                "matched_columns": 83
+              },
+              "tick_0_to_10": {
+                "outward_shift_pixels": 25,
+                "transport_match_error": 0.0020714831047110535,
+                "stationary_match_error": 0.06762243506081732,
+                "error_reduction_after_transport": 0.9693669252985635,
+                "matched_columns": 71
+              },
+              "tick_5_to_10": {
+                "outward_shift_pixels": 13,
+                "transport_match_error": 0.0011631031964612223,
+                "stationary_match_error": 0.023343937079475217,
+                "error_reduction_after_transport": 0.9501753627718666,
+                "matched_columns": 83
+              },
+              "tick_0_to_80": {
+                "outward_shift_pixels": 0,
+                "transport_match_error": 6.285190841486706e-05,
+                "stationary_match_error": 6.285190841486706e-05,
+                "error_reduction_after_transport": 0.0,
+                "matched_columns": 96
+              },
+              "silhouette_iou_at_tick_5": 0.9741320626276379,
+              "silhouette_iou_at_tick_10": 0.9549763033175356
+            },
+            {
+              "side": "right",
+              "chromatic_wing_pixels_at_tick_0": 4948,
+              "tick_0_to_5": {
+                "outward_shift_pixels": 13,
+                "transport_match_error": 0.001471554887312904,
+                "stationary_match_error": 0.024633531351780615,
+                "error_reduction_after_transport": 0.9402621221335148,
+                "matched_columns": 138
+              },
+              "tick_0_to_10": {
+                "outward_shift_pixels": 25,
+                "transport_match_error": 0.0019473513713350486,
+                "stationary_match_error": 0.059104315763350346,
+                "error_reduction_after_transport": 0.9670522981920286,
+                "matched_columns": 126
+              },
+              "tick_5_to_10": {
+                "outward_shift_pixels": 13,
+                "transport_match_error": 0.0017854157046940007,
+                "stationary_match_error": 0.01872826500941248,
+                "error_reduction_after_transport": 0.9046673194875936,
+                "matched_columns": 138
+              },
+              "tick_0_to_80": {
+                "outward_shift_pixels": 0,
+                "transport_match_error": 3.943953416433192e-05,
+                "stationary_match_error": 3.943953416433192e-05,
+                "error_reduction_after_transport": 0.0,
+                "matched_columns": 151
+              },
+              "silhouette_iou_at_tick_5": 0.9788710186061179,
+              "silhouette_iou_at_tick_10": 0.9698965192850423
+            }
+          ],
+          "color_period_ticks": 80,
+          "observed_root_to_tip_hue_advection": true,
+          "brightness_normalized": true,
+          "near_white_glints_excluded": true,
+          "fixed_parent_pose": true,
+          "status": "passed"
+        }
+      ]
+    },
+    "candidate_validation": {
+      "status": "passed_render_scope",
+      "version": "0.1.12",
+      "build_passed": true,
+      "compile_gametest_java_passed": true,
+      "junit_passed_results_reused": 14,
+      "server_gametest_rerun_this_round": false,
+      "historical_server_gametest_version": "0.1.11",
+      "historical_server_gametest_passed": 108,
+      "final_title_audit_passed": true,
+      "final_gpu_audit_passed": true,
+      "package_verified": true,
+      "gif_verified": true,
+      "source_json_resources_matched": 528,
+      "shader_resources_matched": 3,
+      "logs": [
+        "build/verification/vibranium-flow-build.log",
+        "build/verification/vibranium-flow-client.log",
+        "build/verification/vibranium-flow-render.log"
+      ],
+      "historical_gametest_log": "build/verification/cosmic-gametest.log",
+      "published_scope": "0.1.12 source commits include full vibranium Protection V cosmic armor and dynamic wings; GitHub commit c03abc3 preserves the separate historical 0.1.10 scope",
+      "evidence": "build/verification/release-audit.json",
+      "source_delivery": "included_in_0_1_12_commits"
+    }
+  },
+  "cosmic_armor_0_2_0": {
+    "author": "NingMeng123",
+    "status": "passed",
+    "source_delivery": "github_source_commit",
+    "light_wings_and_mount_removed": true,
+    "native_material_rendered_before_overlay": true,
+    "native_rgb_and_alpha_preserved": true,
+    "native_lighting_and_trims_preserved": true,
+    "native_outline_buffer_supported": true,
+    "activation": {
+      "material": "vibranium",
+      "correct_armor_slots": 4,
+      "minimum_protection_per_piece": 5,
+      "ordinary_or_growth_affix_per_piece": true,
+      "mixed_enchantment_sources_allowed": true,
+      "levels_from_two_sources_not_added": true
+    },
+    "animation_period_ticks": 400,
+    "preview": {
+      "author": "NingMeng123",
+      "path": "build/verification/mob-render-audit/cosmic-vibranium-armor.gif",
+      "frames": 200,
+      "fps": 10.0,
+      "ticks_per_frame": 2,
+      "capture_span_ticks": 400,
+      "duration_ms": 20000,
+      "source": "native_gpu_frames",
+      "size": [
+        1536,
+        864
+      ],
+      "sha256": "30d07b385e8a86a33fa02ed13581ec23157021ffda1321781abd0af56db33c5b",
+      "bytes": 8675835,
+      "scope": "isolated starlight animation; independent native glint explicitly hidden"
+    },
+    "native_gpu_controls": [
+      {
+        "entity": "vibranium_gilding_player",
+        "gpu_capture": true,
+        "author": "NingMeng123",
+        "installed_gilding_layers": 1,
+        "full_v_layer_difference": {
+          "changed_pixels": 5494,
+          "pixels_outside_reference": 18,
+          "pixels_far_outside_wearer": 0
+        },
+        "exposed_skin_gpu_control": {
+          "face": {
+            "baseline_skin_pixels": 4505,
+            "changed_skin_pixels": 0,
+            "unchanged_skin_fraction": 1.0
+          },
+          "bare_forearms": {
+            "baseline_skin_pixels": 5135,
+            "changed_skin_pixels": 2,
+            "unchanged_skin_fraction": 0.9996105160662123
+          },
+          "open_face_and_bare_forearms_preserved": true
+        },
+        "standing_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": 0.0,
+          "head_y_rotation": 0.0,
+          "right_arm_x_rotation": -0.04891587,
+          "left_arm_x_rotation": 0.04891587,
+          "right_leg_x_rotation": 0.0,
+          "left_leg_x_rotation": -0.0,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "native_material_preservation_gpu_control": {
+          "helmet": {
+            "native_blue_and_cyan_armor_pixels": 17864,
+            "near_native_color_pixels": 16973,
+            "near_native_color_fraction": 0.9501231527093597,
+            "native_texture_brightness_correlation": 0.9990961764061249,
+            "native_texture_edges": 453,
+            "retained_texture_edges": 448,
+            "retained_texture_edge_fraction": 0.9889624724061811,
+            "visible_star_highlight_pixels": 869
+          },
+          "chest_and_arms": {
+            "native_blue_and_cyan_armor_pixels": 34444,
+            "near_native_color_pixels": 32343,
+            "near_native_color_fraction": 0.9390024387411451,
+            "native_texture_brightness_correlation": 0.9982304267011326,
+            "native_texture_edges": 1233,
+            "retained_texture_edges": 1230,
+            "retained_texture_edge_fraction": 0.9975669099756691,
+            "visible_star_highlight_pixels": 2032
+          },
+          "leggings_and_boots": {
+            "native_blue_and_cyan_armor_pixels": 28399,
+            "near_native_color_pixels": 26604,
+            "near_native_color_fraction": 0.9367935490686292,
+            "native_texture_brightness_correlation": 0.997100279101147,
+            "native_texture_edges": 1332,
+            "retained_texture_edges": 1328,
+            "retained_texture_edge_fraction": 0.996996996996997,
+            "visible_star_highlight_pixels": 1750
+          },
+          "total_native_armor_pixels": 80707,
+          "total_near_native_color_fraction": 0.9406866814526621,
+          "total_visible_star_highlights": 4651,
+          "native_material_and_texture_preserved": true,
+          "visible_star_overlay": true,
+          "held_items_excluded_from_armor_sampling": true,
+          "native_item_glint_isolated": true
+        },
+        "iron_v_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "mixed_material_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "missing_piece_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "one_piece_iv_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "walking_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": -0.20943952,
+          "head_y_rotation": 0.4886922,
+          "right_arm_x_rotation": 0.3659441,
+          "left_arm_x_rotation": -0.3659441,
+          "right_leg_x_rotation": -0.58080393,
+          "left_leg_x_rotation": 0.58080393,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "walking_gilding_difference": {
+          "changed_pixels": 5037,
+          "pixels_outside_reference": 13,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_and_turn_difference": {
+          "changed_pixels": 75525,
+          "pixels_outside_reference": 3541,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_speed": 1.0,
+        "back_surface_geometry_gpu_control": {
+          "native_silhouette_pixels": 98873,
+          "raster_and_inflation_margin_pixels": 2,
+          "new_pixels_within_margin": 58,
+          "pixels_beyond_native_silhouette": 0,
+          "clipped_edge_pixels": 0,
+          "no_additional_back_geometry": true,
+          "portrait_scale": 250.0,
+          "status": "passed"
+        },
+        "fixed_pose_animation": {
+          "clock_samples": [
+            {
+              "changed_pixels": 5350,
+              "pixels_outside_reference": 31,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 0,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 98873,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 63,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              }
+            },
+            {
+              "changed_pixels": 5413,
+              "pixels_outside_reference": 32,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 20,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10258,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10129,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 98873,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 47,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 11277
+            },
+            {
+              "changed_pixels": 5652,
+              "pixels_outside_reference": 27,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 40,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10436,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10326,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 98873,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 44,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 11263
+            }
+          ],
+          "external_particle_count": 0,
+          "native_item_glint_isolated": true,
+          "animation_clock_only_changes_inside_native_gilding_layer": true,
+          "fixed_parent_pose": true,
+          "external_geometry": "none",
+          "no_additional_back_geometry": true,
+          "frames": 200,
+          "ticks_per_frame": 2,
+          "capture_span_ticks": 400,
+          "suggested_frame_duration_ms": 100,
+          "columns": "front,rear",
+          "frame_width": 1536,
+          "frame_height": 864,
+          "frame_folder": "build/verification/mob-render-audit/cosmic-animation",
+          "status": "passed"
+        },
+        "native_armor_glint_gpu_control": {
+          "ordinary_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 4295,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 4277,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-player-ordinary-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": true,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "growth_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 4295,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 4277,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-player-growth-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": false,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "ordinary_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "growth_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "iron_v_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "native_glint_clock_frozen_only_during_test_draws": true,
+          "native_util_clock_restored_after_each_draw": true,
+          "fixed_cosmic_tick": 160,
+          "held_items_excluded": true,
+          "single_native_glint_after_starlight": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      },
+      {
+        "entity": "vibranium_gilding_emperor",
+        "gpu_capture": true,
+        "author": "NingMeng123",
+        "installed_gilding_layers": 1,
+        "full_v_layer_difference": {
+          "changed_pixels": 5190,
+          "pixels_outside_reference": 20,
+          "pixels_far_outside_wearer": 0
+        },
+        "standing_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": 0.0,
+          "head_y_rotation": 0.0,
+          "right_arm_x_rotation": -1.4451793,
+          "left_arm_x_rotation": -1.3473476,
+          "right_leg_x_rotation": 0.0,
+          "left_leg_x_rotation": -0.0,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "native_material_preservation_gpu_control": {
+          "helmet": {
+            "native_blue_and_cyan_armor_pixels": 24134,
+            "near_native_color_pixels": 22868,
+            "near_native_color_fraction": 0.9475428855556476,
+            "native_texture_brightness_correlation": 0.9992876104659756,
+            "native_texture_edges": 702,
+            "retained_texture_edges": 698,
+            "retained_texture_edge_fraction": 0.9943019943019943,
+            "visible_star_highlight_pixels": 1238
+          },
+          "chest_and_arms": {
+            "native_blue_and_cyan_armor_pixels": 25842,
+            "near_native_color_pixels": 24316,
+            "near_native_color_fraction": 0.9409488429688104,
+            "native_texture_brightness_correlation": 0.9979206402684788,
+            "native_texture_edges": 964,
+            "retained_texture_edges": 959,
+            "retained_texture_edge_fraction": 0.9948132780082988,
+            "visible_star_highlight_pixels": 1460
+          },
+          "leggings_and_boots": {
+            "native_blue_and_cyan_armor_pixels": 30539,
+            "near_native_color_pixels": 28660,
+            "near_native_color_fraction": 0.9384721176200923,
+            "native_texture_brightness_correlation": 0.9969956578545406,
+            "native_texture_edges": 1339,
+            "retained_texture_edges": 1336,
+            "retained_texture_edge_fraction": 0.9977595220313666,
+            "visible_star_highlight_pixels": 1829
+          },
+          "total_native_armor_pixels": 80515,
+          "total_near_native_color_fraction": 0.9419859653480718,
+          "total_visible_star_highlights": 4527,
+          "native_material_and_texture_preserved": true,
+          "visible_star_overlay": true,
+          "held_items_excluded_from_armor_sampling": true,
+          "native_item_glint_isolated": true
+        },
+        "iron_v_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "mixed_material_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "missing_piece_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "one_piece_iv_gpu_control": {
+          "changed_pixels": 0,
+          "pixels_outside_reference": 0,
+          "pixels_far_outside_wearer": 0,
+          "gilding_enabled": false,
+          "same_native_glint_clock": true
+        },
+        "walking_parent_pose": {
+          "matched_parts": 7,
+          "matched_models": 2,
+          "head_x_rotation": -0.20943952,
+          "head_y_rotation": 0.4886922,
+          "right_arm_x_rotation": -1.4451793,
+          "left_arm_x_rotation": -1.3473476,
+          "right_leg_x_rotation": -0.58080393,
+          "left_leg_x_rotation": 0.58080393,
+          "crouching": false,
+          "exact_parent_pose_copied": true
+        },
+        "walking_gilding_difference": {
+          "changed_pixels": 4489,
+          "pixels_outside_reference": 113,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_and_turn_difference": {
+          "changed_pixels": 55914,
+          "pixels_outside_reference": 492,
+          "pixels_far_outside_wearer": 0
+        },
+        "native_walk_speed": 1.0,
+        "back_surface_geometry_gpu_control": {
+          "native_silhouette_pixels": 107514,
+          "raster_and_inflation_margin_pixels": 2,
+          "new_pixels_within_margin": 43,
+          "pixels_beyond_native_silhouette": 0,
+          "clipped_edge_pixels": 0,
+          "no_additional_back_geometry": true,
+          "portrait_scale": 250.0,
+          "status": "passed"
+        },
+        "fixed_pose_animation": {
+          "clock_samples": [
+            {
+              "changed_pixels": 5448,
+              "pixels_outside_reference": 7,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 0,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 107514,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 41,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              }
+            },
+            {
+              "changed_pixels": 5510,
+              "pixels_outside_reference": 23,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 20,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10369,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10196,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 107514,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 37,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 13624
+            },
+            {
+              "changed_pixels": 5537,
+              "pixels_outside_reference": 24,
+              "pixels_far_outside_wearer": 0,
+              "animation_tick": 40,
+              "fixed_entity_tick": 160,
+              "walk_speed": 0.0,
+              "parent_pose_frozen": true,
+              "isolated_layer_change_from_tick_0": {
+                "changed_pixels": 10432,
+                "pixels_outside_reference": 0,
+                "pixels_far_outside_wearer": 0
+              },
+              "starfield_changed_pixels_on_armor": 10243,
+              "back_surface_geometry": {
+                "native_silhouette_pixels": 107514,
+                "raster_and_inflation_margin_pixels": 2,
+                "new_pixels_within_margin": 38,
+                "pixels_beyond_native_silhouette": 0,
+                "clipped_edge_pixels": 0,
+                "no_additional_back_geometry": true
+              },
+              "animated_back_armor_pixels": 13498
+            }
+          ],
+          "external_particle_count": 0,
+          "native_item_glint_isolated": true,
+          "animation_clock_only_changes_inside_native_gilding_layer": true,
+          "fixed_parent_pose": true,
+          "external_geometry": "none",
+          "no_additional_back_geometry": true,
+          "status": "passed"
+        },
+        "native_armor_glint_gpu_control": {
+          "ordinary_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 1908,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 1863,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-emperor-ordinary-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": true,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "growth_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 1908,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 1863,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-emperor-growth-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": false,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "ordinary_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "growth_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "iron_v_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "native_glint_clock_frozen_only_during_test_draws": true,
+          "native_util_clock_restored_after_each_draw": true,
+          "fixed_cosmic_tick": 160,
+          "held_items_excluded": true,
+          "single_native_glint_after_starlight": true,
+          "status": "passed"
+        },
+        "status": "passed"
+      }
+    ],
+    "release_jar": {
+      "path": "build/libs/modern-ite-0.2.0.jar",
+      "sha256": "a473b57c60c9c1587dfe29479292a375d19d832ca5c506880cb770928c826d18",
+      "bytes": 1068706,
+      "nested_jars": false,
+      "old_runtime_classes": false,
+      "base_classes_bundled": false,
+      "test_classes_bundled": false,
+      "compiled_production_classes_matched": 157,
+      "packaged_json_resources_matched": 528,
+      "packaged_shader_resources_matched": 3,
+      "jei_bundled": false,
+      "removed_creature_resources_absent": true,
+      "light_wings_absent": true
+    },
+    "native_glint_after_starlight": true,
+    "single_native_glint_pass": true
+  },
+  "initial_overlay_0_2_0_release": {
+    "path": "build/libs/modern-ite-0.2.0.jar",
+    "sha256": "a473b57c60c9c1587dfe29479292a375d19d832ca5c506880cb770928c826d18",
+    "bytes": 1068706,
+    "nested_jars": false,
+    "old_runtime_classes": false,
+    "base_classes_bundled": false,
+    "test_classes_bundled": false,
+    "compiled_production_classes_matched": 157,
+    "packaged_json_resources_matched": 528,
+    "packaged_shader_resources_matched": 3,
+    "jei_bundled": false,
+    "removed_creature_resources_absent": true,
+    "light_wings_absent": true,
+    "version": "0.2.0"
+  },
+  "vibranium_runes_0_2_0": {
+    "author": "NingMeng123",
+    "status": "passed",
+    "scope_count": 28,
+    "native_tools": 12,
+    "addon_club": 1,
+    "simplyswords_weapons": 15,
+    "simplyswords_frames": 8,
+    "simplyswords_frame_ticks": 3,
+    "source_png_hashes_unchanged_between_control_and_fix": true,
+    "minimum_complete_cycles_after_fix": 2,
+    "cached_mesh_reuse_preserved": true,
+    "without_sodium_and_accelerated_rendering": "28 passed",
+    "resources_reproducible": true,
+    "runtime_configs_changed": false,
+    "server_gametests_rerun_this_round": false,
+    "comparison": "build/verification/rune-compat-comparison.json",
+    "details": "docs/vibranium-runes-and-glint.md",
+    "release_jar": {
+      "path": "build/libs/modern-ite-0.2.0.jar",
+      "sha256": "7ceb6213d69e8867adec7f998040c75d4d1e42aca7eae31291d7d7eda12c2e16",
+      "bytes": 1158761,
+      "nested_jars": false,
+      "old_runtime_classes": false,
+      "base_classes_bundled": false,
+      "test_classes_bundled": false,
+      "compiled_production_classes_matched": 165,
+      "packaged_json_resources_matched": 528,
+      "packaged_shader_resources_matched": 3,
+      "jei_bundled": false,
+      "removed_creature_resources_absent": true,
+      "light_wings_absent": true,
+      "packaged_simplyswords_rune_resources_matched": 30
+    },
+    "glint_gpu_controls": [
+      {
+        "entity": "vibranium_gilding_player",
+        "controls": {
+          "ordinary_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 4295,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 4277,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-player-ordinary-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": true,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "growth_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 4295,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 4277,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-player-growth-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": false,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "ordinary_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "growth_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "iron_v_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "native_glint_clock_frozen_only_during_test_draws": true,
+          "native_util_clock_restored_after_each_draw": true,
+          "fixed_cosmic_tick": 160,
+          "held_items_excluded": true,
+          "single_native_glint_after_starlight": true,
+          "status": "passed"
+        }
+      },
+      {
+        "entity": "vibranium_gilding_emperor",
+        "controls": {
+          "ordinary_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 1908,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 1863,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-emperor-ordinary-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": true,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "growth_protection_v": {
+            "override_false_vs_zero_glint_alpha": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "visible_native_glint": {
+              "changed_pixels": 1908,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_one_native_pass_after_starlight": {
+              "changed_pixels": 0,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "difference_from_two_native_passes": {
+              "changed_pixels": 1863,
+              "pixels_outside_reference": 0,
+              "pixels_far_outside_wearer": 0
+            },
+            "comparison": "build/verification/mob-render-audit/cosmic-protection-v-emperor-growth-glint-comparison.png",
+            "comparison_columns": "left: explicit glint override false; right: original native glint enabled",
+            "native_has_foil_without_override": false,
+            "starlight_gate_kept_enabled_when_glint_hidden": true,
+            "status": "passed"
+          },
+          "ordinary_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "growth_iv_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "iron_v_unchanged": {
+            "changed_pixels": 0,
+            "pixels_outside_reference": 0,
+            "pixels_far_outside_wearer": 0,
+            "gilding_enabled": false,
+            "same_native_glint_clock": true
+          },
+          "native_glint_clock_frozen_only_during_test_draws": true,
+          "native_util_clock_restored_after_each_draw": true,
+          "fixed_cosmic_tick": 160,
+          "held_items_excluded": true,
+          "single_native_glint_after_starlight": true,
+          "status": "passed"
+        }
+      }
+    ],
+    "source_delivery": "github_source_commit"
+  }
 }
