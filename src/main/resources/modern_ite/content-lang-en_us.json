@@ -48,6 +48,7 @@
   "tooltip.modern_ite.lantern.offhand": "Only active while held in the offhand.",
   "tooltip.modern_ite.lantern.remaining": "Durability: %s / %s",
   "tooltip.modern_ite.lantern.durability": "Consumes durability while lighting; stops when depleted.",
+  "tooltip.modern_ite.lantern.repair": "Repair with matching metal nuggets on an anvil of equal or higher material tier.",
   "message.modern_ite.underworld_penalty": "You have stayed in the Underworld too long. Leave for a day to recover.",
   "message.modern_ite.underworld_recovered": "The Underworld penalty has worn off.",
   "message.modern_ite.array_used": "The resurrection array was consumed. All experience was lost.",

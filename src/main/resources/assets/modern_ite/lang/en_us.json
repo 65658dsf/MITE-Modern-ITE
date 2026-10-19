@@ -295,5 +295,6 @@
   "item.modern_ite.dynamic_core_vibranium": "Vibranium Lantern",
   "tooltip.modern_ite.lantern.offhand": "Only active while held in the offhand.",
   "tooltip.modern_ite.lantern.durability": "Consumes durability while lighting; stops when depleted.",
+  "tooltip.modern_ite.lantern.repair": "Repair with matching metal nuggets on an anvil of equal or higher material tier.",
   "tooltip.modern_ite.lantern.remaining": "Durability: %s / %s"
 }
