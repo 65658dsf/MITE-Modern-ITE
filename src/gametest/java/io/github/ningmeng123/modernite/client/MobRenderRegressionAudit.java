@@ -155,6 +155,11 @@ public final class MobRenderRegressionAudit {
         capturing=true;
         try {
             check(ownedWorld(mc),"Only the newly created audit world may be rendered");
+            if (Boolean.getBoolean("modern_ite.defenseAudit")) {
+                report.addProperty("scope", "Native shield and door guard client ticks, bounded side turns and GPU pose direction");
+                report.add("defense_intent", DefenseIntentClientAudit.capture(mc, screenshots()));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.forgingAudit")) {
                 report.addProperty("scope", "Forging UI hammer animation, impact sparks and inactive-state GPU controls");
                 JsonObject forging = ForgingClientAudit.capture(mc);
@@ -166,6 +171,12 @@ public final class MobRenderRegressionAudit {
             if (Boolean.getBoolean("modern_ite.lanternAudit")) {
                 report.addProperty("scope", "Eight material lantern models, native GPU item displays and instant local lightmap switching");
                 report.add("lanterns", LanternClientAudit.capture(mc));
+                return;
+            }
+            if (Boolean.getBoolean("modern_ite.doorGuardAudit")) {
+                report.addProperty("scope", "Door zombie native GPU poses, both main arms, walking, melee, empty-hand and shared-model controls");
+                JsonObject facts=new JsonObject();facts.addProperty("entity",ExtremeKind.ZOMBIE_DOOR.id());report.add("door_guard",facts);
+                sample(mc,ExtremeKind.ZOMBIE_DOOR,facts);
                 return;
             }
             if (Boolean.getBoolean("modern_ite.bigHeadAudit")) {
@@ -343,6 +354,8 @@ public final class MobRenderRegressionAudit {
                 int changed=changedAll(actual,without);facts.addProperty("door_shield_changed_pixels",changed);
                 check(changed>100,"The full two-panel door shield must be visible");
             }
+            check(mob instanceof ExtremeMobs.ZombieVariant,"The door zombie must expose its synchronized guard state");
+            facts.add("door_guard",DoorGuardClientAudit.capture(mc,(ExtremeMobs.ZombieVariant)mob,screenshots()));
         }
         if(kind==ExtremeKind.ZOMBIE_IRON_BUCKET){
             ItemStack bucket=mob.getItemBySlot(EquipmentSlot.HEAD);
@@ -464,7 +477,8 @@ public final class MobRenderRegressionAudit {
         }return invalid;
     }
     private static NativeImage capture(Minecraft mc,Mob mob){return capture(mc,mob,false);}
-    private static NativeImage capture(Minecraft mc,Mob mob,boolean dim) {
+    private static NativeImage capture(Minecraft mc,Mob mob,boolean dim){return capture(mc,mob,dim,.35F);}
+    static NativeImage capture(Minecraft mc,Mob mob,boolean dim,float viewYaw) {
         TextureTarget target=new TextureTarget(SIZE,SIZE,true,Minecraft.ON_OSX);
         Matrix4f projection=new Matrix4f(RenderSystem.getProjectionMatrix());VertexSorting sorting=RenderSystem.getVertexSorting();
         var modelView=RenderSystem.getModelViewStack();modelView.pushMatrix();
@@ -474,7 +488,7 @@ public final class MobRenderRegressionAudit {
             modelView.identity();RenderSystem.applyModelViewMatrix();RenderSystem.setShaderColor(1,1,1,1);
             var graphics=new GuiGraphics(mc,mc.renderBuffers().bufferSource());
             renderedMob=mob;postRenderSeen=false;
-            var rotation=new Quaternionf().rotationZ((float)Math.PI).rotateY((float)Math.PI+.35F);
+            var rotation=new Quaternionf().rotationZ((float)Math.PI).rotateY((float)Math.PI+viewYaw);
             if(!dim)InventoryScreen.renderEntityInInventory(graphics,SIZE/2F,SIZE-35F,110F,new Vector3f(),rotation,null,mob);
             else {
                 // InventoryScreen's exact native transform/lighting/dispatch sequence, with packed

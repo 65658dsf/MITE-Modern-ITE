@@ -236,6 +236,7 @@ public final class MobAbilities {
         var k=state.extremeKind();var s=state.extremeMemory();initialize(mob,state);s.clock++;
         if(s.cooldown>0&&k!=ZOMBIE_BOSS)s.cooldown--;if(s.fleeingPotion>0)s.fleeingPotion--;
         if(!(mob.level() instanceof ServerLevel level))return;
+        if(k==ZOMBIE_DOOR&&mob instanceof ExtremeMobs.ZombieVariant zombie)DoorGuard.tick(zombie);
         LivingEntity target=mob.getTarget();
         if(k==ZOMBIE_SIEGE)for(var passenger:mob.getPassengers())if(passenger instanceof Zombie rider){rider.getPersistentData().putBoolean("modern_ite:siege_rider",true);if(!rider.isBaby())rider.setBaby(true);}
         if(!s.entourage){

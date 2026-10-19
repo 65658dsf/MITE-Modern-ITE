@@ -6,6 +6,22 @@
 
 当前版本为 **0.2.0**，已移除背部光翼及安装座，保留振金原纹理并在甲面叠加星光，全套振金每件保护至少V的触发门槛保持。本轮构建、14项JUnit、标题页、实际GPU及包一致性检查通过，源码按功能分类提交。以下0.1.12及更早的通过结果、包哈希和光翼预览均为历史证据，不能作为0.2.0验收结果。
 
+## 0.2.0 持盾攻击意图与主动防御（2026-10-19）
+
+普通盾经 ITE Mixin 接入本体 `ShieldBlockGoal`，与僵尸盗贼铁门共用 `DefenseIntent`。持械逼近、近战戒备、真实攻击、弓弩／三叉戟瞄准及预测来箭触发主动防御，取消随机起盾门槛。非仇恨玩家威胁只改变临时防御焦点；停步转身后继续追击原目标。有限窗口、强制休息、起盾延迟、斧破防及真实正面格挡范围保留。完整规则见 [攻击意图与主动防御](defense-intent.md)。
+
+使用冻结本体 **0.2.0**，SHA-256 为 `e720e895f79338c80f57e21caa33ec951079ef0e0a1fc50a28f2038fa55f0353`，在独立 `build/defense-intent-build` 输出、`run-defense-intent-gametest` 世界运行。最终构建、**22 项 JUnit、161 项服务端 GameTest 全部通过**；配方／标签解析错误为 0。测试总数包含当前工作区的其他功能，本次意图与门防御分别有 10 组真实 GameTest，另新增 8 项数学测试。
+
+覆盖两 tick 真实位置观测、停步／远离／传送、实际武器攻击距离、主副手远程使用、已装填弩、三叉戟、近期攻击过期、非仇恨玩家与稳定焦点，以及空手／挖掘／背对／隔墙／创造／旁观／盟友负例。来箭测试包含穿透、擦身、远离、途中阻挡及射手隐藏；松弓后通过世界实际推进箭矢，验证盾牌耐久减少且生命不损失。防御链覆盖 5 tick 起手、有限窗口、休息与破防、真实近战互斥、侧后伤害、转向限速、保留物理运动和放盾恢复追击。铁门另验证原生挥手及 Better Combat 状态恢复期间不举门、恢复后的 Pre 优先起门，同 tick Post 不重复计时；可选 Better Combat 客户端未安装，恢复用例使用本体真实状态接口构造隔离测试状态。
+
+独立客户端 `modernIteDefenseAudit=true` 验证通过：普通盾／铁门 × 双惯用手共 4 组，**224 次原生客户端 tick、36 张 GPU 姿态图**，含侧转、反向、角度环绕及网络插值移动；头部每 tick 不超过 25°、身体不超过 15°，原生模型装备方向与实际身体／头部方向一致，并有卸下装备的像素负对照。普通盾使用原生服务端物品使用同步数据；没有加载既有世界或连接多人服务器。拼图已人工检查。
+
+最终产物 `build/defense-intent-build/libs/modern-ite-0.2.0.jar` 为 **1,204,283 字节**，SHA-256 为 `ca456a66085f1c25da12e601ddaa219fd73faaffafa95943ca9bbf8180cfdffa`。184 个生产类与编译输出逐字节一致，3 个防御 Mixin 齐全，无测试类、本体类或嵌套 JAR。此包保留当前工作区其他待提交功能，未修改本体仓库或版本号。
+
+日志和报告均在 `build/verification/defense-intent/`：最终服务端 `verified-server.log`、客户端 `client-audit.json`、包核对 `package-audit.json`，姿态拼图 `mob-render-audit/defense-intent-poses.png`。本轮命令为 `./gradlew.bat -I build/verification/defense-intent/isolated.init.gradle -PmiteJar=build/verification/defense-intent/mite-0.2.0.jar build runGameTestServer`；同一依赖和隔离 init 加 `-PmodernIteDefenseAudit=true runClient` 执行客户端专项。init 只设置上述独立输出与测试世界目录。
+
+提交前仅提取持盾意图及其铁门防御前置代码，共 26 个文件，在 `build/verification/defense-intent/commit-check/snapshot` 独立完成构建、**22 项 JUnit、157 项 GameTest，全部通过**。拟态僵尸的并行源码、测试和文档改动均未纳入；上述 161 项与客户端图像仍为此前工作区验证记录。本次提交候选日志为 `build/verification/defense-intent/commit-check/candidate-build.log`，包核对为同目录 `candidate-audit.json`。
+
 ## 0.2.0 击退僵尸水平击退修正（2026-10-19）
 
 击退僵尸从大力士的固定上抛分支分离，成功近战结束后追加 `3.2` 格/tick的向外水平速度，纵向完全保留原生受击及既有跳跃／下落速度。大力士与暗黑铁傀儡的上抛规则保持；下方0.1.10两种僵尸统一上抛的记录属于历史行为。

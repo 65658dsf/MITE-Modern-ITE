@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.client.entity;
 
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
+import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.ZombieModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -9,6 +10,7 @@ import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.item.Items;
 
 /** Species silhouettes and the strong zombie's two-arm uppercut. @author NingMeng123 */
 public final class VariantZombieModel extends ZombieModel<Zombie> {
@@ -28,10 +30,23 @@ public final class VariantZombieModel extends ZombieModel<Zombie> {
         // Models are shared by every entity of this species; restore this before applying its pose.
         head.xScale=head.yScale=head.zScale=kind==ExtremeKind.FISHING_ROD_ZOMBIE?2F:1F;
         hat.xScale=hat.yScale=hat.zScale=head.xScale;
-        if(kind==ExtremeKind.ZOMBIE_DOOR){
-            ModelPart shieldArm=entity.getMainArm()==HumanoidArm.RIGHT?rightArm:leftArm;
-            shieldArm.xRot=-1.1F;shieldArm.yRot=entity.getMainArm()==HumanoidArm.RIGHT?-.45F:.45F;
-            shieldArm.zRot=0;
+        if(kind==ExtremeKind.ZOMBIE_DOOR&&entity.getMainHandItem().is(Items.IRON_DOOR)){
+            boolean right=entity.getMainArm()==HumanoidArm.RIGHT;
+            float side=right?1F:-1F;
+            float partial=Mth.clamp(age-entity.tickCount,0F,1F);
+            float guard=entity instanceof ExtremeMobs.ZombieVariant zombie?zombie.getDoorGuardProgress(partial):0F;
+            ModelPart shieldArm=right?rightArm:leftArm;
+            ModelPart freeArm=right?leftArm:rightArm;
+            float walk=Mth.cos(limb*.6662F)*.12F*amount;
+            float swing=Mth.sin(Mth.sqrt(attackTime)*Mth.PI);
+            shieldArm.xRot=Mth.lerp(guard,-.55F+walk-swing*.65F,-1.10F);
+            shieldArm.yRot=side*Mth.lerp(guard,.08F,-.45F);
+            shieldArm.zRot=side*Mth.lerp(guard,.10F,.025F);
+            // Keep the spare hand behind the panel while bracing it; outside
+            // the guard retain the native zombie's walking and attack animation.
+            freeArm.xRot=Mth.lerp(guard,freeArm.xRot,-.95F);
+            freeArm.yRot=Mth.lerp(guard,freeArm.yRot,side*.45F);
+            freeArm.zRot=Mth.lerp(guard,freeArm.zRot,-side*.05F);
         }
         if(kind==ExtremeKind.ZOMBIE_FLY_AWAY&&attackTime>0){
             // Both arms swing together from low guard to overhead, like an iron golem.

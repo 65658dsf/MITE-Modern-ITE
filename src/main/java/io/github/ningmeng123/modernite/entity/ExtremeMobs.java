@@ -10,8 +10,13 @@ import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -98,13 +103,38 @@ public final class ExtremeMobs {
     }
     public static boolean isBoss(Mob mob){return mob instanceof ExtremeMob e&&e.extremeKind().boss();}
     public static class ZombieVariant extends Zombie implements ExtremeMob {
+        private static final EntityDataAccessor<Byte> DATA_DOOR_GUARD=SynchedEntityData.defineId(ZombieVariant.class,EntityDataSerializers.BYTE);
         private final ExtremeKind kind;private final MobMemory memory=new MobMemory();
+        final DoorGuard doorGuard=new DoorGuard();
+        private float doorGuardProgress,doorGuardProgressOld;
         public ZombieVariant(EntityType<? extends ZombieVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
+        @Override protected void defineSynchedData(SynchedEntityData.Builder builder){super.defineSynchedData(builder);builder.define(DATA_DOOR_GUARD,(byte)0);}
+        public boolean isDoorRaised(){return DoorGuard.holdsDoor(this)&&isAlive()&&entityData.get(DATA_DOOR_GUARD)>0;}
+        public boolean isDoorBlocking(){return DoorGuard.holdsDoor(this)&&isAlive()&&entityData.get(DATA_DOOR_GUARD)==2;}
+        public float getDoorGuardProgress(float partial){return Mth.lerp(partial,doorGuardProgressOld,doorGuardProgress);}
+        void setDoorGuardState(byte state){entityData.set(DATA_DOOR_GUARD,state);}
+        @Override public void onSyncedDataUpdated(EntityDataAccessor<?> key){
+            super.onSyncedDataUpdated(key);
+            // A newly tracked entity can already be blocking when its first packet arrives.
+            if(level().isClientSide&&DATA_DOOR_GUARD.equals(key)&&entityData.get(DATA_DOOR_GUARD)==2&&doorGuardProgress==0)
+                doorGuardProgress=doorGuardProgressOld=1;
+        }
+        @Override public void tick(){
+            doorGuardProgressOld=doorGuardProgress;
+            doorGuardProgress=Mth.clamp(doorGuardProgress+(isDoorRaised()?.2F:-.2F),0,1);
+            super.tick();
+        }
         @Override public boolean doHurtTarget(Entity target){
+            if(isDoorRaised())return false;
             boolean landed=super.doHurtTarget(target);
             if(landed&&target instanceof LivingEntity living)MobAbilities.afterMeleeHit(this,this,living);
             return landed;
+        }
+        @Override public void swing(InteractionHand hand,boolean updateSelf){
+            // SourceMeleeGoal swings before calling doHurtTarget; suppress both the
+            // damage and its animation so a raised door cannot twitch with each retry.
+            if(!isDoorRaised())super.swing(hand,updateSelf);
         }
         @Override public void setBaby(boolean baby){super.setBaby(false);}
         @Override protected boolean convertsInWater(){return false;}
@@ -115,7 +145,10 @@ public final class ExtremeMobs {
         @Override public boolean checkSpawnRules(LevelAccessor l,MobSpawnType reason){return MobAbilities.spawnRules(this,kind,l,reason);}
         @Override public boolean removeWhenFarAway(double d){return kind!=ExtremeKind.MIMIC_ZOMBIE&&kind!=ExtremeKind.ZOMBIE_BOSS&&super.removeWhenFarAway(d);}
         @Override public void addAdditionalSaveData(CompoundTag t){super.addAdditionalSaveData(t);memory.write(t,registryAccess());}
-        @Override public void readAdditionalSaveData(CompoundTag t){super.readAdditionalSaveData(t);memory.read(t,registryAccess());}
+        @Override public void readAdditionalSaveData(CompoundTag t){
+            super.readAdditionalSaveData(t);memory.read(t,registryAccess());doorGuard.reset(this);
+            doorGuardProgress=doorGuardProgressOld=0;
+        }
     }
     public static class SkeletonVariant extends Skeleton implements ExtremeMob {
         private final ExtremeKind kind;private final MobMemory memory=new MobMemory();

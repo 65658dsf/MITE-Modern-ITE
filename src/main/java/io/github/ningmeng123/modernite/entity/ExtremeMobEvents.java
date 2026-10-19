@@ -83,6 +83,8 @@ public final class ExtremeMobEvents {
         if(witch(event.getEntity())&&witch(attacker(event.getSource()))){event.setCanceled(true);return;}
         if(!(event.getEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state))return;
         var k=state.extremeKind();var s=state.extremeMemory();DamageSource damage=event.getSource();
+        if(event.getAmount()>0&&Float.isFinite(event.getAmount())&&mob instanceof ExtremeMobs.ZombieVariant zombie
+                &&DoorGuard.tryBlock(zombie,damage)){event.setCanceled(true);return;}
         if(k.fireproof()&&damage.is(DamageTypeTags.IS_FIRE)){event.setCanceled(true);return;}
         if(k==PHASE_CREEPER&&MobAbilities.evade(mob,s,damage)){event.setCanceled(true);return;}
         if(k==ZOMBIE_BOSS){
