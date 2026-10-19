@@ -27,7 +27,7 @@
 | zombie_siege | 攻城尸 | EntityZombieSiege | 自然；通用维度 | 幼年僵尸骑手、面向目标投掷骑手；修正源空目标判断 |
 | dragon_zombie | 龙头僵尸 | EntityDragonZombie | 自然；通用维度 | 原版龙首、喷射半径固定1.5格的龙息云，并保留范围僵尸增益 |
 | random_zombie | 随机僵尸 | EntityRandomZombie | 自然；通用维度 | 各槽独立概率：四甲每件50%、主手70%，独立材质与磨损；掉绿宝石 |
-| fishing_rod_zombie | 大头僵尸 | FishingRodEntity | 自然；通用维度 | 自身两倍头部、空手；15格可见玩家的头和帽层放大两倍，效果消失恢复 |
+| fishing_rod_zombie | 大头僵尸 | FishingRodEntity | 自然；通用维度 | 自身两倍头部、空手；15格可见玩家的头和帽层放大两倍，移速降低45%，镜头拉近（FOV系数再乘0.75）；效果刷新不叠加，结束恢复 |
 | mirror_zombie | 镜像僵尸 | EntityMirrorZombie | 自然；33 天起 | 复制目标装备/效果并扩展生命，复制装备不掉落、不共享 ItemStack |
 | mimic_zombie | 拟态僵尸 | EntityMimicZombie | 玩家实际死亡时生成 | 保留名字与在线皮肤，接管真实死亡掉落全背包并保存；死亡100%释放一次 |
 | zombie_caller | 唤尸 | EntityZombieCaller | 自然；通用维度；地底锁敌或玩家攻击启动 | 开始召 4 僵尸，200 tick 再召 3，400 tick 自爆并出 7–9 蠹虫 |

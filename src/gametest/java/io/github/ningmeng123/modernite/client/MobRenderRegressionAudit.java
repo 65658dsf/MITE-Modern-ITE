@@ -168,6 +168,11 @@ public final class MobRenderRegressionAudit {
                 report.add("lanterns", LanternClientAudit.capture(mc));
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.bigHeadAudit")) {
+                report.addProperty("scope", "Player big-head model, native FOV hook and effect cleanup");
+                verifyPlayerHead(mc);
+                return;
+            }
             JsonArray identities=new JsonArray();report.add("texture_lookups",identities);
             for(ExtremeKind kind:ExtremeKind.values()) {
                 JsonObject facts=new JsonObject();identities.add(facts);facts.addProperty("entity",kind.id());
@@ -208,6 +213,7 @@ public final class MobRenderRegressionAudit {
             mc.player.removeEffect(effect);model.setupAnim(mc.player,0,0,0,0,0);
             facts.addProperty("cleared_head_scale",model.head.xScale);facts.addProperty("cleared_hat_scale",model.hat.xScale);
             check(model.head.xScale==1&&model.hat.xScale==1,"Removing big_head must restore the shared player model");
+            facts.add("movement_and_fov",BigHeadClientAudit.capture(mc));
         }finally{
             mc.player.removeEffect(effect);if(saved!=null)mc.player.addEffect(saved);
             model.setupAnim(mc.player,0,0,0,0,0);

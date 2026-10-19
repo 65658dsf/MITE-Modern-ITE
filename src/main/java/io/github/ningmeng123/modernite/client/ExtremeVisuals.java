@@ -17,6 +17,9 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 public final class ExtremeVisuals {
     public static final ResourceLocation PUMPKIN_OVERLAY = ResourceLocation.withDefaultNamespace("textures/misc/pumpkinblur.png");
     private static boolean has(LivingEntity entity,String id) { var effect=ExtremeEffects.VALUES.get(id);return entity!=null&&effect!=null&&entity.hasEffect(effect); }
+    @SubscribeEvent public static void fov(ComputeFovModifierEvent event) {
+        if(has(event.getPlayer(),"big_head"))event.setNewFovModifier(event.getNewFovModifier()*.75F);
+    }
     @SubscribeEvent public static void camera(ViewportEvent.ComputeCameraAngles event) {
         var player=Minecraft.getInstance().player;if(player==null)return;
         if(has(player,"reversed"))event.setRoll(event.getRoll()+180);

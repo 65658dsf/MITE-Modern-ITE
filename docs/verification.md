@@ -2,9 +2,21 @@
 
 开发署名：NingMeng123。
 
-2026-10-19 的 0.2.0 最新增量验证（28 件振金符文、15 种简易武器动画、单层原版流光）见 [符文与流光验收](vibranium-runes-and-glint.md)。下方 0.2.0 材质叠加包的字节数与 SHA 为本轮之前的历史构建。
+2026-10-19 的 0.2.0 振金符文、15 种简易武器动画、单层原版流光验证见 [符文与流光验收](vibranium-runes-and-glint.md)；大头效果的最新增量验证见下节。下方 0.2.0 材质叠加包的字节数与 SHA 为本轮之前的历史构建。
 
 当前版本为 **0.2.0**，已移除背部光翼及安装座，保留振金原纹理并在甲面叠加星光，全套振金每件保护至少V的触发门槛保持。本轮构建、14项JUnit、标题页、实际GPU及包一致性检查通过，源码按功能分类提交。以下0.1.12及更早的通过结果、包哈希和光翼预览均为历史证据，不能作为0.2.0验收结果。
+
+## 0.2.0 大头减速与镜头拉近（2026-10-19）
+
+大头效果保留玩家头部和帽层两倍缩放，补充固定45%移速减益，以及客户端FOV系数额外乘0.75的镜头拉近。减速基准来自旧Extreme的 `getSpeedBoostVsSlowDown`；当前实现使用独立属性修饰符，刷新和升级不叠加，移除或自然到期均清除。原版速度、缓慢效果保留，玩家FOV设置不修改。最终视角还会叠加原生移速对FOV的影响，不能将额外0.75系数视为最终视角比例。
+
+使用固定依赖 `build/verification/base/mite-0.1.10.jar`，在当前含其他待提交功能的工作区完成独立输出构建、14项JUnit和GameTest源码编译。新增5项服务端专项全部通过，覆盖实际玩家移速、等级与刷新、自然到期、原版效果共存，以及真实大头僵尸15格边界和施加刷新。隔离客户端新建测试世界检查通过：头部/帽层添加与移除、4组原生FOV采样（效果比例0/1、设置55/100）、重复查询和续时、玩家间隔离，以及已有FOV事件修饰的乘法组合。
+
+全量GameTest为140/143通过，失败项为 `dragonbreathneverexpandsbeyondoneandhalfblocks`、`idleextremezombiecanretaliateagainstanirongolem` 和 `idleextremezombiecanattacktheselectedbatmount`。另在源码副本中将此次两个生产文件恢复为HEAD，保持其余工作区逻辑，单独运行这两类测试：13/15通过，两项相同的僵尸AI失败复现，龙息用例通过。全量测试未全部通过，龙息失败的完整原因尚未确认；本次未修改龙息或僵尸AI。
+
+提交前仅提取本次7个文件的改动，在 `build/verification/big-head-commit/snapshot` 独立完成构建、14项JUnit和GameTest源码编译，全部通过；日志为同目录上级的 `candidate-build.log`。上述143项服务端结果与客户端检查属于此前混合工作区验证。
+
+产物 `build/big-head-build/libs/modern-ite-0.2.0.jar` 为1,167,165字节，SHA-256为 `c20b9e814baa7975376aa13ffcb0580305804d15eb13fd54f3c497b443a07de9`；166个生产类与本次编译输出逐字节一致，无测试类、本体类、JEI实现或嵌套JAR混入。日志为 `build/verification/big-head-build.log`、`big-head-gametest.log`、`big-head-focused-gametest.log`、`big-head-baseline-gametest.log` 和 `big-head-client.log`；客户端与包检查报告分别为 `big-head-client-audit.json`、`big-head-package-audit.json`。
 
 ## 0.2.0 初次材质叠加历史构建：移除光翼，在原甲面叠加星光
 
