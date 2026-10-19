@@ -192,16 +192,20 @@ public final class MobAbilities {
             mob.setItemSlot(slots[i],stack);
         }
     }
+    private static void removeGoals(GoalSelector selector,java.util.function.Predicate<Goal> predicate){
+        // removeAllGoals only removes entries; removeGoal also stops them and releases item use and control locks.
+        selector.getAvailableGoals().stream().map(WrappedGoal::getGoal).filter(predicate).toList().forEach(selector::removeGoal);
+    }
     public static void configureGoals(Mob mob,ExtremeKind k){
         if(mob instanceof Zombie zombie){
             if(io.github.ningmeng123.mite.entity.R196DiggerGoal.first(zombie)==null)
                 zombie.goalSelector.addGoal(1,new io.github.ningmeng123.mite.entity.R196DiggerGoal(zombie));
-            zombie.goalSelector.removeAllGoals(g->g instanceof MeleeAttackGoal);
+            removeGoals(zombie.goalSelector,g->g instanceof MeleeAttackGoal);
             if(SourceMeleeGoal.first(zombie)==null)zombie.goalSelector.addGoal(2,new SourceMeleeGoal(zombie,1,true));
         }
         if(mob instanceof AbstractSkeleton skeleton){
             boolean bow=mob.getMainHandItem().getItem() instanceof BowItem;
-            skeleton.goalSelector.removeAllGoals(g->g instanceof RangedBowAttackGoal<?>||g instanceof RangedAttackGoal||g instanceof MeleeAttackGoal
+            removeGoals(skeleton.goalSelector,g->g instanceof RangedBowAttackGoal<?>||g instanceof RangedAttackGoal||g instanceof MeleeAttackGoal
                 ||bow&&g instanceof SourceMeleeGoal||!bow&&g instanceof SourceRangedAttackGoal);
             if(bow){
                 if(skeleton.goalSelector.getAvailableGoals().stream().noneMatch(g->g.getGoal() instanceof SourceRangedAttackGoal))
@@ -209,16 +213,16 @@ public final class MobAbilities {
             }else if(SourceMeleeGoal.first(skeleton)==null)skeleton.goalSelector.addGoal(4,new SourceMeleeGoal(skeleton,1.15,true));
         }
         if(mob instanceof Witch witch){
-            witch.goalSelector.removeAllGoals(g->g instanceof RangedAttackGoal||g instanceof SourceRangedAttackGoal);
+            removeGoals(witch.goalSelector,g->g instanceof RangedAttackGoal||g instanceof SourceRangedAttackGoal);
             witch.goalSelector.addGoal(2,new SourceRangedAttackGoal(witch,1,k==WITCH_LORD?25:50,16));
             witch.goalSelector.addGoal(1,new AvoidEntityGoal<>(witch,Player.class,3,1.1,1.4));
         }
         if(mob instanceof Ghast ghast){
-            ghast.goalSelector.removeAllGoals(g->g.getClass().getEnclosingClass()==Ghast.class&&g.getFlags().isEmpty());
+            removeGoals(ghast.goalSelector,g->g.getClass().getEnclosingClass()==Ghast.class&&g.getFlags().isEmpty());
             ghast.targetSelector.addGoal(1,new NearestAttackableTargetGoal<>(ghast,Player.class,true));
         }
         if(k==DARK_IRON_GOLEM){
-            mob.targetSelector.removeAllGoals(g->true);mob.targetSelector.addGoal(1,new NearestAttackableTargetGoal<>(mob,Player.class,true));
+            removeGoals(mob.targetSelector,g->true);mob.targetSelector.addGoal(1,new NearestAttackableTargetGoal<>(mob,Player.class,true));
             mob.targetSelector.addGoal(2,new NearestAttackableTargetGoal<>(mob,net.minecraft.world.entity.npc.Villager.class,false));
             mob.targetSelector.addGoal(3,new NearestAttackableTargetGoal<>(mob,Animal.class,true));
         }

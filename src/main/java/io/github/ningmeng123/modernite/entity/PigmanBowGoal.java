@@ -1,4 +1,5 @@
 package io.github.ningmeng123.modernite.entity;
+import io.github.ningmeng123.mite.entity.SkeletonAiming;
 import java.util.EnumSet;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
@@ -13,9 +14,10 @@ public final class PigmanBowGoal extends Goal {
     @Override public void stop(){pig.stopUsingItem();}
     @Override public void tick(){
         var target=pig.getTarget();if(target==null)return;pig.getLookControl().setLookAt(target,30,30);
-        if(pig.distanceToSqr(target)>225)pig.getNavigation().moveTo(target,1);else pig.getNavigation().stop();
+        boolean clearShot=SkeletonAiming.aimPoint(pig,target)!=null;
+        if(pig.distanceToSqr(target)>225||!clearShot)pig.getNavigation().moveTo(target,1);else pig.getNavigation().stop();
         if(cooldown>0){cooldown--;return;}
-        if(!pig.getSensing().hasLineOfSight(target))return;cooldown=60;
+        if(!clearShot)return;cooldown=60;
         ItemStack ammo=MobAbilities.firstItem("mite:iron_arrow","minecraft:arrow");if(!(ammo.getItem() instanceof ArrowItem item))return;
         int punch=(int)Math.min(1+Math.floor(Math.max(0,MobAbilities.day(pig.level())-64)/48D),5);
         if(punch>0)MobAbilities.enchant(pig,pig.getMainHandItem(),"minecraft:punch",punch);

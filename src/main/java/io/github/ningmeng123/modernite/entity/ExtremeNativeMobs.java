@@ -71,10 +71,12 @@ public final class ExtremeNativeMobs {
                 if(pig.getRandom().nextInt(10)>8)pig.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.BOW));
             }
             if(R196DiggerGoal.first(pig)==null)pig.goalSelector.addGoal(1,new R196DiggerGoal(pig));
-            if(pig.getMainHandItem().getItem() instanceof BowItem){
-                pig.goalSelector.removeAllGoals(g->g instanceof SourceMeleeGoal||g instanceof net.minecraft.world.entity.ai.goal.MeleeAttackGoal||g instanceof PigmanBowGoal);
-                pig.goalSelector.addGoal(4,new PigmanBowGoal(pig));
-            }
+            var attacks=pig.goalSelector.getAvailableGoals().stream().filter(w->w.getGoal() instanceof SourceMeleeGoal
+                ||w.getGoal() instanceof net.minecraft.world.entity.ai.goal.MeleeAttackGoal||w.getGoal() instanceof PigmanBowGoal).toList();
+            for(var attack:attacks)pig.goalSelector.removeGoal(attack.getGoal());
+            // The bow goal claims movement first; losing the bow immediately releases it to melee.
+            pig.goalSelector.addGoal(4,new PigmanBowGoal(pig));
+            pig.goalSelector.addGoal(5,new SourceMeleeGoal(pig,1,true));
             // The source default zombie_pigman_attack_animails is false.
             pig.targetSelector.removeAllGoals(g->true);
             pig.targetSelector.addGoal(1,new net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(pig));

@@ -121,6 +121,11 @@ public final class ExtremeMobs {
         private final ExtremeKind kind;private final MobMemory memory=new MobMemory();
         public SkeletonVariant(EntityType<? extends SkeletonVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
+        @Override public void reassessWeaponGoal(){
+            // AbstractSkeleton calls this before this variant's kind has been assigned.
+            if(kind==null){super.reassessWeaponGoal();return;}
+            if(!level().isClientSide)MobAbilities.configureGoals(this,kind);
+        }
         @Override protected boolean isSunBurnTick(){return kind!=null&&kind.fireproof()?false:super.isSunBurnTick();}
         @Override public boolean canFreeze(){return false;}
         @Override public boolean checkSpawnRules(LevelAccessor l,MobSpawnType reason){return MobAbilities.spawnRules(this,kind,l,reason);}
