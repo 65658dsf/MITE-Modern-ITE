@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.compat.bettercombat.BetterMobCombat;
 import io.github.ningmeng123.mite.entity.MobShields;
+import io.github.ningmeng123.mite.entity.MonsterDayScaling;
 import io.github.ningmeng123.mite.entity.ShieldBlockGoal;
 import io.github.ningmeng123.mite.registry.MiteShields;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class DefenseIntentGameTests {
     private static int nextArena;
+    private static BlockPos arenaAnchor;
 
     private DefenseIntentGameTests() {}
 
@@ -52,19 +54,24 @@ public final class DefenseIntentGameTests {
         final List<Player> players = new ArrayList<>();
         final List<Entity> projectiles = new ArrayList<>();
         final Map<BlockPos, BlockState> blocks = new LinkedHashMap<>();
+        final List<ChunkPos> arenaChunks = new ArrayList<>();
         final List<ChunkPos> forcedChunks = new ArrayList<>();
         boolean indexed;
         PlayerTeam team;
 
         Fight(GameTestHelper h, GameType... modes) {
             helper = h;
-            BlockPos anchor = h.absolutePos(BlockPos.ZERO);
+            // A test's template row may move independently of the global arena counter.
+            // One shared anchor keeps arenas disjoint, including their forced chunk ownership.
+            if (arenaAnchor == null) arenaAnchor = h.absolutePos(BlockPos.ZERO).immutable();
+            BlockPos anchor = arenaAnchor;
             origin = new Vec3(anchor.getX() + 2.5D, 144D, anchor.getZ() + 4096.5D + nextArena++ * 80D);
             for (int x = BlockPos.containing(origin.add(-16, 0, 0)).getX() >> 4;
                     x <= BlockPos.containing(origin.add(16, 0, 0)).getX() >> 4; x++)
                 for (int z = BlockPos.containing(origin.add(0, 0, -16)).getZ() >> 4;
                         z <= BlockPos.containing(origin.add(0, 0, 32)).getZ() >> 4; z++) {
                     ChunkPos chunk = new ChunkPos(x, z);
+                    arenaChunks.add(chunk);
                     if (!h.getLevel().getForcedChunks().contains(chunk.toLong())) {
                         h.getLevel().setChunkForced(x, z, true);
                         forcedChunks.add(chunk);
@@ -88,6 +95,8 @@ public final class DefenseIntentGameTests {
             mob.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1000D);
             mob.getAttribute(Attributes.ARMOR).setBaseValue(0D);
             mob.getAttribute(Attributes.ARMOR_TOUGHNESS).setBaseValue(0D);
+            // Settle the normal growth modifier and its 1024 ceiling before recording fixture health.
+            MonsterDayScaling.refresh(mob);
             mob.setHealth(1000F);
             mob.tickCount = 100;
             for (GameType mode : modes) {
@@ -187,7 +196,7 @@ public final class DefenseIntentGameTests {
 
     private static void step(GameTestHelper h, List<Fight> fights, int delay, Runnable action) {
         h.runAfterDelay(delay, () -> {
-            try { whenIndexed(h, fights, 8, action); }
+            try { whenIndexed(h, fights, 40, action); }
             catch (RuntimeException | Error error) { fights.forEach(Fight::close); throw error; }
         });
     }
@@ -197,7 +206,14 @@ public final class DefenseIntentGameTests {
         for (Fight fight : fights) if (!fight.indexed) {
             // The two-argument overload deliberately hides spectators; indexing itself must include them here.
             List<Player> indexed = h.getLevel().getEntitiesOfClass(Player.class, fight.mob.getBoundingBox().inflate(32D), player -> true);
-            fight.indexed = indexed.containsAll(fight.players);
+            // FULL generation and successful player registration precede spatial section promotion.
+            // Wait for the complete projectile corridor and one actual defender tick before testing AI.
+            fight.indexed = fight.mob.tickCount > 100
+                    && h.getLevel().isPositionEntityTicking(fight.mob.blockPosition())
+                    && fight.players.stream().allMatch(player -> h.getLevel().isPositionEntityTicking(player.blockPosition()))
+                    && fight.arenaChunks.stream().allMatch(chunk -> h.getLevel().isPositionEntityTicking(
+                            new BlockPos(chunk.getMinBlockX(), 144, chunk.getMinBlockZ())))
+                    && indexed.containsAll(fight.players);
             ready &= fight.indexed;
         }
         if (ready) { action.run(); return; }

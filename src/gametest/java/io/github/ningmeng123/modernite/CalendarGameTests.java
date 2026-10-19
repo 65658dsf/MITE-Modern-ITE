@@ -8,7 +8,6 @@ import io.github.ningmeng123.mite.survival.PlayerHealthEvents;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasionData;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.modernite.gear.*;
-import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
 import net.minecraft.gametest.framework.*;
@@ -21,30 +20,39 @@ import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.gametest.*;
+import io.github.ningmeng123.modernite.world.ExtremeWorldState;
 
 /** Verify the live base extension entry points and real entity transactions. @author NingMeng123 */
 @GameTestHolder("modern_ite") @PrefixGameTestTemplate(false)
 public final class CalendarGameTests {
-    @GameTest(template="gear_empty")
+    @GameTest(template="gear_empty",batch="spawn_balance")
     public static void sourceSpawnAttemptsUseTheCurrentCalendar(GameTestHelper h) {
         var level=h.getLevel().getServer().overworld();long old=level.getDayTime();
+        var history=BloodMoonInvasionData.get(level);long highest=history.highestDay();boolean dirty=history.isDirty();
+        boolean grace=ExtremeWorldState.graceEnded(level);
         var policy=MiteExtensions.policy();var context=new MiteExtensions.SpawnContext(level,io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER,false);
         try {
             level.setDayTime(31*24000L);
-            h.assertTrue(policy.monsterCap(level,false,289,0)==636&&policy.monsterCap(level,true,289,0)==1272,"Blood moon budgets use 50 per 128 chunks, day floor 100, and separate deep multiplier");
-            h.assertTrue(policy.spawnGroups(context,3)==6&&policy.spawnAttempts(context,null,4)==8&&policy.spawnJitter(context,6)==8,"Blood moon six-by-eight attempts and jitter");
+            ExtremeWorldState.restoreGraceEnded(level,true);
+            h.assertFalse(policy.independentHostileBudgets(level,true),"Deep and shallow monsters consume the same budget");
+            h.assertTrue(policy.monsterCap(level,false,289,0)==636&&policy.monsterCap(level,true,289,0)==636,"First blood moon retains date growth without a deep multiplier");
+            h.assertTrue(policy.spawnGroups(context,3)==4&&policy.spawnAttempts(context,null,4)==4&&policy.spawnJitter(context,6)==8,"Blood moon uses four groups of four attempts");
             var phase=net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(net.minecraft.resources.ResourceLocation.parse("mite:phase_spider"));
-            h.assertTrue(policy.spawnAttempts(context,phase,4)==128,"Phase spider attempts remain positive instead of overflowing a byte");
+            h.assertTrue(policy.spawnAttempts(context,phase,4)==4,"Phase spiders use the same four attempts as other monsters");
             h.assertTrue(policy.distantHostileSkipBound(context,2)==4,"Blood moon distant candidate rejection is one in four");
             level.setDayTime(127*24000L);
             h.assertTrue(policy.monsterCap(level,false,289,0)==240&&policy.spawnGroups(context,3)==3&&policy.distantHostileSkipBound(context,2)==2,"Blue moon day 128 does not inherit blood spawning");
             level.setDayTime(143*24000L);
-            h.assertTrue(policy.monsterCap(level,false,289,0)==768&&policy.spawnAttempts(context,null,4)==8,"Day 144 uses the accelerated calendar");
+            h.assertTrue(policy.monsterCap(level,false,289,0)==768&&policy.spawnAttempts(context,null,4)==4,"Day 144 retains the accelerated calendar and shared cap growth");
             var nether=h.getLevel().getServer().getLevel(net.minecraft.world.level.Level.NETHER);
             var netherContext=new MiteExtensions.SpawnContext(nether,io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER,false);
             int groups=policy.spawnGroups(netherContext,3);
-            h.assertTrue((groups==3||groups==4)&&policy.spawnAttempts(netherContext,null,4)==5,"Nether uses its dedicated ordinary rounds and extra attempt");
-        } finally {level.setDayTime(old);}
+            h.assertTrue(groups==3&&policy.spawnAttempts(netherContext,null,4)==4,"Nether uses three ordinary groups of four attempts");
+            level.setDayTime(32*24000L);
+            h.assertTrue(policy.spawnGroups(context,3)==3&&policy.localDensity(level,null,0)==32,"Ordinary days keep three groups and a thirty-two monster local limit");
+            level.setDayTime(31*24000L);
+            h.assertTrue(policy.localDensity(level,null,0)==48,"Blood moon local limit is forty-eight");
+        } finally {level.setDayTime(old);history.restoreProgress(highest);history.setDirty(dirty);ExtremeWorldState.restoreGraceEnded(level,grace);}
         h.succeed();
     }
     @GameTest(template="gear_empty")
@@ -98,25 +106,22 @@ public final class CalendarGameTests {
         }
         h.succeed();
     }
-    @GameTest(template="gear_empty")
-    public static void passengersAndCanceledJoinsAreOneBudgetTransaction(GameTestHelper h) throws Exception {
-        Class<?> budgetType=Class.forName("io.github.ningmeng123.mite.worldgen.R196MobSpawning$SpawnBudget");
-        var constructor=budgetType.getDeclaredConstructor(int.class,int.class);constructor.setAccessible(true);
-        var commit=R196MobSpawning.class.getDeclaredMethod("finalizeNaturalMonster",ServerLevel.class,Mob.class,SpawnGroupData.class,int.class,budgetType);commit.setAccessible(true);
-        Field deep=budgetType.getDeclaredField("deep"),shallow=budgetType.getDeclaredField("shallow");deep.setAccessible(true);shallow.setAccessible(true);
+    @GameTest(template="gear_empty",batch="spawn_balance")
+    public static void passengersAndCanceledJoinsAreOneBudgetTransaction(GameTestHelper h) {
         var root=EntityType.CREEPER.create(h.getLevel());var rider=EntityType.CREEPER.create(h.getLevel());
+        root.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
+        rider.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
         root.setPos(h.absolutePos(new net.minecraft.core.BlockPos(1,1,1)).getCenter());rider.startRiding(root,true);
-        rider.setPos(root.getX(),70,root.getZ());Object budget=constructor.newInstance(1,0);
-        var rejected=(R196MobSpawning.NaturalMonsterSpawn)commit.invoke(null,h.getLevel(),root,null,Integer.MAX_VALUE,budget);
-        h.assertTrue(rejected.monsters()==0&&root.isRemoved()&&rider.isRemoved(),"A rider in a full height interval rejects the complete spawn");
-        h.assertTrue(deep.getInt(budget)==1&&shallow.getInt(budget)==0,"Rejected tree consumes no budget");
+        rider.setPos(root.getX(),70,root.getZ());
+        var rejected=R196MobSpawning.finalizeNaturalMonster(h.getLevel(),root,null,1);
+        h.assertTrue(rejected.monsters()==0&&root.isRemoved()&&rider.isRemoved(),"A two-monster tree cannot spend a single shared slot across height intervals");
         var canceled=EntityType.CREEPER.create(h.getLevel());canceled.setPos(h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)).getCenter());
+        canceled.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
         Consumer<EntityJoinLevelEvent> listener=event->{if(event.getEntity()==canceled)event.setCanceled(true);};
         NeoForge.EVENT_BUS.addListener(listener);
         try {
-            Object available=constructor.newInstance(1,1);
-            var result=(R196MobSpawning.NaturalMonsterSpawn)commit.invoke(null,h.getLevel(),canceled,null,Integer.MAX_VALUE,available);
-            h.assertTrue(result.monsters()==0&&canceled.isRemoved()&&deep.getInt(available)==1,"Canceled join discards the tree and leaves the ledger unchanged");
+            var result=R196MobSpawning.finalizeNaturalMonster(h.getLevel(),canceled,null,2);
+            h.assertTrue(result.monsters()==0&&canceled.isRemoved(),"Canceled join discards the tree without reporting a committed monster");
         } finally {NeoForge.EVENT_BUS.unregister(listener);}
         h.succeed();
     }

@@ -70,11 +70,28 @@ public final class ExtremeMobEvents {
         if(original.getType()==EntityType.PILLAGER&&original instanceof Pillager&&MobAbilities.day(level)>=33){
             // Keep vanilla patrol/raid identity and AI while retaining a survival source for the addon weapon.
             original.getPersistentData().putBoolean("modern_ite:upgrade_crossbow",true);
-        }else if(original.getType()==EntityType.ZOMBIFIED_PIGLIN&&original.getRandom().nextInt(5)==0){
+        }else if(original.getType()==EntityType.ZOMBIFIED_PIGLIN
+                &&level.getServer().isSameThread()&&event.getSpawnType()!=MobSpawnType.STRUCTURE
+                &&event.getSpawnType()!=MobSpawnType.COMMAND&&event.getSpawnType()!=MobSpawnType.SPAWN_EGG
+                &&!SpawnPopulation.explicit(original)&&SpawnPopulation.automaticAllowed(level,ExtremeMobs.type(ZOMBIE_PIGMAN_LORD))
+                &&original.getRandom().nextInt(5)==0){
             Mob replacement=ExtremeMobs.type(ZOMBIE_PIGMAN_LORD).create(level);if(replacement==null)return;
             replacement.moveTo(original.position());replacement.setYRot(original.getYRot());
-            net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(replacement,level,event.getDifficulty(),event.getSpawnType(),event.getSpawnData());
-            event.setSpawnCancelled(true);level.addFreshEntity(replacement);
+            if(original.getPersistentData().hasUUID(SpawnPopulation.SUMMONER))replacement.getPersistentData().putUUID(SpawnPopulation.SUMMONER,original.getPersistentData().getUUID(SpawnPopulation.SUMMONER));
+            if(SpawnPopulation.encounter(original))replacement.getPersistentData().putBoolean(SpawnPopulation.ENCOUNTER,true);
+            Set<UUID> existing=MobAbilities.summonBaseline(level,original);Set<Entity> owned=new LinkedHashSet<>();owned.add(replacement);
+            event.setSpawnCancelled(true);SpawnPopulation.transfer(original,replacement);boolean added=false;
+            try{
+                net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(replacement,level,event.getDifficulty(),event.getSpawnType(),event.getSpawnData());
+                MobAbilities.rememberSummonTree(replacement,existing,owned);
+                replacement.setTarget(original.getTarget());
+                if(!replacement.isRemoved()&&!replacement.isSpawnCancelled()&&replacement.getSpawnType()!=null)added=level.addFreshEntity(replacement);
+            }finally{
+                if(!added){
+                    MobAbilities.discardSummonTree(replacement,existing,owned);event.setSpawnCancelled(false);
+                    SpawnPopulation.transfer(replacement,original);
+                }
+            }
         }
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
@@ -192,6 +209,7 @@ public final class ExtremeMobEvents {
         if(k==SKELETON_BLAZE&&mob.getRandom().nextFloat()<.05)drop(event,"minecraft:blaze_powder",1);
     }
     private static void playerMimic(LivingDropsEvent event,ServerPlayer player){
+        if(!SpawnPopulation.automaticAllowed(player.serverLevel(),ExtremeMobs.type(MIMIC_ZOMBIE)))return;
         Mob mimic=ExtremeMobs.type(MIMIC_ZOMBIE).create(player.serverLevel());if(!(mimic instanceof ExtremeMob e))return;
         MobAbilities.initialize(mimic,e);mimic.moveTo(player.position());e.extremeMemory().mimicName=player.getGameProfile().getName();
         mimic.setCustomName(Component.literal(e.extremeMemory().mimicName));mimic.setCustomNameVisible(true);mimic.setPersistenceRequired();mimic.setCanPickUpLoot(false);
@@ -208,9 +226,17 @@ public final class ExtremeMobEvents {
         server.tell(new net.minecraft.server.TickTask(server.getTickCount()+1,()->{if(!level.getBlockState(pos).is(Blocks.SPAWNER))spawnBoss(level,pos,player);}));
     }
     public static void spawnBoss(ServerLevel level,BlockPos pos,Player player){
-        if(level.random.nextFloat()>=.5)return;Mob boss=ExtremeMobs.type(ZOMBIE_BOSS).create(level);if(boss==null)return;
-        boss.moveTo(pos.getX()+.5,pos.getY(),pos.getZ()+.5,0,0);boss.setTarget(player);level.addFreshEntity(boss);boss.spawnAnim();
-        MobAbilities.summon(boss,WITCH_LORD,1);
+        if(!SpawnPopulation.automaticAllowed(level,ExtremeMobs.type(ZOMBIE_BOSS))||level.random.nextFloat()>=.5)return;
+        Mob boss=ExtremeMobs.type(ZOMBIE_BOSS).create(level);if(boss==null)return;
+        boss.moveTo(pos.getX()+.5,pos.getY(),pos.getZ()+.5,0,0);boss.setTarget(player);
+        if(!SpawnPopulation.reserveSupport(boss,null,true)){boss.discard();return;}
+        try{
+            net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(boss,level,level.getCurrentDifficultyAt(pos),MobSpawnType.MOB_SUMMONED,null);
+            if(boss.isRemoved()||boss.isSpawnCancelled()||boss.getSpawnType()==null||!level.addFreshEntity(boss))return;
+            boss.spawnAnim();MobAbilities.summon(boss,WITCH_LORD,1,true);
+        }finally{
+            if(!boss.isAddedToLevel()){boss.discard();SpawnPopulation.release(boss);}
+        }
     }
     @SubscribeEvent(priority=EventPriority.LOWEST,receiveCanceled=true)
     public static void blast(ExplosionEvent.Start event){

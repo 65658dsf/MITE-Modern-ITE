@@ -6,6 +6,8 @@ import io.github.ningmeng123.mite.rules.*;
 import io.github.ningmeng123.mite.worldgen.*;
 import io.github.ningmeng123.modernite.content.*;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
+import io.github.ningmeng123.modernite.entity.ExtremeSpawnProgression;
+import io.github.ningmeng123.modernite.world.ExtremeWorldState;
 import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments;
 import net.minecraft.core.*;
@@ -33,31 +35,33 @@ public final class ExtremeRules implements MiteExtensions.Policy {
         return new LunarCalendar.State(day,state.phase(),true,state.night(),event);
     }
     @Override public long bloodMoonCount(long day,long original) { return ExtremeCalendar.bloodCount(day); }
-    @Override public boolean independentHostileBudgets(ServerLevel level,boolean original) { return true; }
-    @Override public int monsterCap(ServerLevel level,boolean deep,int chunks,int original) { return ExtremeCalendar.cap(currentDay(level),chunks,blood(level),deep); }
-    @Override public int localDensity(ServerLevel level,Player player,int original) { return Math.max(original,(int)Math.min(Integer.MAX_VALUE,(long)monsterCap(level,false,289,0)+monsterCap(level,true,289,0))); }
+    @Override public boolean independentHostileBudgets(ServerLevel level,boolean original) { return false; }
+    @Override public int monsterCap(ServerLevel level,boolean deep,int chunks,int original) { return ExtremeWorldState.graceActive(level)?0:ExtremeCalendar.cap(currentDay(level),chunks,blood(level),deep); }
+    @Override public float hostilePassProbability(ServerLevel level,boolean deep,float original) { return ExtremeWorldState.graceActive(level)?0:original; }
+    @Override public int localDensity(ServerLevel level,Player player,int original) { return blood(level)?48:32; }
     @Override public int spawnGroups(MiteExtensions.SpawnContext context,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
         boolean blood=blood(context.level());
-        if(context.level().dimension().equals(Level.NETHER))return blood?(context.level().random.nextInt(10)<7?7:8):(context.level().random.nextInt(5)<3?4:3);
-        return blood?6:3;
+        return ExtremeWorldState.graceActive(context.level())?0:blood?4:3;
     }
     @Override public int spawnAttempts(MiteExtensions.SpawnContext context,EntityType<?> selected,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
-        boolean blood=blood(context.level());
-        if(selected!=null&&BuiltInRegistries.ENTITY_TYPE.getKey(selected).getPath().equals("phase_spider")&&context.level().dimension().equals(Level.OVERWORLD))return blood?128:64;
-        return (blood?8:4)+(context.level().dimension().equals(Level.NETHER)?1:0);
+        return ExtremeWorldState.graceActive(context.level())?0:4;
     }
     @Override public int spawnJitter(MiteExtensions.SpawnContext context,int original) { return context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?8:original; }
     @Override public int distantHostileSkipBound(MiteExtensions.SpawnContext context,int original) { return context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?4:original; }
     @Override public boolean spawnDistance(MiteExtensions.SpawnContext context,BlockPos pos,double nearestSq,double spawnSq,boolean close,boolean original) {
-        if(context.category()!=R196SpawnRules.Category.MONSTER||!blood(context.level()))return original;
-        var level=context.level();
-        boolean dark=level.getMaxLocalRawBrightness(pos)==0&&level.getMaxLocalRawBrightness(pos.above())==0&&level.players().stream().anyMatch(p->p.isAlive()&&!p.isSpectator()&&p.distanceToSqr(pos.getX()+.5,pos.getY(),pos.getZ()+.5)<1024);
-        return spawnSq>=576&&nearestSq>=(dark?144:1024);
+        if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
+        return !ExtremeWorldState.graceActive(context.level())&&spawnSq>=576&&nearestSq>=576;
     }
     @Override public boolean outdoorAllows(MiteExtensions.SpawnContext context,Mob mob,boolean original) { return blood(context.level())||original; }
-    @Override public List<R196MobSpawning.Entry> spawnPool(MiteExtensions.SpawnContext context,BlockPos pos,List<R196MobSpawning.Entry> original) { var result=new ArrayList<>(original);ExtremeMobs.addSpawnEntries(context,pos,result);return List.copyOf(result); }
+    @Override public List<R196MobSpawning.Entry> spawnPool(MiteExtensions.SpawnContext context,BlockPos pos,List<R196MobSpawning.Entry> original) {
+        var result=new ArrayList<>(original);ExtremeMobs.addSpawnEntries(context,pos,result);
+        long day=io.github.ningmeng123.mite.worldgen.BloodMoonInvasion.highestDay(context.level());
+        result.removeIf(entry->!ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(entry.type()).toString(),day)
+                ||ExtremeWorldState.graceActive(context.level())&&io.github.ningmeng123.modernite.entity.SpawnPopulation.hostile(entry.type()));
+        return List.copyOf(result);
+    }
     @Override public double maximumHealth(Player player,double original) { return ExtremeGear.health(player,original); }
     @Override public int foodCapacity(Player player,int original) { return ExtremeGear.nutritionCapacity(player,original); }
     @Override public int gearMaximumLevel(ItemStack stack,int original) { return ExtremeGear.maximumGearLevel(stack,original); }

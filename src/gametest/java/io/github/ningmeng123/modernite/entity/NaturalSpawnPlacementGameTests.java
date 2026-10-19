@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasionData;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
+import io.github.ningmeng123.modernite.world.ExtremeWorldState;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,6 +18,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LightBlock;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -27,7 +30,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class NaturalSpawnPlacementGameTests {
     private NaturalSpawnPlacementGameTests() {}
 
-    @GameTest(template = "gear_empty")
+    @GameTest(template = "gear_empty", batch = "spawn_balance")
     public static void everyGroundIdentityRejectsVoidAndAcceptsAStoneFloor(GameTestHelper helper) {
         try (Site site = new Site(helper)) {
             for (ExtremeKind kind : ExtremeKind.values()) {
@@ -49,7 +52,7 @@ public final class NaturalSpawnPlacementGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "gear_empty")
+    @GameTest(template = "gear_empty", batch = "spawn_balance")
     public static void actualNaturalQualificationRejectsDarkVoidButAllowsSupportedMonsters(GameTestHelper helper) {
         try (Site site = new Site(helper)) {
             helper.assertTrue(site.pos.getY() == -49 && site.level.getMaxLocalRawBrightness(site.pos) <= 7,
@@ -68,7 +71,7 @@ public final class NaturalSpawnPlacementGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "gear_empty")
+    @GameTest(template = "gear_empty", batch = "spawn_balance")
     public static void naturalQualificationStillRejectsBlockedHeadroomAndWater(GameTestHelper helper) {
         try (Site site = new Site(helper)) {
             Mob mob = site.mob(ExtremeKind.ZOMBIE_IRON_BUCKET);
@@ -83,7 +86,7 @@ public final class NaturalSpawnPlacementGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "gear_empty", timeoutTicks = 100)
+    @GameTest(template = "gear_empty", batch = "spawn_glowstone", timeoutTicks = 100)
     public static void glowstonePlatformStillRejectsNaturalMonstersAfterRealLightPropagation(GameTestHelper helper) {
         Site site = new Site(helper, false);
         helper.testInfo.addListener(new GameTestListener() {
@@ -101,7 +104,7 @@ public final class NaturalSpawnPlacementGameTests {
                 .thenSucceed();
     }
 
-    @GameTest(template = "gear_empty")
+    @GameTest(template = "gear_empty", batch = "spawn_balance")
     public static void summonedGroundMobsKeepTheirSpawnReasons(GameTestHelper helper) {
         try (Site site = new Site(helper)) {
             Mob zombie = site.mob(ExtremeKind.ZOMBIE_IRON_BUCKET);
@@ -112,6 +115,33 @@ public final class NaturalSpawnPlacementGameTests {
             }
         }
         helper.succeed();
+    }
+
+    @GameTest(template = "gear_empty", batch = "spawn_light_boundaries", timeoutTicks = 150)
+    public static void oneAndSevenBlockLightRejectButCompleteDarknessAllows(GameTestHelper helper) {
+        Site site=new Site(helper);
+        helper.testInfo.addListener(new GameTestListener() {
+            @Override public void testStructureLoaded(GameTestInfo info) {}
+            @Override public void testAddedForRerun(GameTestInfo original,GameTestInfo rerun,GameTestRunner runner) {}
+            @Override public void testPassed(GameTestInfo info,GameTestRunner runner) {site.close();}
+            @Override public void testFailed(GameTestInfo info,GameTestRunner runner) {site.close();}
+        });
+        site.set(site.pos.below(),Blocks.STONE.defaultBlockState());
+        Mob mob=site.mob(ExtremeKind.ZOMBIE_IRON_BUCKET);BlockPos lamp=site.pos.offset(2,0,0);
+        helper.startSequence()
+                .thenWaitUntil(()->helper.assertTrue(site.level.getBrightness(LightLayer.BLOCK,site.pos)==0,"Control cell is fully dark"))
+                .thenExecute(()->{
+                    helper.assertTrue(qualifies(mob,site),"A supported dark cave candidate remains eligible");
+                    site.set(lamp,Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL,3));
+                })
+                .thenWaitUntil(()->helper.assertTrue(site.level.getBrightness(LightLayer.BLOCK,site.pos)==1,"Light engine reaches the one-light boundary"))
+                .thenExecute(()->{
+                    helper.assertFalse(qualifies(mob,site),"Even one block-light level suppresses an extreme natural monster");
+                    site.set(lamp,Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL,9));
+                })
+                .thenWaitUntil(()->helper.assertTrue(site.level.getBrightness(LightLayer.BLOCK,site.pos)==7,"Light engine reaches the old seven-light boundary"))
+                .thenExecute(()->helper.assertFalse(qualifies(mob,site),"The former level-seven threshold no longer permits a spawn"))
+                .thenSucceed();
     }
 
     private static boolean qualifies(Mob mob, Site site) {
@@ -125,6 +155,7 @@ public final class NaturalSpawnPlacementGameTests {
         final BloodMoonInvasionData progress;
         final long highestDay;
         final boolean progressDirty;
+        final boolean graceEnded;
         final Map<BlockPos, BlockState> previous = new LinkedHashMap<>();
         final List<Mob> mobs = new ArrayList<>();
         boolean closed;
@@ -140,8 +171,11 @@ public final class NaturalSpawnPlacementGameTests {
             progress = BloodMoonInvasionData.get(level);
             highestDay = progress.highestDay();
             progressDirty = progress.isDirty();
+            graceEnded = ExtremeWorldState.graceEnded(level);
+            ExtremeWorldState.restoreGraceEnded(level,true);
             if (night) {
-                level.setDayTime(18000L);
+                level.setDayTime(32*24_000L+18000L);
+                progress.restoreProgress(33);
                 level.updateSkyBrightness();
             }
             for (BlockPos point : BlockPos.betweenClosed(pos.offset(-3, -2, -3), pos.offset(3, 5, 3)))
@@ -170,6 +204,7 @@ public final class NaturalSpawnPlacementGameTests {
             level.updateSkyBrightness();
             progress.restoreProgress(highestDay);
             progress.setDirty(progressDirty);
+            ExtremeWorldState.restoreGraceEnded(level,graceEnded);
         }
     }
 }

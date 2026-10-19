@@ -143,7 +143,10 @@ public final class ExtremeNativeMobs {
         if(m instanceof Creeper&&!id(m).contains("infernal")&&m.getRandom().nextInt(5)==0){Mob bat=MobAbilities.summonId(m,"mite:vampire_bat",1);if(bat!=null)m.startRiding(bat,true);}
         if(id(m).equals("mite:phase_spider")&&m.getRandom().nextInt(100)==0){
             String[] riders={"minecraft:skeleton","mite:longdead_guardian","mite:longdead","modern_ite:skeleton_blaze","mite:bone_lord","mite:ancient_bone_lord","modern_ite:skeleton_elite_lord","modern_ite:skeleton_fast_arrow","modern_ite:skeleton_zombie"};
-            Mob rider=MobAbilities.summonId(m,riders[m.getRandom().nextInt(riders.length)],1);if(rider!=null)rider.startRiding(m,true);
+            if(m.level() instanceof ServerLevel level){
+                var allowed=java.util.Arrays.stream(riders).filter(type->SpawnPopulation.automaticAllowed(level,BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(type)))).toList();
+                if(!allowed.isEmpty()){Mob rider=MobAbilities.summonId(m,allowed.get(m.getRandom().nextInt(allowed.size())),1);if(rider!=null)rider.startRiding(m,true);}
+            }
         }
     }
     @SubscribeEvent public static void tick(EntityTickEvent.Post event){
@@ -183,7 +186,7 @@ public final class ExtremeNativeMobs {
     }
     public static void witherWave(WitherBoss wither){
         for(int i=0;i<15;i++){
-            Mob troop=MobAbilities.summonId(wither,i<5?"modern_ite:wither_skeleton_arrow":"minecraft:wither_skeleton",1);
+            Mob troop=MobAbilities.summonId(wither,i<5?"modern_ite:wither_skeleton_arrow":"minecraft:wither_skeleton",1,true);
             if(troop!=null)troop.getPersistentData().putBoolean("modern_ite:wither_minion",true);
         }
     }
@@ -192,13 +195,13 @@ public final class ExtremeNativeMobs {
         if(half&&!data.getBoolean("modern_ite:dragon_half")){
             data.putBoolean("modern_ite:dragon_half",true);
             for(int i=0;i<5;i++)for(String type:new String[]{"modern_ite:zombie_elite_lord","modern_ite:skeleton_elite_lord","minecraft:ghast"}){
-                Mob troop=MobAbilities.summonId(d,type,1);if(troop==null)continue;troop.getPersistentData().putBoolean("modern_ite:dragon_summoned",true);
+                Mob troop=MobAbilities.summonId(d,type,1,true);if(troop==null)continue;troop.getPersistentData().putBoolean("modern_ite:dragon_summoned",true);
                 stat(troop,Attributes.MAX_HEALTH,troop.getAttributeBaseValue(Attributes.MAX_HEALTH)*3);
                 if(troop instanceof Zombie)stat(troop,Attributes.ATTACK_DAMAGE,troop.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)*3);troop.setHealth(troop.getMaxHealth());
             }
         }
         if(half&&d.tickCount%1200==0)for(ServerPlayer p:level.players())if(p.isAlive()&&!p.isSpectator()&&!p.isCreative()){
-            p.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,600));Mob troop=MobAbilities.summonId(d,"mite:revenant",1);if(troop!=null)troop.setTarget(p);
+            p.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,600));Mob troop=MobAbilities.summonId(d,"mite:revenant",1,true);if(troop!=null)troop.setTarget(p);
         }
         if(d.tickCount%(half?40:80)==0){
             Player target=level.getNearestPlayer(d,128);if(target!=null&&!target.isCreative()&&!target.isSpectator()){

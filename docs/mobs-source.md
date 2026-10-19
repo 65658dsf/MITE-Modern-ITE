@@ -12,7 +12,9 @@
 
 只把两个参考 JAR 当作被审计的程序与资源，不执行它们。Extreme 0.6.6 原注册 44 个生物，0.1.7 按新规格移除亡灵恶魂、旧掠夺者和旧掠夺者首领，保留 **41 个**；另迁移 ITE 2.0.28 的 **4 个正式生物**。当前 **45 个身份**各有独立注册、刷怪蛋、属性、存读、战斗逻辑与客户端渲染器。`modern_ite:` 为下表所有注册 ID 的命名空间。
 
-“自然”均进入本体刷怪预算与 `SpawnPlacements`/碰撞检查，遵循难度、黑暗与维度条件。通用维度指主世界、下界与 MITE 地底世界，不包含末地；特殊召唤和刷怪蛋不受自然生成日期门槛限制。掠夺者保留现代原版身份与巡逻、前哨站及袭击 AI；33 天后原版掠夺者可携带拓展弩，保留其生存获取入口。
+“自然”均进入本体刷怪预算与 `SpawnPlacements`/碰撞检查，遵循难度、黑暗与维度条件。通用维度指主世界、下界与 MITE 地底世界，不包含末地。领主及同级强敌的自然、替换、骑手、技能和事件入口统一按历史最高日期第33天解锁；命令和刷怪蛋可显式生成，已有存档实体正常保留。全部自动敌对生成还受开荒平安期约束。掠夺者保留现代原版身份与巡逻、前哨站及袭击 AI；33 天后原版掠夺者可携带拓展弩，保留其生存获取入口。
+
+平安期取消的一次性结构敌对守卫以原UUID和NBT持久延期，保护结束、所属区块载入且满足生成规则后补回一次；循环自然候选不入队。普通技能召援、死亡分裂及骑手服从玩家周边32/48局部密度和每名召唤者8个存活随从上限；本体未带召唤者标记的自动增怪同样不能绕过局部密度。
 
 | 注册 ID | 中文 | 源类短名 | 当前生存生成入口 | 关键能力 |
 |---|---|---|---|---|
@@ -33,9 +35,9 @@
 | mirror_zombie | 镜像僵尸 | EntityMirrorZombie | 自然；33 天起 | 复制目标装备/效果并扩展生命，复制装备不掉落、不共享 ItemStack |
 | mimic_zombie | 拟态僵尸 | EntityMimicZombie | 玩家实际死亡时生成 | 保留名字与在线皮肤，接管真实死亡掉落全背包并保存；死亡100%释放一次 |
 | zombie_caller | 唤尸 | EntityZombieCaller | 自然；通用维度；地底锁敌或玩家攻击启动 | 开始召 4 僵尸，200 tick 再召 3，400 tick 自爆并出 7–9 蠹虫 |
-| zombie_boss | 僵尸BOSS | EntityZombieBoss | 地底玩家成功破坏刷怪笼后 50% 挑战，并伴女巫领主 | 只接受玩家直接近战、伤害÷5、压制力量、远距雷击、挑战重置、伤害榜奖励 |
+| zombie_boss | 僵尸BOSS | EntityZombieBoss | 33天起地底玩家成功破坏刷怪笼后50%挑战，并伴女巫领主 | 只接受玩家直接近战、伤害÷5、压制力量、远距雷击、挑战重置、伤害榜奖励 |
 | zombie_elite_lord | 僵尸精英领主 | EntityZombieEliteLord | 自然；33 天起；末影龙援军 | 振金装备、专属生命曲线、最多 24 次矿工/食尸鬼/尸妖/亡魂召援 |
-| undying_zombie_emperor | 不朽尸皇 | EntityUndyingZombieEmperor | 自然；128 天起，主世界/地底 | 双倍领主曲线生命、全套振金保护 V/锋利 V 棍、暗红灵魂环、一次性 2 僵尸领主+2 流浪女巫 |
+| undying_zombie_emperor | 不朽尸皇 | EntityUndyingZombieEmperor | 自然；33天起，主世界/地底 | 双倍领主曲线生命、全套振金保护 V/锋利 V 棍、暗红灵魂环、一次性 2 僵尸领主+2 流浪女巫 |
 | exchanger | 转移骷髅 | EntityExchanger | 自然；64 天起；盗贼援军 | 预警约 3 秒后交换双方 XYZ；任一穿戴物固定附魔阻止；免缴械 |
 | mirror_skeleton | 镜像骷髅 | EntityMirrorSkeleton | 自然；通用维度 | 复制装备/效果/生命，复制物不掉落 |
 | skeleton_fast_arrow | 速射手骷髅 | EntitySkeletonFastArrow | 自然；通用维度 | 30 tick 射击间隔 |
@@ -44,22 +46,22 @@
 | skeleton_floating | 漂浮骷髅 | EntitySkeletonFloating | 自然；仅地底 | 命中悬浮200 tick、脚边云雾 |
 | skeleton_blaze | 烈焰骷髅 | EntitySkeletonBlaze | 自然；33 天起 | 火矢 II、火焰免疫、双层旋转火焰与熔岩粒子、5% 烈焰粉 |
 | wither_skeleton_arrow | 凋零骷髅射手 | EntityWitherSkeletonArrow | 自然；下界；凋零召援 | 原版凋零骷髅模型、古金弓、冲击 II、命中凋零 300 tick、煤/稀有头颅 |
-| skeleton_elite_lord | 骷髅暴君 | EntitySkeletonEliteLord | 自然；通用维度；末影龙援军 | 振金近战装备、专属生命曲线、最多召 6 骷髅；与本体骷髅领主不同身份 |
+| skeleton_elite_lord | 骷髅暴君 | EntitySkeletonEliteLord | 自然；33天起，通用维度；末影龙援军 | 振金近战装备、专属生命曲线、最多召 6 骷髅；与本体骷髅领主不同身份 |
 | skeleton_zombie | 骷髅僵尸 | EntitySkeletonZombie | 自然；通用维度 | 弓/锈铁剑双武器，5/6 格阈值切换，备用武器存读 |
 | run_creeper | 疾跑苦力怕 | EntityRunCreeper | 自然；通用维度 | 0.5基础速度、前倾身躯及加长摆动腿 |
 | phase_creeper | 相位苦力怕 | EntityPhaseCreeper | 自然；通用维度 | 黑色修长身躯、末影发光眼及传送粒子、2–4次相位闪避充能，恢复充能并追击传送 |
 | chaos_creeper | 混乱苦力怕 | EntityChaosCreeper | 自然；64 天起 | 头顶旋转箭头、爆炸伤害附混乱 |
 | invisible_creeper | 隐形苦力怕 | EntityInvisibleCreeper | 自然；通用维度 | 隐身效果与5%可见渲染，死亡/爆炸清除隐身避免药水云残留 |
 | invisible_reversed_creeper | 隐形颠倒苦力怕 | EntityInvisibleReversedCreeper | 自然；通用维度 | 隐形，爆炸伤害附颠倒，死亡/爆炸清除隐身 |
-| black_infernal_creeper | 黑暗地狱苦力怕 | EntityBlackInfernalCreeper | 自然；主世界 | 专属生命曲线、大范围双强度爆炸，玩家击杀掉复活传送阵 |
+| black_infernal_creeper | 黑暗地狱苦力怕 | EntityBlackInfernalCreeper | 自然；33天起，主世界 | 专属生命曲线、大范围双强度爆炸，玩家击杀掉复活传送阵 |
 | flash_creeper | 闪光苦力怕 | EntityFlashCreeper | 自然；通用维度 | 爆炸可见范围施加100 tick白屏闪光，最后30 tick渐退 |
 | wither_creeper | 凋零苦力怕 | EntityWitherCreeper | 自然；通用维度 | 爆炸可见范围施加160 tick凋零 |
-| witch_lord | 女巫领主 | EntityWitchLord | 自然；96 天起，主世界/地底；挑战随从 | 370 基础生命、25 tick 投药、最多召 2 流浪女巫，并检查附近女巫数量 |
+| witch_lord | 女巫领主 | EntityWitchLord | 自然；33天起，主世界/地底；挑战随从 | 370 基础生命、25 tick 投药、最多召 2 流浪女巫，并检查附近女巫数量 |
 | red_ghoul | 红色食尸鬼 | EntityRedGhoul | 自然；通用维度 | 攻击玩家/牲畜，命中12倍鼠标输入灵敏度120 tick；源为非亡灵生物 |
-| dark_iron_golem | 暗黑铁傀儡 | EntityDarkIronGolem | 自然；下界/地底 | 专属生命/双倍攻击公式、最终向上速度固定15；只受镐、爆炸、溺水和雪球伤害 |
-| zombie_lord | 僵尸领主 | ITE EntityZombieLord + Extreme 对应 Mixin | 自然；尸皇随从 | 振金整装、免缴械、专属曲线生命、钻石奖励 |
+| dark_iron_golem | 暗黑铁傀儡 | EntityDarkIronGolem | 自然；33天起，下界/地底 | 专属生命/双倍攻击公式、最终向上速度固定15；只受镐、爆炸、溺水和雪球伤害 |
+| zombie_lord | 僵尸领主 | ITE EntityZombieLord + Extreme 对应 Mixin | 自然；33天起；尸皇随从 | 振金整装、免缴械、专属曲线生命、钻石奖励 |
 | wandering_witch | 流浪女巫 | ITE EntityWanderingWitch + Extreme 对应 Mixin | 自然；主世界/地底65 天起；尸皇/女巫领主随从 | 100 基础生命、50 tick 投药、逃跑减速、最多8蝙蝠、真实诅咒 |
-| zombie_pigman_lord | 僵尸猪人领主 | ITE EntityZombiePigmanLord + Extreme 对应 Mixin | 普通僵尸猪人1/5替换；自然下界/地底，主世界限血月 | 振金整装、免缴械、石英奖励；保留父类最终生效的固定生命基线 |
+| zombie_pigman_lord | 僵尸猪人领主 | ITE EntityZombiePigmanLord + Extreme 对应 Mixin | 33天起普通僵尸猪人1/5替换；自然下界/地底，主世界限血月 | 振金整装、免缴械、石英奖励；保留父类最终生效的固定生命基线 |
 | annihilation_skeleton | 湮灭骷髅 | ITE EntityAnnihilationSkeleton + Extreme 对应 Mixin | 自然；主世界33天起额外1/4，下界/地底；刷怪蛋 | 紫黑逆向传送环与烟雾、30基础生命、专属3倍攻击曲线、精金护甲、仅玩家直接近战可伤、受攻击后计时消失、免药水/击退 |
 
 ## 属性、来源与基线边界

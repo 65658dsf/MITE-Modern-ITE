@@ -45,7 +45,7 @@ public final class MobAbilities {
     public static int day(Level level){return level instanceof ServerLevel server?(int)Math.min(Integer.MAX_VALUE,BloodMoonInvasion.highestDay(server)):(int)(level.getDayTime()/24000+1);}
     public static boolean underground(Level level){return level.dimension().location().getPath().equals("underworld");}
     public static boolean maySpawn(ExtremeKind k,ServerLevel l,BlockPos pos){
-        if(day(l)<k.firstDay||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
+        if(!SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))||day(l)<k.firstDay||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
         boolean nether=l.dimension()==Level.NETHER,under=underground(l),over=l.dimension()==Level.OVERWORLD;
         if(k==ANNIHILATION_SKELETON&&over&&day(l)<33)return false;
         if(!over&&!nether&&!under)return false;
@@ -58,13 +58,16 @@ public final class MobAbilities {
         return true;
     }
     public static boolean spawnRules(Mob mob,ExtremeKind k,LevelAccessor level,MobSpawnType reason){
-        if(reason==MobSpawnType.SPAWN_EGG||reason==MobSpawnType.COMMAND||reason==MobSpawnType.MOB_SUMMONED||reason==MobSpawnType.CONVERSION)return true;
-        if(!(mob.level() instanceof ServerLevel server)||!maySpawn(k,server,mob.blockPosition())||level.getDifficulty()==Difficulty.PEACEFUL)return false;
+        if(reason==MobSpawnType.SPAWN_EGG||reason==MobSpawnType.COMMAND||SpawnPopulation.explicit(mob))return true;
+        if(!(mob.level() instanceof ServerLevel server)||!SpawnPopulation.automaticAllowed(server,mob.getType()))return false;
+        if(reason==MobSpawnType.MOB_SUMMONED||reason==MobSpawnType.CONVERSION)return true;
+        if(!maySpawn(k,server,mob.blockPosition())||level.getDifficulty()==Difficulty.PEACEFUL)return false;
         if(k==DARK_IRON_GOLEM&&mob.getRandom().nextInt(9)>=7)return false;
         if(k.family==Family.WITCH&&mob.getRandom().nextInt(100)>=(underground(server)?50:33))return false;
         if(k==ANNIHILATION_SKELETON&&server.dimension()==Level.OVERWORLD
                 &&(mob.getRandom().nextInt(4)!=0||server.getNearestPlayer(mob,24)!=null))return false;
-        return level.getMaxLocalRawBrightness(mob.blockPosition())<=7&&level.getBlockState(mob.blockPosition()).getFluidState().isEmpty();
+        return (reason!=MobSpawnType.NATURAL||server.dimension()!=Level.OVERWORLD||level.getBrightness(LightLayer.BLOCK,mob.blockPosition())==0)
+                &&level.getMaxLocalRawBrightness(mob.blockPosition())<=7&&level.getBlockState(mob.blockPosition()).getFluidState().isEmpty();
     }
     private static void stat(Mob mob,Holder<net.minecraft.world.entity.ai.attributes.Attribute> key,double value){var a=mob.getAttribute(key);if(a!=null)a.setBaseValue(value);}
     public static void attributes(Mob m,ExtremeKind k){
@@ -242,7 +245,10 @@ public final class MobAbilities {
         if(!s.entourage){
             s.entourage=true;
             if(k==UNDYING_ZOMBIE_EMPEROR){summon(mob,ZOMBIE_LORD,2);summon(mob,WANDERING_WITCH,2);}
-            if(k==ZOMBIE_SIEGE){Zombie baby=EntityType.ZOMBIE.create(level);if(baby!=null){baby.getPersistentData().putBoolean("modern_ite:siege_rider",true);baby.setBaby(true);baby.moveTo(mob.position());level.addFreshEntity(baby);baby.startRiding(mob,true);}}
+            if(k==ZOMBIE_SIEGE){
+                Mob rider=summonId(mob,"minecraft:zombie",1);
+                if(rider instanceof Zombie baby){baby.getPersistentData().putBoolean("modern_ite:siege_rider",true);baby.setBaby(true);baby.moveTo(mob.position());baby.startRiding(mob,true);}
+            }
         }
         if(k==PHASE_CREEPER){if(s.clock%100==0&&s.phaseCharges<s.phaseMaximum)s.phaseCharges++;if(target!=null&&s.clock%10==0&&mob.getRandom().nextInt(3)==0&&mob.distanceToSqr(target)>9)teleportNear(mob,target);}
         if(k==ANNIHILATION_SKELETON&&s.stage>0&&++s.summons>=3600){mob.spawnAnim();mob.discard();return;}
@@ -354,21 +360,53 @@ public final class MobAbilities {
         Vec3 delta=target.getEyePosition().add(target.getDeltaMovement().scale(witch.distanceTo(target)*(.5+witch.getRandom().nextFloat()))).subtract(potion.position());
         potion.shoot(delta.x,delta.y+Math.sqrt(delta.horizontalDistanceSqr())*.2,delta.z,.9F,8);level.addFreshEntity(potion);
     }
-    public static Mob summon(Mob owner,ExtremeKind kind,int count){return summonType(owner,ExtremeMobs.type(kind),count);}
-    public static Mob summonId(Mob owner,String id,int count){var t=BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id));return summonType(owner,t,count);}
+    public static Mob summon(Mob owner,ExtremeKind kind,int count){return summon(owner,kind,count,false);}
+    public static Mob summon(Mob owner,ExtremeKind kind,int count,boolean encounter){return summonType(owner,ExtremeMobs.type(kind),count,encounter);}
+    public static Mob summonId(Mob owner,String id,int count){return summonId(owner,id,count,false);}
+    public static Mob summonId(Mob owner,String id,int count,boolean encounter){var t=BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id));return summonType(owner,t,count,encounter);}
     private static void summonZombie(Mob owner,int count){summonId(owner,"minecraft:zombie",count);}
-    public static Mob summonType(Mob owner,EntityType<?> type,int count){
+    public static Mob summonType(Mob owner,EntityType<?> type,int count){return summonType(owner,type,count,false);}
+    public static Mob summonType(Mob owner,EntityType<?> type,int count,boolean encounter){
         if(!(owner.level() instanceof ServerLevel level))return null;Mob last=null;
         for(int i=0;i<count;i++){
             Entity e=type.create(level);if(!(e instanceof Mob mob))continue;boolean valid=false;
             for(int attempt=0;attempt<12;attempt++){BlockPos p=owner.blockPosition().offset(owner.getRandom().nextInt(7)-3,0,owner.getRandom().nextInt(7)-3);mob.moveTo(p.getX()+.5,p.getY(),p.getZ()+.5,owner.getYRot(),0);if(level.noCollision(mob)){valid=true;break;}}
-            if(!valid)continue;
-            net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(mob,level,level.getCurrentDifficultyAt(mob.blockPosition()),MobSpawnType.MOB_SUMMONED,null);
-            mob.setTarget(owner.getTarget());
-            if(owner instanceof ExtremeMob ex&&ex.extremeKind().family==Family.WITCH)mob.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,Integer.MAX_VALUE,1));
-            mob.getPersistentData().putUUID("modern_ite:summoner",owner.getUUID());
-            if(level.addFreshEntity(mob)){mob.spawnAnim();last=mob;}
+            if(!valid||!SpawnPopulation.reserveSupport(mob,owner,encounter)){mob.discard();continue;}
+            Set<UUID> existing=summonBaseline(level,owner);Set<Entity> owned=new LinkedHashSet<>();owned.add(mob);
+            try{
+                net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(mob,level,level.getCurrentDifficultyAt(mob.blockPosition()),MobSpawnType.MOB_SUMMONED,null);
+                rememberSummonTree(mob,existing,owned);
+                if(mob.isRemoved()||mob.isSpawnCancelled()||mob.getSpawnType()==null)continue;
+                mob.setTarget(owner.getTarget());
+                if(owner instanceof ExtremeMob ex&&ex.extremeKind().family==Family.WITCH)mob.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,Integer.MAX_VALUE,1));
+                if(level.addFreshEntity(mob)){mob.spawnAnim();last=mob;}
+            }finally{
+                if(!mob.isAddedToLevel())discardSummonTree(mob,existing,owned);
+            }
         }return last;
+    }
+    /** Protect pre-existing riders and the summoner even when a section is not query-visible yet. */
+    static Set<UUID> summonBaseline(ServerLevel level,Mob owner){
+        Set<UUID> existing=new HashSet<>();
+        for(Entity entity:level.getAllEntities())existing.add(entity.getUUID());
+        if(owner!=null)owner.getRootVehicle().getSelfAndPassengers().forEach(entity->existing.add(entity.getUUID()));
+        return existing;
+    }
+    static void rememberSummonTree(Mob root,Set<UUID> existing,Set<Entity> owned){
+        Entity vehicle=root.getRootVehicle();
+        // A newly summoned creeper can itself become the passenger of its freshly summoned bat.
+        boolean ownVehicle=vehicle!=root&&!existing.contains(vehicle.getUUID())
+                &&vehicle.getPersistentData().hasUUID(SpawnPopulation.SUMMONER)
+                &&root.getUUID().equals(vehicle.getPersistentData().getUUID(SpawnPopulation.SUMMONER));
+        (ownVehicle?vehicle:root).getSelfAndPassengers().forEach(entity->{
+            if(entity==root||!existing.contains(entity.getUUID()))owned.add(entity);
+        });
+    }
+    static void discardSummonTree(Mob root,Set<UUID> existing,Set<Entity> owned){
+        rememberSummonTree(root,existing,owned);
+        // Keep the snapshot taken before the join: a later listener may already have detached riders.
+        for(Entity entity:owned)if(entity!=root){entity.discard();if(entity instanceof Mob mob)SpawnPopulation.release(mob);}
+        root.discard();SpawnPopulation.release(root);
     }
     public static boolean evade(Mob mob,MobMemory state,DamageSource source){
         if(state.phaseCharges<=0||source.is(DamageTypeTags.IS_FIRE)||source.is(DamageTypeTags.IS_FALL)||source.is(DamageTypes.MAGIC))return false;

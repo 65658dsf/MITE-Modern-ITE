@@ -4630,5 +4630,61 @@
       }
     ],
     "source_delivery": "github_source_commit"
+  },
+  "spawn_balance": {
+    "author": "NingMeng123",
+    "date": "2026-10-19",
+    "status": "passed",
+    "extension_version": "0.2.0",
+    "base_mod_version": "0.2.0",
+    "frozen_base_sha256": "e720e895f79338c80f57e21caa33ec951079ef0e0a1fc50a28f2038fa55f0353",
+    "artifact": "build/libs/modern-ite-0.2.0.jar",
+    "artifact_bytes": 1227463,
+    "artifact_sha256": "b8aa575d63ce85ba224e8157fc8f6a1e39342863e1232facf857c1d0b0ae6461",
+    "junit_passed": 25,
+    "junit_failures": 0,
+    "gametest_passed": 175,
+    "compiled_production_classes_matched": 192,
+    "class_mismatches": [],
+    "resource_mismatches": [],
+    "parsed_resource_json": 528,
+    "forbidden_archive_entries": [],
+    "verified_dimensions": [
+      "minecraft:overworld",
+      "minecraft:the_nether",
+      "minecraft:the_end"
+    ],
+    "underworld_level_loaded_in_gametest": false,
+    "real_multiplayer_client_sync_tested": false,
+    "shared_hostile_budget": true,
+    "ordinary_289_chunk_cap_before_day_101": 212,
+    "first_blood_289_chunk_cap": 636,
+    "local_caps": [
+      32,
+      48
+    ],
+    "strong_unlock_day": 33,
+    "grace_ends_at_daytime": 37000,
+    "double_daylight_until_highest_day": 32,
+    "structure_deferral_saved_and_replayed": true,
+    "server_log": "build/verification/spawn-balance/verified-server.log",
+    "commit_candidate": {
+      "author": "NingMeng123",
+      "status": "passed",
+      "mixed_workspace": false,
+      "scoped_files": 24,
+      "junit_passed": 25,
+      "gametest_passed": 171,
+      "excluded_existing_mimic_changes": true,
+      "artifact": "build/spawn-commit/build/libs/modern-ite-0.2.0.jar",
+      "artifact_bytes": 1225084,
+      "artifact_sha256": "08c24d5a87e51f8d7beee68e562c627439717d840f2e37a4f98a24c743ed75ec",
+      "compiled_production_classes_matched": 192,
+      "parsed_resource_json": 528,
+      "test_or_base_classes_in_artifact": false,
+      "server_log": "build/verification/spawn-balance/commit-verified-server.log",
+      "report": "build/verification/spawn-balance/commit-audit.json",
+      "parent": "1a91e058c1c28c5b9d8598be2a855a990541e0d2"
+    }
   }
 }
