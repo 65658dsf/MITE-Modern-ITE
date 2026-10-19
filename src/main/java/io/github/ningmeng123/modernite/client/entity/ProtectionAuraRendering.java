@@ -12,7 +12,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
-/** Attached cosmic vibranium armor surface for both player skins and humanoid creatures. @author NingMeng123 */
+/** Starlight over native vibranium armor for both player skins and humanoid creatures. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID, bus=EventBusSubscriber.Bus.MOD, value=Dist.CLIENT)
 public final class ProtectionAuraRendering {
     private ProtectionAuraRendering() {}

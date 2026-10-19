@@ -9,7 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.enchantment.Enchantments;
 
-/** Only a correctly worn protection-V vibranium set receives cosmic armor and light wings. @author NingMeng123 */
+/** Only a correctly worn protection-V vibranium set receives the starlight overlay. @author NingMeng123 */
 public final class ArmorAuraRules {
     private static final ResourceLocation PROTECTION = ResourceLocation.withDefaultNamespace("protection");
     private static final EquipmentSlot[] ARMOR = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};

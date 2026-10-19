@@ -1,5 +1,5 @@
 #version 150
-// View-ray cosmic armor window. Author: NingMeng123.
+// View-ray starlight over the original armor material. Author: NingMeng123.
 #moj_import <light.glsl>
 #moj_import <fog.glsl>
 in vec3 Position;

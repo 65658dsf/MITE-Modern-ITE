@@ -10,7 +10,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 
-/** Native armor geometry for an alpha-masked cosmic vibranium surface. @author NingMeng123 */
+/** Native armor geometry for transparent, alpha-masked starlight. @author NingMeng123 */
 public final class VibraniumCosmicModel<T extends LivingEntity> extends HumanoidArmorModel<T> {
     public static final ModelLayerLocation OUTER_LAYER = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "vibranium_cosmic"), "outer");

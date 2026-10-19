@@ -25,7 +25,8 @@ float field(vec3 p) {
 void main() {
     vec4 armor=texture(Sampler0,texCoord0);
     if (armor.a<0.1) discard;
-    // Native color is unused: every visible armor texel becomes a cosmic window.
+    // Native armor, lighting and trims are already rendered below this transparent pass.
+    // Its RGB also tints the starlight, while alpha preserves the original openings.
     vec3 ray=normalize(cosmicRay);
     ray.yz=turn(CosmicPitch)*ray.yz;
     ray.xz=turn(-CosmicYaw)*ray.xz;
@@ -33,15 +34,8 @@ void main() {
     vec3 drift=vec3(sin(phase),cos(phase),sin(phase+1.4))*.16;
     float mist=field(ray*2.3+drift);
     float clouds=pow(mist,3.0)*(.55+.45*field(ray*6.0-drift));
-    // Palette sampled from the original vibranium ingot: steel blue, alloy gray and sky blue.
-    // Keep the moving cosmic material, without restoring the original armor's painted pattern.
-    vec3 shadow=vec3(64.0,64.0,88.0)/255.0;
-    vec3 steel=vec3(74.0,92.0,138.0)/255.0;
-    vec3 alloy=vec3(110.0,110.0,134.0)/255.0;
     vec3 skyBlue=vec3(119.0,206.0,251.0)/255.0;
-    vec3 color=mix(shadow,steel,.45+.55*smoothstep(.15,.85,mist));
-    color=mix(color,alloy,.36*field(ray*5.2-drift));
-    color=mix(color,skyBlue,clouds*.52);
+    vec3 starlight=vec3(0.0);
     for (int layer=0; layer<8; layer++) {
         float n=float(layer);
         vec3 sky=ray;
@@ -58,12 +52,19 @@ void main() {
         float star=(1.0-smoothstep(size,size+.035,max(d.x,d.y)));
         // The rare cross is built from square arms, like a Minecraft star sprite.
         float cross=(1.0-smoothstep(.018,.035,min(d.x,d.y)))*(1.0-smoothstep(.09,.15,max(d.x,d.y)));
-        star+=cross*step(.88,seed)*.55;
+        star+=cross*step(.82,seed)*.85;
         star*=step(.72,seed)*(.65+.35*sin(phase*2.0+n+seed*20.0));
         vec3 tint=mix(skyBlue,vec3(216.0)/255.0,hash(cell.yx+n));
-        color+=tint*star*(.48+n*.045);
+        starlight+=tint*star*(.48+n*.045);
     }
+    float strength=max(starlight.r,max(starlight.g,starlight.b));
+    // Most texels retain over 96% of the native surface. Only compact stars brighten it more.
+    // Even a star's core stays translucent, so the texture is never replaced by a solid sky.
+    float opacity=(clouds*.035+clamp(strength*1.4,0.0,.8))*armor.a*vertexColor.a;
+    if (opacity<.003) discard;
+    vec3 glow=mix(skyBlue,vec3(1.0),clamp(strength*.9,0.0,1.0));
+    vec3 color=mix(armor.rgb,glow,.95);
     color*=vec3(.8)+vertexColor.rgb*.2;
     color=mix(overlayColor.rgb,color,overlayColor.a);
-    fragColor=linear_fog(vec4(clamp(color,0.0,1.0),1.0)*ColorModulator,vertexDistance,FogStart,FogEnd,FogColor);
+    fragColor=linear_fog(vec4(clamp(color,0.0,1.0),opacity)*ColorModulator,vertexDistance,FogStart,FogEnd,FogColor);
 }
