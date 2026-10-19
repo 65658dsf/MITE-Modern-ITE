@@ -212,6 +212,7 @@ public final class ExtremeMobEvents {
     }
     private static void playerMimic(LivingDropsEvent event,ServerPlayer player){
         if(!SpawnPopulation.automaticAllowed(player.serverLevel(),ExtremeMobs.type(MIMIC_ZOMBIE)))return;
+        if(player.getRandom().nextInt(4)!=0)return;
         Mob mimic=ExtremeMobs.type(MIMIC_ZOMBIE).create(player.serverLevel());if(!(mimic instanceof ExtremeMob e))return;
         MobAbilities.initialize(mimic,e);mimic.moveTo(player.position());e.extremeMemory().mimicName=player.getGameProfile().getName();
         mimic.setCustomName(Component.literal(e.extremeMemory().mimicName));mimic.setCustomNameVisible(true);mimic.setPersistenceRequired();mimic.setCanPickUpLoot(false);

@@ -38,6 +38,7 @@ import static io.github.ningmeng123.modernite.entity.ExtremeKind.*;
 
 /** Literal ability families translated to modern entities, with persistent stage transitions. @author NingMeng123 */
 public final class MobAbilities {
+    public static final float MIMIC_HEALTH=10F;
     private static final double DARK_GOLEM_LAUNCH_SPEED=15;
     // Half the apex height of speed 15 with vanilla air gravity .08 and drag (double).98F.
     // Halving the velocity instead would reach only 37.68% of the golem's height.
@@ -87,7 +88,7 @@ public final class MobAbilities {
             case ZOMBIE_JUMP -> health=rate*60+healthRate*15;
             case ZOMBIE_PUMPKIN -> {health=60;attack=8;speed=.23;}
             case ZOMBIE_IRON_BUCKET -> health=60;
-            case MIMIC_ZOMBIE -> {health=80;attack=10;}
+            case MIMIC_ZOMBIE -> {health=MIMIC_HEALTH;attack=10;}
             case ZOMBIE_CALLER -> {health=60;speed=.22;}
             case ZOMBIE_BOSS -> {int r=Math.min(limit,raw/10);health=20+r*45;attack=6+r;speed=.3;}
             case ZOMBIE_ELITE_LORD,ZOMBIE_LORD -> {health=rate*60+healthRate*15;attack=12;speed=.3;}
@@ -131,7 +132,16 @@ public final class MobAbilities {
         }
     }
     public static void initialize(Mob mob,ExtremeMob state){
-        var k=state.extremeKind();var s=state.extremeMemory();if(s.initialized){upgradeSavedCombat(mob,k);return;}s.initialized=true;
+        var k=state.extremeKind();var s=state.extremeMemory();
+        if(k==MIMIC_ZOMBIE){
+            // Normalize older saves without healing an injured substitute or retaining old day growth.
+            var health=mob.getAttribute(Attributes.MAX_HEALTH);
+            if(health!=null&&health.getBaseValue()!=MIMIC_HEALTH){
+                health.setBaseValue(MIMIC_HEALTH);health.removeModifier(io.github.ningmeng123.mite.entity.MonsterDayScaling.HEALTH_MODIFIER);
+                mob.setHealth(Math.min(mob.getHealth(),MIMIC_HEALTH));
+            }
+        }
+        if(s.initialized){upgradeSavedCombat(mob,k);return;}s.initialized=true;
         s.phaseMaximum=s.phaseCharges=mob.getRandom().nextInt(3)+2;
         if(mob instanceof Zombie zombie)zombie.setCanBreakDoors(true);
         if(k.family==Family.SKELETON)equip(mob,EquipmentSlot.MAINHAND,"minecraft:bow");

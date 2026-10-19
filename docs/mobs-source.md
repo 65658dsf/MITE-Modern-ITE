@@ -33,7 +33,7 @@
 | random_zombie | 随机僵尸 | EntityRandomZombie | 自然；通用维度 | 各槽独立概率：四甲每件50%、主手70%，独立材质与磨损；掉绿宝石 |
 | fishing_rod_zombie | 大头僵尸 | FishingRodEntity | 自然；通用维度 | 自身两倍头部、空手；15格可见玩家的头和帽层放大两倍，移速降低45%，镜头拉近（FOV系数再乘0.75）；效果刷新不叠加，结束恢复 |
 | mirror_zombie | 镜像僵尸 | EntityMirrorZombie | 自然；33 天起 | 复制目标装备/效果并扩展生命，复制装备不掉落、不共享 ItemStack |
-| mimic_zombie | 拟态僵尸 | EntityMimicZombie | 玩家实际死亡时生成 | 保留名字与在线皮肤，接管真实死亡掉落全背包并保存；死亡100%释放一次 |
+| mimic_zombie | 拟态僵尸 | EntityMimicZombie | 玩家实际死亡时25%概率生成；未生成或生成失败时正常掉落物品 | 固定10点生命（5颗心），不随天数增长；保留名字与在线皮肤，生成成功后接管真实死亡掉落全背包并保存；死亡100%释放一次 |
 | zombie_caller | 唤尸 | EntityZombieCaller | 自然；通用维度；地底锁敌或玩家攻击启动 | 开始召 4 僵尸，200 tick 再召 3，400 tick 自爆并出 7–9 蠹虫 |
 | zombie_boss | 僵尸BOSS | EntityZombieBoss | 33天起地底玩家成功破坏刷怪笼后50%挑战，并伴女巫领主 | 只接受玩家直接近战、伤害÷5、压制力量、远距雷击、挑战重置、伤害榜奖励 |
 | zombie_elite_lord | 僵尸精英领主 | EntityZombieEliteLord | 自然；33 天起；末影龙援军 | 振金装备、专属生命曲线、最多 24 次矿工/食尸鬼/尸妖/亡魂召援 |

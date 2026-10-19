@@ -91,7 +91,11 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public boolean enchantmentsCompatible(String left,String right,boolean original) { return ExtremeEnchantments.compatible(left,right,original); }
     @Override public io.github.ningmeng123.mite.progression.GearAffixRules.Definition affixDefinition(ItemStack stack,Holder<Enchantment> enchantment,io.github.ningmeng123.mite.progression.GearAffixRules.Definition original) { return ExtremeEnchantments.affixDefinition(stack,enchantment,original); }
     @Override public double maximumHealthAttributeRange(double original) { return 1_000_000D; }
-    @Override public double mobHealthLimit(Mob mob,double original) { return mob.getPersistentData().getBoolean("modern_ite:boss")?1_000_000D:original; }
+    @Override public double mobHealthLimit(Mob mob,double original) {
+        if(mob instanceof io.github.ningmeng123.modernite.entity.ExtremeMob extreme&&extreme.extremeKind()==io.github.ningmeng123.modernite.entity.ExtremeKind.MIMIC_ZOMBIE)
+            return io.github.ningmeng123.modernite.entity.MobAbilities.MIMIC_HEALTH;
+        return mob.getPersistentData().getBoolean("modern_ite:boss")?1_000_000D:original;
+    }
     @Override public R196FurnaceRules.Profile furnaceProfile(BlockState state,R196FurnaceRules.Profile original) { return state.is(ExtremeContent.VIBRANIUM_FURNACE.get())?new R196FurnaceRules.Profile(5,true,200):original; }
     @Override public R196FurnaceRules.Fuel fuel(ItemStack stack,R196FurnaceRules.Fuel original) { return stack.is(ExtremeContent.BLAZE_COAL.get())?new R196FurnaceRules.Fuel(6800,5):original; }
     @Override public int requiredHeat(ItemStack stack,int original) {

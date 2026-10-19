@@ -1,12 +1,14 @@
 package io.github.ningmeng123.modernite.entity;
 
 import com.mojang.authlib.GameProfile;
+import io.github.ningmeng123.mite.entity.MonsterDayScaling;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasionData;
 import io.github.ningmeng123.modernite.content.ExtremeContent;
 import io.github.ningmeng123.modernite.content.ExtremeEffects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -23,6 +25,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -36,6 +40,9 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.event.EventHooks;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -50,6 +57,13 @@ public final class ExtremeDeathAndExplosionGameTests {
         h.assertTrue(mob!=null,"Registered entity creates: "+kind);
         mob.moveTo(h.absolutePos(new BlockPos(2,2,2)).getCenter());
         MobAbilities.initialize(mob,(ExtremeMob)mob);mob.setNoAi(true);return mob;
+    }
+    private static void mimicRoll(ServerPlayer player,int roll){
+        for(long seed=0;seed<10_000;seed++){
+            player.getRandom().setSeed(seed);
+            if(player.getRandom().nextInt(4)==roll){player.getRandom().setSeed(seed);return;}
+        }
+        throw new IllegalStateException("No deterministic player random seed for mimic roll "+roll);
     }
 
     @GameTest(template="gear_empty")
@@ -93,10 +107,13 @@ public final class ExtremeDeathAndExplosionGameTests {
         ServerPlayer player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),name),ClientInformation.createDefault());
         player.setPos(h.absolutePos(new BlockPos(2,2,2)).getCenter());
         List<ItemEntity> incoming=new ArrayList<>();incoming.add(new ItemEntity(h.getLevel(),player.getX(),player.getY(),player.getZ(),new ItemStack(Items.DIAMOND,23)));
+        mimicRoll(player,0);
         ExtremeMobEvents.drops(new LivingDropsEvent(player,h.getLevel().damageSources().generic(),incoming,false));
         var mimics=h.getLevel().getEntitiesOfClass(Mob.class,player.getBoundingBox().inflate(2),m->m instanceof ExtremeMob e&&e.extremeKind()==ExtremeKind.MIMIC_ZOMBIE&&name.equals(e.extremeMemory().mimicName));
         h.assertTrue(mimics.size()==1&&incoming.isEmpty(),"Only after the mimic joins does the original drop collection transfer");
         Mob mimic=mimics.getFirst();List<ItemEntity> recovered=new ArrayList<>();
+        MonsterDayScaling.refresh(mimic);
+        h.assertTrue(mimic.getMaxHealth()==10&&mimic.getHealth()==10,"The spawned player substitute has exactly ten health after joining and calendar scaling");
         PlayerMimicInventory.release(mimic,recovered);
         h.assertTrue(mimic.isPersistenceRequired()&&recovered.size()==1&&recovered.getFirst().getItem().getCount()==23,"The persistent substitute owns the exact real player drop");
         mimic.discard();h.succeed();
@@ -107,6 +124,7 @@ public final class ExtremeDeathAndExplosionGameTests {
         String name="KeptItems"+UUID.randomUUID().toString().substring(0,5);
         ServerPlayer player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),name),ClientInformation.createDefault());
         player.setPos(h.absolutePos(new BlockPos(2,2,2)).getCenter());player.getInventory().setItem(0,new ItemStack(Items.DIAMOND,11));
+        mimicRoll(player,0);
         ExtremeMobEvents.drops(new LivingDropsEvent(player,h.getLevel().damageSources().generic(),new ArrayList<>(),false));
         var mimics=h.getLevel().getEntitiesOfClass(Mob.class,player.getBoundingBox().inflate(2),m->m instanceof ExtremeMob e&&name.equals(e.extremeMemory().mimicName));
         h.assertTrue(mimics.size()==1,"A substitute can spawn for a death with no transferable drops");List<ItemEntity> recovered=new ArrayList<>();
@@ -115,14 +133,105 @@ public final class ExtremeDeathAndExplosionGameTests {
         mimics.getFirst().discard();h.succeed();
     }
 
+    @GameTest(template="gear_empty")
+    public static void unsuccessfulMimicRollLeavesTheOriginalPlayerDropsUntouched(GameTestHelper h){
+        for(int roll=1;roll<4;roll++){
+            String name="DeathDrops"+UUID.randomUUID().toString().substring(0,5);
+            ServerPlayer player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),name),ClientInformation.createDefault());
+            player.setPos(h.absolutePos(new BlockPos(2,2,2)).getCenter());
+            ItemStack diamonds=new ItemStack(Items.DIAMOND,23);diamonds.set(DataComponents.CUSTOM_NAME,Component.literal("Unclaimed diamonds"));
+            ItemStack helmet=new ItemStack(Items.IRON_HELMET);helmet.setDamageValue(37);
+            helmet.enchant(h.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.PROTECTION),5);
+            List<ItemStack> stacks=List.of(diamonds,helmet),expected=stacks.stream().map(ItemStack::copy).toList();
+            List<ItemEntity> originals=stacks.stream().map(stack->new ItemEntity(h.getLevel(),player.getX(),player.getY(),player.getZ(),stack)).toList();
+            List<ItemEntity> incoming=new ArrayList<>(originals);
+            LivingDropsEvent event=new LivingDropsEvent(player,h.getLevel().damageSources().generic(),incoming,false);
+            mimicRoll(player,roll);ExtremeMobEvents.drops(event);
+            var mimics=h.getLevel().getEntitiesOfClass(Mob.class,player.getBoundingBox().inflate(2),m->m instanceof ExtremeMob e&&e.extremeKind()==ExtremeKind.MIMIC_ZOMBIE&&name.equals(e.extremeMemory().mimicName));
+            try{
+                h.assertTrue(mimics.isEmpty(),"Mimic roll "+roll+" does not spawn a substitute");
+                h.assertTrue(!event.isCanceled()&&event.getDrops()==incoming&&incoming.size()==originals.size(),"Mimic roll "+roll+" preserves the normal death-drop event and collection");
+                for(int i=0;i<originals.size();i++)h.assertTrue(incoming.get(i)==originals.get(i)&&!incoming.get(i).isRemoved()&&incoming.get(i).getItem()==stacks.get(i)&&ItemStack.matches(expected.get(i),incoming.get(i).getItem()),"Mimic roll "+roll+" preserves original item entity, stack, count, name, wear and enchantments in drop "+i);
+            }finally{mimics.forEach(Mob::discard);}
+        }h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void canceledMimicJoinLeavesTheOriginalPlayerDropsUntouched(GameTestHelper h){
+        String name="DeniedMimic"+UUID.randomUUID().toString().substring(0,5);
+        ServerPlayer player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),name),ClientInformation.createDefault());
+        player.setPos(h.absolutePos(new BlockPos(2,2,2)).getCenter());
+        ItemStack stack=new ItemStack(Items.DIAMOND,23);stack.set(DataComponents.CUSTOM_NAME,Component.literal("Unclaimed after denied join"));ItemStack expected=stack.copy();
+        ItemEntity original=new ItemEntity(h.getLevel(),player.getX(),player.getY(),player.getZ(),stack);
+        List<ItemEntity> incoming=new ArrayList<>(List.of(original));List<Mob> attempts=new ArrayList<>();
+        Consumer<EntityJoinLevelEvent> deny=event->{if(event.getEntity() instanceof Mob mimic&&mimic instanceof ExtremeMob e&&e.extremeKind()==ExtremeKind.MIMIC_ZOMBIE&&name.equals(e.extremeMemory().mimicName)){attempts.add(mimic);event.setCanceled(true);}};
+        NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST,EntityJoinLevelEvent.class,deny);
+        try{
+            LivingDropsEvent event=new LivingDropsEvent(player,h.getLevel().damageSources().generic(),incoming,false);
+            mimicRoll(player,0);ExtremeMobEvents.drops(event);
+            h.assertTrue(attempts.size()==1,"The successful probability roll attempts exactly one substitute join");
+            h.assertTrue(h.getLevel().getEntitiesOfClass(Mob.class,player.getBoundingBox().inflate(2),m->m instanceof ExtremeMob e&&name.equals(e.extremeMemory().mimicName)).isEmpty(),"A canceled substitute join does not leave a substitute in the world");
+            h.assertTrue(!event.isCanceled()&&incoming.size()==1&&incoming.getFirst()==original&&!original.isRemoved()&&original.getItem()==stack&&ItemStack.matches(expected,stack),"A failed substitute join preserves the normal player drop, original item entity, stack count and components");
+        }finally{NeoForge.EVENT_BUS.unregister(deny);attempts.forEach(Mob::discard);}
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void mimicHealthStaysTenAcrossDaysRefreshesAndReloadsWithoutHealing(GameTestHelper h){
+        var level=h.getLevel().getServer().overworld();var history=BloodMoonInvasionData.get(level);
+        long time=level.getDayTime(),highest=history.highestDay();boolean dirty=history.isDirty();
+        try{
+            level.setDayTime(0);history.restoreProgress(1);
+            Mob mimic=mob(h,ExtremeKind.MIMIC_ZOMBIE);
+            h.assertTrue(mimic.getMaxHealth()==10&&mimic.getHealth()==10,"A newly created substitute starts at exactly ten health");
+            mimic.setHealth(4);
+            for(long day:new long[]{1,32,128,366,10_000}){
+                level.setDayTime((day-1)*24_000L);history.restoreProgress(day);
+                for(int refresh=0;refresh<3;refresh++){
+                    MobAbilities.initialize(mimic,(ExtremeMob)mimic);MonsterDayScaling.refresh(mimic);
+                    h.assertTrue(mimic.getAttributeBaseValue(Attributes.MAX_HEALTH)==10&&mimic.getMaxHealth()==10&&mimic.getHealth()==4,"Day "+day+" refresh "+refresh+" keeps ten maximum health without healing injuries");
+                }
+                CompoundTag saved=new CompoundTag();mimic.saveWithoutId(saved);
+                Mob loaded=ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE).create(h.getLevel());loaded.load(saved);
+                MobAbilities.initialize(loaded,(ExtremeMob)loaded);MonsterDayScaling.refresh(loaded);
+                h.assertTrue(loaded.getMaxHealth()==10&&loaded.getHealth()==4,"A day "+day+" save reload keeps ten maximum health and the existing injury");
+                mimic=loaded;
+            }
+        }finally{level.setDayTime(time);history.restoreProgress(highest);history.setDirty(dirty);}
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void legacyMimicHealthAndGrowthAreNormalizedWithoutHealing(GameTestHelper h){
+        var level=h.getLevel().getServer().overworld();var history=BloodMoonInvasionData.get(level);
+        long time=level.getDayTime(),highest=history.highestDay();boolean dirty=history.isDirty();
+        try{
+            level.setDayTime(365*24_000L);history.restoreProgress(366);
+            for(float health:new float[]{80,4}){
+                Mob legacy=mob(h,ExtremeKind.MIMIC_ZOMBIE);var attribute=legacy.getAttribute(Attributes.MAX_HEALTH);
+                attribute.setBaseValue(80);attribute.addPermanentModifier(new AttributeModifier(MonsterDayScaling.HEALTH_MODIFIER,.5,AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));legacy.setHealth(health);
+                CompoundTag saved=new CompoundTag();legacy.saveWithoutId(saved);
+                Mob loaded=ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE).create(h.getLevel());loaded.load(saved);
+                h.assertTrue(((ExtremeMob)loaded).extremeMemory().initialized&&loaded.getMaxHealth()==120,"The legacy fixture retains its initialized eighty-health baseline and old calendar modifier");
+                MobAbilities.initialize(loaded,(ExtremeMob)loaded);
+                h.assertTrue(loaded.getAttributeBaseValue(Attributes.MAX_HEALTH)==10&&loaded.getAttribute(Attributes.MAX_HEALTH).getModifier(MonsterDayScaling.HEALTH_MODIFIER)==null&&loaded.getMaxHealth()==10&&loaded.getHealth()==Math.min(health,10),"Loading an old substitute removes legacy health and growth while clipping excess health without healing");
+                MonsterDayScaling.refresh(loaded);MobAbilities.initialize(loaded,(ExtremeMob)loaded);MonsterDayScaling.refresh(loaded);
+                h.assertTrue(loaded.getMaxHealth()==10&&loaded.getHealth()==Math.min(health,10),"Repeated initialization and growth refresh preserve the migrated substitute's injury");
+            }
+        }finally{level.setDayTime(time);history.restoreProgress(highest);history.setDirty(dirty);}
+        h.succeed();
+    }
+
     @GameTest(template="gear_empty",timeoutTicks=40)
     public static void invisibleCreeperExplosionCannotCreateAnInfiniteInvisibilityCloud(GameTestHelper h){
         Creeper creeper=(Creeper)mob(h,ExtremeKind.INVISIBLE_CREEPER);
+        // The one-block template only forces its own chunk; keep the ticking creeper inside it.
+        creeper.moveTo(h.absolutePos(new BlockPos(0,2,0)).getCenter());
         CompoundTag saved=new CompoundTag();creeper.saveWithoutId(saved);saved.putShort("Fuse",(short)1);saved.putByte("ExplosionRadius",(byte)0);creeper.load(saved);
         h.getLevel().addFreshEntity(creeper);creeper.ignite();
         var bounds=creeper.getBoundingBox().inflate(3);
         h.runAfterDelay(5,()->{
-            h.assertTrue(creeper.isRemoved(),"The real creeper fuse completes");
+            h.assertTrue(creeper.isRemoved(),"The real creeper fuse completes (entity ticks="+creeper.tickCount+", ignited="+creeper.isIgnited()+")");
             h.assertTrue(h.getLevel().getEntitiesOfClass(AreaEffectCloud.class,bounds).isEmpty(),"No lingering potion cloud is created from the permanent invisibility buff");h.succeed();
         });
     }
