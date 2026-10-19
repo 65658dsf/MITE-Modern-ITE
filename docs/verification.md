@@ -6,6 +6,16 @@
 
 当前版本为 **0.2.0**，已移除背部光翼及安装座，保留振金原纹理并在甲面叠加星光，全套振金每件保护至少V的触发门槛保持。本轮构建、14项JUnit、标题页、实际GPU及包一致性检查通过，源码按功能分类提交。以下0.1.12及更早的通过结果、包哈希和光翼预览均为历史证据，不能作为0.2.0验收结果。
 
+## 0.2.0 击退僵尸水平击退修正（2026-10-19）
+
+击退僵尸从大力士的固定上抛分支分离，成功近战结束后追加 `3.2` 格/tick的向外水平速度，纵向完全保留原生受击及既有跳跃／下落速度。大力士与暗黑铁傀儡的上抛规则保持；下方0.1.10两种僵尸统一上抛的记录属于历史行为。
+
+使用固定依赖 `build/verification/base/mite-0.1.10.jar`，独立构建、14项JUnit与14项战斗GameTest全部通过。新增回归用真实 `doHurtTarget` 对照普通僵尸，覆盖地面／跳跃／下落、四个攻击方向、普通／完全击退抗性共24组，确认明显水平推离、方向正确、纵向速度与普通受击一致；保留大力士半高、运动状态不改变上抛高度、拒绝伤害不追加特技和速度codec检查。
+
+本次只运行 `ExtremeCombatRegressionGameTests`，未重跑全量GameTest或客户端。日志为 `build/verification/knockback-fix-gametest.log`；测试包 `build/knockback-fix-build/libs/modern-ite-0.2.0.jar` 包含当前工作区的其他待提交更改。
+
+提交前仅提取本次5个文件的改动，在 `build/verification/knockback-commit/snapshot` 独立完成构建、14项JUnit和14项战斗GameTest，全部通过；日志为 `build/verification/knockback-commit/candidate-build.log`。
+
 ## 0.2.0 灯笼提携动画与耐久（2026-10-19）
 
 第一人称绘制真实玩家手臂和袖子，手掌握住提环，前臂从侧面伸入，灯体向下悬挂；站立轻晃、行走摆动并保留装备切换和挥手过渡。第三人称提臂姿态、掌心锚点和悬挂摆动同步支持左右惯用手及主副手。弓弩、盾、望远镜、游泳等动作保留原有手臂姿态。
@@ -68,7 +78,7 @@
 
 日志：`build/verification/commit-prep/submission-build-gametest.log`、`submission-client.log`、`submission-render.log`。完整独立核对记录为 `build/verification/commit-prep/submission-validation.json`；标题页和GPU报告在同目录的 `snapshot/build/verification/`。真实多人高延迟、Better Combat安装后的实战及长期生存平衡仍待游玩验证。
 
-## 0.1.10 大力士与击退僵尸向上击飞
+## 0.1.10 历史行为：大力士与击退僵尸向上击飞
 
 本次“大力士僵尸”和“击飞僵尸”分别对应 `modern_ite:zombie_fly_away` 与现名“击退僵尸”的 `modern_ite:zombie_knockback`；旧Extreme资源和当前注册均没有第三个独立“击飞僵尸”身份。两者的成功近战命中统一为向上抛飞：最终 `vy = 9.105464833` 格/tick，水平速度仅作 `0.25` 格/tick的小幅分离；不再随天数增大，也不保留原击退僵尸的远距离水平弹射。
 

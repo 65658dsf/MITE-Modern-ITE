@@ -59,7 +59,7 @@ public final class ExtremeCombatRegressionGameTests {
     }
     @GameTest(template="gear_empty")
     public static void knockbackAndLaunchSkillsUseTheirStrongerImpulses(GameTestHelper h){
-        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_KNOCKBACK,ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.DARK_IRON_GOLEM}){
+        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.DARK_IRON_GOLEM}){
             var launched=realMeleeLaunch(h,kind,true,new Vec3(1.8,-.0784,-1.2),0);
             h.assertTrue(launched.getDeltaMovement().y>3.9,"The completed real melee hit retains its strong upward velocity after vanilla knockback: "+kind);
             assertMostlyVertical(h,launched,kind);
@@ -71,20 +71,40 @@ public final class ExtremeCombatRegressionGameTests {
         h.assertTrue(target.hasEffect(MobEffects.LEVITATION),"Floating skeleton's real hit handler applies levitation");h.succeed();
     }
     @GameTest(template="gear_empty")
-    public static void zombieLaunchApexIsHalfTheDarkGolemApexUnderRealPlayerTravel(GameTestHelper h){
-        var golemTarget=realMeleeLaunch(h,ExtremeKind.DARK_IRON_GOLEM,true,new Vec3(0,-.0784,0),0);
-        double golemRise=travelToApex(h,golemTarget);
-        h.assertTrue(golemRise>400,"The reference golem launch exercises an unobstructed full-strength ascent, rather than vanilla's clipped ground knockback");
-        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.ZOMBIE_KNOCKBACK}){
-            var target=realMeleeLaunch(h,kind,true,new Vec3(0,-.0784,0),0);
-            double rise=travelToApex(h,target);
-            h.assertTrue(Math.abs(rise-golemRise*.5)<.02,"Actual Player.travel ascent reaches half the golem height: "+kind+" rose "+rise+" versus golem "+golemRise);
+    public static void knockbackZombiePushesAwayWithoutChangingVanillaVerticalMotion(GameTestHelper h){
+        var directions=new Vec3[]{new Vec3(1,0,0),new Vec3(-1,0,0),new Vec3(0,0,1),new Vec3(0,0,-1)};
+        for(int resistance=0;resistance<=1;resistance++){
+            for(int scenario=0;scenario<3;scenario++){
+                boolean grounded=scenario==0;
+                var initial=new Vec3(.2,scenario==0?-.0784:scenario==1?.6:-.8,-.1);
+                for(var away:directions){
+                    Zombie reference=EntityType.ZOMBIE.create(h.getLevel());
+                    h.assertTrue(reference!=null,"The vanilla zombie reference creates");
+                    var normal=realMeleeMotion(h,reference,grounded,initial,resistance,away);
+                    var pushed=realMeleeMotion(h,mob(h,ExtremeKind.ZOMBIE_KNOCKBACK),grounded,initial,resistance,away);
+                    Vec3 extra=pushed.subtract(normal);
+                    String context=" scenario="+scenario+" resistance="+resistance+" away="+away;
+                    h.assertTrue(extra.dot(away)>3,"The real knockback zombie hit adds a strong horizontal push away from the attacker"+context);
+                    h.assertTrue(Math.abs(extra.x*away.z-extra.z*away.x)<.000001,"The extra push follows the attack direction"+context);
+                    h.assertTrue(Math.abs(pushed.y-normal.y)<.000001,"The real knockback zombie hit preserves vanilla grounded, jumping and falling vertical motion"+context);
+                }
+            }
         }
         h.succeed();
     }
     @GameTest(template="gear_empty")
+    public static void zombieLaunchApexIsHalfTheDarkGolemApexUnderRealPlayerTravel(GameTestHelper h){
+        var golemTarget=realMeleeLaunch(h,ExtremeKind.DARK_IRON_GOLEM,true,new Vec3(0,-.0784,0),0);
+        double golemRise=travelToApex(h,golemTarget);
+        h.assertTrue(golemRise>400,"The reference golem launch exercises an unobstructed full-strength ascent, rather than vanilla's clipped ground knockback");
+        var target=realMeleeLaunch(h,ExtremeKind.ZOMBIE_FLY_AWAY,true,new Vec3(0,-.0784,0),0);
+        double rise=travelToApex(h,target);
+        h.assertTrue(Math.abs(rise-golemRise*.5)<.02,"Actual Player.travel ascent reaches half the golem height: strong zombie rose "+rise+" versus golem "+golemRise);
+        h.succeed();
+    }
+    @GameTest(template="gear_empty")
     public static void launchApexStaysFixedAcrossGroundAirMotionAndKnockbackResistance(GameTestHelper h){
-        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.ZOMBIE_KNOCKBACK,ExtremeKind.DARK_IRON_GOLEM}){
+        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.DARK_IRON_GOLEM}){
             double baseline=-1;
             for(int resistance=0;resistance<=1;resistance++){
                 for(int scenario=0;scenario<3;scenario++){
@@ -139,6 +159,19 @@ public final class ExtremeCombatRegressionGameTests {
         float health=target.getHealth();
         h.assertTrue(attacker.doHurtTarget(target)&&target.getHealth()<health,"The registered monster completes real damaging melee before launch checks: "+kind);
         return target;
+    }
+    private static Vec3 realMeleeMotion(GameTestHelper h,Mob attacker,boolean grounded,Vec3 initial,double resistance,Vec3 away){
+        var target=launchTarget(h);
+        attacker.moveTo(target.position().subtract(away));attacker.setNoAi(true);attacker.removeAllEffects();
+        for(var slot:EquipmentSlot.values())attacker.setItemSlot(slot,ItemStack.EMPTY);
+        attacker.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(2);
+        var knockback=attacker.getAttribute(Attributes.ATTACK_KNOCKBACK);
+        if(knockback!=null)knockback.setBaseValue(0);
+        target.setOnGround(grounded);target.setDeltaMovement(initial);
+        target.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(resistance);
+        float health=target.getHealth();
+        h.assertTrue(attacker.doHurtTarget(target)&&target.getHealth()<health,"The comparison completes a real damaging zombie melee hit");
+        return target.getDeltaMovement();
     }
     private static void assertMostlyVertical(GameTestHelper h,Player target,ExtremeKind kind){
         Vec3 velocity=target.getDeltaMovement();

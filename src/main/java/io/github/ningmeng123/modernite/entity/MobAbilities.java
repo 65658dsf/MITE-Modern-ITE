@@ -402,7 +402,11 @@ public final class MobAbilities {
     public static void afterMeleeHit(Mob mob,ExtremeMob state,LivingEntity target){
         if(mob.level().isClientSide||!target.isAlive())return;
         var kind=state.extremeKind();
-        if(kind!=ZOMBIE_FLY_AWAY&&kind!=ZOMBIE_KNOCKBACK&&kind!=DARK_IRON_GOLEM)return;
+        if(kind==ZOMBIE_KNOCKBACK){
+            // Restore its horizontal shove while preserving ordinary hit, jump or fall motion on Y.
+            knock(mob,target,3.2,0);return;
+        }
+        if(kind!=ZOMBIE_FLY_AWAY&&kind!=DARK_IRON_GOLEM)return;
         if(kind==ZOMBIE_FLY_AWAY){mob.swing(InteractionHand.MAIN_HAND);mob.playSound(SoundEvents.IRON_GOLEM_ATTACK,1,.85F);}
         Vec3 away=target.position().subtract(mob.position()).multiply(1,0,1).normalize();
         if(away.lengthSqr()<.001)away=mob.getLookAngle().multiply(1,0,1).normalize();

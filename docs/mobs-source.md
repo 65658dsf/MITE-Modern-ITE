@@ -20,7 +20,7 @@
 | zombie_fly_away | 大力士僵尸 | EntityZombieFlyAway | 自然；通用维度 | 低基础攻击、固定向上击飞9.105464833及水平分离0.25、铁傀儡双臂上挑动画、速度 II |
 | zombie_ghast | 恶魂僵尸 | EntityZombieGhast | 自然；33 天起 | 迷你恶魂头及触须、发射时恶魂嘶叫、64 格预测 NB 火球，下界五连发 |
 | zombie_jump | 倒立僵尸 | EntityZombieJump | 自然；通用维度 | 倒立渲染、命中颠倒 120 tick、专属生命曲线 |
-| zombie_knockback | 击退僵尸 | EntityZombieKnockback | 自然；通用维度 | 本次所称“击飞僵尸”；固定向上击飞9.105464833及水平分离0.25、速度增益 |
+| zombie_knockback | 击退僵尸 | EntityZombieKnockback | 自然；通用维度 | 成功近战命中追加背离攻击者的水平击退3.2，纵向沿用普通受击／跳跃／下落速度、速度增益 |
 | zombie_invisible_look_up | 仰头僵尸 | EntityZombieInvisibleLookUp | 自然；通用维度 | 5% 可见度、命中强制仰头 200 tick |
 | zombie_pumpkin | 万圣僵尸 | EntityZombiePumpkin | 自然；通用维度 | 南瓜头、60 基础生命、命中原版南瓜头视野遮罩 600 tick |
 | zombie_iron_bucket | 铁桶僵尸 | EntityZombieIronBucket | 自然；通用维度 | 倒扣铁桶几何头盔（玩家也适用）、60 基础生命 |
@@ -84,7 +84,13 @@
 
 0.1.7：所有女巫拒绝互相选为攻击目标和互伤；锁定玩家后每160 tick召唤吸血蝙蝠、蜘蛛/洞穴蜘蛛，附近同源随从最多8只。镜像骷髅及骷髅僵尸按武器类型幂等切换本体Source战斗目标，保留Better Combat桥接；僵尸领主使用同一近战入口。
 
-## 0.1.10 大力士与击退僵尸向上击飞
+## 0.2.0 击退僵尸恢复水平击退（2026-10-19）
+
+`modern_ite:zombie_knockback` 成功近战命中后追加背离攻击者方向的 `3.2` 格/tick水平速度，纵向保留原生受击及既有跳跃／下落速度，不再使用大力士的固定上抛。仍在实际 `doHurtTarget` 成功返回后应用，拒绝伤害时不追加击退，并沿用玩家速度同步。大力士僵尸和暗黑铁傀儡的上抛行为保持。
+
+## 0.1.10 历史行为：大力士与击退僵尸向上击飞
+
+以下是0.1.10的历史实现与验收；击退僵尸的现行行为以上方0.2.0修正为准。
 
 当前“大力士僵尸”为 `ZOMBIE_FLY_AWAY` / `modern_ite:zombie_fly_away`，本次所称“击飞僵尸”为现名“击退僵尸”的 `ZOMBIE_KNOCKBACK` / `modern_ite:zombie_knockback`。旧Extreme中文资源也分别称“大力士僵尸”“击退僵尸”，没有第三种独立身份，注册ID保留。
 
