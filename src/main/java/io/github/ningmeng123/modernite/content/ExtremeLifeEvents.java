@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.content;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.mite.survival.PlayerExperience;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.mite.block.entity.StrongboxBlockEntity;
@@ -47,12 +48,24 @@ public final class ExtremeLifeEvents {
     @SubscribeEvent public static void tick(PlayerTickEvent.Post event) {
         if(!(event.getEntity() instanceof ServerPlayer player)||player.isSpectator()||player.isCreative())return;
         tickLantern(player);
-        var data=player.getPersistentData();var penalty=data.getCompound(PENALTY);boolean under=R196MobSpawning.underworld(player.serverLevel());
+        advanceUnderworldFatigue(player,R196MobSpawning.underworld(player.serverLevel()));
+    }
+    /** Reuses the existing Extreme counter and its one-day recovery, rather than adding another penalty. */
+    public static void advanceUnderworldFatigue(ServerPlayer player,boolean under) {
+        var data=player.getPersistentData();
+        if(!IteConfig.bool("underworld_debuff")){data.remove(PENALTY);return;}
+        var penalty=data.getCompound(PENALTY);
         int elapsed=penalty.getInt("elapsed"), recovery=penalty.getInt("recovery");boolean active=penalty.getBoolean("active");
-        if(under){ elapsed=(int)Math.min(Integer.MAX_VALUE,(long)elapsed+1);recovery=0; if(elapsed>=54000)active=true;
-            if(active&&player.tickCount%100==0)player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,220,0));
-            if(active&&!penalty.getBoolean("warned")){player.sendSystemMessage(Component.translatable("message.modern_ite.underworld_penalty"));penalty.putBoolean("warned",true);}
+        int first=IteConfig.integer("underworld_debuff_period1"),second=Math.max(first,IteConfig.integer("underworld_debuff_period2"));
+        if(under){ elapsed=(int)Math.min(Integer.MAX_VALUE,Math.max(0L,(long)elapsed)+1);recovery=0; if(elapsed>=first)active=true;
+            int stage=elapsed>=second?2:elapsed>=first?1:0;
+            if(stage>0&&(player.tickCount%100==0||stage>penalty.getInt("warned_stage")))player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,220,stage-1));
+            if(stage>penalty.getInt("warned_stage")){
+                player.sendSystemMessage(Component.translatable(stage==2?"message.modern_ite.underworld_penalty_second":"message.modern_ite.underworld_penalty"));
+                penalty.putBoolean("warned",true);penalty.putInt("warned_stage",stage);
+            }
         }else if(active&&++recovery>=24000){elapsed=0;recovery=0;active=false;penalty.putBoolean("warned",false);player.sendSystemMessage(Component.translatable("message.modern_ite.underworld_recovered"));}
+        if(!active)penalty.remove("warned_stage");
         penalty.putInt("elapsed",elapsed);penalty.putInt("recovery",recovery);penalty.putBoolean("active",active);penalty.putInt("version",1);data.put(PENALTY,penalty);
     }
     @SubscribeEvent(priority=EventPriority.LOW) public static void resurrect(LivingDeathEvent event) {

@@ -3,6 +3,7 @@ import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.enchantment.R196EnchantmentCatalog;
 import io.github.ningmeng123.mite.progression.GearProgress;
 import io.github.ningmeng123.mite.progression.GearProgression;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.*;
 import net.minecraft.core.BlockPos;
@@ -89,6 +90,46 @@ public final class EnchantmentGameTests {
    h.assertTrue(victim.hurt(attacker.damageSources().mobAttack(attacker),5F),"The enchanted monster hit uses the same pipeline");
    h.assertTrue(Math.abs((1000-victim.getHealth())-(baseline*1.5F+2F))<.001F,"At the source guaranteed critical rank the monster deals baseline times1.5 plus0.4 per rank");
   }finally{attacker.discard();victim.discard();}h.succeed();
+ }
+ @GameTest(template="gear_empty",batch="ite_config") public static void configuredConquerorScalesRepeatedHitsAndKeepsTargetsIndependent(GameTestHelper h) {
+  double previous=IteConfig.number("conqueror_damage_boost_per_lvl");
+  var victim=h.spawn(net.minecraft.world.entity.EntityType.COW,new BlockPos(2,2,1));
+  var untouched=h.spawn(net.minecraft.world.entity.EntityType.COW,new BlockPos(3,2,1));
+  try(Session session=new Session(h)) {
+   IteConfig.setting("conqueror_damage_boost_per_lvl").set(2.5D);IteConfig.refresh();
+   var weapon=new ItemStack(Items.IRON_SWORD);weapon.enchant(enchant(h,"conqueror"),2);session.player.setItemSlot(EquipmentSlot.MAINHAND,weapon);
+   for(var cow:List.of(victim,untouched)){cow.setNoAi(true);cow.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(1000);cow.setHealth(1000);}
+   h.assertTrue(victim.hurt(session.player.damageSources().playerAttack(session.player),5F),"The first direct hit follows the real damage pipeline");
+   float first=1000-victim.getHealth();victim.invulnerableTime=0;
+   h.assertTrue(victim.hurt(session.player.damageSources().playerAttack(session.player),5F),"The second direct hit also succeeds");
+   float second=1000-victim.getHealth()-first;
+   h.assertTrue(Math.abs(second-first-5F)<.001F,"Rank two gains exactly two times the configured2.5per previous successful hit");
+   h.assertTrue(untouched.hurt(session.player.damageSources().playerAttack(session.player),5F),"A fresh target can be attacked");
+   h.assertTrue(Math.abs((1000-untouched.getHealth())-first)<.001F,"Conqueror history belongs to each player-target pair");
+  }finally{IteConfig.setting("conqueror_damage_boost_per_lvl").set(previous);IteConfig.refresh();victim.discard();untouched.discard();}h.succeed();
+ }
+ @GameTest(template="gear_empty",batch="ite_config") public static void configuredEmergencyCooldownAboveTheFormerLimitSurvivesItemPersistence(GameTestHelper h) {
+  int previous=IteConfig.integer("emergency_cooldown_");
+  try(Session session=new Session(h)) {
+   IteConfig.setting("emergency_cooldown_").set(240000);IteConfig.refresh();
+   var armor=new ItemStack(Items.IRON_CHESTPLATE);armor.enchant(enchant(h,"emergency"),1);session.player.setItemSlot(EquipmentSlot.CHEST,armor);
+   session.player.setHealth(0);var death=new LivingDeathEvent(session.player,session.player.damageSources().generic());NeoForge.EVENT_BUS.post(death);
+   h.assertTrue(death.isCanceled()&&armor.getOrDefault(ExtremeEnchantments.EMERGENCY_COOLDOWN.get(),0)==240000,"The configured base cooldown is applied to real equipment");
+   var saved=ItemStack.parse(h.getLevel().registryAccess(),armor.save(h.getLevel().registryAccess())).orElseThrow();
+   h.assertTrue(saved.getOrDefault(ExtremeEnchantments.EMERGENCY_COOLDOWN.get(),0)==240000,"The widened persistent codec retains cooldowns beyond120000ticks");
+  }finally{IteConfig.setting("emergency_cooldown_").set(previous);IteConfig.refresh();}h.succeed();
+ }
+ @GameTest(template="gear_empty",batch="ite_config") public static void disablingTheGuardEnchantmentRequirementOnlyUnlocksEligibleVibraniumTools(GameTestHelper h) {
+  boolean previous=IteConfig.bool("player_enchant_defense");
+  try {
+   var tool=new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("mite:vibranium_sword")));
+   h.assertTrue(!tool.isEmpty(),"The test uses the actual registered vibranium sword");
+   IteConfig.setting("player_enchant_defense").set(true);IteConfig.refresh();
+   h.assertTrue(!ExtremeEnchantments.guard(tool),"An ordinary eligible tool still needs its enchantment by default");
+   IteConfig.setting("player_enchant_defense").set(false);IteConfig.refresh();
+   h.assertTrue(ExtremeEnchantments.guard(tool)&&tool.getUseDuration(h.makeMockPlayer(GameType.SURVIVAL))==ExtremeEnchantments.guardDuration(),"Disabling the requirement also updates the real Item use duration");
+   h.assertTrue(!ExtremeEnchantments.guard(new ItemStack(Items.IRON_SWORD))&&!ExtremeEnchantments.guard(new ItemStack(Items.APPLE)),"Other materials and food do not become guarding tools");
+  }finally{IteConfig.setting("player_enchant_defense").set(previous);IteConfig.refresh();}h.succeed();
  }
  private static final class Session implements AutoCloseable {
   final ServerPlayer player;final EmbeddedChannel channel;

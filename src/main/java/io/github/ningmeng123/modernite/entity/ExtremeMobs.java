@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.mite.api.MiteExtensions;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import java.util.EnumMap;
@@ -91,15 +92,22 @@ public final class ExtremeMobs {
     public static void addSpawnEntries(MiteExtensions.SpawnContext context,BlockPos position,List<R196MobSpawning.Entry> entries){
         if(context.category()!=io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER)return;
         var level=context.level();
-        if(level.dimension()==Level.OVERWORLD&&MobAbilities.day(level)>=128
+        if(level.dimension()==Level.OVERWORLD&&MobAbilities.day(level)>=IteConfig.integer("GameMechanics.MobSpawning.ghast_spawn_limit_day")
                 &&io.github.ningmeng123.mite.rules.LunarCalendar.state(level.getDayTime(),true).bloodPeriod()
                 &&level.getEntitiesOfClass(Ghast.class,new net.minecraft.world.phys.AABB(position).inflate(64)).isEmpty()
                 &&level.isEmptyBlock(position.above())&&level.isEmptyBlock(position.above(2))&&level.isEmptyBlock(position.above(3)))
             entries.add(new R196MobSpawning.Entry(EntityType.GHAST,null,context.category(),2,1,1,1,true));
         for(var kind:ExtremeKind.values()) {
-            if(kind.weight==0||!MobAbilities.maySpawn(kind,context.level(),position))continue;
-            entries.add(new R196MobSpawning.Entry(type(kind),null,context.category(),kind.weight,1,1,1,true));
+            int weight=spawnWeight(kind);
+            if(weight==0||!MobAbilities.maySpawn(kind,context.level(),position))continue;
+            entries.add(new R196MobSpawning.Entry(type(kind),null,context.category(),weight,1,1,1,true));
         }
+    }
+    public static int spawnWeight(ExtremeKind kind){
+        return switch(kind){
+            case ZOMBIE_LORD,ZOMBIE_PIGMAN_LORD,ANNIHILATION_SKELETON,WANDERING_WITCH -> IteConfig.integer("GameMechanics.MobSpawning."+kind.id()+"_spawn_frequency");
+            default -> kind.weight;
+        };
     }
     public static boolean isBoss(Mob mob){return mob instanceof ExtremeMob e&&e.extremeKind().boss();}
     public static class ZombieVariant extends Zombie implements ExtremeMob {

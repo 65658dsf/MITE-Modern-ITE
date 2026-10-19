@@ -10,6 +10,7 @@ import io.github.ningmeng123.mite.progression.GearAffixRules;
 import io.github.ningmeng123.mite.progression.GearProgression;
 import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.ToolFamily;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -66,7 +67,7 @@ public final class ExtremeEnchantments {
         new Definition("conqueror",5,10,15),new Definition("beheading",5,10,10),new Definition("experience",3,7,10));
     private static final DeferredRegister.DataComponents COMPONENTS=DeferredRegister.createDataComponents(ModernIte.MOD_ID);
     public static final DeferredHolder<DataComponentType<?>,DataComponentType<Integer>> EMERGENCY_COOLDOWN=
-        COMPONENTS.registerComponentType("emergency_cooldown_v1",builder->builder.persistent(Codec.intRange(0,120000)).networkSynchronized(ByteBufCodecs.VAR_INT));
+        COMPONENTS.registerComponentType("emergency_cooldown_v1",builder->builder.persistent(Codec.intRange(0,Integer.MAX_VALUE)).networkSynchronized(ByteBufCodecs.VAR_INT));
     private static final Set<UUID> MINING=new HashSet<>();
     private ExtremeEnchantments() {}
     public static ResourceLocation key(String id) { return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,id); }
@@ -130,7 +131,11 @@ public final class ExtremeEnchantments {
         Integer value=source.get(EMERGENCY_COOLDOWN.get());
         if(value==null) result.remove(EMERGENCY_COOLDOWN.get()); else result.set(EMERGENCY_COOLDOWN.get(),value);
     }
-    public static boolean guard(ItemStack stack) { return level(stack,"defenced")>0; }
+    public static boolean guard(ItemStack stack) {
+        return level(stack,"defenced")>0 || !IteConfig.bool("player_enchant_defense") && applicable("defenced",stack,false);
+    }
+    public static int guardDuration() { return IteConfig.integer("player_defence_max_time"); }
+    public static int guardCooldown() { return IteConfig.integer("player_defense_cooldown"); }
     public static boolean beginGuard(Player player,net.minecraft.world.InteractionHand hand) {
         ItemStack stack=player.getItemInHand(hand);
         if(!guard(stack)||player.getCooldowns().isOnCooldown(stack.getItem())) return false;
@@ -146,18 +151,41 @@ public final class ExtremeEnchantments {
     @SubscribeEvent public static void critical(CriticalHitEvent event) {
         Player player=event.getEntity();int rank=level(player.getMainHandItem(),"crit");
         if(rank<=0||immuneConqueror(event.getTarget())) return;
-        if(event.isCriticalHit()||player.getRandom().nextFloat()<Math.min(1F,rank*.2F)) {
+        if(event.isCriticalHit()||player.getRandom().nextFloat()<Math.min(1D,rank*IteConfig.number("crit_enchantment_chance_boost_per_lvl")/100D)) {
             event.setCriticalHit(true);event.setDamageMultiplier(Math.max(1.5F,event.getDamageMultiplier()));
             player.getPersistentData().putLong("modern_ite:critical_tick",player.level().getGameTime());
             player.getPersistentData().putUUID("modern_ite:critical_target",event.getTarget().getUUID());
         }
     }
     private static boolean immuneConqueror(Entity target) { return BuiltInRegistries.ENTITY_TYPE.getKey(target.getType()).equals(key("zombie_boss")); }
+    private static boolean steppedMob(Mob mob) {
+        return !(mob instanceof net.minecraft.world.entity.boss.enderdragon.EnderDragon)&&!(mob instanceof Slime)
+                &&!(mob instanceof io.github.ningmeng123.mite.entity.R196Cube);
+    }
+    private static boolean steppedPlayer(Player player,LivingEntity target) {
+        return target instanceof Mob&&!immuneConqueror(target)&&EquipmentDurability.toolProfile(player.getMainHandItem())!=null;
+    }
+    private static int priorMobHits(Player target,Mob attacker) {
+        return target.getPersistentData().getCompound("modern_ite:stepped_mobs_v1").getInt(attacker.getUUID().toString());
+    }
+    private static void recordMobHit(Player target,Mob attacker) {
+        var root=target.getPersistentData();var hits=root.getCompound("modern_ite:stepped_mobs_v1");String key=attacker.getUUID().toString();
+        if(!hits.contains(key)&&hits.getAllKeys().size()>=256)hits.remove(hits.getAllKeys().stream().sorted().findFirst().orElseThrow());
+        hits.putInt(key,Math.min(1000000,Math.max(0,hits.getInt(key))+1));root.put("modern_ite:stepped_mobs_v1",hits);
+    }
     @SubscribeEvent(priority=EventPriority.HIGH) public static void incoming(LivingIncomingDamageEvent event) {
         if(event.isCanceled()||event.getEntity().level().isClientSide) return;
+        if(event.getEntity() instanceof Player defender&&event.getSource().getEntity() instanceof Mob mob&&steppedMob(mob)) {
+            int hits=priorMobHits(defender,mob);
+            double day=io.github.ningmeng123.modernite.ExtremeRules.currentDay((ServerLevel)defender.level());
+            double step=Math.min(IteConfig.number("stepped_mob_damage_progress_max"),IteConfig.number("stepped_mob_damage_factor")
+                    +day/Math.max(1,IteConfig.integer("stepped_mob_damage_progress_increase_day")));
+            if(hits>0&&step>0)event.setAmount(event.getAmount()+(float)(hits*step));
+        }
         if(event.getSource().getDirectEntity() instanceof Mob attacker&&event.getSource().getEntity()==attacker) {
             int rank=level(attacker.getMainHandItem(),"crit");
-            if(rank>0&&attacker.getRandom().nextFloat()<Math.min(1F,.2F*rank))event.setAmount(event.getAmount()*1.5F+.4F*rank);
+            if(rank>0&&attacker.getRandom().nextFloat()<Math.min(1D,rank*IteConfig.number("crit_enchantment_chance_boost_per_lvl")/100D))
+                event.setAmount(event.getAmount()*1.5F+(float)(IteConfig.number("crit_enchantment_damage_boost_per_lvl")*rank));
         }
         if(event.getEntity() instanceof Player defender && defender.isUsingItem() && guard(defender.getUseItem())
                 && !event.getSource().is(DamageTypeTags.BYPASSES_SHIELD) && event.getSource().getSourcePosition()!=null) {
@@ -169,20 +197,28 @@ public final class ExtremeEnchantments {
         }
         if(event.getSource().getDirectEntity() instanceof Player attacker && event.getSource().getEntity()==attacker && !immuneConqueror(event.getEntity())) {
             ItemStack weapon=attacker.getMainHandItem();int rank=level(weapon,"conqueror");
-            if(rank>0) event.setAmount(event.getAmount()+rank*event.getEntity().getPersistentData().getInt("modern_ite:conqueror_"+attacker.getUUID()));
+            int hits=event.getEntity().getPersistentData().getInt("modern_ite:conqueror_"+attacker.getUUID());
+            double extra=rank*IteConfig.number("conqueror_damage_boost_per_lvl")*hits;
+            if(steppedPlayer(attacker,event.getEntity()))extra+=Math.min(IteConfig.number("stepped_player_damage_progress"),
+                    hits*(double)Math.max(0,attacker.experienceLevel)*IteConfig.number("stepped_player_damage_increase_per_lvl"));
+            if(extra>0)event.setAmount(event.getAmount()+(float)extra);
             var memory=attacker.getPersistentData();
             if(memory.getLong("modern_ite:critical_tick")==attacker.level().getGameTime() && memory.hasUUID("modern_ite:critical_target")
                     && memory.getUUID("modern_ite:critical_target").equals(event.getEntity().getUUID())) {
-                event.setAmount(event.getAmount()+level(weapon,"crit")*.4F);memory.remove("modern_ite:critical_target");
+                event.setAmount(event.getAmount()+(float)(level(weapon,"crit")*IteConfig.number("crit_enchantment_damage_boost_per_lvl")));memory.remove("modern_ite:critical_target");
             }
         }
     }
     @SubscribeEvent public static void damaged(LivingDamageEvent.Post event) {
         if(event.getEntity().level().isClientSide||event.getNewDamage()<=0) return;
         if(event.getEntity() instanceof ServerPlayer injured&&injured.isAlive()&&injured.getHealth()<=injured.getMaxHealth()*.3F)activateEmergency(injured);
-        if(event.getSource().getDirectEntity() instanceof Player player && event.getSource().getEntity()==player) {
+        if(event.getSource().getDirectEntity() instanceof Player player && event.getSource().getEntity()==player&&!immuneConqueror(event.getEntity())
+                &&(steppedPlayer(player,event.getEntity())||level(player.getMainHandItem(),"conqueror")>0)) {
             var data=event.getEntity().getPersistentData();String key="modern_ite:conqueror_"+player.getUUID();
             data.putInt(key,Math.min(1000000,data.getInt(key)+1));
+        }
+        if(event.getEntity() instanceof Player player&&event.getSource().getEntity() instanceof Mob mob&&steppedMob(mob)) {
+            recordMobHit(player,mob);
         }
         if(event.getSource().getDirectEntity() instanceof AbstractArrow arrow) {
             ItemStack weapon=arrow.getWeaponItem();var ranks=levels(weapon,"slowdown");
@@ -201,9 +237,9 @@ public final class ExtremeEnchantments {
         var ready=new ArrayList<ItemStack>();
         for(ItemStack stack:player.getArmorSlots()) if(level(stack,"emergency")>0&&stack.getOrDefault(EMERGENCY_COOLDOWN.get(),0)<=0) ready.add(stack);
         if(ready.isEmpty()) return false;
-        player.setHealth(Math.min(10F,player.getMaxHealth()));
+        player.setHealth(Math.min((float)IteConfig.number("emergency_health_recover_amount"),player.getMaxHealth()));
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,60,1));
-        int cooldown=(int)Math.round(120000D*(1D-.2D*(ready.size()-1)));
+        int cooldown=(int)Math.round(IteConfig.integer("emergency_cooldown_")*Math.max(0D,1D-IteConfig.number("emergency_cooldown_reduce_every_armor")*(ready.size()-1)));
         for(ItemStack stack:ready) stack.set(EMERGENCY_COOLDOWN.get(),cooldown);
         player.playSound(SoundEvents.FIREWORK_ROCKET_LARGE_BLAST,2F,.75F);
         player.playSound(SoundEvents.ANVIL_LAND,.4F,.4F);
@@ -217,20 +253,20 @@ public final class ExtremeEnchantments {
             int cooldown=stack.getOrDefault(EMERGENCY_COOLDOWN.get(),0);
             if(cooldown>0) stack.set(EMERGENCY_COOLDOWN.get(),Math.max(0,cooldown-2));
         }
-        if(player.isUsingItem() && guard(player.getUseItem()) && player.getTicksUsingItem()>=39) {
-            player.getCooldowns().addCooldown(player.getUseItem().getItem(),160);player.stopUsingItem();
+        if(player.isUsingItem() && guard(player.getUseItem()) && player.getTicksUsingItem()>=guardDuration()-1) {
+            player.getCooldowns().addCooldown(player.getUseItem().getItem(),guardCooldown());player.stopUsingItem();
         }
     }
     @SubscribeEvent public static void guardStopped(LivingEntityUseItemEvent.Stop event) {
-        if(event.getEntity() instanceof Player player && guard(event.getItem())) player.getCooldowns().addCooldown(event.getItem().getItem(),160);
+        if(event.getEntity() instanceof Player player && guard(event.getItem())) player.getCooldowns().addCooldown(event.getItem().getItem(),guardCooldown());
     }
     @SubscribeEvent public static void guardFinished(LivingEntityUseItemEvent.Finish event) {
-        if(event.getEntity() instanceof Player player && guard(event.getItem())) player.getCooldowns().addCooldown(event.getItem().getItem(),160);
+        if(event.getEntity() instanceof Player player && guard(event.getItem())) player.getCooldowns().addCooldown(event.getItem().getItem(),guardCooldown());
     }
     @SubscribeEvent public static void drops(LivingDropsEvent event) {
         if(event.isCanceled()||!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         int rank=level(player.getMainHandItem(),"beheading");
-        if(rank<=0||player.getRandom().nextFloat()>=Math.min(1F,.05F*rank)) return;
+        if(rank<=0||player.getRandom().nextFloat()>=Math.min(1D,IteConfig.number("beheading_chance_boost_per_lvl")*rank)) return;
         LivingEntity target=event.getEntity();
         Item head=target instanceof WitherSkeleton?Items.WITHER_SKELETON_SKULL:target instanceof AbstractSkeleton?Items.SKELETON_SKULL:
             target instanceof Zombie?Items.ZOMBIE_HEAD:target instanceof Creeper?Items.CREEPER_HEAD:target instanceof Player?Items.PLAYER_HEAD:null;

@@ -3,6 +3,7 @@ package io.github.ningmeng123.modernite.entity;
 import io.github.ningmeng123.mite.compat.bettercombat.BetterMobCombat;
 import io.github.ningmeng123.mite.entity.MobShields;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.DamageTypeTags;
@@ -43,7 +44,7 @@ public final class DoorGuard {
     }
 
     private static boolean canGuard(ExtremeMobs.ZombieVariant zombie){
-        return holdsDoor(zombie)&&zombie.isAlive()&&!zombie.isRemoved();
+        return IteConfig.bool("mob_defense")&&holdsDoor(zombie)&&zombie.isAlive()&&!zombie.isRemoved();
     }
 
     private static DefenseIntent.Threat threat(ExtremeMobs.ZombieVariant zombie){
@@ -105,6 +106,7 @@ public final class DoorGuard {
         // The rendered door follows the torso, including when LookControl has only turned the head.
         if(toward.lengthSqr()<.0001||Vec3.directionFromRotation(0,zombie.yBodyRot).dot(toward.normalize())<.5)return false;
         zombie.playSound(SoundEvents.SHIELD_BLOCK,.9F,.7F+zombie.getRandom().nextFloat()*.15F);
+        if(melee&&direct instanceof LivingEntity attacker)IteMobSettingsRules.tryDisarm(zombie,attacker);
         if(melee&&direct instanceof LivingEntity attacker&&(attacker.canDisableShield()
                 ||attacker.getMainHandItem().getItem() instanceof AxeItem||MobShields.axe(attacker.getMainHandItem()))){
             zombie.doorGuard.lower(zombie,BREAK_TICKS);

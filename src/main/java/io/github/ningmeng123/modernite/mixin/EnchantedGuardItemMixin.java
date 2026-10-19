@@ -23,7 +23,7 @@ public abstract class EnchantedGuardItemMixin {
   if(ExtremeEnchantments.guard(stack)||modernite$club(stack)) cir.setReturnValue(UseAnim.BLOCK);
  }
  @Inject(method="getUseDuration",at=@At("HEAD"),cancellable=true) private void modernite$duration(ItemStack stack,LivingEntity user,CallbackInfoReturnable<Integer> cir) {
-  if(ExtremeEnchantments.guard(stack)) cir.setReturnValue(40);
+  if(ExtremeEnchantments.guard(stack)) cir.setReturnValue(ExtremeEnchantments.guardDuration());
   else if(modernite$club(stack)) cir.setReturnValue(72000);
  }
  @Inject(method="use",at=@At("HEAD"),cancellable=true) private void modernite$guard(Level level,Player player,InteractionHand hand,CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {

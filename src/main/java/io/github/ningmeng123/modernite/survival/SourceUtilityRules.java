@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.survival;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -77,7 +78,7 @@ public final class SourceUtilityRules {
     public static final class MeatPlayerTarget extends Goal {
         private final Wolf wolf;private Player target;
         public MeatPlayerTarget(Wolf wolf){this.wolf=wolf;setFlags(EnumSet.of(Flag.TARGET));}
-        private boolean wild(){return !wolf.isTame()&&!wolf.isOrderedToSit()&&!wolf.getPersistentData().getBoolean("mite_wolf_witch_ally_032");}
+        private boolean wild(){return IteConfig.bool("wolves_attack_players_with_meat")&&!wolf.isTame()&&!wolf.isOrderedToSit()&&!wolf.getPersistentData().getBoolean("mite_wolf_witch_ally_032");}
         @Override public boolean canUse() {
             if(!wild())return false;
             target=wolf.level().getNearestPlayer(wolf.getX(),wolf.getY(),wolf.getZ(),64,
@@ -87,7 +88,7 @@ public final class SourceUtilityRules {
         }
         @Override public boolean canContinueToUse(){return wild()&&target!=null&&target.isAlive()&&!target.isCreative()&&!target.isSpectator()&&wolf.getTarget()==target&&wolf.distanceToSqr(target)<=4096;}
         @Override public void start(){wolf.setTarget(target);}
-        @Override public void stop(){target=null;}
+        @Override public void stop(){if(!IteConfig.bool("wolves_attack_players_with_meat")&&wolf.getTarget()==target)wolf.setTarget(null);target=null;}
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event){BEACONS.remove(event.getEntity().getUUID());}
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent event){BEACONS.remove(event.getEntity().getUUID());}

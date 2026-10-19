@@ -25,4 +25,11 @@ class ExtremeSpawnProgressionTest {
             assertTrue(ExtremeSpawnProgression.unlocked(id,1));
         }
     }
+    @Test void theAncientBoneLordDateCanChangeWithoutMovingOtherLordGates() {
+        assertFalse(ExtremeSpawnProgression.unlocked("mite:ancient_bone_lord",95,96));
+        assertTrue(ExtremeSpawnProgression.unlocked("mite:ancient_bone_lord",96,96));
+        assertTrue(ExtremeSpawnProgression.unlocked("mite:ancient_bone_lord",1,1));
+        assertFalse(ExtremeSpawnProgression.unlocked("modern_ite:zombie_lord",32,1));
+        assertTrue(ExtremeSpawnProgression.unlocked("modern_ite:zombie_lord",33,96));
+    }
 }

@@ -5,6 +5,7 @@ import io.github.ningmeng123.mite.entity.SourceMeleeGoal;
 import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasion;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponents;
@@ -45,10 +46,11 @@ public final class MobAbilities {
     public static int day(Level level){return level instanceof ServerLevel server?(int)Math.min(Integer.MAX_VALUE,BloodMoonInvasion.highestDay(server)):(int)(level.getDayTime()/24000+1);}
     public static boolean underground(Level level){return level.dimension().location().getPath().equals("underworld");}
     public static boolean maySpawn(ExtremeKind k,ServerLevel l,BlockPos pos){
-        if(!SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))||day(l)<k.firstDay||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
+        if(!SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))||(k!=WANDERING_WITCH&&day(l)<k.firstDay)||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
         boolean nether=l.dimension()==Level.NETHER,under=underground(l),over=l.dimension()==Level.OVERWORLD;
         if(k==ANNIHILATION_SKELETON&&over&&day(l)<33)return false;
         if(!over&&!nether&&!under)return false;
+        if(k==WANDERING_WITCH&&day(l)<IteConfig.integer("GameMechanics.MobSpawning.wandering_witch_spawn_limit_day_"+(over?"overworld":"other")))return false;
         if(k==SKELETON_FLOATING)return under;
         if(k==DARK_IRON_GOLEM||k==SKELETON_KNOCKBACK||k==SKELETON_LIGHTNING)return under||nether;
         if(k==WITHER_SKELETON_ARROW)return nether;
@@ -63,16 +65,17 @@ public final class MobAbilities {
         if(reason==MobSpawnType.MOB_SUMMONED||reason==MobSpawnType.CONVERSION)return true;
         if(!maySpawn(k,server,mob.blockPosition())||level.getDifficulty()==Difficulty.PEACEFUL)return false;
         if(k==DARK_IRON_GOLEM&&mob.getRandom().nextInt(9)>=7)return false;
-        if(k.family==Family.WITCH&&mob.getRandom().nextInt(100)>=(underground(server)?50:33))return false;
+        if(k.family==Family.WITCH&&mob.getRandom().nextInt(100)>=IteConfig.integer("GameMechanics.MobSpawning.wandering_witch_spawn_chance_"+(underground(server)?"underworld":"overworld")))return false;
         if(k==ANNIHILATION_SKELETON&&server.dimension()==Level.OVERWORLD
                 &&(mob.getRandom().nextInt(4)!=0||server.getNearestPlayer(mob,24)!=null))return false;
-        return (reason!=MobSpawnType.NATURAL||server.dimension()!=Level.OVERWORLD||level.getBrightness(LightLayer.BLOCK,mob.blockPosition())==0)
-                &&level.getMaxLocalRawBrightness(mob.blockPosition())<=7&&level.getBlockState(mob.blockPosition()).getFluidState().isEmpty();
+        boolean spawnInLight=k==ANNIHILATION_SKELETON&&server.dimension()==Level.OVERWORLD&&IteConfig.bool("GameMechanics.MobSpawning.annihilation_skeleton_spawn_in_light");
+        return (reason!=MobSpawnType.NATURAL||server.dimension()!=Level.OVERWORLD||spawnInLight||level.getBrightness(LightLayer.BLOCK,mob.blockPosition())==0)
+                &&(spawnInLight||level.getMaxLocalRawBrightness(mob.blockPosition())<=7)&&level.getBlockState(mob.blockPosition()).getFluidState().isEmpty();
     }
     private static void stat(Mob mob,Holder<net.minecraft.world.entity.ai.attributes.Attribute> key,double value){var a=mob.getAttribute(key);if(a!=null)a.setBaseValue(value);}
     public static void attributes(Mob m,ExtremeKind k){
         if(k.boss())m.getPersistentData().putBoolean("modern_ite:boss",true);
-        int raw=day(m.level()),d=Math.min(366,raw),healthRate=Math.min(d/16,10);
+        int raw=day(m.level()),limit=IteConfig.integer("Entities.enhance_limit"),d=Math.min(limit,raw),healthRate=Math.min(d/16,10);
         double x=d/7-7,rate=.5+x/(20+Math.abs(x));
         // The agreed C4 model replaces inherited linear day bonuses. Only species-specific challenge curves remain.
         double health=15,attack=8,speed=k.family==Family.ZOMBIE?.23:k.family==Family.CREEPER?.25:.3;
@@ -86,7 +89,7 @@ public final class MobAbilities {
             case ZOMBIE_IRON_BUCKET -> health=60;
             case MIMIC_ZOMBIE -> {health=80;attack=10;}
             case ZOMBIE_CALLER -> {health=60;speed=.22;}
-            case ZOMBIE_BOSS -> {int r=Math.min(366,raw/10);health=20+r*45;attack=6+r;speed=.3;}
+            case ZOMBIE_BOSS -> {int r=Math.min(limit,raw/10);health=20+r*45;attack=6+r;speed=.3;}
             case ZOMBIE_ELITE_LORD,ZOMBIE_LORD -> {health=rate*60+healthRate*15;attack=12;speed=.3;}
             case UNDYING_ZOMBIE_EMPEROR -> {health=(rate*60+healthRate*15)*2;attack=12;speed=.3;}
             case SKELETON_ELITE_LORD -> {health=rate*90+healthRate*15;attack=12;}
@@ -251,7 +254,7 @@ public final class MobAbilities {
             }
         }
         if(k==PHASE_CREEPER){if(s.clock%100==0&&s.phaseCharges<s.phaseMaximum)s.phaseCharges++;if(target!=null&&s.clock%10==0&&mob.getRandom().nextInt(3)==0&&mob.distanceToSqr(target)>9)teleportNear(mob,target);}
-        if(k==ANNIHILATION_SKELETON&&s.stage>0&&++s.summons>=3600){mob.spawnAnim();mob.discard();return;}
+        if(k==ANNIHILATION_SKELETON&&s.stage>0&&++s.summons>=IteConfig.integer("Entities.annihilation_skeleton_despawn_time")){mob.spawnAnim();mob.discard();return;}
         if(target==null||!target.isAlive()){
             if(k==ZOMBIE_BOSS&&!s.contribution.isEmpty()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}return;
         }

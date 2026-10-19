@@ -19,4 +19,7 @@ public final class ExtremeSpawnProgression {
     public static boolean unlocked(String id, long highestDay) {
         return highestDay >= firstDay(id);
     }
+    public static boolean unlocked(String id,long highestDay,int ancientBoneLordDay) {
+        return highestDay >= (id.equals("mite:ancient_bone_lord")?ancientBoneLordDay:firstDay(id));
+    }
 }

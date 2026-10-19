@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
 import java.util.*;
 import net.minecraft.core.*;
@@ -41,14 +42,14 @@ public final class ExtremeMobEvents {
         }
         if(event.getEntity() instanceof AbstractSkeleton skeleton&&!skeleton.getPersistentData().getBoolean("modern_ite:legacy_rolls")){
             skeleton.getPersistentData().putBoolean("modern_ite:legacy_rolls",true);
-            skeleton.getPersistentData().putBoolean("modern_ite:triple",skeleton.getRandom().nextInt(100)>85);
+            skeleton.getPersistentData().putBoolean("modern_ite:triple",IteConfig.bool("Entities.skeleton_triple_shot")&&skeleton.getRandom().nextInt(100)>85);
             skeleton.getPersistentData().putBoolean("modern_ite:fire_arrows",skeleton.getRandom().nextInt(10)>5);
-            skeleton.getPersistentData().putBoolean("modern_ite:compressed",skeleton.getRandom().nextInt(100)<3);
+            skeleton.getPersistentData().putBoolean("modern_ite:compressed",IteConfig.bool("Entities.compressed_skeleton")&&skeleton.getRandom().nextInt(100)<3);
         }
         if(event.getEntity() instanceof AbstractArrow arrow&&arrow.getOwner() instanceof AbstractSkeleton skeleton
                 &&!arrow.getPersistentData().getBoolean("modern_ite:split_arrow")){
             if(skeleton.getPersistentData().getBoolean("modern_ite:fire_arrows")&&MobAbilities.day(event.getLevel())>196)arrow.setRemainingFireTicks(100);
-            if(skeleton.getPersistentData().getBoolean("modern_ite:triple")){
+            if(IteConfig.bool("Entities.skeleton_triple_shot")&&skeleton.getPersistentData().getBoolean("modern_ite:triple")){
                 arrow.getPersistentData().putBoolean("modern_ite:split_arrow",true);
                 for(double angle:new double[]{-.12,.12}){
                     Arrow split=EntityType.ARROW.create(event.getLevel());if(split==null)continue;
@@ -153,9 +154,10 @@ public final class ExtremeMobEvents {
                     for(var slot:EquipmentSlot.values())mob.setItemSlot(slot,ItemStack.EMPTY);
                 if(state.extremeKind()==ZOMBIE_BOSS)bossReward(mob,state.extremeMemory());
             }
-            if(mob.getPersistentData().getBoolean("modern_ite:compressed"))for(int i=0;i<4;i++){
+            if(IteConfig.bool("Entities.compressed_skeleton")&&mob.getPersistentData().getBoolean("modern_ite:compressed"))for(int i=0;i<IteConfig.integer("Entities.compressed_skeleton_expand_count");i++){
                 Mob troop=MobAbilities.summonId(mob,"minecraft:skeleton",1);if(troop==null)continue;
-                troop.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,20,127));troop.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,20,127));troop.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,20,127));
+                int standTime=IteConfig.integer("Entities.compressed_skeleton_crack_stand_time");
+                troop.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,standTime,127));troop.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,standTime,127));troop.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,standTime,127));
             }
             if(mob.getPersistentData().hasUUID("modern_ite:summoner")&&mob.level() instanceof ServerLevel level){
                 Entity owner=level.getEntity(mob.getPersistentData().getUUID("modern_ite:summoner"));

@@ -26,4 +26,11 @@ class ExtremeCalendarTest {
         assertEquals(212,ExtremeCalendar.cap(1,289,false,false));
         assertEquals(Integer.MAX_VALUE,ExtremeCalendar.cap(Long.MAX_VALUE,Integer.MAX_VALUE,true,true));
     }
+    @Test void configurableBudgetsPreserveTheBaselineAndApplyBothControls() {
+        assertEquals(636,ExtremeCalendar.cap(32,289,true,false,3D,1D));
+        assertEquals(424,ExtremeCalendar.cap(32,289,true,false,2D,1D));
+        assertEquals(512,ExtremeCalendar.cap(200,289,false,false,3D,2D));
+        assertEquals(0,ExtremeCalendar.cap(200,289,true,false,0D,2D));
+        assertEquals(212,ExtremeCalendar.cap(200,289,false,false,3D,0D));
+    }
 }

@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.crafting.TimedCraftingController;
 import io.github.ningmeng123.mite.registry.MiteFoods;
 import io.github.ningmeng123.mite.survival.PlayerExperience;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -45,6 +46,20 @@ public final class SourceUtilityGameTests {
             session.player.moveTo(Vec3.atCenterOf(pos).add(40,0,0));spawner.serverTick(level,pos);
             h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==26,"The bonus cannot activate a spawner without a player in its native activation range");
         }h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
+    public static void disablingSpawnerAccelerationLeavesTheNativeCountdown(GameTestHelper h) {
+        boolean previous=IteConfig.bool("mob_spawner_speed_up_with_players");
+        try(Session session=new Session(h)) {
+            var level=h.getLevel();BlockPos pos=h.absolutePos(new BlockPos(2,2,2));level.setBlockAndUpdate(pos,Blocks.SPAWNER.defaultBlockState());
+            var spawner=((SpawnerBlockEntity)level.getBlockEntity(pos)).getSpawner();var tag=new CompoundTag();tag.putShort("Delay",(short)30);spawner.load(level,pos,tag);
+            session.player.moveTo(Vec3.atCenterOf(pos).add(1,1,0));
+            IteConfig.setting("mob_spawner_speed_up_with_players").set(false);IteConfig.refresh();spawner.serverTick(level,pos);
+            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==29,"A close player now advances only the native one tick");
+            IteConfig.setting("mob_spawner_speed_up_with_players").set(true);IteConfig.refresh();spawner.serverTick(level,pos);
+            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==26,"Refreshing the setting restores the existing three-tick countdown");
+        }finally{IteConfig.setting("mob_spawner_speed_up_with_players").set(previous);IteConfig.refresh();}h.succeed();
     }
 
     @GameTest(template="gear_empty",timeoutTicks=240)

@@ -5,6 +5,7 @@ import io.github.ningmeng123.mite.rules.R196PortalRules;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.mite.worldgen.R196StructureGeneration;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -29,7 +30,6 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class SourceSurvivalEvents {
     public static final String DATA="modern_ite:source_survival";
-    public static final int RAIN_LIMIT=3600, TELEPORT_LIMIT=132000;
     private static final String HOT="modern_ite:netherrack_contacts";
     private SourceSurvivalEvents() {}
     public static CompoundTag state(Player player) { return player.getPersistentData().getCompound(DATA); }
@@ -40,30 +40,44 @@ public final class SourceSurvivalEvents {
         boolean rain=level.isRainingAt(player.blockPosition())||level.isRainingAt(BlockPos.containing(player.getX(),player.getBoundingBox().maxY,player.getZ()));
         advanceRain(player,rain);
         advanceTeleport(player,R196MobSpawning.underworld(level));
+        advanceNetherFatigue(player,level.dimension().equals(Level.NETHER));
+    }
+    /** Actual Nether residence advances the old timer; leaving drains it and cloning preserves it. */
+    public static void advanceNetherFatigue(ServerPlayer player,boolean nether) {
+        CompoundTag data=state(player);
+        if(!IteConfig.bool("nether_debuff")){data.remove("nether_fatigue");save(player,data);return;}
+        int elapsed=Math.max(0,data.getInt("nether_fatigue"));
+        if(nether) {
+            elapsed=(int)Math.min(Integer.MAX_VALUE,(long)elapsed+1);
+            if(elapsed>=IteConfig.integer("nether_debuff_time"))player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN,3600,1));
+        }else if(elapsed>0)elapsed--;
+        data.putInt("nether_fatigue",elapsed);save(player,data);
     }
     /** Rain exposure is accumulated, capped, saved, and slowly drained under shelter. */
     public static void advanceRain(ServerPlayer player,boolean raining) {
-        CompoundTag data=state(player);int before=Math.clamp(data.getInt("rain"),0,RAIN_LIMIT);
+        int limit=IteConfig.integer("in_rain_debuff_time");
+        CompoundTag data=state(player);int before=Math.clamp(data.getInt("rain"),0,limit);
         if(raining) {
-            if(before<RAIN_LIMIT) data.putInt("rain",before+1);
+            if(before<limit) data.putInt("rain",before+1);
             else player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,3600,0));
         } else if(before>0) data.putInt("rain",before-1);
         save(player,data);
     }
     /** Leaving the dimension drains the source timer; it does not reset all accumulated exposure. */
     public static void advanceTeleport(ServerPlayer player,boolean underworld) {
-        CompoundTag data=state(player);int elapsed=Math.clamp(data.getInt("teleport"),0,TELEPORT_LIMIT+1);
-        if(!underworld) {
+        int limit=IteConfig.integer("underworld_random_teleport_time_new");
+        CompoundTag data=state(player);int elapsed=Math.clamp(data.getInt("teleport"),0,limit+1);
+        if(!underworld || !IteConfig.bool("underworld_random_teleport")) {
             if(elapsed>0) data.putInt("teleport",elapsed-1);
             data.remove("pending");data.remove("retry_at");save(player,data);return;
         }
-        elapsed=Math.min(TELEPORT_LIMIT+1,elapsed+1);data.putInt("teleport",elapsed);
-        int left=TELEPORT_LIMIT-elapsed;
+        elapsed=Math.min(limit+1,elapsed+1);data.putInt("teleport",elapsed);
+        int left=limit-elapsed;
         if(left==6000) player.displayClientMessage(Component.translatable("message.modern_ite.teleport_five_minutes"),true);
         else if(left==1200) player.displayClientMessage(Component.translatable("message.modern_ite.teleport_one_minute"),true);
         else if(left>=0&&left<=200&&elapsed%20==0) player.displayClientMessage(Component.translatable("message.modern_ite.teleport_countdown",left/20),true);
         save(player,data);
-        if(elapsed>TELEPORT_LIMIT&&player.serverLevel().getGameTime()>=data.getLong("retry_at")) tryRandomTeleport(player,data);
+        if(elapsed>limit&&player.serverLevel().getGameTime()>=data.getLong("retry_at")) tryRandomTeleport(player,data);
     }
     private static void tryRandomTeleport(ServerPlayer player,CompoundTag data) {
         ServerLevel level=player.serverLevel();
@@ -87,7 +101,7 @@ public final class SourceSurvivalEvents {
     }
     /** The source checks an expanded contact box, not footwear, and starts on displayed day96. */
     public static boolean hotNetherrack(Entity entity,long day) {
-        if(!entity.level().dimension().equals(Level.NETHER)||day<96||entity.fireImmune()
+        if(!IteConfig.bool("netherrack_damage")||!entity.level().dimension().equals(Level.NETHER)||day<IteConfig.integer("netherrack_damage_limit_day")||entity.fireImmune()
                 ||entity instanceof LivingEntity living&&living.hasEffect(MobEffects.FIRE_RESISTANCE)) return false;
         var box=entity.getBoundingBox().inflate(.001,.005,.001);
         return BlockPos.betweenClosedStream(BlockPos.containing(box.minX,box.minY,box.minZ),BlockPos.containing(box.maxX-1E-7,box.maxY-1E-7,box.maxZ-1E-7))

@@ -3,6 +3,7 @@ package io.github.ningmeng123.modernite.entity;
 import io.github.ningmeng123.mite.entity.*;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -47,7 +48,7 @@ public final class ExtremeNativeMobs {
     @SubscribeEvent(priority=EventPriority.HIGH)
     public static void join(EntityJoinLevelEvent event){
         if(event.isCanceled()||event.getLevel().isClientSide)return;
-        if(event.getEntity() instanceof Mob m&&!(m instanceof ExtremeMob)){initialize(m);if(m.getType()==EntityType.GIANT&&m.getPersistentData().getBoolean(PROFILE))installGiant(m);}
+        if(event.getEntity() instanceof Mob m&&!(m instanceof ExtremeMob)){initialize(m);IteMobSettingsRules.synchronizeBoneLordProfile(m);syncGolemBoost(m);if(m.getType()==EntityType.GIANT&&m.getPersistentData().getBoolean(PROFILE))installGiant(m);}
         if(event.getEntity() instanceof LargeFireball ball&&!(ball instanceof InfernalFireball)&&ball.getOwner() instanceof Ghast ghast&&ghast.getType()==EntityType.GHAST){
             event.setCanceled(true);int count=ghast.level().dimension()==Level.NETHER?5:1;
             for(int i=0;i<count;i++){
@@ -55,7 +56,7 @@ public final class ExtremeNativeMobs {
                 copy.setOwner(ghast);copy.setPos(ball.position());
                 copy.setDeltaMovement(ball.getDeltaMovement().add(count==1?Vec3.ZERO:new Vec3((ghast.getRandom().nextDouble()-.5)*.08,0,(ghast.getRandom().nextDouble()-.5)*.08)));
                 copy.accelerationPower=ball.accelerationPower*1.15;
-                float power=ghast.level().dimension()==Level.OVERWORLD?Math.round(6*1.25F)*2:6;
+                float power=ghast.level().dimension()==Level.OVERWORLD?Math.round(6*IteConfig.number("Entities.ghast_overworld_boost"))*2:6;
                 if(ghast.getPersistentData().getBoolean("modern_ite:dragon_summoned"))power*=3;
                 copy.normalPower(power);ghast.level().addFreshEntity(copy);
             }
@@ -67,8 +68,8 @@ public final class ExtremeNativeMobs {
         if(m.getType()==EntityType.ZOMBIFIED_PIGLIN&&m instanceof ZombifiedPiglin pig){
             var data=pig.getPersistentData();
             if(!data.getBoolean("modern_ite:pigman_rolls")){
-                data.putBoolean("modern_ite:pigman_rolls",true);data.putBoolean("modern_ite:pigman_boosted",pig.getRandom().nextDouble()<.025);
-                if(pig.getRandom().nextInt(10)>8)pig.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.BOW));
+                data.putBoolean("modern_ite:pigman_rolls",true);data.putBoolean("modern_ite:pigman_boosted",pig.getRandom().nextDouble()<IteConfig.number("Entities.zombie_pigman_boost_chance"));
+                if(IteConfig.bool("Entities.zombie_pigman_use_bow")&&pig.getRandom().nextInt(10)>8)pig.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.BOW));
             }
             if(R196DiggerGoal.first(pig)==null)pig.goalSelector.addGoal(1,new R196DiggerGoal(pig));
             var attacks=pig.goalSelector.getAvailableGoals().stream().filter(w->w.getGoal() instanceof SourceMeleeGoal
@@ -82,16 +83,17 @@ public final class ExtremeNativeMobs {
             pig.targetSelector.addGoal(1,new net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(pig));
             pig.targetSelector.addGoal(2,new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(pig,Player.class,true));
             pig.targetSelector.addGoal(3,new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(pig,net.minecraft.world.entity.npc.Villager.class,false));
+            pig.targetSelector.addGoal(4,new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(pig,net.minecraft.world.entity.animal.Animal.class,true){
+                @Override public boolean canUse(){return IteConfig.bool("Entities.zombie_pigman_attack_animails")&&super.canUse();}
+                @Override public boolean canContinueToUse(){return IteConfig.bool("Entities.zombie_pigman_attack_animails")&&super.canContinueToUse();}
+            });
         }
         if(m instanceof AbstractSkeleton skeleton){
             var data=m.getPersistentData();
             if(!data.contains("modern_ite:melee_roll"))data.putBoolean("modern_ite:melee_roll",m.getRandom().nextInt(100)<15);
-            if(data.getBoolean("modern_ite:melee_roll")&&m.getMainHandItem().getItem() instanceof BowItem){
-                skeleton.goalSelector.removeAllGoals(g->g instanceof SourceRangedAttackGoal||g instanceof net.minecraft.world.entity.ai.goal.RangedBowAttackGoal<?>);
-                skeleton.goalSelector.addGoal(4,new SourceMeleeGoal(skeleton,1.2,false));
-            }
+            data.remove("modern_ite:forced_melee_active");syncSkeletonMelee(skeleton);
             if(m instanceof R196Skeleton bones&&bones.miteKind()!=MobKind.LONGDEAD_GUARDIAN&&(bones.isLongdead()||bones.isLord())&&!data.contains("modern_ite:stock_roll")){
-                data.putBoolean("modern_ite:stock_roll",true);data.putBoolean("modern_ite:switch_weapon",m.getRandom().nextFloat()<.25);
+                data.putBoolean("modern_ite:stock_roll",true);data.putBoolean("modern_ite:switch_weapon",m.getRandom().nextFloat()<IteConfig.number("Entities.bone_lord_and_longdead_change_weapon_chance"));
                 if(data.getBoolean("modern_ite:switch_weapon")){
                     ItemStack spare=m.getMainHandItem().getItem() instanceof BowItem?MobAbilities.firstItem("mite:ancient_metal_sword","minecraft:iron_sword"):new ItemStack(Items.BOW);
                     data.put("modern_ite:stocked_weapon",spare.save(m.registryAccess()));
@@ -121,11 +123,37 @@ public final class ExtremeNativeMobs {
         else if(key.equals("mite:revenant"))body(m,35,12,.28,64);
         else if(key.equals("mite:longdead"))body(m,15,8,.29,40);
         else if(key.equals("mite:longdead_guardian"))body(m,26,10,.29,40);
-        else if(key.equals("mite:bone_lord"))body(m,35,10,.27,44);
-        else if(key.equals("mite:ancient_bone_lord"))body(m,40,13,.3,48);
-        if(m instanceof Slime&&!(m instanceof MagmaCube)){var attack=m.getAttribute(Attributes.ATTACK_DAMAGE);if(attack!=null)attack.setBaseValue(attack.getBaseValue()+4);}
+        else if(key.equals("mite:bone_lord"))body(m,IteConfig.bool("bone_lord_tweak")?35:22,IteConfig.bool("bone_lord_tweak")?10:3.5,.27,44);
+        else if(key.equals("mite:ancient_bone_lord"))body(m,IteConfig.bool("bone_lord_tweak")?40:25,IteConfig.bool("bone_lord_tweak")?13:8,.3,48);
+        if(m instanceof Slime&&!(m instanceof MagmaCube)){var attack=m.getAttribute(Attributes.ATTACK_DAMAGE);if(attack!=null)attack.setBaseValue(attack.getBaseValue()*IteConfig.number("Entities.slime_attack_damage_multiplier")+IteConfig.number("Entities.slime_attack_damage_bonus"));}
         if(m instanceof MagmaCube)stat(m,Attributes.MAX_HEALTH,m.getAttributeBaseValue(Attributes.MAX_HEALTH)+30);
+        IteMobSettingsRules.rememberBoneLordProfile(m);
         m.setHealth(Math.min(m.getMaxHealth(),m.getMaxHealth()*ratio));
+    }
+    private static void syncSkeletonMelee(AbstractSkeleton skeleton){
+        var data=skeleton.getPersistentData();
+        boolean before=data.getBoolean("modern_ite:forced_melee_active");
+        boolean desired=IteConfig.bool("Entities.skeleton_force_melee_attack")&&data.getBoolean("modern_ite:melee_roll")&&skeleton.getMainHandItem().getItem() instanceof BowItem;
+        if(before==desired)return;
+        if(before){
+            skeleton.goalSelector.removeAllGoals(g->g instanceof SourceMeleeGoal);
+            skeleton.reassessWeaponGoal();
+        }
+        if(desired){
+            skeleton.goalSelector.removeAllGoals(g->g instanceof SourceRangedAttackGoal||g instanceof net.minecraft.world.entity.ai.goal.RangedBowAttackGoal<?>);
+            skeleton.goalSelector.addGoal(4,new SourceMeleeGoal(skeleton,1.2,false));
+        }
+        data.putBoolean("modern_ite:forced_melee_active",desired);
+    }
+    private static boolean golemBoosted(Mob mob){return IteConfig.bool("Entities.can_boost_iron_golem")&&mob.getPersistentData().getBoolean("modern_ite:golem_boost");}
+    private static void syncGolemBoost(Mob mob){
+        if(mob.getType()!=EntityType.IRON_GOLEM||!mob.getPersistentData().getBoolean("modern_ite:golem_boost"))return;
+        var data=mob.getPersistentData();
+        // Existing boosted saves already include the original +20 health.
+        boolean before=!data.contains("modern_ite:golem_boost_effective")||data.getBoolean("modern_ite:golem_boost_effective");
+        boolean desired=golemBoosted(mob);
+        if(before!=desired){stat(mob,Attributes.MAX_HEALTH,Math.max(1,mob.getAttributeBaseValue(Attributes.MAX_HEALTH)+(desired?20:-20)));mob.setHealth(Math.min(mob.getHealth(),mob.getMaxHealth()));mob.refreshDimensions();}
+        data.putBoolean("modern_ite:golem_boost_effective",desired);
     }
     private static void installGiant(Mob m){
         if(!(m instanceof PathfinderMob path))return;
@@ -152,6 +180,7 @@ public final class ExtremeNativeMobs {
     @SubscribeEvent public static void tick(EntityTickEvent.Post event){
         if(event.getEntity() instanceof Player p&&!p.level().isClientSide&&p.getPersistentData().getLong("modern_ite:boss_strength_suppression")>p.level().getGameTime())p.removeEffect(MobEffects.DAMAGE_BOOST);
         if(!(event.getEntity() instanceof Mob m)||!(m.level() instanceof ServerLevel level)||!m.isAlive())return;
+        if(m.tickCount%10==0){if(m instanceof AbstractSkeleton skeleton&&!(m instanceof ExtremeMob))syncSkeletonMelee(skeleton);syncGolemBoost(m);}
         if(m instanceof Zombie zombie&&m.getPersistentData().getBoolean("modern_ite:siege_rider")&&!zombie.isBaby())zombie.setBaby(true);
         if(m instanceof Witch&&!(m instanceof ExtremeMob))MobAbilities.witchSupportTick(m);
         if(m instanceof WitherBoss wither){
@@ -168,21 +197,22 @@ public final class ExtremeNativeMobs {
             var prey=bat.getTarget();Vec3 aim=prey.position().subtract(bat.position()).normalize().scale(.025);bat.setDeltaMovement(bat.getDeltaMovement().add(aim.x,-.025,aim.z));
             if(!(prey instanceof Player))bat.setTarget(null);
         }
-        if(m instanceof ZombifiedPiglin pig&&m.getPersistentData().getBoolean("modern_ite:pigman_boosted")&&MobAbilities.day(level)>128&&m.tickCount%30==0){
+        if(m instanceof ZombifiedPiglin pig&&IteConfig.number("Entities.zombie_pigman_boost_chance")>0&&m.getPersistentData().getBoolean("modern_ite:pigman_boosted")&&MobAbilities.day(level)>128&&m.tickCount%30==0){
             int day=MobAbilities.day(level);
             for(var ally:level.getEntitiesOfClass(ZombifiedPiglin.class,m.getBoundingBox().inflate(16,8,16))){
                 ally.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,40+day/32*10,pig.getRandom().nextInt(Math.max((day-96)/96,1))));
                 ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,day/32*10,pig.getRandom().nextInt(Math.max((day-128)/96,1))));
             }
         }
-        if(m instanceof AbstractSkeleton skeleton&&m.tickCount%10==0&&m.getTarget()!=null&&m.getSensing().hasLineOfSight(m.getTarget())&&m.getPersistentData().getBoolean("modern_ite:switch_weapon")){
+        if(m instanceof AbstractSkeleton skeleton&&IteConfig.number("Entities.bone_lord_and_longdead_change_weapon_chance")>0&&m.tickCount%10==0&&m.getTarget()!=null&&m.getSensing().hasLineOfSight(m.getTarget())&&m.getPersistentData().getBoolean("modern_ite:switch_weapon")){
             boolean bow=m.getMainHandItem().getItem() instanceof BowItem;
             if(bow&&m.distanceToSqr(m.getTarget())<25||!bow&&m.distanceToSqr(m.getTarget())>36){
                 var data=m.getPersistentData();ItemStack spare=ItemStack.parseOptional(m.registryAccess(),data.getCompound("modern_ite:stocked_weapon"));
                 if(!spare.isEmpty()){var held=m.getMainHandItem();m.setItemSlot(EquipmentSlot.MAINHAND,spare);data.put("modern_ite:stocked_weapon",held.save(m.registryAccess()));skeleton.reassessWeaponGoal();}
             }
         }
-        if(id(m).equals("minecraft:giant")&&m.tickCount%1200==0)MobAbilities.summonId(m,"minecraft:zombie",1);
+        int giantCooldown=IteConfig.integer("Entities.giant_zombie_spawn_zombie_cooldown");
+        if(id(m).equals("minecraft:giant")&&giantCooldown>0&&m.tickCount%giantCooldown==0)MobAbilities.summonId(m,"minecraft:zombie",1);
     }
     public static void witherWave(WitherBoss wither){
         for(int i=0;i<15;i++){
@@ -218,11 +248,11 @@ public final class ExtremeNativeMobs {
                 ||victim.getPersistentData().getBoolean("modern_ite:wither_minion")&&(attacker instanceof WitherBoss||src.getDirectEntity() instanceof WitherSkull)){event.setCanceled(true);return;}
         if(victim instanceof ElementalMaterial e&&e.modernIteMaterial()==1&&src.is(DamageTypeTags.IS_FIRE))event.setAmount(event.getAmount()*2);
         if(victim instanceof EnderDragon d){
-            if(d.getHealth()<d.getMaxHealth()*.3&&src.is(DamageTypeTags.IS_PROJECTILE)){event.setCanceled(true);return;}
+            if(d.getHealth()<d.getMaxHealth()*IteConfig.number("Entities.ender_dragon_immune_to_arrow_health_percent")&&src.is(DamageTypeTags.IS_PROJECTILE)){event.setCanceled(true);return;}
             if(d.getHealth()<150)event.setAmount(event.getAmount()*.8F);
-            if(attacker instanceof Player player&&d.getRandom().nextInt(5)==0)player.addEffect(new MobEffectInstance(MobEffects.WITHER,200));
+            if(attacker instanceof Player player&&d.getRandom().nextFloat()<IteConfig.number("Entities.ender_dragon_attack_wither_chance"))player.addEffect(new MobEffectInstance(MobEffects.WITHER,200));
         }
-        if(attacker instanceof IronGolem golem&&golem.getType()==EntityType.IRON_GOLEM&&src.getDirectEntity()==attacker)event.setAmount(25+(golem.getPersistentData().getBoolean("modern_ite:golem_boost")?3:0));
+        if(attacker instanceof IronGolem golem&&golem.getType()==EntityType.IRON_GOLEM&&src.getDirectEntity()==attacker)event.setAmount(25+(golemBoosted(golem)?3:0));
         if(victim instanceof Player player&&player.isUsingItem()&&!ExtremeEnchantments.guard(player.getUseItem())
                 &&BuiltInRegistries.ITEM.getKey(player.getUseItem().getItem()).toString().startsWith("modern_ite:club_")
                 &&!src.is(DamageTypeTags.BYPASSES_SHIELD)&&src.getSourcePosition()!=null){
@@ -235,14 +265,14 @@ public final class ExtremeNativeMobs {
         if(event.getNewDamage()<=0)return;
         if(event.getSource().getEntity() instanceof EnderMan&&event.getSource().getDirectEntity()==event.getSource().getEntity()){event.getEntity().push(0,.6,0);event.getEntity().hurtMarked=true;}
         if(event.getSource().getEntity() instanceof EnderDragon dragon&&event.getEntity() instanceof Player player){
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,300));
+            if(IteConfig.bool("Entities.ender_dragon_attack_slowness"))player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,300));
             if(dragon.level() instanceof ServerLevel level&&dragon.getRandom().nextBoolean()){
                 LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.moveTo(player.position().add(dragon.getRandom().nextInt(17)-8,0,dragon.getRandom().nextInt(17)-8));level.addFreshEntity(bolt);}
             }
         }
-        if(event.getSource().getEntity() instanceof R196Bat bat&&bat.miteKind()!=MobKind.NIGHTWING&&bat.getRandom().nextBoolean())event.getEntity().addEffect(new MobEffectInstance(MobEffects.POISON,480));
-        if(event.getSource().getEntity() instanceof ZombifiedPiglin pig&&event.getSource().getDirectEntity()==pig&&pig.getRandom().nextBoolean())event.getEntity().igniteForSeconds(5);
-        if(event.getSource().getEntity() instanceof MagmaCube cube&&cube.getRandom().nextBoolean())event.getEntity().igniteForSeconds(100);
+        if(IteConfig.bool("Entities.bat_poison_attack")&&event.getSource().getEntity() instanceof R196Bat bat&&bat.miteKind()!=MobKind.NIGHTWING&&bat.getRandom().nextBoolean())event.getEntity().addEffect(new MobEffectInstance(MobEffects.POISON,480));
+        if(event.getSource().getEntity() instanceof ZombifiedPiglin pig&&event.getSource().getDirectEntity()==pig&&pig.getRandom().nextFloat()<IteConfig.number("Entities.nether_mod_attack_fire_chance"))event.getEntity().igniteForSeconds(5);
+        if(event.getSource().getEntity() instanceof MagmaCube cube&&cube.getRandom().nextFloat()<IteConfig.number("Entities.nether_mod_attack_fire_chance"))event.getEntity().igniteForSeconds(100);
     }
     @SubscribeEvent(priority=EventPriority.LOWEST) public static void death(LivingDeathEvent event){
         if(event.isCanceled()||!(event.getEntity() instanceof Mob m)||m.level().isClientSide)return;
@@ -272,14 +302,14 @@ public final class ExtremeNativeMobs {
     @SubscribeEvent public static void interact(PlayerInteractEvent.EntityInteract event){
         if(event.getLevel().isClientSide||event.getEntity().isSpectator())return;
         if(event.getTarget() instanceof Bat bat&&event.getItemStack().isEmpty()&&!bat.isVehicle()){event.getEntity().startRiding(bat,true);bat.setResting(false);event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);}
-        if(event.getTarget() instanceof IronGolem golem&&golem.getType()==EntityType.IRON_GOLEM&&!golem.getPersistentData().getBoolean("modern_ite:golem_boost")
+        if(IteConfig.bool("Entities.can_boost_iron_golem")&&event.getTarget() instanceof IronGolem golem&&golem.getType()==EntityType.IRON_GOLEM&&!golem.getPersistentData().getBoolean("modern_ite:golem_boost")
                 &&BuiltInRegistries.ITEM.getKey(event.getItemStack().getItem()).toString().equals("mite:mithril_block")){
-            golem.getPersistentData().putBoolean("modern_ite:golem_boost",true);stat(golem,Attributes.MAX_HEALTH,golem.getAttributeBaseValue(Attributes.MAX_HEALTH)+20);golem.setHealth(golem.getMaxHealth());golem.refreshDimensions();
+            golem.getPersistentData().putBoolean("modern_ite:golem_boost",true);golem.getPersistentData().putBoolean("modern_ite:golem_boost_effective",true);stat(golem,Attributes.MAX_HEALTH,golem.getAttributeBaseValue(Attributes.MAX_HEALTH)+20);golem.setHealth(golem.getMaxHealth());golem.refreshDimensions();
             if(!event.getEntity().isCreative())event.getItemStack().shrink(1);event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);
         }
     }
     @SubscribeEvent public static void size(net.neoforged.neoforge.event.entity.EntityEvent.Size event){
-        if(event.getEntity() instanceof IronGolem g&&g.getType()==EntityType.IRON_GOLEM&&g.getPersistentData().getBoolean("modern_ite:golem_boost"))event.setNewSize(EntityDimensions.scalable(1.9F,3.5F));
+        if(event.getEntity() instanceof IronGolem g&&g.getType()==EntityType.IRON_GOLEM&&golemBoosted(g))event.setNewSize(EntityDimensions.scalable(1.9F,3.5F));
     }
     @SubscribeEvent public static void witherBlast(ExplosionEvent.Start event){
         if(!(event.getExplosion().getDirectSourceEntity() instanceof WitherBoss wither)||wither.getPersistentData().getBoolean("modern_ite:wither_blast"))return;

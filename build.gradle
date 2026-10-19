@@ -13,7 +13,7 @@ repositories {
         content { includeGroup 'mezz.jei' }
     }
 }
-def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.1.10.jar'))
+def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.3.jar'))
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output
@@ -32,6 +32,16 @@ neoForge {
         client {
             client()
             gameDirectory = file('run-client')
+            if (providers.gradleProperty('modernIteConfigAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('run-config-audit')
+                systemProperty 'modern_ite.configAudit', 'true'
+                systemProperty 'modern_ite.configAuditOutput', file('build/verification/config/client-audit.json').absolutePath
+            }
+            if (providers.gradleProperty('modernIteMetalAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('run-metal-audit')
+                systemProperty 'modern_ite.metalAudit', 'true'
+                systemProperty 'modern_ite.metalAuditOutput', file('build/verification/metal/client-audit.json').absolutePath
+            }
             if (providers.gradleProperty('modernIteClientAudit').getOrElse('false').toBoolean()) {
                 systemProperty 'modern_ite.clientAudit', 'true'
                 systemProperty 'modern_ite.clientAuditOutput', file('build/verification/client-audit.json').absolutePath
@@ -73,7 +83,7 @@ neoForge {
         server { server(); gameDirectory = file('run-server'); programArgument '--nogui' }
         gameTestServer {
             type = 'gameTestServer'
-            gameDirectory = file('run-gametest')
+            gameDirectory = file(providers.gradleProperty('modernIteGameTestDirectory').getOrElse('run-gametest'))
             systemProperty 'neoforge.enabledGameTestNamespaces', 'modern_ite'
         }
     }
@@ -91,7 +101,9 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def forgingAudit = providers.gradleProperty('modernIteForgingAudit').getOrElse('false').toBoolean()
         def runeAudit = providers.gradleProperty('modernIteRuneAudit').getOrElse('false').toBoolean()
         def defenseAudit = providers.gradleProperty('modernIteDefenseAudit').getOrElse('false').toBoolean()
-        def directory = defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : 'run-client'
+        def configAudit = providers.gradleProperty('modernIteConfigAudit').getOrElse('false').toBoolean()
+        def metalAudit = providers.gradleProperty('modernIteMetalAudit').getOrElse('false').toBoolean()
+        def directory = metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : 'run-client'
         def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()
         def existing = config.exists() ? config.getText('UTF-8') : ''
@@ -111,7 +123,8 @@ dependencies {
     // Only this optional sidebar hook refers to JEI internals; never bundle the implementation.
     compileOnly('mezz.jei:jei-1.21.1-neoforge:19.57.0.451') { transitive = false }
     if (providers.gradleProperty('modernIteWithJei').getOrElse('false').toBoolean()
-            || providers.gradleProperty('modernIteJeiAudit').getOrElse('false').toBoolean()) {
+            || providers.gradleProperty('modernIteJeiAudit').getOrElse('false').toBoolean()
+            || providers.gradleProperty('modernIteMetalAudit').getOrElse('false').toBoolean()) {
         runtimeOnly('mezz.jei:jei-1.21.1-neoforge:19.57.0.451') { transitive = false }
     }
     testImplementation platform('org.junit:junit-bom:5.11.4')

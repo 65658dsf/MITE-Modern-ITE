@@ -10,10 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class SourceDisarmImmunityMixin {
     @Inject(method="disarm",at=@At("HEAD"),cancellable=true)
     private static void modernIte$immune(LivingEntity attacker,LivingEntity target,CallbackInfo ci){
-        if(target instanceof ExtremeMob e&&switch(e.extremeKind()){
-            case EXCHANGER,MINER_ZOMBIE,ZOMBIE_DOOR,ZOMBIE_BOSS,SKELETON_ELITE_LORD,ZOMBIE_LORD,
-                UNDYING_ZOMBIE_EMPEROR,ZOMBIE_PIGMAN_LORD,ANNIHILATION_SKELETON -> true;
-            default -> false;
-        })ci.cancel();
+        if(!IteMobSettingsRules.disarmable(target))ci.cancel();
     }
 }

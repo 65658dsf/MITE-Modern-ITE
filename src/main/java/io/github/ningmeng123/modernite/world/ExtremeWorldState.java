@@ -79,7 +79,7 @@ public final class ExtremeWorldState {
     }
 
     static float dayTimePerTick(long dayTime, long highestDay) {
-        return highestDay < FIRST_BLOOD_DAY
+        return io.github.ningmeng123.modernite.config.IteConfig.bool("first_day_longer_day_time") && highestDay < FIRST_BLOOD_DAY
                 && LunarCalendar.daytime((int) Math.floorMod(dayTime, 24_000L)) ? .5F : -1F;
     }
 

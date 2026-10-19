@@ -1,0 +1,4 @@
+{
+  "parent": "modern_ite:block/metal_upgrading_furnace",
+  "textures": {"front": "minecraft:block/blast_furnace_front_on"}
+}

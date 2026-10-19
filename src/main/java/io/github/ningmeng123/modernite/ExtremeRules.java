@@ -25,6 +25,17 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /** One provider owns all extension decisions; the base scheduler remains authoritative. @author NingMeng123 */
 public final class ExtremeRules implements MiteExtensions.Policy {
+    @Override public int gemSacrificeExperience(ItemStack stack,int original) { return io.github.ningmeng123.modernite.item.IteItemRules.gemSacrificeExperience(stack,original); }
+    @Override public boolean canSacrificeGem(Player player,ItemStack stack,boolean original) { return io.github.ningmeng123.modernite.item.IteItemRules.canSacrificeGem(player,stack,original); }
+    @Override public int foodUseDuration(ItemStack stack,LivingEntity user,int original) { return io.github.ningmeng123.modernite.item.IteItemRules.foodUseDuration(stack,user,original); }
+    @Override public void portalUsed(net.minecraft.server.level.ServerPlayer player,BlockPos entry) { io.github.ningmeng123.modernite.item.IteItemRules.portalUsed(player,entry); }
+    @Override public int breedingExperience(net.minecraft.world.entity.animal.Animal parent,int original) { return io.github.ningmeng123.modernite.entity.IteMobSettingsRules.breedingExperience(parent,original); }
+    @Override public float creeperExplosionRadius(net.minecraft.world.entity.monster.Creeper creeper,float original) { return io.github.ningmeng123.modernite.entity.IteMobSettingsRules.creeperExplosionRadius(creeper,original); }
+    @Override public void villagerOffers(net.minecraft.world.entity.npc.Villager villager,net.minecraft.world.item.trading.MerchantOffers offers) { io.github.ningmeng123.modernite.entity.IteMobSettingsRules.villagerOffers(villager,offers); }
+    @Override public boolean mobDefense(Mob mob,boolean original) { return original && io.github.ningmeng123.modernite.config.IteConfig.bool("mob_defense"); }
+    @Override public float playerInWallDamage(Player player,float original) { return (float)io.github.ningmeng123.modernite.config.IteConfig.number("in_wall_damage_for_player"); }
+    @Override public int fishingExperience(Player player,int original) { return io.github.ningmeng123.modernite.config.IteConfig.integer("fishing_xp"); }
+    @Override public boolean canDisarmPlayer(Player attacker,Player target,boolean original) { return original || io.github.ningmeng123.modernite.config.IteConfig.bool("player_disarm_player"); }
     public static void register(IEventBus bus) { MiteExtensions.register(new ExtremeRules());bus.addListener((FMLCommonSetupEvent event)->event.enqueueWork(MiteExtensions::applyAttributeRanges)); }
     public static long currentDay(ServerLevel level) { return ExtremeCalendar.day(level.getServer().overworld().getDayTime()); }
     public static boolean blood(ServerLevel level) { return level.dimension().equals(Level.OVERWORLD)&&ExtremeCalendar.blood(currentDay(level)); }
@@ -36,7 +47,12 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     }
     @Override public long bloodMoonCount(long day,long original) { return ExtremeCalendar.bloodCount(day); }
     @Override public boolean independentHostileBudgets(ServerLevel level,boolean original) { return false; }
-    @Override public int monsterCap(ServerLevel level,boolean deep,int chunks,int original) { return ExtremeWorldState.graceActive(level)?0:ExtremeCalendar.cap(currentDay(level),chunks,blood(level),deep); }
+    public static int hostileCap(ServerLevel level,int chunks,boolean deep) {
+        return ExtremeWorldState.graceActive(level)?0:ExtremeCalendar.cap(currentDay(level),chunks,blood(level),deep,
+                io.github.ningmeng123.modernite.config.IteConfig.number("blood_moon_max_hostile_fraction"),
+                io.github.ningmeng123.modernite.config.IteConfig.number("mob_max_spawn_count_increase_per_day"));
+    }
+    @Override public int monsterCap(ServerLevel level,boolean deep,int chunks,int original) { return hostileCap(level,chunks,deep); }
     @Override public float hostilePassProbability(ServerLevel level,boolean deep,float original) { return ExtremeWorldState.graceActive(level)?0:original; }
     @Override public int localDensity(ServerLevel level,Player player,int original) { return blood(level)?48:32; }
     @Override public int spawnGroups(MiteExtensions.SpawnContext context,int original) {
@@ -58,7 +74,8 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public List<R196MobSpawning.Entry> spawnPool(MiteExtensions.SpawnContext context,BlockPos pos,List<R196MobSpawning.Entry> original) {
         var result=new ArrayList<>(original);ExtremeMobs.addSpawnEntries(context,pos,result);
         long day=io.github.ningmeng123.mite.worldgen.BloodMoonInvasion.highestDay(context.level());
-        result.removeIf(entry->!ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(entry.type()).toString(),day)
+        result.removeIf(entry->!ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(entry.type()).toString(),day,
+                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"))
                 ||ExtremeWorldState.graceActive(context.level())&&io.github.ningmeng123.modernite.entity.SpawnPopulation.hostile(entry.type()));
         return List.copyOf(result);
     }

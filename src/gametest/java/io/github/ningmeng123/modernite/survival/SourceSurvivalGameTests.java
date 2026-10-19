@@ -1,5 +1,6 @@
 package io.github.ningmeng123.modernite.survival;
 import com.mojang.authlib.GameProfile;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.UUID;
 import net.minecraft.gametest.framework.GameTest;
@@ -40,6 +41,24 @@ public final class SourceSurvivalGameTests {
    h.assertTrue(copied.getInt("rain")==725&&copied.getInt("teleport")==499,"Player replacement retains the environmental history");
    copied.putInt("rain",0);
    h.assertTrue(SourceSurvivalEvents.state(before.player).getInt("rain")==725,"The replacement state is a detached copy");
+  }h.succeed();
+ }
+ @GameTest(template="gear_empty",batch="ite_config") public static void configuredRainAndTeleportThresholdsRefreshWithoutLosingSavedCounters(GameTestHelper h) {
+  int rain=IteConfig.integer("in_rain_debuff_time"),teleport=IteConfig.integer("underworld_random_teleport_time_new");
+  boolean enabled=IteConfig.bool("underworld_random_teleport");
+  try(Session session=new Session(h)) {
+   IteConfig.setting("in_rain_debuff_time").set(3);IteConfig.setting("underworld_random_teleport_time_new").set(3);
+   IteConfig.setting("underworld_random_teleport").set(true);IteConfig.refresh();
+   for(int tick=0;tick<3;tick++){SourceSurvivalEvents.advanceRain(session.player,true);SourceSurvivalEvents.advanceTeleport(session.player,true);}
+   h.assertTrue(!session.player.hasEffect(MobEffects.WEAKNESS)&&SourceSurvivalEvents.state(session.player).getInt("teleport")==3,"The newly configured thresholds retain their inclusive accumulation boundary");
+   SourceSurvivalEvents.advanceRain(session.player,true);SourceSurvivalEvents.advanceTeleport(session.player,true);
+   h.assertTrue(session.player.hasEffect(MobEffects.WEAKNESS)&&SourceSurvivalEvents.state(session.player).getInt("teleport")==4,"The next tick reaches the configured environmental action boundary");
+   var state=SourceSurvivalEvents.state(session.player);state.putBoolean("pending",true);session.player.getPersistentData().put(SourceSurvivalEvents.DATA,state);
+   IteConfig.setting("underworld_random_teleport").set(false);IteConfig.refresh();SourceSurvivalEvents.advanceTeleport(session.player,true);
+   h.assertTrue(SourceSurvivalEvents.state(session.player).getInt("teleport")==3&&!SourceSurvivalEvents.state(session.player).getBoolean("pending"),"Turning off random teleport drains history and clears a pending destination");
+  }finally{
+   IteConfig.setting("in_rain_debuff_time").set(rain);IteConfig.setting("underworld_random_teleport_time_new").set(teleport);
+   IteConfig.setting("underworld_random_teleport").set(enabled);IteConfig.refresh();
   }h.succeed();
  }
  private static final class Session implements AutoCloseable {

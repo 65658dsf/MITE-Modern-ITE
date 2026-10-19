@@ -1,5 +1,6 @@
 package io.github.ningmeng123.modernite.entity;
 import io.github.ningmeng123.mite.entity.SkeletonAiming;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import java.util.EnumSet;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
@@ -9,7 +10,7 @@ import net.minecraft.world.item.*;
 public final class PigmanBowGoal extends Goal {
     private final ZombifiedPiglin pig;private int cooldown;
     public PigmanBowGoal(ZombifiedPiglin pig){this.pig=pig;setFlags(EnumSet.of(Flag.MOVE,Flag.LOOK));}
-    @Override public boolean canUse(){return pig.getMainHandItem().getItem() instanceof BowItem&&pig.getTarget()!=null&&pig.getTarget().isAlive();}
+    @Override public boolean canUse(){return IteConfig.bool("Entities.zombie_pigman_use_bow")&&pig.getMainHandItem().getItem() instanceof BowItem&&pig.getTarget()!=null&&pig.getTarget().isAlive();}
     @Override public boolean requiresUpdateEveryTick(){return true;}
     @Override public void stop(){pig.stopUsingItem();}
     @Override public void tick(){

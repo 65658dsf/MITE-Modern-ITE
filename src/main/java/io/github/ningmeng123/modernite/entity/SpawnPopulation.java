@@ -38,7 +38,8 @@ public final class SpawnPopulation {
     public static boolean encounter(Mob mob) {return mob!=null&&mob.getPersistentData().getBoolean(ENCOUNTER);}
     public static boolean automaticAllowed(ServerLevel level,EntityType<?> type) {
         return !hostile(type)||!ExtremeWorldState.graceActive(level)
-                &&ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),BloodMoonInvasion.highestDay(level));
+                &&ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),BloodMoonInvasion.highestDay(level),
+                        io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"));
     }
     public static int localCount(ServerLevel level,AABB box) {return ledger(level).count(null,box,null,false);}
     public static int supportCount(Mob owner) {return owner.level() instanceof ServerLevel level?ledger(level).count(null,null,owner.getUUID(),false):0;}
@@ -63,7 +64,7 @@ public final class SpawnPopulation {
         if(R196MobSpawning.category(mob)==io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER) {
             if(ledger.chunks<0)ledger.chunks=R196MobSpawning.eligibleChunks(level,true).size();
             int chunks=ledger.chunks;
-            int cap=io.github.ningmeng123.modernite.ExtremeCalendar.cap(ExtremeRules.currentDay(level),chunks,ExtremeRules.blood(level),false);
+            int cap=ExtremeRules.hostileCap(level,chunks,false);
             if(ledger.count(mob,null,null,true)>=cap)return false;
         }
         ledger.pending.put(mob.getUUID(),mob);return true;

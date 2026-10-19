@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.compat.bettercombat.BetterMobCombat;
 import io.github.ningmeng123.mite.entity.MobShields;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Mob;
 
@@ -14,7 +15,7 @@ public final class IntentShieldGuard {
     public IntentShieldGuard(Mob mob) { this.mob = mob; }
 
     private boolean equipped() {
-        return !mob.level().isClientSide && mob.isAlive() && !mob.isRemoved()
+        return IteConfig.bool("mob_defense") && !mob.level().isClientSide && mob.isAlive() && !mob.isRemoved()
                 && MobShields.melee(mob.getMainHandItem()) && MobShields.shield(mob.getOffhandItem())
                 && !MobShields.disabled(mob);
     }

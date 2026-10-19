@@ -2,8 +2,7 @@
   "feature": "modern_ite:nether_adamantium_ore",
   "placement": [
     {
-      "type": "minecraft:count",
-      "count": 4
+      "type": "modern_ite:nether_adamantium_count"
     },
     {
       "type": "minecraft:in_square"
