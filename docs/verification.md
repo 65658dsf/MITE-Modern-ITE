@@ -2,6 +2,14 @@
 
 开发署名：NingMeng123。
 
+## 0.2.5 灯笼种类精简（2026-10-20）
+
+正常展示与合成仅保留艾德曼、振金；秘银保留注册及模型、语言以兼容旧存档，隐藏于创造栏、搜索和 JEI，移除合成配方；铜、银、金、铁、古代金属灯笼及专用模型、配方、语言移除。已有秘银灯笼的照明、耐久和金属粒修复继续生效。
+
+执行 `./gradlew.bat build compileGametestJava`，构建、30 项 JUnit 和全部 GameTest 源码编译通过。通过 `./gradlew.bat -I build/verification/lantern-selection/focused.init.gradle runGameTestServer` 独立运行灯笼照明、铁砧修复和资源配方三组共 15 项 GameTest，全部通过，包含真实创造栏与搜索仅显示两档、秘银无任何配方产物以及三档修复验证。本轮未运行客户端或实际 JEI 界面验收。
+
+发布包 `build/libs/modern-ite-0.2.5.jar` 为 1,344,578 字节，SHA-256 为 `794c0d4ca7e209dac0f121df616fac9ffc50f50f91a71339f520a84b56967b9f`。228 个生产类和 527 份 JSON 与源码及编译输出逐字节一致，确认仅三份灯笼模型、两份配方，无测试类、本体类、JEI 实现或嵌套 JAR。专项日志与包核对报告位于 `build/verification/lantern-selection/server.log` 和 `package-audit.json`；以下同步发布及更早记录保留为历史证据。
+
 ## 0.2.5 同步发布（2026-10-20）
 
 本体与 ITE 同步发布为 0.2.5，仅调整版本元数据、默认依赖路径和最低依赖版本。ITE 的 228 个生产类与下方已验证交付包逐字节一致，本体的 1338 个生产类也与固定功能验证依赖一致，沿用下方 **217 项 GameTest** 的功能证据；对固定 0.2.5 本体依赖重新执行 **30 项 JUnit 和打包，全部通过**，不把改版本号视为再次运行 GameTest。

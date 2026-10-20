@@ -121,7 +121,7 @@ tex(EX,'assets/extreme/textures/models/armor/ironBucket_layer_1.png','models/arm
 for id,cn,eng in [('fishing','钓鱼','Fishing'),('planting','种植','Planting'),('villager','村民','Villager'),('club_core','金属棒核心','Club Core')]:
     name='voucher_'+id;named(name,cn+'凭证',eng+' Voucher');model(name);tex(EX,f'assets/extreme/textures/items/voucher/{name}.png','item/'+name)
 metals=['copper','silver','gold','iron','ancient_metal','mithril','adamantium','vibranium'];metal_cn=['铜','银','金','铁','古代金属','秘银','艾德曼','振金']
-lantern_models(metals,metal_cn)
+lantern_models(['mithril','adamantium','vibranium'],['秘银','艾德曼','振金'])
 for metal,cn in zip(metals,metal_cn):
     id='club_'+metal;named(id,cn+'棒',metal.replace('_',' ').title()+' Club');model(id,parent='minecraft:item/handheld');tex(EX,f'assets/extreme/textures/items/club/{metal}_club.png','item/'+id)
 for suffix,source in [('', 'standby'),('_pulling_0','pulling_0'),('_pulling_1','pulling_1'),('_pulling_2','pulling_2'),('_arrow','arrow')]:
@@ -152,7 +152,7 @@ state('vibranium_chest',{'variants':{'':{'model':'minecraft:block/chest'}}});sav
 shaped('resurrection_array',['ABA','BCB','ABA'],{'A':'mite:mithril_ingot','B':'minecraft:diamond','C':'minecraft:ender_pearl'})
 shaped('vibranium_furnace',['VOA','DND','AOV'],{'V':'mite:vibranium_ingot','O':'minecraft:obsidian','A':'mite:adamantium_ingot','D':'minecraft:diamond','N':'mite:netherrack_furnace'})
 shaped('vibranium_chest',['VVV','V V','VVV'],{'V':'mite:vibranium_ingot'})
-for metal in metals:
+for metal in ['adamantium','vibranium']:
     namespace='minecraft' if metal in ['copper','gold','iron'] else 'mite'
     shaped('dynamic_core_'+metal,[' I ','IGI','ITI'],{'I':namespace+':'+metal+'_ingot','G':'minecraft:glass','T':'minecraft:torch'})
 shapeless('voucher_club_core',['modern_ite:voucher_'+v for v in ['fishing','planting','villager']])
@@ -221,5 +221,5 @@ for locale in ['zh_cn','en_us']:
     merged={}
     for fragment in sorted((RES/'modern_ite').glob('*-lang-'+locale+'.json')):merged.update(json.loads(fragment.read_text(encoding='utf-8')))
     save(f'assets/modern_ite/lang/{locale}.json',merged)
-save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; legacy mithril and adamantium core identities remain compatible.','Eight material lantern recipes use five matching ingots, glass and a torch; lanterns only light from the offhand and consume material-scaled durability.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
+save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; the legacy mithril core identity remains available for existing saves without a crafting recipe.','Adamantium and vibranium lantern recipes use five matching ingots, glass and a torch; lanterns only light from the offhand and consume material-scaled durability.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
 print(f'Packaged {len(provenance)} source textures; merged all language fragments.')

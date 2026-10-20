@@ -169,7 +169,7 @@ public final class MobRenderRegressionAudit {
                 return;
             }
             if (Boolean.getBoolean("modern_ite.lanternAudit")) {
-                report.addProperty("scope", "Eight material lantern models, native GPU item displays and instant local lightmap switching");
+                report.addProperty("scope", "Three retained lantern models, native GPU item displays and instant local lightmap switching");
                 report.add("lanterns", LanternClientAudit.capture(mc));
                 return;
             }

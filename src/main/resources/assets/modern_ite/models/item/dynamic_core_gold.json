@@ -1,6 +1,0 @@
-{
-  "parent": "modern_ite:item/template_material_lantern",
-  "textures": {
-    "metal": "minecraft:block/gold_block"
-  }
-}

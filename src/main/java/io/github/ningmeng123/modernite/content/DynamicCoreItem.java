@@ -14,7 +14,6 @@ public final class DynamicCoreItem extends Item {
     public static final int REPAIR_COMPONENTS = 5;
 
     public enum Material {
-        COPPER(800), SILVER(1200), GOLD(1600), IRON(2400), ANCIENT_METAL(3200),
         MITHRIL(4800), ADAMANTIUM(8000), VIBRANIUM(12800);
 
         public final int durability;

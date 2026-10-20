@@ -4,6 +4,8 @@ import io.github.ningmeng123.modernite.ModernIte;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -16,6 +18,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -26,7 +29,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class DynamicLanternGameTests {
     private static final String[] MATERIALS = {
-            "copper", "silver", "gold", "iron", "ancient_metal", "mithril", "adamantium", "vibranium"
+            "mithril", "adamantium", "vibranium"
     };
 
     private DynamicLanternGameTests() {}
@@ -43,7 +46,27 @@ public final class DynamicLanternGameTests {
 
     @GameTest(template = "gear_empty")
     public static void everyMaterialHasTheSameLightAndIncreasingLifetime(GameTestHelper h) {
-        int[] durability = {800, 1200, 1600, 2400, 3200, 4800, 8000, 12800};
+        int[] durability = {4800, 8000, 12800};
+        h.assertValueEqual((int) BuiltInRegistries.ITEM.stream().filter(item -> item instanceof DynamicCoreItem).count(),
+                MATERIALS.length, "Only the hidden mithril lantern and the two available lantern tiers remain registered");
+        for (String removed : new String[]{"copper", "silver", "gold", "iron", "ancient_metal"}) {
+            h.assertFalse(BuiltInRegistries.ITEM.containsKey(ExtremeContent.id("dynamic_core_" + removed)),
+                    "Removed lantern tiers cannot remain registered: " + removed);
+        }
+        CreativeModeTabs.tryRebuildTabContents(h.getLevel().enabledFeatures(), true, h.getLevel().registryAccess());
+        Set<ResourceLocation> visibleLanterns = CreativeModeTabs.allTabs().stream()
+                .flatMap(tab -> tab.getDisplayItems().stream())
+                .filter(stack -> stack.getItem() instanceof DynamicCoreItem)
+                .map(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem())).collect(Collectors.toSet());
+        Set<ResourceLocation> availableLanterns = Set.of(ExtremeContent.id("dynamic_core_adamantium"),
+                ExtremeContent.id("dynamic_core_vibranium"));
+        h.assertTrue(visibleLanterns.equals(availableLanterns),
+                "Actual creative tabs expose only adamantium and vibranium lanterns");
+        Set<ResourceLocation> searchableLanterns = CreativeModeTabs.searchTab().getDisplayItems().stream()
+                .filter(stack -> stack.getItem() instanceof DynamicCoreItem)
+                .map(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem())).collect(Collectors.toSet());
+        h.assertTrue(searchableLanterns.equals(availableLanterns),
+                "Actual creative search exposes only adamantium and vibranium lanterns");
         Player player = h.makeMockPlayer(GameType.SURVIVAL);
         int previous = 0;
         for (int i = 0; i < MATERIALS.length; i++) {
@@ -120,7 +143,7 @@ public final class DynamicLanternGameTests {
     @GameTest(template = "gear_empty")
     public static void onlyTheEquippedOffhandLanternConsumesItsLifetime(GameTestHelper h) {
         Player player = h.makeMockPlayer(GameType.SURVIVAL);
-        ItemStack offhand = lantern("copper"), mainHand = lantern("adamantium"), backpack = lantern("vibranium");
+        ItemStack offhand = lantern("adamantium"), mainHand = lantern("vibranium"), backpack = lantern("vibranium");
         player.setItemInHand(InteractionHand.OFF_HAND, offhand);
         player.setItemInHand(InteractionHand.MAIN_HAND, mainHand);
         player.getInventory().setItem(9, backpack);

@@ -30,7 +30,7 @@ final class LanternWearClientAudit {
         var renderer = mc.gameRenderer.itemInHandRenderer;
         var items = BuiltInRegistries.ITEM.stream().filter(item -> item instanceof DynamicCoreItem)
             .map(item -> (DynamicCoreItem) item).sorted(Comparator.comparingInt(item -> item.material.ordinal())).toList();
-        check(items.size() == 8 && !player.isHandsBusy(), "Wear audit requires eight lanterns and free hands");
+        check(items.size() == 3 && !player.isHandsBusy(), "Wear audit requires the three retained lanterns and free hands");
         var savedItems = new ArrayList<>(inventory.items);
         ItemStack savedOffhand = player.getOffhandItem();
         int savedSelected = inventory.selected;
@@ -86,7 +86,7 @@ final class LanternWearClientAudit {
                 sample.addProperty("material_empty_name_and_slot_controls", true);
             }
             result.addProperty("scope", "Actual ItemInHandRenderer.tick -> ClientHooks -> item hook, with replaced inventory stacks");
-            result.addProperty("native_tick_count", 440);
+            result.addProperty("native_tick_count", items.size() * 55);
             result.addProperty("status", "passed");
             return result;
         } finally {

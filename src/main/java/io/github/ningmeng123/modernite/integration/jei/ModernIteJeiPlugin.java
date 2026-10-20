@@ -2,16 +2,19 @@ package io.github.ningmeng123.modernite.integration.jei;
 
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.client.gear.GearStationScreen;
+import io.github.ningmeng123.modernite.content.ExtremeContent;
 import java.util.Collection;
 import java.util.List;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
+import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -25,6 +28,11 @@ public final class ModernIteJeiPlugin implements IModPlugin {
 
     @Override public ResourceLocation getPluginUid() {
         return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "forging");
+    }
+
+    @Override public void onRuntimeAvailable(IJeiRuntime runtime) {
+        runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK,
+                List.of(new ItemStack(ExtremeContent.MITHRIL_CORE.get())));
     }
 
     @Override public void registerCategories(IRecipeCategoryRegistration registration) {

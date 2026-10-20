@@ -38,6 +38,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class LanternRepairGameTests {
     private static final BlockPos SITE = new BlockPos(1, 1, 1);
     private static final List<String> MATERIALS = List.of(
+            "mithril", "adamantium", "vibranium");
+    private static final List<String> REPAIR_METALS = List.of(
             "copper", "silver", "gold", "iron", "ancient_metal", "mithril", "adamantium", "vibranium");
     private static final List<Anvil> ANVILS = List.of(
             new Anvil("mite:copper_anvil", 4F), new Anvil("mite:silver_anvil", 4F),
@@ -45,7 +47,7 @@ public final class LanternRepairGameTests {
             new Anvil("minecraft:chipped_anvil", 8F), new Anvil("minecraft:damaged_anvil", 8F),
             new Anvil("mite:ancient_metal_anvil", 16F), new Anvil("mite:mithril_anvil", 64F),
             new Anvil("mite:adamantium_anvil", 256F), new Anvil("mite:vibranium_anvil", 512F));
-    private static final float[] REQUIRED_CAPACITIES = {4F, 4F, 4F, 8F, 16F, 64F, 256F, 512F};
+    private static final float[] REQUIRED_CAPACITIES = {64F, 256F, 512F};
     private record Anvil(String id, float capacity) {
         BlockState state() { return BuiltInRegistries.BLOCK.get(ResourceLocation.parse(id)).defaultBlockState(); }
     }
@@ -53,7 +55,7 @@ public final class LanternRepairGameTests {
     private LanternRepairGameTests() {}
 
     @GameTest(template = "gear_empty")
-    public static void allEightExhaustedAndPartiallyWornLanternsRepairAndLightAgain(GameTestHelper h) {
+    public static void allRetainedExhaustedAndPartiallyWornLanternsRepairAndLightAgain(GameTestHelper h) {
         Player owner = player(h);
         try {
             for (String material : MATERIALS) for (boolean exhausted : new boolean[]{true, false}) {
@@ -112,7 +114,7 @@ public final class LanternRepairGameTests {
             for (int i = 0; i < MATERIALS.size(); i++) {
                 String material = MATERIALS.get(i);
                 h.assertValueEqual(WorkbenchRules.materialCapacity(material), REQUIRED_CAPACITIES[i],
-                        "The required material capacity follows equipment, including equal-tier copper/silver/gold");
+                        "Each retained lantern requires its equipment material's anvil capacity");
                 for (Anvil anvil : ANVILS) {
                     owner.getInventory().clearContent();
                     AnvilMenu menu = menu(h, owner, anvil.state());
@@ -155,7 +157,7 @@ public final class LanternRepairGameTests {
         try {
             for (String material : MATERIALS) {
                 List<ItemStack> invalid = new ArrayList<>();
-                for (String wrong : MATERIALS) if (!wrong.equals(material)) invalid.add(nuggets(wrong, 3));
+                for (String wrong : REPAIR_METALS) if (!wrong.equals(material)) invalid.add(nuggets(wrong, 3));
                 invalid.add(ingots(material, 3));
                 invalid.add(ItemStack.EMPTY);
                 for (ItemStack resource : invalid) {
@@ -222,7 +224,7 @@ public final class LanternRepairGameTests {
                 ItemStack resource = nuggets(material, 3);
                 menu.getSlot(0).set(source); menu.getSlot(1).set(resource);
                 h.assertTrue(menu.getSlot(2).hasItem(), "Matching ingredients first produce a valid repair preview");
-                ItemStack wrong = nuggets(material.equals("copper") ? "iron" : "copper", 3);
+                ItemStack wrong = nuggets("copper", 3);
                 menu.getSlot(1).set(wrong);
                 assertRejectedWithoutCost(h, owner, menu, source.copy(), wrong.copy(), 0);
                 menu.getSlot(1).set(resource.copy());

@@ -39,11 +39,7 @@ public final class ExtremeContent {
     public static final DeferredItem<Item> TORCH_BUNDLE = item("stack_torch", new Item.Properties().stacksTo(16));
     public static final DeferredItem<CrossbowItem> CROSSBOW = ITEMS.registerItem("crossbow", CrossbowItem::new, new Item.Properties().durability(326));
     public static final DeferredItem<FortressEyeItem> FORTRESS_EYE = ITEMS.registerItem("nether_ender_eye", FortressEyeItem::new);
-    public static final DeferredItem<DynamicCoreItem> COPPER_CORE = lantern("copper", DynamicCoreItem.Material.COPPER);
-    public static final DeferredItem<DynamicCoreItem> SILVER_CORE = lantern("silver", DynamicCoreItem.Material.SILVER);
-    public static final DeferredItem<DynamicCoreItem> GOLD_CORE = lantern("gold", DynamicCoreItem.Material.GOLD);
-    public static final DeferredItem<DynamicCoreItem> IRON_CORE = lantern("iron", DynamicCoreItem.Material.IRON);
-    public static final DeferredItem<DynamicCoreItem> ANCIENT_METAL_CORE = lantern("ancient_metal", DynamicCoreItem.Material.ANCIENT_METAL);
+    // Keep the legacy mithril identity for existing stacks, without exposing new ones in the catalog.
     public static final DeferredItem<DynamicCoreItem> MITHRIL_CORE = lantern("mithril", DynamicCoreItem.Material.MITHRIL);
     public static final DeferredItem<DynamicCoreItem> ADAMANTIUM_CORE = lantern("adamantium", DynamicCoreItem.Material.ADAMANTIUM);
     public static final DeferredItem<DynamicCoreItem> VIBRANIUM_CORE = lantern("vibranium", DynamicCoreItem.Material.VIBRANIUM);
@@ -83,7 +79,10 @@ public final class ExtremeContent {
         MiteExtensions.registerExternalArmor(new MiteArmorContent.Definition("modern_ite:iron_bucket_helmet",-1,"iron",ArmorItem.Type.HELMET,5,false,false,256,15,30,Quality.LEGENDARY,0,1280));
         TABS.register("content", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.modern_ite")).icon(() -> new ItemStack(FANCY_RED.get())).displayItems((p,out) -> {
             var seen = new HashSet<Item>();
-            net.minecraft.core.registries.BuiltInRegistries.ITEM.forEach(item -> { if(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).getNamespace().equals(ModernIte.MOD_ID) && seen.add(item)) out.accept(item); });
+            net.minecraft.core.registries.BuiltInRegistries.ITEM.forEach(item -> {
+                if (net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).getNamespace().equals(ModernIte.MOD_ID)
+                        && item != MITHRIL_CORE.get() && seen.add(item)) out.accept(item);
+            });
         }).build());
     }
     public static ResourceLocation id(String path) { return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,path); }
