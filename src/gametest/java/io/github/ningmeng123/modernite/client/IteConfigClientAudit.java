@@ -11,11 +11,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.logging.LogUtils;
 import io.github.ningmeng123.mite.client.config.MiteSettingsScreen;
+import io.github.ningmeng123.mite.client.config.MonsterSpawnSettingsScreen;
 import io.github.ningmeng123.mite.client.config.OreGenerationSettingsScreen;
 import io.github.ningmeng123.mite.config.MiteConfig;
 import io.github.ningmeng123.mite.rules.R196OreRules;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.entity.ExtremeKind;
+import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.github.ningmeng123.modernite.config.client.IteConfigValuesScreen;
 import io.github.ningmeng123.modernite.config.client.IteSettingsScreen;
 import java.nio.charset.StandardCharsets;
@@ -149,6 +152,25 @@ public final class IteConfigClientAudit {
             Screen home = mc.screen;
             capture(mc, home, width, height, "ite-settings", -1, -1);
             bounds(home);
+            press(home, "modern_ite.config.monster_spawns");
+            check(mc.screen instanceof MonsterSpawnSettingsScreen, "ITE's spawn button must open the shared registry browser");
+            Screen spawns = mc.screen;
+            capture(mc, spawns, width, height, "ite-natural-spawns", -1, -1);
+            bounds(spawns);
+            var entriesField = MonsterSpawnSettingsScreen.class.getDeclaredField("entries");
+            entriesField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            var spawnEntries = (List<io.github.ningmeng123.mite.config.MonsterSpawnCatalog.Entry>)entriesField.get(spawns);
+            for(var kind:ExtremeKind.values()) {
+                var type = ExtremeMobs.type(kind);
+                check(spawnEntries.stream().anyMatch(entry -> entry.type() == type
+                                && entry.baseWeights().equals(List.of(ExtremeMobs.spawnWeight(kind)))),
+                        "The ITE browser must show each registered monster's real current raw weight: " + kind.id());
+            }
+            check(spawnEntries.stream().allMatch(entry -> entry.id().startsWith("modern_ite:")),
+                    "ITE's browser must not duplicate the base mod's registered monsters");
+            spawns.onClose();
+            check(mc.screen == home, "Closing the spawn browser must restore ITE settings");
             press(home, "modern_ite.config.values");
             check(mc.screen instanceof IteConfigValuesScreen, "The values button must open the effective settings browser");
             Screen values = mc.screen;
@@ -166,6 +188,7 @@ public final class IteConfigClientAudit {
         }
         report.addProperty("mite_entry_button_clicked", true);
         report.addProperty("effective_values_search_verified", true);
+        report.addProperty("ite_registry_spawn_browser_and_native_weights_verified", true);
         report.addProperty("minimum_and_large_widget_bounds_verified", true);
         auditOres(mc, title);
         var home = new IteSettingsScreen(ite, title);

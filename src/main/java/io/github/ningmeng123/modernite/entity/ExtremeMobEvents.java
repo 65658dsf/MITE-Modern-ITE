@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns;
 import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
 import java.util.*;
 import net.minecraft.core.*;
@@ -75,7 +76,7 @@ public final class ExtremeMobEvents {
                 &&level.getServer().isSameThread()&&event.getSpawnType()!=MobSpawnType.STRUCTURE
                 &&event.getSpawnType()!=MobSpawnType.COMMAND&&event.getSpawnType()!=MobSpawnType.SPAWN_EGG
                 &&!SpawnPopulation.explicit(original)&&SpawnPopulation.automaticAllowed(level,ExtremeMobs.type(ZOMBIE_PIGMAN_LORD))
-                &&original.getRandom().nextInt(5)==0){
+                &&pigmanReplacementRoll(original,event.getSpawnType())){
             Mob replacement=ExtremeMobs.type(ZOMBIE_PIGMAN_LORD).create(level);if(replacement==null)return;
             replacement.moveTo(original.position());replacement.setYRot(original.getYRot());
             if(original.getPersistentData().hasUUID(SpawnPopulation.SUMMONER))replacement.getPersistentData().putUUID(SpawnPopulation.SUMMONER,original.getPersistentData().getUUID(SpawnPopulation.SUMMONER));
@@ -94,6 +95,11 @@ public final class ExtremeMobEvents {
                 }
             }
         }
+    }
+    private static boolean pigmanReplacementRoll(Mob original,MobSpawnType reason) {
+        if(reason!=MobSpawnType.NATURAL)return original.getRandom().nextInt(5)==0;
+        return ConfiguredMonsterSpawns.replacement(original.getRandom(),.2D,original.getType(),
+                ExtremeMobs.type(ZOMBIE_PIGMAN_LORD),()->original.getRandom().nextInt(5)==0);
     }
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void incoming(LivingIncomingDamageEvent event){

@@ -7,6 +7,10 @@ import io.github.ningmeng123.mite.worldgen.*;
 import io.github.ningmeng123.modernite.content.*;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.github.ningmeng123.modernite.entity.ExtremeSpawnProgression;
+import io.github.ningmeng123.modernite.entity.ExtremeKind;
+import io.github.ningmeng123.modernite.entity.SpawnPopulation;
+import io.github.ningmeng123.modernite.config.IteSpawnConfig;
+import io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns;
 import io.github.ningmeng123.modernite.world.ExtremeWorldState;
 import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments;
@@ -71,6 +75,22 @@ public final class ExtremeRules implements MiteExtensions.Policy {
         return !ExtremeWorldState.graceActive(context.level())&&spawnSq>=576&&nearestSq>=576;
     }
     @Override public boolean outdoorAllows(MiteExtensions.SpawnContext context,Mob mob,boolean original) { return blood(context.level())||original; }
+    @Override public boolean ownsMonsterSpawnSettings(String entityId) { return IteSpawnConfig.owns(entityId); }
+    @Override public double monsterSpawnMultiplier(EntityType<?> type,double original) {
+        String id=BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
+        return IteSpawnConfig.owns(id)?IteSpawnConfig.multiplier(id):original;
+    }
+    @Override public double monsterSpawnWeightMultiplier(MiteExtensions.SpawnContext context,BlockPos pos,EntityType<?> type,double original) {
+        if(type!=EntityType.ZOMBIFIED_PIGLIN||!naturalPigmanReplacementAllowed(context.level()))return original;
+        double parent=ConfiguredMonsterSpawns.multiplier(type);
+        double lord=ConfiguredMonsterSpawns.multiplier(ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD));
+        return .8D*parent+.2D*lord;
+    }
+    /** Same admission gate as the natural pigman finalization path. */
+    public static boolean naturalPigmanReplacementAllowed(ServerLevel level) {
+        return level.getServer().isSameThread()
+                &&SpawnPopulation.automaticAllowed(level,ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD));
+    }
     @Override public List<R196MobSpawning.Entry> spawnPool(MiteExtensions.SpawnContext context,BlockPos pos,List<R196MobSpawning.Entry> original) {
         var result=new ArrayList<>(original);ExtremeMobs.addSpawnEntries(context,pos,result);
         long day=io.github.ningmeng123.mite.worldgen.BloodMoonInvasion.highestDay(context.level());

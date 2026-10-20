@@ -1,5 +1,12 @@
 package io.github.ningmeng123.modernite.config.client;
 
+import io.github.ningmeng123.mite.client.config.MonsterSpawnSettingsScreen;
+import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteSpawnConfig;
+import io.github.ningmeng123.modernite.entity.ExtremeKind;
+import io.github.ningmeng123.modernite.entity.ExtremeMobs;
+import java.util.List;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -22,17 +29,24 @@ public final class IteSettingsScreen extends Screen {
     @Override
     protected void init() {
         int buttonWidth = Math.min(260, width - 32);
-        int y = Math.max(108, height / 2 - 12);
+        int y = Math.max(100, height / 2 - 24);
+        var spawns = addRenderableWidget(Button.builder(Component.translatable("modern_ite.config.monster_spawns"),
+                ignored -> minecraft.setScreen(new MonsterSpawnSettingsScreen(this, ModernIte.MOD_ID,
+                        IteSpawnConfig::effectiveSnapshot, values -> {
+                            if(IteConfigClient.editable())IteSpawnConfig.save(values);
+                        }, IteSettingsScreen::nativeSpawnWeights)))
+                .bounds((width - buttonWidth) / 2, y, buttonWidth, 20).build());
+        spawns.setTooltip(Tooltip.create(Component.translatable("modern_ite.config.monster_spawns.tooltip")));
         var edit = addRenderableWidget(Button.builder(Component.translatable("modern_ite.config.edit"),
                 ignored -> {
                     if (IteConfigClient.editable()) minecraft.setScreen(IteConfigurationScreen.create(container, this));
-                }).bounds((width - buttonWidth) / 2, y, buttonWidth, 20).build());
+                }).bounds((width - buttonWidth) / 2, y + 28, buttonWidth, 20).build());
         edit.active = IteConfigClient.editable();
         edit.setTooltip(Tooltip.create(Component.translatable(edit.active
                 ? "modern_ite.config.edit.tooltip" : "modern_ite.config.server_owned")));
         addRenderableWidget(Button.builder(Component.translatable("modern_ite.config.values"),
                 ignored -> minecraft.setScreen(new IteConfigValuesScreen(this)))
-                .bounds((width - buttonWidth) / 2, y + 28, buttonWidth, 20).build());
+                .bounds((width - buttonWidth) / 2, y + 56, buttonWidth, 20).build());
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, ignored -> onClose())
                 .bounds(width / 2 - 100, height - 28, 200, 20).build());
     }
@@ -50,4 +64,9 @@ public final class IteSettingsScreen extends Screen {
 
     @Override
     public void onClose() { minecraft.setScreen(parent); }
+
+    private static List<Integer> nativeSpawnWeights(EntityType<?> type) {
+        for(var kind:ExtremeKind.values())if(ExtremeMobs.type(kind)==type)return List.of(ExtremeMobs.spawnWeight(kind));
+        return List.of();
+    }
 }

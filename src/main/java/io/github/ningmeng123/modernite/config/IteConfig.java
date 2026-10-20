@@ -120,6 +120,7 @@ public final class IteConfig {
         add(builder, "Entities.Animals", "breed_xp_pig", 25, 0D, 1000000D, "猪繁殖经验。0不产生繁殖经验。");
         add(builder, "Entities.Animals", "breed_xp_cow", 45, 0D, 1000000D, "牛繁殖经验。0不产生繁殖经验。");
         add(builder, "Misc", "log_players_interact_with_portal", true, 0D, 1D, "玩家成功使用传送门时广播。只在本体传送门真正完成传送后广播，查询、失败、取消不广播。");
+        IteSpawnConfig.define(builder);
         SPEC=builder.build();
         local=defaults();
     }
@@ -165,9 +166,10 @@ public final class IteConfig {
         var values=new LinkedHashMap<String,Object>();
         SETTINGS.forEach((key,setting)->values.put(key,SPEC.isLoaded()?setting.get():setting.getDefault()));
         local=validated(values);
+        IteSpawnConfig.refresh();
     }
     public static void receiveServerSnapshot(Map<String,?> snapshot) { remote=validated(snapshot); }
-    public static void clearServerSnapshot() { remote=null; }
+    public static void clearServerSnapshot() { remote=null;IteSpawnConfig.clearServerSnapshot(); }
     @SubscribeEvent public static void configChanged(ModConfigEvent event) {
         if(event.getConfig().getSpec()!=SPEC||event instanceof ModConfigEvent.Unloading) return;
         refresh();IteConfigSync.broadcast();

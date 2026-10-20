@@ -3,6 +3,7 @@ package io.github.ningmeng123.modernite.config.client;
 import io.github.ningmeng123.mite.client.config.MiteSettingsScreen;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.config.IteSpawnConfig;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -33,11 +34,13 @@ public final class IteConfigClient {
         return minecraft.getConnection() == null || minecraft.hasSingleplayerServer();
     }
 
-    public static void receive(Map<String, Object> values) {
+    public static void receive(Map<String, Object> values, Map<String, Double> naturalSpawnRates) {
         var minecraft = Minecraft.getInstance();
         // The integrated server shares local configuration with its client.
-        if (minecraft.getConnection() != null && !minecraft.hasSingleplayerServer())
+        if (minecraft.getConnection() != null && !minecraft.hasSingleplayerServer()) {
             IteConfig.receiveServerSnapshot(values);
+            IteSpawnConfig.receiveServerSnapshot(naturalSpawnRates);
+        }
     }
 
     @SubscribeEvent
