@@ -10,6 +10,7 @@ import io.github.ningmeng123.mite.survival.PlayerExperience;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import io.github.ningmeng123.mite.registry.MiteArmorContent;
+import io.github.ningmeng123.mite.registry.MiteShields;
 import io.github.ningmeng123.mite.registry.MiteTools;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
@@ -130,36 +131,31 @@ public final class IteItemGameTests {
     }
 
     @GameTest(template="gear_empty")
-    public static void sourceExperienceTruncatesBeforeArmorDoublingAndEachAwardAdvancesAtMostOneLevel(GameTestHelper h) {
+    public static void restoredExperienceKeepsFractionalPointsAndCumulativeOverflowAcrossSeveralLevels(GameTestHelper h) {
         try(Session session=new Session(h)) {
             int[] grades={1,2,10};
-            long[] expectedTool={1000,1000,3000},expectedArmor={2000,2000,6000};
+            long[] expectedTool={1050,1150,3750},expectedArmor={1050,1150,3750};
             for(int index=0;index<grades.length;index++) {
-                ItemStack tool=new ItemStack(Items.IRON_SWORD),armor=new ItemStack(Items.IRON_CHESTPLATE);
+                ItemStack tool=new ItemStack(MiteTools.get("vibranium_pickaxe")),
+                        armor=new ItemStack(MiteArmorContent.get("mite:vibranium_chestplate"));
                 tool.set(ExtremeGear.FORGE_GRADE.get(),grades[index]);armor.set(ExtremeGear.FORGE_GRADE.get(),grades[index]);
                 GearProgression.award(tool,1000,session.player);GearProgression.award(armor,1000,session.player);
                 h.assertTrue(GearProgression.state(tool).experienceMillis()==expectedTool[index]
                         &&GearProgression.state(armor).experienceMillis()==expectedArmor[index],
-                        "The real award service truncates forging's whole points before armor doubles them, grade "+grades[index]);
+                        "Forging retains fractional points equally for tools and armor, grade "+grades[index]);
             }
-            ItemStack[] equipment={new ItemStack(MiteTools.get("vibranium_sword")),
-                    new ItemStack(MiteArmorContent.get("mite:vibranium_chestplate"))};
-            int[] expectedCaps={25,28};
-            for(int index=0;index<equipment.length;index++) {
-                ItemStack stack=equipment[index];stack.set(ExtremeGear.FORGE_GRADE.get(),10);
+            for(GrowthCase sample:growthCases()) {
+                ItemStack stack=new ItemStack(sample.item());stack.set(ExtremeGear.FORGE_GRADE.get(),10);
                 int cap=GearProgression.maxLevel(stack);
-                h.assertTrue(cap==expectedCaps[index],"Source equipment cap remains independent of experience thresholds");
-                while(GearProgression.state(stack).level()<cap) {
-                    int before=GearProgression.state(stack).level();
-                    long threshold=GearProgression.nextLevelExperienceMillis(stack,before);
-                    long divisor=index==1?2000L:1000L;
-                    long input=(threshold+divisor-1)/divisor*1000L;
-                    // Grade ten deliberately overshoots the threshold; the same event must not buy several levels.
-                    GearProgression.award(stack,input,session.player);
-                    h.assertTrue(GearProgression.state(stack).level()==before+1
-                            &&GearProgression.state(stack).experienceMillis()==0,
-                            "Every threshold-sized action advances exactly one level and discards its surplus");
-                }
+                h.assertTrue(cap==sample.cap(),"The retained forging cap is independent of the new threshold: "+sample.name());
+                GearProgression.award(stack,100_000L,session.player);
+                h.assertTrue(GearProgression.state(stack).level()==sample.overflowLevel()
+                                &&GearProgression.state(stack).experienceMillis()==sample.overflowRemainder(),
+                        "One grade-ten 100-point award becomes 375 points and uses the category's thresholds once: "+sample.name());
+                GearProgression.award(stack,Long.MAX_VALUE,session.player);
+                h.assertTrue(GearProgression.state(stack).level()==cap
+                                &&GearProgression.state(stack).experienceMillis()==0,
+                        "A single large award reaches the retained forging cap and clears only max-level surplus");
                 var before=GearProgression.state(stack);
                 GearProgression.award(stack,Long.MAX_VALUE,session.player);
                 h.assertTrue(GearProgression.state(stack).equals(before),"Full equipment ignores further growth awards");
@@ -168,6 +164,45 @@ public final class IteItemGameTests {
                         "Completed growth and forge caps survive actual item serialization");
             }
         }h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void categoryThresholdsUseBaseCurvesAndApplyForgingOnceAtEveryLevel(GameTestHelper h) {
+        try(Session session=new Session(h)) {
+            for(GrowthCase sample:growthCases()) {
+                ItemStack stack=new ItemStack(sample.item()),unforged=new ItemStack(sample.item());
+                stack.set(ExtremeGear.FORGE_GRADE.get(),10);
+                h.assertTrue(GearProgression.maxLevel(stack)==sample.cap(),"The real grade-ten cap is unchanged: "+sample.name());
+                for(int level=0;level<sample.cap();level++) {
+                    long threshold=(sample.first()+sample.increment()*(long)level)*1000L;
+                    h.assertTrue(GearProgression.nextLevelExperienceMillis(stack,level)==threshold
+                                    &&GearProgression.nextLevelExperienceMillis(unforged,level)==threshold,
+                            "ITE follows the independently expected base category curve, without a material or forging threshold multiplier: "+sample.name()+" L"+level);
+                    GearProgress before=GearProgression.state(stack);
+                    long deficit=threshold-before.experienceMillis();
+                    // Grade ten is exactly 15/4. Round the raw thousandths upward, then retain any credited surplus.
+                    long rawMillis=(deficit*4L+14L)/15L;
+                    long creditedMillis=rawMillis*15L/4L;
+                    GearProgression.award(stack,rawMillis,session.player);
+                    GearProgress after=GearProgression.state(stack);
+                    long remainder=level+1==sample.cap()?0L:before.experienceMillis()+creditedMillis-threshold;
+                    h.assertTrue(after.level()==level+1&&after.experienceMillis()==remainder,
+                            "The actual award applies forging once, deducts one reached threshold and retains exact thousandths: "+sample.name()+" L"+level);
+                }
+            }
+        }h.succeed();
+    }
+
+    private record GrowthCase(String name,Item item,int first,int increment,int cap,int overflowLevel,long overflowRemainder) {}
+    private static List<GrowthCase> growthCases() {
+        return List.of(
+                new GrowthCase("tool",MiteTools.get("vibranium_pickaxe"),100,50,25,2,125_000L),
+                new GrowthCase("shield",MiteShields.get("vibranium"),100,50,25,2,125_000L),
+                new GrowthCase("weapon",MiteTools.get("vibranium_sword"),150,100,25,1,225_000L),
+                new GrowthCase("helmet",MiteArmorContent.get("mite:vibranium_helmet"),40,20,28,4,95_000L),
+                new GrowthCase("chestplate",MiteArmorContent.get("mite:vibranium_chestplate"),80,40,28,3,15_000L),
+                new GrowthCase("leggings",MiteArmorContent.get("mite:vibranium_leggings"),60,30,28,3,105_000L),
+                new GrowthCase("boots",MiteArmorContent.get("mite:vibranium_boots"),20,10,28,7,25_000L));
     }
 
     @GameTest(template="gear_empty",batch="ite_config")

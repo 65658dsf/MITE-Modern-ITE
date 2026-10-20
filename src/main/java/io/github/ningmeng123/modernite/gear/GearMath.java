@@ -45,13 +45,11 @@ public final class GearMath {
         int base = armor ? materialHarvestLevel(material) * 3 : 15;
         return base + Math.clamp(forgeGrade, 0, 10);
     }
-    /** Keep the old float operations and truncate whole experience before armor's outer multiplier. */
+    /** Restore 0.2.4's double multiplier on stored thousandths, without discarding fractional points. */
     public static long experienceMillis(long originalMillis, int forgeGrade) {
-        int rawPoints = (int)Math.min(Integer.MAX_VALUE, Math.max(0L, originalMillis / 1000L));
         int grade = Math.clamp(forgeGrade, 0, 10);
-        float bonus = (0.05F + grade * 0.05F) * grade / 2F;
-        int awarded = (int)(rawPoints * (1F + bonus));
-        return awarded * 1000L;
+        double total = Math.max(0L, originalMillis) * (1D + .025D * grade * (grade + 1));
+        return (long)Math.min(Long.MAX_VALUE, total);
     }
     public static int failurePercent(int grade, int axeTier, int hammerTier) {
         return Math.clamp((grade < 4 ? 35 : grade < 7 ? 55 : 65)

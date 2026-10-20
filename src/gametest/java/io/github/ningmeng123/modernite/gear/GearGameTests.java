@@ -167,20 +167,21 @@ public final class GearGameTests {
         h.succeed();
     }
     @GameTest(template = "gear_empty")
-    public static void forgeExperiencePolicyKeepsOldFloatAndWholePointAwards(GameTestHelper h) {
+    public static void forgeExperiencePolicyRestoresDoublePrecisionAndFractionalPointAwards(GameTestHelper h) {
         ItemStack stack = new ItemStack(Items.IRON_SWORD);
         var policy = io.github.ningmeng123.mite.api.MiteExtensions.policy();
         stack.set(ExtremeGear.FORGE_GRADE.get(), 1);
-        h.assertTrue(policy.gearExperience(stack, 1000) == 1000
-                && policy.gearExperience(stack, 60_000) == 62_000,
-                "Grade one truncates one-point awards and preserves the old float boundary below 63");
+        h.assertTrue(policy.gearExperience(stack, 1000) == 1050
+                && policy.gearExperience(stack, 60_000) == 63_000
+                && policy.gearExperience(stack, 999) == 1048,
+                "Grade one retains fractional points and truncates only fractions below one stored thousandth");
         stack.set(ExtremeGear.FORGE_GRADE.get(), 2);
-        h.assertTrue(policy.gearExperience(stack, 1000) == 1000, "Grade two's fractional bonus is not stored as partial experience");
+        h.assertTrue(policy.gearExperience(stack, 1000) == 1150, "Grade two stores its fractional-point bonus");
         stack.set(ExtremeGear.FORGE_GRADE.get(), 3);
-        h.assertTrue(policy.gearExperience(stack, 90_000) == 116_000, "Grade three preserves the source float boundary below 117");
+        h.assertTrue(policy.gearExperience(stack, 90_000) == 117_000, "Grade three uses the restored double multiplier");
         stack.set(ExtremeGear.FORGE_GRADE.get(), 10);
-        h.assertTrue(policy.gearExperience(stack, 1000) == 3000
-                && policy.gearExperience(stack, 1999) == 3000, "Grade ten truncates raw and awarded whole points before returning millis");
+        h.assertTrue(policy.gearExperience(stack, 1000) == 3750
+                && policy.gearExperience(stack, 1999) == 7496, "Grade ten preserves thousandth precision in both input and award");
         h.succeed();
     }
     @GameTest(template = "gear_empty")

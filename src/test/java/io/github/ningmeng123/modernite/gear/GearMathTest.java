@@ -72,19 +72,19 @@ public final class GearMathTest {
         assertEquals(28, GearMath.maximumGearLevel("vibranium", true, 10));
         assertEquals(28, GearMath.maximumGearLevel("vibranium", true, Integer.MAX_VALUE));
     }
-    @Test void forgedExperienceKeepsLegacyWholePointTruncationAndFloatBoundaries() {
-        assertEquals(1000L, GearMath.experienceMillis(1000, 1));
-        assertEquals(1000L, GearMath.experienceMillis(1000, 2));
-        assertEquals(3000L, GearMath.experienceMillis(1000, 10));
-        assertEquals(0L, GearMath.experienceMillis(999, 10));
-        assertEquals(3000L, GearMath.experienceMillis(1999, 10));
-        // The source float products are just below 63 and 117; double/rational arithmetic changes the award.
-        assertEquals(62_000L, GearMath.experienceMillis(60_000, 1));
-        assertEquals(116_000L, GearMath.experienceMillis(90_000, 3));
+    @Test void forgedExperienceRestoresDoublePrecisionAndFractionalPointAwards() {
+        assertEquals(1050L, GearMath.experienceMillis(1000, 1));
+        assertEquals(1150L, GearMath.experienceMillis(1000, 2));
+        assertEquals(3750L, GearMath.experienceMillis(1000, 10));
+        assertEquals(1048L, GearMath.experienceMillis(999, 1));
+        assertEquals(3746L, GearMath.experienceMillis(999, 10));
+        assertEquals(7496L, GearMath.experienceMillis(1999, 10));
+        assertEquals(63_000L, GearMath.experienceMillis(60_000, 1));
+        assertEquals(117_000L, GearMath.experienceMillis(90_000, 3));
         assertEquals(41_000L, GearMath.experienceMillis(20_000, 6));
         assertEquals(0L, GearMath.experienceMillis(Long.MIN_VALUE, 10));
-        assertEquals(Integer.MAX_VALUE * 1000L, GearMath.experienceMillis(Long.MAX_VALUE, 10));
+        assertEquals(Long.MAX_VALUE, GearMath.experienceMillis(Long.MAX_VALUE, 10));
         assertEquals(1000L, GearMath.experienceMillis(1000, -1));
-        assertEquals(3000L, GearMath.experienceMillis(1000, Integer.MAX_VALUE));
+        assertEquals(3750L, GearMath.experienceMillis(1000, Integer.MAX_VALUE));
     }
 }
