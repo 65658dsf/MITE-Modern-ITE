@@ -79,7 +79,7 @@ public final class MobRenderRegressionAudit {
             ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.ZOMBIE_PIGMAN_LORD,ExtremeKind.ZOMBIE_FLY_AWAY,
             ExtremeKind.ZOMBIE_GHAST,ExtremeKind.DRAGON_ZOMBIE,ExtremeKind.ZOMBIE_DOOR,ExtremeKind.ZOMBIE_IRON_BUCKET,
             ExtremeKind.FISHING_ROD_ZOMBIE,ExtremeKind.WITHER_SKELETON_ARROW,ExtremeKind.RUN_CREEPER,
-            ExtremeKind.PHASE_CREEPER,ExtremeKind.CHAOS_CREEPER);
+            ExtremeKind.PHASE_CREEPER,ExtremeKind.CHAOS_CREEPER,ExtremeKind.SKELETON_ZOMBIE);
     private static boolean baked,started,finished,capturing,postRenderSeen,startupReady;
     private static int waiting,readyTicks,firstServerTick=-1;
     private static String worldName;
@@ -338,6 +338,9 @@ public final class MobRenderRegressionAudit {
     private static void verifyVariant(Minecraft mc,Mob mob,ExtremeKind kind,NativeImage actual,JsonObject facts)throws Exception {
         LivingEntityRenderer renderer=(LivingEntityRenderer)mc.getEntityRenderDispatcher().getRenderer(mob);
         Object model=renderer.getModel();facts.addProperty("model",model.getClass().getName());
+        if(kind==ExtremeKind.SKELETON_ZOMBIE)SkeletonZombieModelAudit.verify(mc,mob,facts);
+        if(kind==ExtremeKind.WITCH_LORD||kind==ExtremeKind.WANDERING_WITCH)
+            WitchFreshAnimationsAudit.verify(mc,mob,facts,screenshots());
         if(kind==ExtremeKind.ZOMBIE_GHAST||kind==ExtremeKind.DRAGON_ZOMBIE){
             check(model instanceof VariantZombieModel,"Species head requires the dedicated headless humanoid");
             Field cubes=ModelPart.class.getDeclaredField("cubes");cubes.setAccessible(true);
@@ -529,7 +532,7 @@ public final class MobRenderRegressionAudit {
     }
     private static JsonObject initialReport() {
         JsonObject j=new JsonObject();j.addProperty("author","NingMeng123");j.addProperty("timestamp",Instant.now().toString());
-        j.addProperty("scope","real ClientLevel; all 45 active texture lookups; fourteen native InventoryScreen GPU draws; alpha/body and zombie UV controls; variant heads, shield, wearable bucket and attack poses");
+        j.addProperty("scope","real ClientLevel; all 45 active texture lookups; "+FOCUS.size()+" native InventoryScreen GPU draws; alpha/body and zombie UV controls; variant heads, shield, wearable bucket and attack poses");
         j.addProperty("property","modern_ite.mobRenderAudit=true");j.addProperty("existing_world_loaded",false);j.addProperty("multiplayer_connected",false);
         j.addProperty("render_target_width",SIZE);j.addProperty("render_target_height",SIZE);j.add("failures",new JsonArray());return j;
     }

@@ -13,7 +13,7 @@ repositories {
         content { includeGroup 'mezz.jei' }
     }
 }
-def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.5.jar'))
+def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.6.jar'))
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output
@@ -78,6 +78,9 @@ neoForge {
                 systemProperty 'modern_ite.mobRenderAudit', 'true'
                 systemProperty 'modern_ite.defenseAudit', 'true'
                 systemProperty 'modern_ite.mobRenderAuditOutput', file('build/verification/defense-intent/client-audit.json').absolutePath
+            }
+            if (providers.gradleProperty('modernIteClientDirectory').isPresent()) {
+                gameDirectory = file(providers.gradleProperty('modernIteClientDirectory').get())
             }
         }
         server { server(); gameDirectory = file('run-server'); programArgument '--nogui' }
