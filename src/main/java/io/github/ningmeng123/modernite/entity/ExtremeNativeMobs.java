@@ -111,7 +111,8 @@ public final class ExtremeNativeMobs {
         else if(key.equals("minecraft:skeleton"))body(m,15,8,.3,64);
         else if(key.equals("minecraft:wither_skeleton"))body(m,45,13,.25,64);
         else if(key.equals("minecraft:enderman"))body(m,60,15,.3,64);
-        else if(key.equals("minecraft:iron_golem"))body(m,200,0,.25,64);
+        // Player.hurt rejects zero before the fixed 25/28 incoming-damage rule can run.
+        else if(key.equals("minecraft:iron_golem"))body(m,200,25,.25,64);
         else if(key.equals("minecraft:giant")){body(m,100,25,.3,64);stat(m,Attributes.KNOCKBACK_RESISTANCE,1);}
         else if(key.equals("minecraft:ghast"))stat(m,Attributes.MAX_HEALTH,15);
         else if(key.equals("minecraft:blaze")){stat(m,Attributes.MAX_HEALTH,40);stat(m,Attributes.ATTACK_DAMAGE,6);}
@@ -147,7 +148,11 @@ public final class ExtremeNativeMobs {
     }
     private static boolean golemBoosted(Mob mob){return IteConfig.bool("Entities.can_boost_iron_golem")&&mob.getPersistentData().getBoolean("modern_ite:golem_boost");}
     private static void syncGolemBoost(Mob mob){
-        if(mob.getType()!=EntityType.IRON_GOLEM||!mob.getPersistentData().getBoolean("modern_ite:golem_boost"))return;
+        if(mob.getType()!=EntityType.IRON_GOLEM)return;
+        // Repair saved zero-damage profiles on join and periodic sync, retaining nonzero custom values.
+        var attack=mob.getAttribute(Attributes.ATTACK_DAMAGE);
+        if(attack!=null&&attack.getBaseValue()==0D)attack.setBaseValue(25D);
+        if(!mob.getPersistentData().getBoolean("modern_ite:golem_boost"))return;
         var data=mob.getPersistentData();
         // Existing boosted saves already include the original +20 health.
         boolean before=!data.contains("modern_ite:golem_boost_effective")||data.getBoolean("modern_ite:golem_boost_effective");

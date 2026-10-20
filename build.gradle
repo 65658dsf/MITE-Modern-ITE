@@ -13,7 +13,7 @@ repositories {
         content { includeGroup 'mezz.jei' }
     }
 }
-def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.6.jar'))
+def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.5.jar'))
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output
@@ -87,7 +87,7 @@ neoForge {
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = file(providers.gradleProperty('modernIteGameTestDirectory').getOrElse('run-gametest'))
-            systemProperty 'neoforge.enabledGameTestNamespaces', 'modern_ite'
+            systemProperty 'neoforge.enabledGameTestNamespaces', providers.gradleProperty('modernIteGameTestNamespaces').getOrElse('modern_ite')
         }
     }
     mods {
