@@ -18,6 +18,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.AnimalArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -130,7 +131,9 @@ public final class ExtremeGear {
     public static ItemStack gem(GemType type, int rank) { return new ItemStack(GEMS.get(type.ordinal() * 6 + rank - 1).get()); }
     public static ItemStack fromCode(int code) { return code == 0 ? ItemStack.EMPTY : new ItemStack(GEMS.get(code - 1).get()); }
     public static boolean socketable(ItemStack stack) {
-        return !stack.isEmpty() && (EquipmentDurability.toolProfile(stack) != null || GearProgression.isArmor(stack));
+        return !stack.isEmpty() && (EquipmentDurability.toolProfile(stack) != null
+                || stack.getItem() instanceof ArmorItem && !(stack.getItem() instanceof AnimalArmorItem)
+                && GearProgression.material(stack) != null);
     }
     public static int grade(ItemStack stack) { return stack.getOrDefault(FORGE_GRADE.get(), 0); }
     public static double health(Player player, double original) {
@@ -141,12 +144,12 @@ public final class ExtremeGear {
     public static float regeneration(Player player, float original) { return original * (1F + worn(player, GemType.RECOVER) * .125F); }
     public static float naturalRegeneration(Player player, float original) { return regeneration(player, original); }
     public static int maximumGearLevel(ItemStack stack, int original) {
-        return original == 0 ? 0 : original + Math.clamp(stack.getOrDefault(GRINDINGS.get(), 0), 0, 3);
+        if (original <= 0) return 0;
+        return GearMath.maximumGearLevel(GearProgression.material(stack), stack.getItem() instanceof ArmorItem,
+                grade(stack));
     }
     public static long experience(ItemStack stack, long original) {
-        int grade = grade(stack);
-        double total = original * (1D + .025D * grade * (grade + 1));
-        return (long)Math.min(Long.MAX_VALUE, total);
+        return GearMath.experienceMillis(original, grade(stack));
     }
     public static long gearExperience(ItemStack stack, long original) { return experience(stack, original); }
     public static void preserve(ItemStack source, ItemStack result) {

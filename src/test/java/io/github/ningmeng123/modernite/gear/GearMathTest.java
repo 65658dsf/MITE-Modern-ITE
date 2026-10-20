@@ -43,4 +43,48 @@ public final class GearMathTest {
         assertEquals(0, GearMath.enhanceFactor(0));
         assertTrue(GearMath.enhanceFactor(10) > .87 && GearMath.enhanceFactor(10) < .89);
     }
+    @Test void equipmentCapsUseForgeGradeInsteadOfMaterialGrowthBands() {
+        for (String material : new String[]{"wood", "flint", "copper", "iron", "mithril", "adamantium", "vibranium"}) {
+            assertEquals(15, GearMath.maximumGearLevel(material, false, 0));
+            assertEquals(18, GearMath.maximumGearLevel(material, false, 3));
+            assertEquals(25, GearMath.maximumGearLevel(material, false, 10));
+        }
+        assertEquals(0, GearMath.maximumGearLevel(null, false, 10));
+        assertEquals(15, GearMath.maximumGearLevel("iron", false, -1));
+        assertEquals(25, GearMath.maximumGearLevel("iron", false, Integer.MAX_VALUE));
+    }
+    @Test void armorCapsUseMiteHarvestLevelsRatherThanForgingToolTiers() {
+        assertEquals(2, GearMath.materialHarvestLevel("flint"));
+        assertEquals(2, GearMath.materialHarvestLevel("stone"));
+        assertEquals(3, GearMath.materialHarvestLevel("obsidian"));
+        assertEquals(4, GearMath.materialHarvestLevel("diamond"));
+        assertEquals(0, GearMath.maximumGearLevel("leather", true, 0));
+        for (String material : new String[]{"copper", "silver", "gold", "rusted_iron"})
+            assertEquals(6, GearMath.maximumGearLevel(material, true, 0));
+        assertEquals(9, GearMath.maximumGearLevel("iron", true, 0));
+        assertEquals(9, GearMath.maximumGearLevel("ancient_metal", true, 0));
+        assertEquals(12, GearMath.maximumGearLevel("mithril", true, 0));
+        assertEquals(15, GearMath.maximumGearLevel("adamantium", true, 0));
+        assertEquals(18, GearMath.maximumGearLevel("vibranium", true, 0));
+        assertEquals(12, GearMath.maximumGearLevel("iron", true, 3));
+        assertEquals(17, GearMath.maximumGearLevel("mithril", true, 5));
+        assertEquals(22, GearMath.maximumGearLevel("adamantium", true, 7));
+        assertEquals(28, GearMath.maximumGearLevel("vibranium", true, 10));
+        assertEquals(28, GearMath.maximumGearLevel("vibranium", true, Integer.MAX_VALUE));
+    }
+    @Test void forgedExperienceKeepsLegacyWholePointTruncationAndFloatBoundaries() {
+        assertEquals(1000L, GearMath.experienceMillis(1000, 1));
+        assertEquals(1000L, GearMath.experienceMillis(1000, 2));
+        assertEquals(3000L, GearMath.experienceMillis(1000, 10));
+        assertEquals(0L, GearMath.experienceMillis(999, 10));
+        assertEquals(3000L, GearMath.experienceMillis(1999, 10));
+        // The source float products are just below 63 and 117; double/rational arithmetic changes the award.
+        assertEquals(62_000L, GearMath.experienceMillis(60_000, 1));
+        assertEquals(116_000L, GearMath.experienceMillis(90_000, 3));
+        assertEquals(41_000L, GearMath.experienceMillis(20_000, 6));
+        assertEquals(0L, GearMath.experienceMillis(Long.MIN_VALUE, 10));
+        assertEquals(Integer.MAX_VALUE * 1000L, GearMath.experienceMillis(Long.MAX_VALUE, 10));
+        assertEquals(1000L, GearMath.experienceMillis(1000, -1));
+        assertEquals(3000L, GearMath.experienceMillis(1000, Integer.MAX_VALUE));
+    }
 }

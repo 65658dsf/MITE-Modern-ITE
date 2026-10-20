@@ -148,8 +148,8 @@ public final class ClubSmithingGameTests {
         }
         ItemStack current = personalClub(h, "copper");
         GearProgress identity = GearProgression.state(current);
-        for (var step : List.of(Map.entry("iron", 13), Map.entry("ancient_metal", 13), Map.entry("mithril", 18),
-                Map.entry("adamantium", 23), Map.entry("vibranium", 28))) {
+        for (var step : List.of(Map.entry("iron", 17), Map.entry("ancient_metal", 17), Map.entry("mithril", 17),
+                Map.entry("adamantium", 17), Map.entry("vibranium", 17))) {
             String from = GearProgression.material(current);
             Route route = ROUTES.stream().filter(value -> value.from().equals(from) && value.to().equals(step.getKey())).findFirst().orElseThrow();
             ItemStack before = current.copy();
@@ -157,7 +157,7 @@ public final class ClubSmithingGameTests {
             assertPersonalComponents(h, before, current);
             assertProportionalWear(h, before, current);
             h.assertTrue(GearProgression.state(current).equals(identity) && GearProgression.maxLevel(current) == step.getValue(),
-                    "Five consecutive upgrades retain UUID, XP, levels and affixes while the new material and preserved three grindings set its growth cap");
+                    "Five consecutive upgrades retain UUID, XP, levels and affixes while preserved forge grade two sets the growth cap to 17");
         }
         h.assertTrue(current.is(club("vibranium")), "The complete copper-to-vibranium route ends at the intended top-tier club");
         h.succeed();

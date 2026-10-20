@@ -51,15 +51,25 @@ public final class SourceUtilityGameTests {
     @GameTest(template="gear_empty",batch="ite_config")
     public static void disablingSpawnerAccelerationLeavesTheNativeCountdown(GameTestHelper h) {
         boolean previous=IteConfig.bool("mob_spawner_speed_up_with_players");
-        try(Session session=new Session(h)) {
-            var level=h.getLevel();BlockPos pos=h.absolutePos(new BlockPos(2,2,2));level.setBlockAndUpdate(pos,Blocks.SPAWNER.defaultBlockState());
-            var spawner=((SpawnerBlockEntity)level.getBlockEntity(pos)).getSpawner();var tag=new CompoundTag();tag.putShort("Delay",(short)30);spawner.load(level,pos,tag);
-            session.player.moveTo(Vec3.atCenterOf(pos).add(1,1,0));
-            IteConfig.setting("mob_spawner_speed_up_with_players").set(false);IteConfig.refresh();spawner.serverTick(level,pos);
-            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==29,"A close player now advances only the native one tick");
-            IteConfig.setting("mob_spawner_speed_up_with_players").set(true);IteConfig.refresh();spawner.serverTick(level,pos);
-            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==26,"Refreshing the setting restores the existing three-tick countdown");
-        }finally{IteConfig.setting("mob_spawner_speed_up_with_players").set(previous);IteConfig.refresh();}h.succeed();
+        Session session=new Session(h);
+        var level=h.getLevel();BlockPos pos=h.absolutePos(new BlockPos(2,2,2));level.setBlockAndUpdate(pos,Blocks.SPAWNER.defaultBlockState());
+        session.player.moveTo(Vec3.atCenterOf(pos).add(1,1,0));
+        // The first logged-in test player needs a server tick to enter the level's spatial entity lookup.
+        h.runAfterDelay(2,()->{
+            try(session) {
+                var spawner=((SpawnerBlockEntity)level.getBlockEntity(pos)).getSpawner();var tag=new CompoundTag();
+                tag.putShort("Delay",(short)30);tag.putShort("SpawnRange",(short)4);
+                tag.putShort("MaxNearbyEntities",(short)6);tag.putShort("RequiredPlayerRange",(short)16);
+                spawner.load(level,pos,tag);
+                h.assertTrue(SourceUtilityRules.closeToSpawner(level,pos,4),"The live fixture player is registered in the spawner's close-range entity lookup");
+                IteConfig.setting("mob_spawner_speed_up_with_players").set(false);IteConfig.refresh();spawner.serverTick(level,pos);
+                h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==29,"A close player now advances only the native one tick");
+                IteConfig.setting("mob_spawner_speed_up_with_players").set(true);IteConfig.refresh();spawner.serverTick(level,pos);
+                int actual=spawner.save(new CompoundTag()).getShort("Delay");
+                h.assertTrue(actual==26,"Refreshing the setting restores the existing three-tick countdown; actual delay="+actual);
+            }finally{IteConfig.setting("mob_spawner_speed_up_with_players").set(previous);IteConfig.refresh();}
+            h.succeed();
+        });
     }
 
     @GameTest(template="gear_empty",timeoutTicks=240)

@@ -3,12 +3,14 @@ package io.github.ningmeng123.modernite.gear;
 import io.github.ningmeng123.mite.progression.GearProgress;
 import io.github.ningmeng123.mite.progression.GearProgression;
 import io.github.ningmeng123.mite.registry.MiteTools;
+import io.github.ningmeng123.mite.registry.MiteArmorContent;
 import io.github.ningmeng123.mite.crafting.CraftingQuality;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
 import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.Quality;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
@@ -26,6 +28,9 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -84,9 +89,98 @@ public final class GearGameTests {
         stack.set(GearProgression.PROGRESS.get(), new GearProgress(id, 28, 0, Map.of(), 1));
         ItemStack saved = ItemStack.parse(h.getLevel().registryAccess(), stack.save(h.getLevel().registryAccess())).orElseThrow();
         h.assertTrue(ExtremeGear.rank(saved, GemType.HEALTH) == 6 && ExtremeGear.grade(saved) == 10, "Gem and forge components survive item transport");
-        h.assertTrue(GearProgression.maxLevel(saved) == 28 && GearProgression.state(saved).level() == 28, "Three grinding extensions and baseline persistence support level 28");
+        h.assertTrue(GearProgression.maxLevel(saved) == 25 && GearProgression.state(saved).level() == 28,
+                "Forge grade sets the current cap without deleting historical over-cap growth or grinding data");
+        h.assertTrue(saved.getOrDefault(ExtremeGear.GRINDINGS.get(), 0) == 3, "Historical grinding uses survive transport");
         ItemStack repaired = new ItemStack(saved.getItem()); GearProgression.preserve(saved, repaired);
         h.assertTrue(ExtremeGear.sockets(repaired).equals(ExtremeGear.sockets(saved)) && ExtremeGear.grade(repaired) == 10, "Baseline maintenance preserves addon components");
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void installedIteCapsFollowLegacyMaterialAndForgeRules(GameTestHelper h) {
+        for (String material : new String[]{"copper", "silver", "rusted_iron", "mithril", "adamantium", "vibranium"}) {
+            ItemStack tool = new ItemStack(MiteTools.get(material + "_sword"));
+            h.assertTrue(GearProgression.maxLevel(tool) == 15, "Every supported weapon starts at 15: " + material);
+            tool.set(ExtremeGear.GRINDINGS.get(), 3);
+            h.assertTrue(GearProgression.maxLevel(tool) == 15, "Legacy grinding history cannot raise the cap");
+            tool.set(ExtremeGear.FORGE_GRADE.get(), 10);
+            h.assertTrue(GearProgression.maxLevel(tool) == 25, "Forge grade is added to weapon growth: " + material);
+        }
+        for (var entry : Map.of("copper", 6, "silver", 6, "rusted_iron", 6, "ancient_metal", 9,
+                "mithril", 12, "adamantium", 15, "vibranium", 18).entrySet()) {
+            ItemStack armor = new ItemStack(MiteArmorContent.get("mite:" + entry.getKey() + "_chestplate"));
+            h.assertTrue(GearProgression.maxLevel(armor) == entry.getValue(), "Armor uses its material harvest level: " + entry.getKey());
+            armor.set(ExtremeGear.FORGE_GRADE.get(), 10);
+            armor.set(ExtremeGear.GRINDINGS.get(), 3);
+            h.assertTrue(GearProgression.maxLevel(armor) == entry.getValue() + 10, "Grinding does not stack above the forged armor cap");
+            if (entry.getKey().equals("vibranium")) {
+                UUID id = GearProgression.ensureId(armor);
+                armor.set(GearProgression.PROGRESS.get(), new GearProgress(id, 28, 0, Map.of(), 1));
+                ItemStack loaded = ItemStack.parse(h.getLevel().registryAccess(), armor.save(h.getLevel().registryAccess())).orElseThrow();
+                h.assertTrue(GearProgression.maxLevel(loaded) == 28 && GearProgression.state(loaded).level() == 28,
+                        "The highest forged armor cap survives the baseline progress codec");
+            }
+        }
+        h.assertTrue(GearProgression.maxLevel(new ItemStack(Items.IRON_CHESTPLATE)) == 9, "Iron harvest level is three");
+        h.assertTrue(GearProgression.maxLevel(new ItemStack(Items.GOLDEN_CHESTPLATE)) == 6, "Gold harvest level is two");
+        h.assertTrue(GearProgression.maxLevel(new ItemStack(Items.CHAINMAIL_CHESTPLATE)) == 9, "Chainmail shares its iron material");
+        h.assertTrue(GearProgression.maxLevel(new ItemStack(Items.LEATHER_CHESTPLATE)) == 0, "Leather has no old-style harvest level");
+        h.assertTrue(GearProgression.maxLevel(new ItemStack(Items.BOW)) == 15
+                && GearProgression.maxLevel(new ItemStack(Items.SHIELD)) == 15, "Modern ranged weapons and shields use the non-armor rule");
+        h.assertTrue(GearProgression.maxLevel(new ItemStack(Items.DIRT)) == 0
+                && ExtremeGear.maximumGearLevel(new ItemStack(Items.DIRT), 25) == 0
+                && ExtremeGear.maximumGearLevel(new ItemStack(Items.IRON_SWORD), 0) == 0,
+                "Unsupported items cannot gain progression through the extension policy");
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void legacyGrindingBlockDoesNotConsumeItselfOrChangeEquipment(GameTestHelper h) {
+        BlockPos pos = h.absolutePos(new BlockPos(1, 1, 1));
+        var block = ExtremeGear.GRINDER.get();
+        h.getLevel().setBlockAndUpdate(pos, block.defaultBlockState());
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        ItemStack stack = new ItemStack(Items.IRON_SWORD);
+        stack.set(ExtremeGear.GRINDINGS.get(), 2);
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        ItemStack before = stack.copy();
+        block.useWithoutItem(block.defaultBlockState(), h.getLevel(), pos, player,
+                new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
+        h.assertTrue(h.getLevel().getBlockState(pos).is(block), "The obsolete grinding operation preserves its block");
+        h.assertTrue(ItemStack.matches(stack, before), "It does not consume equipment, write new history or allocate growth identity");
+        h.assertTrue(GearProgression.maxLevel(stack) == 15, "A grinding interaction cannot raise the growth cap");
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void zeroGrowthLeatherRetainsGemSocketsAndMaintenance(GameTestHelper h) {
+        ItemStack leather = new ItemStack(Items.LEATHER_CHESTPLATE);
+        leather.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, GemType.HEALTH.ordinal() * 6 + 6));
+        leather.set(ExtremeGear.GRINDINGS.get(), 2);
+        h.assertTrue(GearProgression.maxLevel(leather) == 0 && ExtremeGear.socketable(leather),
+                "Leather's zero legacy growth cap does not disable its gem sockets");
+        ItemStack repaired = new ItemStack(Items.LEATHER_CHESTPLATE);
+        GearProgression.preserve(leather, repaired);
+        h.assertTrue(ExtremeGear.rank(repaired, GemType.HEALTH) == 6
+                && repaired.getOrDefault(ExtremeGear.GRINDINGS.get(), 0) == 2,
+                "Baseline maintenance preserves leather gems and historical grinding data at cap zero");
+        h.assertTrue(!ExtremeGear.socketable(new ItemStack(Items.IRON_HORSE_ARMOR))
+                && !ExtremeGear.socketable(new ItemStack(Items.DIRT)), "Horse armor and unknown items remain outside gem support");
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void forgeExperiencePolicyKeepsOldFloatAndWholePointAwards(GameTestHelper h) {
+        ItemStack stack = new ItemStack(Items.IRON_SWORD);
+        var policy = io.github.ningmeng123.mite.api.MiteExtensions.policy();
+        stack.set(ExtremeGear.FORGE_GRADE.get(), 1);
+        h.assertTrue(policy.gearExperience(stack, 1000) == 1000
+                && policy.gearExperience(stack, 60_000) == 62_000,
+                "Grade one truncates one-point awards and preserves the old float boundary below 63");
+        stack.set(ExtremeGear.FORGE_GRADE.get(), 2);
+        h.assertTrue(policy.gearExperience(stack, 1000) == 1000, "Grade two's fractional bonus is not stored as partial experience");
+        stack.set(ExtremeGear.FORGE_GRADE.get(), 3);
+        h.assertTrue(policy.gearExperience(stack, 90_000) == 116_000, "Grade three preserves the source float boundary below 117");
+        stack.set(ExtremeGear.FORGE_GRADE.get(), 10);
+        h.assertTrue(policy.gearExperience(stack, 1000) == 3000
+                && policy.gearExperience(stack, 1999) == 3000, "Grade ten truncates raw and awarded whole points before returning millis");
         h.succeed();
     }
     @GameTest(template = "gear_empty")

@@ -28,6 +28,31 @@ public final class GearMath {
             case "adamantium" -> 5; case "vibranium" -> 6; default -> 0;
         };
     }
+    /** MITE raw-material minimum harvest levels, distinct from the forging tool tiers above. */
+    public static int materialHarvestLevel(String material) {
+        return switch (material == null ? "" : material) {
+            case "flint", "stone", "copper", "silver", "gold", "rusted_iron" -> 2;
+            case "iron", "ancient_metal", "obsidian" -> 3;
+            case "mithril", "diamond" -> 4;
+            case "adamantium", "netherite", "runic" -> 5;
+            case "vibranium", "unique" -> 6;
+            default -> 0;
+        };
+    }
+    /** Installed ITE uses the legacy equipment cap; grinding history does not add levels. */
+    public static int maximumGearLevel(String material, boolean armor, int forgeGrade) {
+        if (material == null) return 0;
+        int base = armor ? materialHarvestLevel(material) * 3 : 15;
+        return base + Math.clamp(forgeGrade, 0, 10);
+    }
+    /** Keep the old float operations and truncate whole experience before armor's outer multiplier. */
+    public static long experienceMillis(long originalMillis, int forgeGrade) {
+        int rawPoints = (int)Math.min(Integer.MAX_VALUE, Math.max(0L, originalMillis / 1000L));
+        int grade = Math.clamp(forgeGrade, 0, 10);
+        float bonus = (0.05F + grade * 0.05F) * grade / 2F;
+        int awarded = (int)(rawPoints * (1F + bonus));
+        return awarded * 1000L;
+    }
     public static int failurePercent(int grade, int axeTier, int hammerTier) {
         return Math.clamp((grade < 4 ? 35 : grade < 7 ? 55 : 65)
                 - Math.max(0, axeTier - 2) * 2 - Math.max(0, hammerTier - 2) * 3, 0, 100);
