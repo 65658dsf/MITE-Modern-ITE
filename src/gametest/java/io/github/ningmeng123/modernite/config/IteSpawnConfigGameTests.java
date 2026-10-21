@@ -57,6 +57,7 @@ public final class IteSpawnConfigGameTests {
         });
         var expected = new HashSet<String>();
         for (var kind : ExtremeKind.values()) expected.add(BuiltInRegistries.ENTITY_TYPE.getKey(ExtremeMobs.type(kind)).toString());
+        expected.add(BuiltInRegistries.ENTITY_TYPE.getKey(io.github.ningmeng123.modernite.entity.RabidDogContent.RABID_DOG.get()).toString());
         h.assertTrue(actual.equals(expected), "The live registry discovers every ITE monster without a second UI list");
         for (String id : actual) h.assertTrue(MiteExtensions.policy().ownsMonsterSpawnSettings(id), "The ITE menu owns " + id);
         h.assertFalse(MiteExtensions.policy().ownsMonsterSpawnSettings("minecraft:zombie"), "Vanilla monsters belong to the base menu");

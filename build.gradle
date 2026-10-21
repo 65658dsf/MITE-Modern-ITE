@@ -60,6 +60,8 @@ neoForge {
                 gameDirectory = file('run-mob-render-audit')
                 systemProperty 'modern_ite.mobRenderAudit', 'true'
                 systemProperty 'modern_ite.mobRenderAuditOutput', file('build/verification/mob-render-audit.json').absolutePath
+                systemProperty 'modern_ite.endermanHeadAudit', providers.gradleProperty('modernIteEndermanHeadAudit').getOrElse('false')
+                systemProperty 'modern_ite.mobAdditionsAudit', providers.gradleProperty('modernIteMobAdditionsAudit').getOrElse('false')
             }
             if (providers.gradleProperty('modernIteLanternAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('run-lantern-audit')

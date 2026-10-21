@@ -91,6 +91,7 @@ public final class ExtremeMobs {
     }
     public static void addSpawnEntries(MiteExtensions.SpawnContext context,BlockPos position,List<R196MobSpawning.Entry> entries){
         if(context.category()!=io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER)return;
+        RabidDogContent.addSpawnEntries(context, entries);
         var level=context.level();
         if(level.dimension()==Level.OVERWORLD&&MobAbilities.day(level)>=IteConfig.integer("GameMechanics.MobSpawning.ghast_spawn_limit_day")
                 &&io.github.ningmeng123.mite.rules.LunarCalendar.state(level.getDayTime(),true).bloodPeriod()

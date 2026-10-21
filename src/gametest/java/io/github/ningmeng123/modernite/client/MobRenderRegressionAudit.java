@@ -195,6 +195,12 @@ public final class MobRenderRegressionAudit {
                 sample(mc,ExtremeKind.FISHING_ROD_ZOMBIE,facts);
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.endermanHeadAudit") || Boolean.getBoolean("modern_ite.mobAdditionsAudit")) {
+                report.addProperty("scope", "Enderman head and native eyes; rabid dog model, native texture and new status icons");
+                report.add("enderman_big_head", EndermanHeadClientAudit.capture(mc, screenshots()));
+                report.add("rabid_dog", RabidDogClientAudit.capture(mc, screenshots()));
+                return;
+            }
             JsonArray identities=new JsonArray();report.add("texture_lookups",identities);
             for(ExtremeKind kind:ExtremeKind.values()) {
                 JsonObject facts=new JsonObject();identities.add(facts);facts.addProperty("entity",kind.id());
@@ -213,6 +219,8 @@ public final class MobRenderRegressionAudit {
             }
             report.addProperty("focused_gpu_sample_count",samples.size());
             verifyPlayerHead(mc);
+            report.add("enderman_big_head", EndermanHeadClientAudit.capture(mc, screenshots()));
+            report.add("rabid_dog", RabidDogClientAudit.capture(mc, screenshots()));
             verifyParticleAuras(mc);
             report.add("aura_previews",MobAuraPreviews.capture(mc));
             report.add("lanterns",LanternClientAudit.capture(mc));
@@ -517,6 +525,9 @@ public final class MobRenderRegressionAudit {
     private static NativeImage capture(Minecraft mc,Mob mob){return capture(mc,mob,false);}
     private static NativeImage capture(Minecraft mc,Mob mob,boolean dim){return capture(mc,mob,dim,.35F);}
     static NativeImage capture(Minecraft mc,Mob mob,boolean dim,float viewYaw) {
+        return capture(mc,mob,dim,viewYaw,110F);
+    }
+    static NativeImage capture(Minecraft mc,Mob mob,boolean dim,float viewYaw,float scale) {
         TextureTarget target=new TextureTarget(SIZE,SIZE,true,Minecraft.ON_OSX);
         Matrix4f projection=new Matrix4f(RenderSystem.getProjectionMatrix());VertexSorting sorting=RenderSystem.getVertexSorting();
         var modelView=RenderSystem.getModelViewStack();modelView.pushMatrix();
@@ -527,13 +538,13 @@ public final class MobRenderRegressionAudit {
             var graphics=new GuiGraphics(mc,mc.renderBuffers().bufferSource());
             renderedMob=mob;postRenderSeen=false;
             var rotation=new Quaternionf().rotationZ((float)Math.PI).rotateY((float)Math.PI+viewYaw);
-            if(!dim)InventoryScreen.renderEntityInInventory(graphics,SIZE/2F,SIZE-35F,110F,new Vector3f(),rotation,null,mob);
+            if(!dim)InventoryScreen.renderEntityInInventory(graphics,SIZE/2F,SIZE-35F,scale,new Vector3f(),rotation,null,mob);
             else {
                 // InventoryScreen's exact native transform/lighting/dispatch sequence, with packed
                 // light0 instead of its hard-coded full light. This distinguishes source-identical
                 // red base/eye texels from a missing emissive layer.
                 graphics.pose().pushPose();graphics.pose().translate(SIZE/2F,SIZE-35F,50);
-                graphics.pose().scale(110,110,-110);graphics.pose().mulPose(rotation);Lighting.setupForEntityInInventory();
+                graphics.pose().scale(scale,scale,-scale);graphics.pose().mulPose(rotation);Lighting.setupForEntityInInventory();
                 var dispatcher=mc.getEntityRenderDispatcher();dispatcher.setRenderShadow(false);
                 try{RenderSystem.runAsFancy(()->dispatcher.render(mob,0,0,0,0,1,graphics.pose(),graphics.bufferSource(),0));graphics.flush();}
                 finally{dispatcher.setRenderShadow(true);graphics.pose().popPose();Lighting.setupFor3DItems();}

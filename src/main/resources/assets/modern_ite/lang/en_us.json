@@ -548,5 +548,11 @@
   "message.modern_ite.portal_used": "%s used a portal.",
   "message.modern_ite.nether_fatigue": "You have stayed in the Nether too long and feel exhausted.",
   "message.modern_ite.nether_recovered": "The Nether fatigue has worn off.",
-  "message.modern_ite.underworld_penalty_second": "You have stayed in the Underworld too long and feel more exhausted."
+  "message.modern_ite.underworld_penalty_second": "You have stayed in the Underworld too long and feel more exhausted.",
+  "entity.modern_ite.rabid_dog": "Rabid Dog",
+  "item.modern_ite.rabid_dog_spawn_egg": "Rabid Dog Spawn Egg",
+  "effect.modern_ite.rabies": "Rabid Frenzy",
+  "effect.modern_ite.dwarf_curse": "Dwarf Curse",
+  "message.modern_ite.dwarf_curse": "A dwarf curse halves your health, attack and size. Defeat the witch or dispel the curse to recover.",
+  "message.modern_ite.dwarf_curse_lifted": "The dwarf curse has been lifted."
 }

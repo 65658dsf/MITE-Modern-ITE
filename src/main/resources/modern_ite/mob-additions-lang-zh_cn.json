@@ -1,0 +1,8 @@
+{
+  "entity.modern_ite.rabid_dog": "疯狗",
+  "item.modern_ite.rabid_dog_spawn_egg": "疯狗刷怪蛋",
+  "effect.modern_ite.rabies": "疯狗模式",
+  "effect.modern_ite.dwarf_curse": "矮冬瓜诅咒",
+  "message.modern_ite.dwarf_curse": "你中了矮冬瓜诅咒：生命、攻击与体型减半。击败施咒的女巫或解除诅咒可恢复。",
+  "message.modern_ite.dwarf_curse_lifted": "矮冬瓜诅咒已解除。"
+}

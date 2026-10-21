@@ -13,12 +13,12 @@ public final class ExtremeEffects {
     private static final DeferredRegister<MobEffect> EFFECTS=DeferredRegister.create(Registries.MOB_EFFECT,ModernIte.MOD_ID);
     public static final Map<String,DeferredHolder<MobEffect,MobEffect>> VALUES=new LinkedHashMap<>();
     static {
-        String[] names={"chaos","flash","occlusion","reversed","fast_sensitivity","look_up","big_head","bucket_head"};
-        int[] colors={0x9966cc,0xffffff,0xaa6622,0x5533aa,0xff5555,0x55aaff,0x88bb44,0x747b83};
+        String[] names={"chaos","flash","occlusion","reversed","fast_sensitivity","look_up","big_head","bucket_head","rabies","dwarf_curse"};
+        int[] colors={0x9966cc,0xffffff,0xaa6622,0x5533aa,0xff5555,0x55aaff,0x88bb44,0x747b83,0xb53427,0x785331};
         for(int i=0;i<names.length;i++){
             final int color=colors[i];final String name=names[i];
             VALUES.put(name,EFFECTS.register(name,()->{
-                MobEffect effect=new ControlEffect(color);
+                MobEffect effect=name.equals("dwarf_curse")?new DwarfCurseEffect():new ControlEffect(color);
                 // Fixed strength, like the twofold model scale; refreshing cannot stack penalties.
                 if(name.equals("big_head"))effect.addAttributeModifier(Attributes.MOVEMENT_SPEED,
                         ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"big_head_movement_penalty"),

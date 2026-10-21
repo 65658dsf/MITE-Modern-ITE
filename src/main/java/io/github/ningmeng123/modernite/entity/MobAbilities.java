@@ -350,7 +350,7 @@ public final class MobAbilities {
         witchSupportTick(mob);
         if(!s.cursed&&target instanceof ServerPlayer player&&mob.distanceToSqr(player)<1024&&player.hasLineOfSight(mob)){
             if(mob instanceof Witch witch){
-                io.github.ningmeng123.mite.curse.PlayerCurses.schedule(player,witch,
+                io.github.ningmeng123.modernite.content.DwarfCurse.scheduleSelected(player,witch,
                     io.github.ningmeng123.mite.curse.WitchCursing.selectCurse(io.github.ningmeng123.mite.curse.WitchCursing.seed(witch),player.getGameProfile().getName()),0);
             }
             s.cursed=true;

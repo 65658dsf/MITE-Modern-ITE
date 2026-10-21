@@ -39,6 +39,16 @@
       "type": "minecraft:single",
       "resource": "minecraft:mob_effect/blindness",
       "sprite": "modern_ite:bucket_head"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/strength",
+      "sprite": "modern_ite:rabies"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/weakness",
+      "sprite": "modern_ite:dwarf_curse"
     }
   ]
 }
