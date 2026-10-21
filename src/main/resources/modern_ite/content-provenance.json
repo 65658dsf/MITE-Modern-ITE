@@ -218,7 +218,7 @@
     "Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; the legacy mithril core identity remains available for existing saves without a crafting recipe.",
     "Adamantium and vibranium lantern recipes use five matching ingots, glass and a torch; lanterns only light from the offhand and consume material-scaled durability.",
     "Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.",
-    "Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.",
+    "Native chest geometry uses the original ITE vibranium chest skin; the bucket helmet inherits the full native bucket item model so resource packs retain matching geometry and UVs.",
     "Torch bundles unpack one at a time because modern MITE torches stack to sixteen.",
     "Nether adamantium and red diamond heights are mapped to modern dimensions."
   ]

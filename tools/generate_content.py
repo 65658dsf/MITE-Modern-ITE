@@ -115,8 +115,8 @@ simple={
 for id,(cn,eng) in simple.items():named(id,cn,eng);model(id)
 for id in ['fancy_red','nether_ender_eye','stack_torch']:tex(EX,f'assets/extreme/textures/items/{id}.png','item/'+id)
 for id in ['diamond_chunk','blaze_coal_powder']:tex(ITE,f'assets/miteite/textures/items/{id}.png','item/'+id)
-# The source helmet has an armor layer but no independent inventory sprite.
-save('assets/modern_ite/models/item/iron_bucket_helmet.json',{'parent':'minecraft:item/generated','textures':{'layer0':'minecraft:item/bucket'}})
+# Inherit the full bucket model so resource packs keep matching geometry and UVs.
+save('assets/modern_ite/models/item/iron_bucket_helmet.json',{'parent':'minecraft:item/bucket'})
 tex(EX,'assets/extreme/textures/models/armor/ironBucket_layer_1.png','models/armor/iron_bucket_layer_1')
 for id,cn,eng in [('fishing','钓鱼','Fishing'),('planting','种植','Planting'),('villager','村民','Villager'),('club_core','金属棒核心','Club Core')]:
     name='voucher_'+id;named(name,cn+'凭证',eng+' Voucher');model(name);tex(EX,f'assets/extreme/textures/items/voucher/{name}.png','item/'+name)
@@ -221,5 +221,5 @@ for locale in ['zh_cn','en_us']:
     merged={}
     for fragment in sorted((RES/'modern_ite').glob('*-lang-'+locale+'.json')):merged.update(json.loads(fragment.read_text(encoding='utf-8')))
     save(f'assets/modern_ite/lang/{locale}.json',merged)
-save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; the legacy mithril core identity remains available for existing saves without a crafting recipe.','Adamantium and vibranium lantern recipes use five matching ingots, glass and a torch; lanterns only light from the offhand and consume material-scaled durability.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket inventory icon is reused.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
+save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; the legacy mithril core identity remains available for existing saves without a crafting recipe.','Adamantium and vibranium lantern recipes use five matching ingots, glass and a torch; lanterns only light from the offhand and consume material-scaled durability.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket helmet inherits the full native bucket item model so resource packs retain matching geometry and UVs.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
 print(f'Packaged {len(provenance)} source textures; merged all language fragments.')
