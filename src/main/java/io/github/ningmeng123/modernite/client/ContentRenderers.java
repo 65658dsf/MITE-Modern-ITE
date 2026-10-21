@@ -24,7 +24,10 @@ import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsE
 /** Native chest renderer for the new persisted strongbox. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class ContentRenderers {
-    @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers event) {event.registerBlockEntityRenderer(ExtremeContent.CHEST_ENTITY.get(),VibraniumChestRenderer::new);}
+    @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ExtremeContent.CHEST_ENTITY.get(),VibraniumChestRenderer::new);
+        event.registerBlockEntityRenderer(ExtremeContent.RESURRECTION_ENTITY.get(),ResurrectionArrayRenderer::new);
+    }
     @SubscribeEvent public static void items(RegisterClientExtensionsEvent event) {
         event.registerItem(new IClientItemExtensions() {
             private BlockEntityWithoutLevelRenderer renderer;

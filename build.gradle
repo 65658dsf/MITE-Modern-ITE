@@ -32,6 +32,11 @@ neoForge {
         client {
             client()
             gameDirectory = file('run-client')
+            if (providers.gradleProperty('modernIteResurrectionAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('run-resurrection-audit')
+                systemProperty 'modern_ite.resurrectionAudit', 'true'
+                systemProperty 'modern_ite.resurrectionAuditOutput', file('build/verification/resurrection/audit.json').absolutePath
+            }
             if (providers.gradleProperty('modernIteConfigAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('run-config-audit')
                 systemProperty 'modern_ite.configAudit', 'true'
@@ -106,7 +111,8 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def defenseAudit = providers.gradleProperty('modernIteDefenseAudit').getOrElse('false').toBoolean()
         def configAudit = providers.gradleProperty('modernIteConfigAudit').getOrElse('false').toBoolean()
         def metalAudit = providers.gradleProperty('modernIteMetalAudit').getOrElse('false').toBoolean()
-        def directory = metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : 'run-client'
+        def resurrectionAudit = providers.gradleProperty('modernIteResurrectionAudit').getOrElse('false').toBoolean()
+        def directory = resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : 'run-client'
         def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()
         def existing = config.exists() ? config.getText('UTF-8') : ''

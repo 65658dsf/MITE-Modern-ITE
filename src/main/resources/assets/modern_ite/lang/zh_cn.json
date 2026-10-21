@@ -1,5 +1,8 @@
 {
   "message.modern_ite.array_bound": "复活传送阵已绑定。",
+  "message.modern_ite.array_owner": "复活传送阵的主人：%s",
+  "message.modern_ite.array_unbound": "这个复活传送阵尚未绑定灵魂。",
+  "message.modern_ite.array_break_denied": "只有复活传送阵的主人才能破坏它。",
   "item.modern_ite.fancy_red": "红钻",
   "item.modern_ite.diamond_chunk": "钻石碎块",
   "item.modern_ite.blaze_coal_powder": "烈焰煤粉",

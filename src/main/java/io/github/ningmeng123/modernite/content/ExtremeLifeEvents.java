@@ -85,6 +85,9 @@ public final class ExtremeLifeEvents {
         player.sendSystemMessage(Component.translatable("message.modern_ite.array_used"));
     }
     public record Anchor(ServerLevel level,BlockPos position) {}
+    @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) resolveAnchor(player);
+    }
     static Optional<Anchor> resolveAnchor(ServerPlayer player) {
         var data=player.getPersistentData();if(!data.contains(ANCHOR))return Optional.empty();
         var saved=data.getCompound(ANCHOR);ResourceLocation id=ResourceLocation.tryParse(saved.getString("dimension"));
@@ -92,7 +95,16 @@ public final class ExtremeLifeEvents {
         ServerLevel level=player.server.getLevel(ResourceKey.create(Registries.DIMENSION,id));BlockPos pos=BlockPos.of(saved.getLong("position"));
         if(level==null||!level.isInWorldBounds(pos)||!level.getWorldBorder().isWithinBounds(pos))return Optional.empty();
         level.getChunkAt(pos);
-        return level.getBlockState(pos).is(ExtremeContent.RESURRECTION.get())?Optional.of(new Anchor(level,pos)):Optional.empty();
+        BlockState state=level.getBlockState(pos);
+        if (!state.is(ExtremeContent.RESURRECTION.get())) return Optional.empty();
+        // Pre-upgrade arrays have only a player-side anchor, so recover the owner when it is first checked.
+        var blockEntity=level.getBlockEntity(pos);
+        if (!(blockEntity instanceof ResurrectionBlockEntity)) {
+            blockEntity=new ResurrectionBlockEntity(pos,state);level.setBlockEntity(blockEntity);
+        }
+        ResurrectionBlockEntity array=(ResurrectionBlockEntity)blockEntity;
+        if (!array.hasOwner() || array.isOwner(player)) array.setOwner(player);
+        return array.isOwner(player)?Optional.of(new Anchor(level,pos)):Optional.empty();
     }
     /** Check the occupied volume and the floor that remains after consuming the array. Never carve terrain. */
     static Optional<Vec3> resurrectionLanding(ServerLevel level,BlockPos array,ServerPlayer player) {

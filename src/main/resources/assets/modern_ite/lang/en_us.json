@@ -1,5 +1,8 @@
 {
   "message.modern_ite.array_bound": "Resurrection array bound.",
+  "message.modern_ite.array_owner": "Resurrection array owner: %s",
+  "message.modern_ite.array_unbound": "No soul is bound to this resurrection array.",
+  "message.modern_ite.array_break_denied": "Only the owner can break this resurrection array.",
   "item.modern_ite.fancy_red": "Red Diamond",
   "item.modern_ite.diamond_chunk": "Diamond Chunk",
   "item.modern_ite.blaze_coal_powder": "Blaze Coal Powder",

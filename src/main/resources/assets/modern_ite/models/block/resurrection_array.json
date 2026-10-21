@@ -1,6 +1,358 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "ambientocclusion": false,
   "textures": {
-    "all": "modern_ite:block/resurrection_array"
+    "particle": "minecraft:block/obsidian",
+    "obsidian": "minecraft:block/obsidian",
+    "soul_stone": "minecraft:block/crying_obsidian",
+    "gold": "minecraft:block/gold_block",
+    "pearl": "minecraft:block/end_stone_bricks",
+    "crystal": "minecraft:block/beacon",
+    "star": "minecraft:item/nether_star",
+    "glass": "minecraft:block/glass"
+  },
+  "elements": [
+    {
+      "name": "Obsidian foundation",
+      "from": [0, 0, 0],
+      "to": [16, 1, 16],
+      "faces": {
+        "down": {"texture": "#obsidian"},
+        "up": {"texture": "#obsidian"},
+        "north": {"texture": "#obsidian"},
+        "south": {"texture": "#obsidian"},
+        "west": {"texture": "#obsidian"},
+        "east": {"texture": "#obsidian"}
+      }
+    },
+    {
+      "name": "Soul stone body",
+      "from": [0.5, 1, 0.5],
+      "to": [15.5, 4, 15.5],
+      "faces": {
+        "down": {"texture": "#soul_stone"},
+        "up": {"texture": "#soul_stone"},
+        "north": {"texture": "#soul_stone"},
+        "south": {"texture": "#soul_stone"},
+        "west": {"texture": "#soul_stone"},
+        "east": {"texture": "#soul_stone"}
+      }
+    },
+    {
+      "name": "Golden upper rim",
+      "from": [0, 4, 0],
+      "to": [16, 4.5, 16],
+      "faces": {
+        "down": {"texture": "#gold"},
+        "up": {"texture": "#gold"},
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "west": {"texture": "#gold"},
+        "east": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "Obsidian altar surface",
+      "from": [0.5, 4.5, 0.5],
+      "to": [15.5, 5, 15.5],
+      "faces": {
+        "down": {"texture": "#obsidian"},
+        "up": {"texture": "#obsidian"},
+        "north": {"texture": "#obsidian"},
+        "south": {"texture": "#obsidian"},
+        "west": {"texture": "#obsidian"},
+        "east": {"texture": "#obsidian"}
+      }
+    },
+    {
+      "name": "North Nether Star inlay",
+      "from": [6.5, 1, 0.48],
+      "to": [9.5, 4, 0.48],
+      "faces": {
+        "north": {"texture": "#star", "uv": [0, 0, 16, 16]}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "South Nether Star inlay",
+      "from": [6.5, 1, 15.52],
+      "to": [9.5, 4, 15.52],
+      "faces": {
+        "south": {"texture": "#star", "uv": [0, 0, 16, 16]}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "West Nether Star inlay",
+      "from": [0.48, 1, 6.5],
+      "to": [0.48, 4, 9.5],
+      "faces": {
+        "west": {"texture": "#star", "uv": [0, 0, 16, 16]}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "East Nether Star inlay",
+      "from": [15.52, 1, 6.5],
+      "to": [15.52, 4, 9.5],
+      "faces": {
+        "east": {"texture": "#star", "uv": [0, 0, 16, 16]}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "West channel",
+      "from": [3.5, 5, 7.5],
+      "to": [5, 5.04, 8.5],
+      "faces": {
+        "up": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "East channel",
+      "from": [11, 5, 7.5],
+      "to": [12.5, 5.04, 8.5],
+      "faces": {
+        "up": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "North channel",
+      "from": [7.5, 5, 3.5],
+      "to": [8.5, 5.04, 5],
+      "faces": {
+        "up": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "South channel",
+      "from": [7.5, 5, 11],
+      "to": [8.5, 5.04, 12.5],
+      "faces": {
+        "up": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "Soul projection dais",
+      "from": [5, 5, 5],
+      "to": [11, 5.08, 11],
+      "faces": {
+        "down": {"texture": "#crystal"},
+        "up": {"texture": "#crystal"},
+        "north": {"texture": "#crystal"},
+        "south": {"texture": "#crystal"},
+        "west": {"texture": "#crystal"},
+        "east": {"texture": "#crystal"}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "Projection dais inner seal",
+      "from": [6, 5.08, 6],
+      "to": [10, 5.1, 10],
+      "faces": {
+        "up": {"texture": "#pearl"}
+      }
+    },
+    {
+      "name": "Northwest ivory plinth",
+      "from": [1.5, 5, 1.5],
+      "to": [4.5, 5.75, 4.5],
+      "faces": {
+        "down": {"texture": "#pearl"},
+        "up": {"texture": "#pearl"},
+        "north": {"texture": "#pearl"},
+        "south": {"texture": "#pearl"},
+        "west": {"texture": "#pearl"},
+        "east": {"texture": "#pearl"}
+      }
+    },
+    {
+      "name": "Northwest gold setting",
+      "from": [1.75, 5.75, 1.75],
+      "to": [4.25, 6.125, 4.25],
+      "faces": {
+        "down": {"texture": "#gold"},
+        "up": {"texture": "#gold"},
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "west": {"texture": "#gold"},
+        "east": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "Northwest soul crystal",
+      "from": [2.125, 6.125, 2.125],
+      "to": [3.875, 8, 3.875],
+      "faces": {
+        "down": {"texture": "#crystal"},
+        "up": {"texture": "#crystal"},
+        "north": {"texture": "#crystal"},
+        "south": {"texture": "#crystal"},
+        "west": {"texture": "#crystal"},
+        "east": {"texture": "#crystal"}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "Northeast ivory plinth",
+      "from": [11.5, 5, 1.5],
+      "to": [14.5, 5.75, 4.5],
+      "faces": {
+        "down": {"texture": "#pearl"},
+        "up": {"texture": "#pearl"},
+        "north": {"texture": "#pearl"},
+        "south": {"texture": "#pearl"},
+        "west": {"texture": "#pearl"},
+        "east": {"texture": "#pearl"}
+      }
+    },
+    {
+      "name": "Northeast gold setting",
+      "from": [11.75, 5.75, 1.75],
+      "to": [14.25, 6.125, 4.25],
+      "faces": {
+        "down": {"texture": "#gold"},
+        "up": {"texture": "#gold"},
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "west": {"texture": "#gold"},
+        "east": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "Northeast soul crystal",
+      "from": [12.125, 6.125, 2.125],
+      "to": [13.875, 8, 3.875],
+      "faces": {
+        "down": {"texture": "#crystal"},
+        "up": {"texture": "#crystal"},
+        "north": {"texture": "#crystal"},
+        "south": {"texture": "#crystal"},
+        "west": {"texture": "#crystal"},
+        "east": {"texture": "#crystal"}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "Southwest ivory plinth",
+      "from": [1.5, 5, 11.5],
+      "to": [4.5, 5.75, 14.5],
+      "faces": {
+        "down": {"texture": "#pearl"},
+        "up": {"texture": "#pearl"},
+        "north": {"texture": "#pearl"},
+        "south": {"texture": "#pearl"},
+        "west": {"texture": "#pearl"},
+        "east": {"texture": "#pearl"}
+      }
+    },
+    {
+      "name": "Southwest gold setting",
+      "from": [1.75, 5.75, 11.75],
+      "to": [4.25, 6.125, 14.25],
+      "faces": {
+        "down": {"texture": "#gold"},
+        "up": {"texture": "#gold"},
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "west": {"texture": "#gold"},
+        "east": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "Southwest soul crystal",
+      "from": [2.125, 6.125, 12.125],
+      "to": [3.875, 8, 13.875],
+      "faces": {
+        "down": {"texture": "#crystal"},
+        "up": {"texture": "#crystal"},
+        "north": {"texture": "#crystal"},
+        "south": {"texture": "#crystal"},
+        "west": {"texture": "#crystal"},
+        "east": {"texture": "#crystal"}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "Southeast ivory plinth",
+      "from": [11.5, 5, 11.5],
+      "to": [14.5, 5.75, 14.5],
+      "faces": {
+        "down": {"texture": "#pearl"},
+        "up": {"texture": "#pearl"},
+        "north": {"texture": "#pearl"},
+        "south": {"texture": "#pearl"},
+        "west": {"texture": "#pearl"},
+        "east": {"texture": "#pearl"}
+      }
+    },
+    {
+      "name": "Southeast gold setting",
+      "from": [11.75, 5.75, 11.75],
+      "to": [14.25, 6.125, 14.25],
+      "faces": {
+        "down": {"texture": "#gold"},
+        "up": {"texture": "#gold"},
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "west": {"texture": "#gold"},
+        "east": {"texture": "#gold"}
+      }
+    },
+    {
+      "name": "Southeast soul crystal",
+      "from": [12.125, 6.125, 12.125],
+      "to": [13.875, 8, 13.875],
+      "faces": {
+        "down": {"texture": "#crystal"},
+        "up": {"texture": "#crystal"},
+        "north": {"texture": "#crystal"},
+        "south": {"texture": "#crystal"},
+        "west": {"texture": "#crystal"},
+        "east": {"texture": "#crystal"}
+      },
+      "shade": false,
+      "neoforge_data": {"block_light": 12, "ambient_occlusion": false}
+    },
+    {
+      "name": "Clear glass display cover",
+      "from": [0.5, 5, 0.5],
+      "to": [15.5, 16, 15.5],
+      "faces": {
+        "up": {"texture": "#glass", "uv": [0, 0, 16, 16]},
+        "north": {"texture": "#glass", "uv": [0, 0, 16, 16]},
+        "south": {"texture": "#glass", "uv": [0, 0, 16, 16]},
+        "west": {"texture": "#glass", "uv": [0, 0, 16, 16]},
+        "east": {"texture": "#glass", "uv": [0, 0, 16, 16]}
+      },
+      "shade": false
+    }
+  ],
+  "display": {
+    "gui": {
+      "rotation": [30, 225, 0],
+      "translation": [0, 2, 0],
+      "scale": [0.625, 0.625, 0.625]
+    },
+    "ground": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 3, 0],
+      "scale": [0.25, 0.25, 0.25]
+    },
+    "fixed": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.5, 0.5, 0.5]
+    }
   }
 }
