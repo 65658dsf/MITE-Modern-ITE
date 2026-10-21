@@ -42,6 +42,7 @@
   "effect.modern_ite.fast_sensitivity": "灵敏失控",
   "effect.modern_ite.look_up": "强制仰视",
   "effect.modern_ite.big_head": "大头",
+  "effect.modern_ite.bucket_head": "铁桶套头",
   "itemGroup.modern_ite": "MITE: Modern ITE",
   "message.modern_ite.underworld_penalty": "你在地底停留过久，离开一天后可恢复。",
   "message.modern_ite.underworld_recovered": "地底停留惩罚已消退。",

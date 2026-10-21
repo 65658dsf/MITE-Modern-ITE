@@ -42,6 +42,7 @@
   "effect.modern_ite.fast_sensitivity": "Fast Sensitivity",
   "effect.modern_ite.look_up": "Look Up",
   "effect.modern_ite.big_head": "Big Head",
+  "effect.modern_ite.bucket_head": "Bucket Head",
   "itemGroup.modern_ite": "MITE: Modern ITE",
   "message.modern_ite.underworld_penalty": "You have stayed in the Underworld too long. Leave for a day to recover.",
   "message.modern_ite.underworld_recovered": "The Underworld penalty has worn off.",

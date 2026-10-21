@@ -2,6 +2,18 @@
 
 开发署名：NingMeng123。
 
+## 0.2.5 铁桶套头与第三人称遮蔽（2026-10-21）
+
+铁桶僵尸成功近战命中玩家后施加独立 `modern_ite:bucket_head` 状态，持续 200 tick，重复命中刷新。原头盔实例及附魔、名称等组件保留，空头盔槽也不插入物品；到期或喝奶解除。玩家头上的铁桶由独立渲染层绘制，支持宽／细模型、下蹲及大头缩放，并通过原生效果包向追踪玩家同步。第一人称、背后第三人称、正面第三人称均遮挡上方 75% 视野，只露出屏幕底部 25%。南瓜僵尸的原生南瓜视野遮罩也在三个视角下生效，两种遮罩均不受 F1 隐藏 HUD 影响。
+
+使用当前本地本体 `mite-0.2.5.jar`，隔离输出 `build/bucket-head`；构建、30 项 JUnit 和全部 GameTest 源码编译通过。9 项专项 GameTest 全部通过，其中 7 项覆盖真实近战、原头盔及组件保留、空头槽、拒绝命中、远程归因和其他僵尸负对照、非玩家负对照、刷新、自然到期及真实牛奶清除；另 2 项通过实际 ChunkMap 追踪、服务端 tick 和连接包捕获，验证新追踪者补状态、添加／刷新／移除／到期同步，以及普通倒计时不逐 tick 发包。
+
+隔离客户端新建测试世界完成原生 GPU 检查：三视角铁桶遮罩逐像素相同，上部完全不透光、下部场景像素完整保留；南瓜遮罩三视角一致，F1 保留遮挡，双效果叠加仍保留铁桶上部不透明区域；移除后原像素恢复。宽／细玩家模型的独立桶层、原钻石头盔保留、下蹲和大头变换也通过检查。桶层采用原生铁块的不透明材质，完整覆盖内部头盔和面部。日志为 `build/verification/bucket-head/build.log`、`gametest-final.log`、`client-final.log` 和 `final-build.log`；图像及完整客户端报告分别位于同目录 `mob-render-audit/` 和 `client-audit.json`。
+
+本轮安装包为 `build/bucket-head/libs/modern-ite-0.2.5.jar`，包含工作区已有修改；生产类和资源均与构建输出逐字节一致，无测试类、本体类或嵌套 JAR，核对见 `build/verification/bucket-head/package-audit.json`。本轮未重跑全量 GameTest，也未执行两个真实游戏客户端的联机实战。
+
+提交前在当前 0.2.6 主线基础上，仅导出本次暂存内容至 `build/verification/bucket-commit/snapshot`，使用本体 `mite-0.2.6.jar` 独立验证：构建、30 项 JUnit、全部 GameTest 源码编译及 9 项套桶／同步 GameTest 全部通过。日志为 `build/verification/bucket-commit/candidate-build.log` 和 `candidate-gametest.log`；客户端 GPU 结果沿用上文此前验证，本次提交前未重新运行客户端。
+
 ## 0.2.5 灯笼种类精简（2026-10-20）
 
 正常展示与合成仅保留艾德曼、振金；秘银保留注册及模型、语言以兼容旧存档，隐藏于创造栏、搜索和 JEI，移除合成配方；铜、银、金、铁、古代金属灯笼及专用模型、配方、语言移除。已有秘银灯笼的照明、耐久和金属粒修复继续生效。

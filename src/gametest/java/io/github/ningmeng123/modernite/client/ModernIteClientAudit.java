@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.content.ExtremeEffects;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.github.ningmeng123.modernite.gear.ExtremeGear;
@@ -229,7 +230,7 @@ public final class ModernIteClientAudit {
             });
         }
         report.addProperty("effect_sprite_count", entries.size());
-        check(entries.size() == 7, "Expected all seven custom effect atlas sprites");
+        check(entries.size() == ExtremeEffects.VALUES.size(), "Expected every registered custom effect atlas sprite");
     }
 
     @FunctionalInterface private interface Audit { void run() throws Exception; }

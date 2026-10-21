@@ -28,8 +28,8 @@
 | zombie_jump | 倒立僵尸 | EntityZombieJump | 自然；通用维度 | 倒立渲染、命中颠倒 120 tick、专属生命曲线 |
 | zombie_knockback | 击退僵尸 | EntityZombieKnockback | 自然；通用维度 | 成功近战命中追加背离攻击者的水平击退3.2，纵向沿用普通受击／跳跃／下落速度、速度增益 |
 | zombie_invisible_look_up | 仰头僵尸 | EntityZombieInvisibleLookUp | 自然；通用维度 | 5% 可见度、命中强制仰头 200 tick |
-| zombie_pumpkin | 万圣僵尸 | EntityZombiePumpkin | 自然；通用维度 | 南瓜头、60 基础生命、命中原版南瓜头视野遮罩 600 tick |
-| zombie_iron_bucket | 铁桶僵尸 | EntityZombieIronBucket | 自然；通用维度 | 倒扣铁桶几何头盔（玩家也适用）、60 基础生命 |
+| zombie_pumpkin | 万圣僵尸 | EntityZombiePumpkin | 自然；通用维度 | 南瓜头、60 基础生命、命中原版南瓜头视野遮罩 600 tick；第一人称和第三人称均遮蔽视野，F1 不解除遮罩 |
+| zombie_iron_bucket | 铁桶僵尸 | EntityZombieIronBucket | 自然；通用维度 | 倒扣铁桶几何头盔、60 基础生命；成功近战命中玩家施加 10 秒套桶效果，重复命中刷新；第三人称独立绘制头上铁桶，第一人称和第三人称均仅露出屏幕底部约 25% 视野，F1 不解除遮罩；不替换或占用头盔槽；到期或喝奶解除 |
 | zombie_siege | 攻城尸 | EntityZombieSiege | 自然；通用维度 | 幼年僵尸骑手、面向目标投掷骑手；修正源空目标判断 |
 | dragon_zombie | 龙头僵尸 | EntityDragonZombie | 自然；通用维度 | 原版龙首、喷射半径固定1.5格的龙息云，并保留范围僵尸增益 |
 | random_zombie | 随机僵尸 | EntityRandomZombie | 自然；通用维度 | 各槽独立概率：四甲每件50%、主手70%，独立材质与磨损；掉绿宝石 |

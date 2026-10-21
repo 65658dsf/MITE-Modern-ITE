@@ -454,6 +454,10 @@ public final class MobAbilities {
     public static void afterMeleeHit(Mob mob,ExtremeMob state,LivingEntity target){
         if(mob.level().isClientSide||!target.isAlive())return;
         var kind=state.extremeKind();
+        if(kind==ZOMBIE_IRON_BUCKET&&target instanceof Player){
+            // The synchronized status supplies the bucket visuals without touching equipped armor.
+            effect(target,"bucket_head",200,0);return;
+        }
         if(kind==ZOMBIE_KNOCKBACK){
             // Restore its horizontal shove while preserving ordinary hit, jump or fall motion on Y.
             knock(mob,target,3.2,0);return;

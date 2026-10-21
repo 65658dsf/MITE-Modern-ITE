@@ -39,6 +39,7 @@
   "effect.modern_ite.fast_sensitivity": "Fast Sensitivity",
   "effect.modern_ite.look_up": "Look Up",
   "effect.modern_ite.big_head": "Big Head",
+  "effect.modern_ite.bucket_head": "Bucket Head",
   "itemGroup.modern_ite": "MITE: Modern ITE",
   "tooltip.modern_ite.lantern.offhand": "Only active while held in the offhand.",
   "tooltip.modern_ite.lantern.remaining": "Durability: %s / %s",

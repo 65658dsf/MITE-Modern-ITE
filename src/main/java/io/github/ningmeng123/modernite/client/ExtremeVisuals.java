@@ -33,12 +33,18 @@ public final class ExtremeVisuals {
     @SubscribeEvent public static void overlay(RenderGuiLayerEvent.Post event) {
         if(!event.getName().equals(VanillaGuiLayers.HOTBAR))return;var player=Minecraft.getInstance().player;if(player==null)return;
         var gui=event.getGuiGraphics();int w=gui.guiWidth(),h=gui.guiHeight();
-        if(has(player,"occlusion")&&Minecraft.getInstance().options.getCameraType().isFirstPerson()){
+        if(has(player,"flash")){var effect=player.getEffect(ExtremeEffects.VALUES.get("flash"));int alpha=(int)(255F*Math.min(1F,effect.getDuration()/30F));gui.fill(0,0,w,h,(alpha<<24)|0xffffff);}
+    }
+    @SubscribeEvent public static void occlusion(RenderGuiEvent.Post event) {
+        var mc=Minecraft.getInstance();var player=mc.player;
+        if(player!=null&&player.isAlive()&&!player.isSpectator()&&mc.getCameraEntity()==player&&has(player,"occlusion")){
+            var gui=event.getGuiGraphics();int w=gui.guiWidth(),h=gui.guiHeight();
             RenderSystem.disableDepthTest();RenderSystem.depthMask(false);RenderSystem.enableBlend();
+            gui.pose().pushPose();gui.pose().translate(0,0,1000);
             gui.setColor(1,1,1,1);
             gui.blit(PUMPKIN_OVERLAY,0,0,-90,0,0,w,h,w,h);
+            gui.flush();gui.pose().popPose();
             RenderSystem.disableBlend();RenderSystem.depthMask(true);RenderSystem.enableDepthTest();
         }
-        if(has(player,"flash")){var effect=player.getEffect(ExtremeEffects.VALUES.get("flash"));int alpha=(int)(255F*Math.min(1F,effect.getDuration()/30F));gui.fill(0,0,w,h,(alpha<<24)|0xffffff);}
     }
 }

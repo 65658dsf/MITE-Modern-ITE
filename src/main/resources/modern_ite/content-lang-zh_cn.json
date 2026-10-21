@@ -39,6 +39,7 @@
   "effect.modern_ite.fast_sensitivity": "灵敏失控",
   "effect.modern_ite.look_up": "强制仰视",
   "effect.modern_ite.big_head": "大头",
+  "effect.modern_ite.bucket_head": "铁桶套头",
   "itemGroup.modern_ite": "MITE: Modern ITE",
   "tooltip.modern_ite.lantern.offhand": "仅放在副手时生效。",
   "tooltip.modern_ite.lantern.remaining": "耐久：%s / %s",
