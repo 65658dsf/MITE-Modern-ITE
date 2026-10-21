@@ -1,7 +1,10 @@
 package io.github.ningmeng123.modernite.client.entity;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
+import java.lang.reflect.Method;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.ZombieModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -14,6 +17,9 @@ import net.minecraft.world.item.Items;
 
 /** Species silhouettes and the strong zombie's two-arm uppercut. @author NingMeng123 */
 public final class VariantZombieModel extends ZombieModel<Zombie> {
+    private static final Method EMF_ROOT=emfRootMethod();
+    private static final Method EMF_ANIMATE=emfAnimateMethod();
+    private static boolean emfAnimationFailed;
     private final ExtremeKind kind;
 
     public VariantZombieModel(ModelPart root,ExtremeKind kind){super(root);this.kind=kind;}
@@ -55,5 +61,37 @@ public final class VariantZombieModel extends ZombieModel<Zombie> {
             rightArm.yRot=leftArm.yRot=0;rightArm.zRot=leftArm.zRot=0;
             body.yRot=0;rightArm.x=-5;leftArm.x=5;rightArm.z=leftArm.z=0;
         }
+    }
+
+    @Override public void renderToBuffer(PoseStack pose,VertexConsumer vertices,int light,int overlay,int color){
+        if(kind==ExtremeKind.FISHING_ROD_ZOMBIE&&EMF_ANIMATE!=null&&!emfAnimationFailed){
+            try{
+                Object root=EMF_ROOT.invoke(this);
+                if(root!=null){
+                    // Stay inside the current render context: mounting a separate animation API
+                    // context would let EMF rerun its headwear scale animation during this draw.
+                    head.xScale=head.yScale=head.zScale=1F;
+                    hat.xScale=hat.yScale=hat.zScale=1F;
+                    EMF_ANIMATE.invoke(root);
+                    head.xScale*=2F;head.yScale*=2F;head.zScale*=2F;
+                    hat.xScale*=2F;hat.yScale*=2F;hat.zScale*=2F;
+                }
+            }catch(ReflectiveOperationException failure){
+                emfAnimationFailed=true;
+                head.xScale=head.yScale=head.zScale=hat.xScale=hat.yScale=hat.zScale=2F;
+                com.mojang.logging.LogUtils.getLogger().warn("Cannot preserve big-head zombie scale after optional EMF animation",failure);
+            }
+        }
+        super.renderToBuffer(pose,vertices,light,overlay,color);
+    }
+
+    private static Method emfRootMethod(){
+        try{return VariantZombieModel.class.getMethod("emf$getEMFRootModel");}
+        catch(NoSuchMethodException unavailable){return null;}
+    }
+    private static Method emfAnimateMethod(){
+        if(EMF_ROOT==null)return null;
+        try{return EMF_ROOT.getReturnType().getMethod("animate");}
+        catch(NoSuchMethodException unavailable){return null;}
     }
 }

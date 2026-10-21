@@ -184,6 +184,12 @@ public final class MobRenderRegressionAudit {
                 verifyPlayerHead(mc);
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.bigHeadZombieAudit")) {
+                report.addProperty("scope", "Big-head zombie GPU silhouette with native and resource-pack models");
+                JsonObject facts=new JsonObject();report.add("big_head_zombie",facts);
+                sample(mc,ExtremeKind.FISHING_ROD_ZOMBIE,facts);
+                return;
+            }
             JsonArray identities=new JsonArray();report.add("texture_lookups",identities);
             for(ExtremeKind kind:ExtremeKind.values()) {
                 JsonObject facts=new JsonObject();identities.add(facts);facts.addProperty("entity",kind.id());
@@ -381,9 +387,33 @@ public final class MobRenderRegressionAudit {
         }
         if(kind==ExtremeKind.FISHING_ROD_ZOMBIE){
             check(model instanceof VariantZombieModel,"The big-head zombie requires its dedicated model");
-            var zombie=(VariantZombieModel)model;zombie.setupAnim((Zombie)mob,0,0,0,0,0);
-            facts.addProperty("head_scale",zombie.head.xScale);
-            check(zombie.head.xScale==2&&zombie.hat.xScale==2,"The zombie's actual head and outer head must both double");
+            var zombie=(VariantZombieModel)model;
+            Field modelField=LivingEntityRenderer.class.getDeclaredField("model");modelField.setAccessible(true);
+            var normal=new ZombieModel<Zombie>(mc.getEntityModels().bakeLayer(net.minecraft.client.model.geom.ModelLayers.ZOMBIE));
+            JsonArray frames=new JsonArray();facts.add("rendered_head_frames",frames);
+            try{
+                for(int frame=0;frame<4;frame++){
+                    try(NativeImage enlarged=capture(mc,mob)){
+                        JsonObject sample=new JsonObject();frames.add(sample);
+                        sample.addProperty("frame",frame);
+                        sample.addProperty("head_scale",zombie.head.xScale);sample.addProperty("hat_scale",zombie.hat.xScale);
+                        check(zombie.head.xScale==2&&zombie.hat.xScale>=2&&zombie.hat.xScale<=3,
+                                "Real redraws must preserve doubled heads without accumulating scale");
+                        modelField.set(renderer,normal);
+                        try(NativeImage control=capture(mc,mob)){
+                            int enlargedWidth=headWidth(enlarged),normalWidth=headWidth(control);
+                            int changed=changedAll(enlarged,control);
+                            sample.addProperty("enlarged_head_pixel_width",enlargedWidth);
+                            sample.addProperty("normal_head_pixel_width",normalWidth);
+                            sample.addProperty("head_changed_pixels",changed);
+                            enlarged.writeToFile(screenshots().resolve("fishing_rod_zombie_frame_"+frame+".png"));
+                            if(frame==0)control.writeToFile(screenshots().resolve("fishing_rod_zombie_normal_head.png"));
+                            check(changed>100&&enlargedWidth>normalWidth*1.45F,
+                                    "The rendered head must visibly exceed an ordinary zombie head, including resource-pack geometry: "+enlargedWidth+" vs "+normalWidth);
+                        }finally{modelField.set(renderer,model);}
+                    }
+                }
+            }finally{modelField.set(renderer,model);}
         }
         if(kind==ExtremeKind.ZOMBIE_FLY_AWAY){
             var strong=(VariantZombieModel)model;strong.attackTime=.5F;strong.setupAnim((Zombie)mob,0,0,0,0,0);
@@ -517,6 +547,16 @@ public final class MobRenderRegressionAudit {
         JsonObject json(){JsonObject j=new JsonObject();j.addProperty("body",body);j.addProperty("near_pure_white",white);j.addProperty("near_pure_white_fraction",white/(double)Math.max(1,body));return j;}
     }
     private static boolean foreground(int p) {return Math.abs((p&255)-16)+Math.abs((p>>>8&255)-24)+Math.abs((p>>>16&255)-32)>18;}
+    private static int headWidth(NativeImage image) {
+        int width=0;
+        // Restrict to the head: a normal zombie's raised hands reach the rows below this.
+        for(int y=0;y<100;y++){
+            int first=SIZE,last=-1;
+            for(int x=0;x<SIZE;x++)if(foreground(image.getPixelRGBA(x,y))){first=Math.min(first,x);last=x;}
+            width=Math.max(width,last-first+1);
+        }
+        return width;
+    }
     private static PixelStats stats(NativeImage image) {
         int body=0,white=0;for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++) {
             int p=image.getPixelRGBA(x,y);if(!foreground(p))continue;body++;
