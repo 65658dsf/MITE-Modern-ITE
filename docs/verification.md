@@ -2,6 +2,14 @@
 
 开发署名：NingMeng123。
 
+## 0.2.6 苦力怕与骷髅小型死亡分裂（2026-10-21）
+
+各类苦力怕与骷髅默认以3%概率生成6～8只同类型小型个体，苦力怕自爆也可触发；幼体半体型、四分之一日期成长后生命、半攻击伤害，苦力怕爆炸半径减半，幼体不再分裂。保留骷髅配置开关、初始停滞和生成额度。镜像生命阈值、闪电箭固定伤害、黑色地狱苦力怕专属爆炸均已适配。本体固定站立尺寸原先覆盖原生SCALE，现按同步属性补回小型碰撞尺寸，并在生成落点检查前立即刷新。
+
+使用本地构建的 `mite-0.2.6.jar`，执行 `./gradlew.bat build compileGametestJava`：30项JUnit、构建及全部GameTest源码编译通过。隔离世界执行 `./gradlew.bat -I build/verification/mob-splitting.init.gradle runGameTestServer -PsplitFocused=true`，11项专项GameTest全部通过：19种骷髅、10种苦力怕的真实死亡路径；失败概率与取消死亡；成长刷新、伤势、存读与尺寸；防重复和防递归；实际伤害管线中的近战、箭与闪电固定伤害；普通、地狱及黑色地狱爆炸半径；自爆后幼体存活；镜像生命复制；配置关闭与零数量；每名父体最多8个存活随从。
+
+日志为 `build/verification/mob-splitting-build.log` 和 `build/verification/mob-splitting-server-verified.log`，安装包为 `build/libs/modern-ite-0.2.6.jar`。已有骷髅数量配置值会保留，将 `compressed_skeleton_expand_count` 设为7即可采用6～8只。此次未运行全量GameTest或真实联机客户端验收。
+
 ## 0.2.5 铁桶套头与第三人称遮蔽（2026-10-21）
 
 铁桶僵尸成功近战命中玩家后施加独立 `modern_ite:bucket_head` 状态，持续 200 tick，重复命中刷新。原头盔实例及附魔、名称等组件保留，空头盔槽也不插入物品；到期或喝奶解除。玩家头上的铁桶由独立渲染层绘制，支持宽／细模型、下蹲及大头缩放，并通过原生效果包向追踪玩家同步。第一人称、背后第三人称、正面第三人称均遮挡上方 75% 视野，只露出屏幕底部 25%。南瓜僵尸的原生南瓜视野遮罩也在三个视角下生效，两种遮罩均不受 F1 隐藏 HUD 影响。

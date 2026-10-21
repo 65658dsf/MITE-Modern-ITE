@@ -310,7 +310,7 @@ public final class MobAbilities {
         }
     }
     private static void mirror(Mob mob,LivingEntity player,MobMemory s){
-        if(!s.mirrored){if(player.getMaxHealth()>mob.getMaxHealth()){stat(mob,Attributes.MAX_HEALTH,player.getMaxHealth());mob.setHealth(mob.getMaxHealth());}s.mirrored=true;}
+        if(!s.mirrored){if(player.getMaxHealth()>(MobSplitting.isChild(mob)?mob.getMaxHealth()*4F:mob.getMaxHealth())){stat(mob,Attributes.MAX_HEALTH,player.getMaxHealth());mob.setHealth(mob.getMaxHealth());}s.mirrored=true;}
         for(var slot:new EquipmentSlot[]{EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET,EquipmentSlot.MAINHAND}){if(!ItemStack.isSameItemSameComponents(mob.getItemBySlot(slot),player.getItemBySlot(slot)))mob.setItemSlot(slot,player.getItemBySlot(slot).copy());mob.setDropChance(slot,0);}
         for(var p:player.getActiveEffects())mob.addEffect(new MobEffectInstance(p));configureGoals(mob,((ExtremeMob)mob).extremeKind());
     }
@@ -380,9 +380,13 @@ public final class MobAbilities {
     private static void summonZombie(Mob owner,int count){summonId(owner,"minecraft:zombie",count);}
     public static Mob summonType(Mob owner,EntityType<?> type,int count){return summonType(owner,type,count,false);}
     public static Mob summonType(Mob owner,EntityType<?> type,int count,boolean encounter){
+        return summonType(owner,type,count,encounter,mob->{});
+    }
+    static Mob summonType(Mob owner,EntityType<?> type,int count,boolean encounter,java.util.function.Consumer<Mob> prepare){
         if(!(owner.level() instanceof ServerLevel level))return null;Mob last=null;
         for(int i=0;i<count;i++){
             Entity e=type.create(level);if(!(e instanceof Mob mob))continue;boolean valid=false;
+            prepare.accept(mob);
             for(int attempt=0;attempt<12;attempt++){BlockPos p=owner.blockPosition().offset(owner.getRandom().nextInt(7)-3,0,owner.getRandom().nextInt(7)-3);mob.moveTo(p.getX()+.5,p.getY(),p.getZ()+.5,owner.getYRot(),0);if(level.noCollision(mob)){valid=true;break;}}
             if(!valid||!SpawnPopulation.reserveSupport(mob,owner,encounter)){mob.discard();continue;}
             Set<UUID> existing=summonBaseline(level,owner);Set<Entity> owned=new LinkedHashSet<>();owned.add(mob);

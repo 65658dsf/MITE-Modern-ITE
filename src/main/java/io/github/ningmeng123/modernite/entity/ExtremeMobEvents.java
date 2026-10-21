@@ -45,7 +45,7 @@ public final class ExtremeMobEvents {
             skeleton.getPersistentData().putBoolean("modern_ite:legacy_rolls",true);
             skeleton.getPersistentData().putBoolean("modern_ite:triple",IteConfig.bool("Entities.skeleton_triple_shot")&&skeleton.getRandom().nextInt(100)>85);
             skeleton.getPersistentData().putBoolean("modern_ite:fire_arrows",skeleton.getRandom().nextInt(10)>5);
-            skeleton.getPersistentData().putBoolean("modern_ite:compressed",IteConfig.bool("Entities.compressed_skeleton")&&skeleton.getRandom().nextInt(100)<3);
+            skeleton.getPersistentData().putBoolean("modern_ite:compressed",!MobSplitting.isChild(skeleton)&&IteConfig.bool("Entities.compressed_skeleton")&&skeleton.getRandom().nextInt(100)<3);
         }
         if(event.getEntity() instanceof AbstractArrow arrow&&arrow.getOwner() instanceof AbstractSkeleton skeleton
                 &&!arrow.getPersistentData().getBoolean("modern_ite:split_arrow")){
@@ -129,7 +129,7 @@ public final class ExtremeMobEvents {
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void fixedLightning(LivingDamageEvent.Pre event){
         if(event.getEntity() instanceof Player&&attacker(event.getSource()) instanceof ExtremeMob e&&e.extremeKind()==SKELETON_LIGHTNING
-                &&event.getSource().getDirectEntity() instanceof AbstractArrow)event.setNewDamage(6F);
+                &&event.getSource().getDirectEntity() instanceof AbstractArrow)event.setNewDamage(6F*MobSplitting.damageMultiplier(attacker(event.getSource())));
     }
     @SubscribeEvent public static void damaged(LivingDamageEvent.Post event){
         Mob attacker=attacker(event.getSource());
@@ -159,11 +159,6 @@ public final class ExtremeMobEvents {
                 if(state.extremeKind().mirrors()||state.extremeKind()==MIMIC_ZOMBIE||state.extremeKind()==UNDYING_ZOMBIE_EMPEROR)
                     for(var slot:EquipmentSlot.values())mob.setItemSlot(slot,ItemStack.EMPTY);
                 if(state.extremeKind()==ZOMBIE_BOSS)bossReward(mob,state.extremeMemory());
-            }
-            if(IteConfig.bool("Entities.compressed_skeleton")&&mob.getPersistentData().getBoolean("modern_ite:compressed"))for(int i=0;i<IteConfig.integer("Entities.compressed_skeleton_expand_count");i++){
-                Mob troop=MobAbilities.summonId(mob,"minecraft:skeleton",1);if(troop==null)continue;
-                int standTime=IteConfig.integer("Entities.compressed_skeleton_crack_stand_time");
-                troop.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,standTime,127));troop.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,standTime,127));troop.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,standTime,127));
             }
             if(mob.getPersistentData().hasUUID("modern_ite:summoner")&&mob.level() instanceof ServerLevel level){
                 Entity owner=level.getEntity(mob.getPersistentData().getUUID("modern_ite:summoner"));
@@ -255,7 +250,8 @@ public final class ExtremeMobEvents {
         if(event.isCanceled())return;
         if(state.extremeKind()!=BLACK_INFERNAL_CREEPER||mob.getPersistentData().getBoolean("modern_ite:processing_blast"))return;
         event.setCanceled(true);mob.getPersistentData().putBoolean("modern_ite:processing_blast",true);
-        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new R196ExplosionCalculator(mob,34.375F),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),37.5F,false,Level.ExplosionInteraction.MOB);}
+        float scale=MobSplitting.isChild(mob)?.5F:1F;
+        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new R196ExplosionCalculator(mob,34.375F*scale),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),37.5F*scale,false,Level.ExplosionInteraction.MOB);}
         finally{mob.getPersistentData().remove("modern_ite:processing_blast");}
     }
     private static boolean invisibleCreeper(ExtremeKind kind){return kind==INVISIBLE_CREEPER||kind==INVISIBLE_REVERSED_CREEPER;}

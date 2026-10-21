@@ -47,9 +47,9 @@ public final class IteConfig {
         add(builder, "Block", "mob_spawner_speed_up_with_players", true, 0D, 1D, "玩家近场加速刷怪笼。玩家在近场时，每tick额外减少2tick刷怪倒计时；旁观者除外。");
         add(builder, "Entities", "enhance_limit", 366, 0D, 1000000D, "特殊生物属性成长天数上限。控制本拓展特殊生物的种类专属成长曲线；本体通用怪物成长仍由主模组设置控制。");
         add(builder, "Entities", "skeleton_triple_shot", true, 0D, 1D, "三发骷髅。允许已抽中三发特性的骷髅发射额外两支箭。");
-        add(builder, "Entities", "compressed_skeleton", true, 0D, 1D, "分裂骷髅。允许带分裂特性的骷髅死亡后召唤随从，仍服从召援数量与密度限制。");
-        add(builder, "Entities", "compressed_skeleton_crack_stand_time", 20, 1D, 100000000D, "分裂骷髅停滞时间（tick）。分裂后随从的虚弱、缓慢与抗性持续时间。");
-        add(builder, "Entities", "compressed_skeleton_expand_count", 4, 0D, 64D, "分裂骷髅分裂数量。当前默认4；召援系统仍限制实际成功数量，不保证全部生成。");
+        add(builder, "Entities", "compressed_skeleton", true, 0D, 1D, "分裂骷髅。允许各类骷髅以3%概率获得死亡分裂特性，生成同类小型骷髅；幼体不再分裂，仍服从召援数量与密度限制。");
+        add(builder, "Entities", "compressed_skeleton_crack_stand_time", 20, 1D, 100000000D, "分裂骷髅停滞时间（tick）。分裂后小型骷髅的虚弱、缓慢与抗性持续时间。");
+        add(builder, "Entities", "compressed_skeleton_expand_count", 7, 0D, 64D, "分裂骷髅分裂数量中值。实际随机取设置值±1（限制在1～64），默认7生成6～8只，0禁用；仍服从召援数量与密度限制。");
         add(builder, "Entities", "skeleton_force_melee_attack", true, 0D, 1D, "允许强制骷髅近战。控制带近战特性的骷髅；不强制所有骷髅近战。");
         add(builder, "Entities", "bone_lord_and_longdead_change_weapon_chance", 0.25D, 0D, 1D, "古尸和骷髅领主切换武器概率。0.25代表25%；对新抽取切换特性的生物生效。");
         add(builder, "Entities", "bat_poison_attack", true, 0D, 1D, "吸血蝙蝠攻击中毒。关闭仅禁用本拓展添加的中毒效果。");

@@ -58,7 +58,8 @@ public final class IteMobSettingsRules {
     }
 
     public static float creeperExplosionRadius(Creeper creeper,float original){
-        return creeper instanceof R196InfernalCreeper&&!IteConfig.bool("infernal_creeper_boost")?original*.5F:original;
+        float radius=creeper instanceof R196InfernalCreeper&&!IteConfig.bool("infernal_creeper_boost")?original*.5F:original;
+        return MobSplitting.isChild(creeper)?radius*.5F:radius;
     }
 
     /** Replace the source wool purchase, including saved offers, without resetting stock or reputation. */
