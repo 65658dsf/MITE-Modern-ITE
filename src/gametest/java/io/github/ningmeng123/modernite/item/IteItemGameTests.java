@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -42,7 +43,9 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.NetherPortalBlock;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -203,6 +206,82 @@ public final class IteItemGameTests {
                 new GrowthCase("chestplate",MiteArmorContent.get("mite:vibranium_chestplate"),80,40,28,3,15_000L),
                 new GrowthCase("leggings",MiteArmorContent.get("mite:vibranium_leggings"),60,30,28,3,105_000L),
                 new GrowthCase("boots",MiteArmorContent.get("mite:vibranium_boots"),20,10,28,7,25_000L));
+    }
+
+    @GameTest(template="gear_empty")
+    public static void realArmorHitDistributesThousandthsBeforeEachForgeMultiplier(GameTestHelper h) {
+        try(Session session=new Session(h)) {
+            prepareArmorExperiencePlayer(session.player);
+            ItemStack[] armor={new ItemStack(MiteArmorContent.get("mite:vibranium_helmet")),
+                    new ItemStack(MiteArmorContent.get("mite:vibranium_chestplate")),
+                    new ItemStack(MiteArmorContent.get("mite:vibranium_leggings"))};
+            int[] grades={0,1,10};
+            long[] expected={334L,349L,1248L};
+            for(int index=0;index<armor.length;index++) {
+                armor[index].set(ExtremeGear.FORGE_GRADE.get(),grades[index]);
+                session.player.setItemSlot(ARMOR[index],armor[index]);
+            }
+            session.player.tick();
+            actualArmorExperienceHit(h,session.player,1F);
+            for(int index=0;index<armor.length;index++) {
+                GearProgress result=GearProgression.state(armor[index]);
+                h.assertTrue(result.level()==0&&result.experienceMillis()==expected[index],
+                        "One real damage point splits 334/333/333 stored units before grades 0/1/10 yield 334/349/1248: "+ARMOR[index]);
+            }
+        }h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void realArmorHitAppliesGradeTenOnceAcrossFourPieces(GameTestHelper h) {
+        try(Session session=new Session(h)) {
+            prepareArmorExperiencePlayer(session.player);
+            ItemStack[] armor={new ItemStack(MiteArmorContent.get("mite:vibranium_helmet")),
+                    new ItemStack(MiteArmorContent.get("mite:vibranium_chestplate")),
+                    new ItemStack(MiteArmorContent.get("mite:vibranium_leggings")),
+                    new ItemStack(MiteArmorContent.get("mite:vibranium_boots"))};
+            for(int index=0;index<armor.length;index++) {
+                armor[index].set(ExtremeGear.FORGE_GRADE.get(),10);
+                session.player.setItemSlot(ARMOR[index],armor[index]);
+            }
+            session.player.tick();
+            actualArmorExperienceHit(h,session.player,4F);
+            for(int index=0;index<armor.length;index++) {
+                GearProgress result=GearProgression.state(armor[index]);
+                h.assertTrue(result.level()==0&&result.experienceMillis()==3750L,
+                        "Four real damage points yield one raw point per piece and grade ten applies exactly one 3.75 multiplier: "+ARMOR[index]);
+            }
+        }h.succeed();
+    }
+
+    private static void prepareArmorExperiencePlayer(ServerPlayer player) {
+        for(int tick=0;tick<60;tick++)player.tick();
+        player.getInventory().clearContent();
+        player.removeAllEffects();
+        player.stopUsingItem();
+        player.setItemInHand(InteractionHand.MAIN_HAND,ItemStack.EMPTY);
+        player.setItemInHand(InteractionHand.OFF_HAND,ItemStack.EMPTY);
+        player.setNoGravity(true);player.setOnGround(true);
+    }
+
+    private static void actualArmorExperienceHit(GameTestHelper h,ServerPlayer player,float damage) {
+        var attacker=EntityType.COW.create(h.getLevel());
+        attacker.setNoAi(true);attacker.setNoGravity(true);attacker.setPos(player.position().add(1D,0D,0D));
+        player.setHealth(player.getMaxHealth());player.invulnerableTime=0;player.hurtTime=0;
+        h.assertTrue(player.getMainHandItem().isEmpty()&&player.getOffhandItem().isEmpty()&&!player.isBlocking(),
+                "The real armor-training hit has no held shield or active block");
+        float health=player.getHealth();
+        List<Float> incoming=new ArrayList<>();
+        Consumer<LivingIncomingDamageEvent> observer=event->{
+            if(event.getEntity()==player&&event.getSource().getEntity()==attacker)incoming.add(event.getAmount());
+        };
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,LivingIncomingDamageEvent.class,observer);
+        try {
+            h.assertTrue(player.hurt(player.damageSources().mobAttack(attacker),damage),
+                    "The native entity-owned armor-training hit is accepted");
+        }finally{NeoForge.EVENT_BUS.unregister(observer);attacker.discard();}
+        h.assertTrue(incoming.size()==1&&incoming.getFirst()==damage,
+                "The native incoming event sees exactly the requested damage once: "+incoming);
+        h.assertTrue(player.getHealth()<health,"The accepted native hit really loses health after armor mitigation");
     }
 
     @GameTest(template="gear_empty",batch="ite_config")
