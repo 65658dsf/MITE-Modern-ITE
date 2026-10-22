@@ -54,6 +54,18 @@ public final class IteConfigGameTests {
     }
 
     @GameTest(template="gear_empty",batch="ite_config")
+    public static void quartzSacrificeDefaultsToThirtyFiveWithoutOverwritingExplicitRewards(GameTestHelper helper) {
+        helper.assertTrue(IteConfig.defaults().get("quartz_exp").equals(35)
+                && IteConfig.setting("quartz_exp").getDefault().equals(35), "Both the schema and generated config use thirty-five quartz sacrifice experience");
+        helper.assertTrue(IteConfig.validated(Map.of()).get("quartz_exp").equals(35)
+                && IteConfig.validated(Map.of("quartz_exp",-1)).get("quartz_exp").equals(35), "Missing or invalid rewards fall back to the new default");
+        for(int reward:new int[]{0,35,50,99})
+            helper.assertTrue(IteConfig.validated(Map.of("quartz_exp",reward)).get("quartz_exp").equals(reward),
+                    "Explicit existing and customized quartz rewards remain authoritative, including zero disabling it");
+        helper.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
     public static void invalidNetworkValuesFallBackWithoutAddingUnknownSettings(GameTestHelper h) {
         var invalid=new HashMap<String,Object>();
         invalid.put("in_rain_debuff_time",-1);invalid.put("conqueror_damage_boost_per_lvl",Double.NaN);

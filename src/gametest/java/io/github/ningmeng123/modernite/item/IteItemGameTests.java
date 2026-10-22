@@ -32,6 +32,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -63,14 +64,16 @@ public final class IteItemGameTests {
             var values=List.of(Map.entry(Items.DIAMOND,Map.entry("diamond_exp",77)),Map.entry(Items.EMERALD,Map.entry("emerald_exp",88)),
                     Map.entry(Items.QUARTZ,Map.entry("quartz_exp",99)),Map.entry(Items.LAPIS_LAZULI,Map.entry("lapis_exp",111)));
             for(var value:values) {
+                awaitGemCooldown(h,session.player);
                 config.set(value.getValue().getKey(),value.getValue().getValue());PlayerExperience.setTotal(session.player,0);
                 var stack=new ItemStack(value.getKey(),2);session.player.setItemInHand(InteractionHand.MAIN_HAND,stack);
-                var event=NeoForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickItem(session.player,InteractionHand.MAIN_HAND));
-                h.assertTrue(event.isCanceled()&&stack.getCount()==1&&session.player.totalExperience==value.getValue().getValue(),
+                var result=useGem(session.player);
+                h.assertTrue(result.consumesAction()&&stack.getCount()==1&&session.player.totalExperience==value.getValue().getValue(),
                         "Real gem use consumes one item and grants the configured XP: "+value.getValue().getKey());
             }
+            awaitGemCooldown(h,session.player);
             config.set("diamond_exp",0);PlayerExperience.setTotal(session.player,0);var disabled=new ItemStack(Items.DIAMOND);
-            session.player.setItemInHand(InteractionHand.MAIN_HAND,disabled);GemSacrifice.onUse(new PlayerInteractEvent.RightClickItem(session.player,InteractionHand.MAIN_HAND));
+            session.player.setItemInHand(InteractionHand.MAIN_HAND,disabled);useGem(session.player);
             h.assertTrue(disabled.getCount()==1&&session.player.totalExperience==0,"A zero reward disables sacrifice without consuming a gem");
         }h.succeed();
     }
@@ -80,17 +83,102 @@ public final class IteItemGameTests {
         try(ConfigRestore config=new ConfigRestore();Session session=new Session(h)) {
             config.set("quartz_max_exp_level",2);config.set("quartz_exp",1);
             var stack=new ItemStack(Items.QUARTZ,3);session.player.setItemInHand(InteractionHand.MAIN_HAND,stack);PlayerExperience.setLevels(session.player,1);
-            GemSacrifice.onUse(new PlayerInteractEvent.RightClickItem(session.player,InteractionHand.MAIN_HAND));
+            useGem(session.player);
             h.assertTrue(stack.getCount()==2,"The level immediately below the configured limit still accepts quartz");
+            awaitGemCooldown(h,session.player);
             PlayerExperience.setLevels(session.player,2);int before=session.player.totalExperience;
-            GemSacrifice.onUse(new PlayerInteractEvent.RightClickItem(session.player,InteractionHand.MAIN_HAND));
+            useGem(session.player);
             h.assertTrue(stack.getCount()==2&&session.player.totalExperience==before,"At the exact level limit quartz is neither consumed nor credited");
             config.set("quartz_max_exp_level",0);PlayerExperience.setTotal(session.player,0);
-            GemSacrifice.onUse(new PlayerInteractEvent.RightClickItem(session.player,InteractionHand.MAIN_HAND));
+            useGem(session.player);
             h.assertTrue(stack.getCount()==2&&session.player.totalExperience==0,"A zero level limit explicitly disables quartz sacrifice");
-            PlayerExperience.setTotal(session.player,-50);GemSacrifice.onUse(new PlayerInteractEvent.RightClickItem(session.player,InteractionHand.MAIN_HAND));
+            PlayerExperience.setTotal(session.player,-50);useGem(session.player);
             h.assertTrue(stack.getCount()==2&&session.player.totalExperience==-50,"Zero also disables quartz while the player has negative experience debt");
         }h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
+    public static void nativeQuartzSacrificeWorksAtFiftyFourAndExplainsTheFiftyFiveLevelBoundary(GameTestHelper helper) {
+        try(ConfigRestore config=new ConfigRestore();Session session=new Session(helper)) {
+            config.set("quartz_max_exp_level",55);config.set("quartz_exp",35);
+            var stack=new ItemStack(Items.QUARTZ,3);session.player.setItemInHand(InteractionHand.MAIN_HAND,stack);
+            PlayerExperience.setLevels(session.player,54);int before=session.player.totalExperience;
+            helper.assertTrue(useGem(session.player).consumesAction()&&stack.getCount()==2
+                    &&session.player.totalExperience==before+35,"A real level-fifty-four use consumes one quartz and credits the configured thirty-five points");
+            helper.assertTrue(session.quartzMessages().isEmpty(),"A successful native sacrifice sends no rejection hint");
+            awaitGemCooldown(helper,session.player);
+            PlayerExperience.setLevels(session.player,55);before=session.player.totalExperience;
+            helper.assertValueEqual(useGem(session.player),InteractionResult.PASS,"The quartz level rule leaves the native unsuccessful interaction unchanged");
+            helper.assertTrue(stack.getCount()==2&&session.player.totalExperience==before,"The exact level limit neither consumes quartz nor awards experience");
+            assertQuartzHint(helper,session,"message.modern_ite.quartz_sacrifice_level_limit",55);
+            helper.assertFalse(IteItemRules.canSacrificeGem(session.player,stack,true),"The pure policy query still rejects the exact configured limit");
+            helper.assertValueEqual(GemSacrifice.experienceValue(stack),35,"Pure reward lookup retains the configured reward independently of level eligibility");
+            helper.assertTrue(session.quartzMessages().isEmpty(),"Policy and tooltip queries never publish interaction hints");
+        }helper.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
+    public static void nativeQuartzUseExplainsDisabledSettingsWithoutChangingItemsOrExperience(GameTestHelper helper) {
+        try(ConfigRestore config=new ConfigRestore();Session session=new Session(helper)) {
+            var stack=new ItemStack(Items.QUARTZ,2);session.player.setItemInHand(InteractionHand.MAIN_HAND,stack);
+            PlayerExperience.setTotal(session.player,0);config.set("quartz_exp",35);config.set("quartz_max_exp_level",0);
+            helper.assertValueEqual(useGem(session.player),InteractionResult.PASS,"Disabling the level gate does not cancel the ordinary unsuccessful item interaction");
+            helper.assertTrue(stack.getCount()==2&&session.player.totalExperience==0,"A zero level limit preserves all quartz and experience");
+            assertQuartzHint(helper,session,"message.modern_ite.quartz_sacrifice_disabled",null);
+            config.set("quartz_max_exp_level",55);config.set("quartz_exp",0);
+            helper.assertValueEqual(useGem(session.player),InteractionResult.PASS,"A zero configured reward also leaves the native result unchanged");
+            helper.assertTrue(stack.getCount()==2&&session.player.totalExperience==0,"A disabled reward cannot consume quartz for no experience");
+            assertQuartzHint(helper,session,"message.modern_ite.quartz_sacrifice_disabled",null);
+        }helper.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
+    public static void spectatorsAndEarlierCancelledNativeQuartzUseNeverPublishRejectionHints(GameTestHelper helper) {
+        try(ConfigRestore config=new ConfigRestore();Session session=new Session(helper)) {
+            config.set("quartz_max_exp_level",55);config.set("quartz_exp",35);
+            var stack=new ItemStack(Items.QUARTZ,2);session.player.setItemInHand(InteractionHand.MAIN_HAND,stack);
+            PlayerExperience.setLevels(session.player,55);int before=session.player.totalExperience;
+            int[] intercepted={0};
+            Consumer<PlayerInteractEvent.RightClickItem> cancel=event->{
+                if(event.getEntity()==session.player) {
+                    intercepted[0]++;event.setCancellationResult(InteractionResult.FAIL);event.setCanceled(true);
+                }
+            };
+            NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST,PlayerInteractEvent.RightClickItem.class,cancel);
+            try {
+                helper.assertValueEqual(useGem(session.player),InteractionResult.FAIL,"Earlier mod cancellation remains the native interaction result");
+            }finally{NeoForge.EVENT_BUS.unregister(cancel);}
+            helper.assertTrue(intercepted[0]==1&&stack.getCount()==2&&session.player.totalExperience==before
+                    &&session.quartzMessages().isEmpty(),"An externally cancelled attempt neither mutates state nor misattributes failure to the level rule");
+            session.player.setGameMode(GameType.SPECTATOR);
+            helper.assertValueEqual(useGem(session.player),InteractionResult.PASS,"The real spectator use exits before publishing an item interaction");
+            helper.assertTrue(stack.getCount()==2&&session.player.totalExperience==before&&session.quartzMessages().isEmpty(),
+                    "Spectators never receive sacrifice feedback or change quartz and experience");
+        }helper.succeed();
+    }
+
+    private static InteractionResult useGem(ServerPlayer player) {
+        return player.gameMode.useItem(player,player.serverLevel(),player.getMainHandItem(),InteractionHand.MAIN_HAND);
+    }
+
+    private static void awaitGemCooldown(GameTestHelper helper,ServerPlayer player) {
+        int ticks=0;
+        while(gemCoolingDown(player)&&ticks++<20_000)player.getCooldowns().tick();
+        helper.assertFalse(gemCoolingDown(player),"Native gem cooldown timers expire by normal ticking, never by removing cooldown state");
+    }
+
+    private static boolean gemCoolingDown(ServerPlayer player) {
+        return player.getCooldowns().isOnCooldown(Items.QUARTZ)||player.getCooldowns().isOnCooldown(Items.DIAMOND)
+                ||player.getCooldowns().isOnCooldown(Items.EMERALD)||player.getCooldowns().isOnCooldown(Items.LAPIS_LAZULI);
+    }
+
+    private static void assertQuartzHint(GameTestHelper helper,Session session,String key,Integer limit) {
+        var messages=session.quartzMessages();
+        helper.assertValueEqual(messages.size(),1,"Exactly one native action-bar packet explains the rejected quartz interaction");
+        var message=messages.getFirst();var text=(TranslatableContents)message.content().getContents();
+        helper.assertTrue(message.overlay()&&text.getKey().equals(key),"The rejection is a translated action-bar hint rather than ordinary chat");
+        helper.assertTrue(limit==null?text.getArgs().length==0:text.getArgs().length==1&&limit.equals(text.getArgs()[0]),
+                "The hint contains precisely the applicable configured level boundary");
     }
 
     @GameTest(template="gear_empty",batch="ite_config")
@@ -328,9 +416,15 @@ public final class IteItemGameTests {
             player.getInventory().clearContent();player.removeAllEffects();drain();
         }
         List<ClientboundSystemChatPacket> drain() {
+            return drain("message.modern_ite.portal_used");
+        }
+        List<ClientboundSystemChatPacket> quartzMessages() {
+            return drain("message.modern_ite.quartz_sacrifice_");
+        }
+        private List<ClientboundSystemChatPacket> drain(String prefix) {
             channel.runPendingTasks();channel.flushOutbound();var messages=new ArrayList<ClientboundSystemChatPacket>();Object packet;
             while((packet=channel.readOutbound())!=null)if(packet instanceof ClientboundSystemChatPacket chat
-                    &&chat.content().getContents() instanceof TranslatableContents text&&text.getKey().equals("message.modern_ite.portal_used"))messages.add(chat);
+                    &&chat.content().getContents() instanceof TranslatableContents text&&text.getKey().startsWith(prefix))messages.add(chat);
             return messages;
         }
         @Override public void close(){player.getInventory().clearContent();player.server.getPlayerList().remove(player);channel.finishAndReleaseAll();}

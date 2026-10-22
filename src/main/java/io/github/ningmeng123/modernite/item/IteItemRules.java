@@ -7,6 +7,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
@@ -17,9 +18,11 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.slf4j.LoggerFactory;
 
 /** Item configuration hooks and armor effects, separate from visual set qualifications. @author NingMeng123 */
@@ -40,6 +43,17 @@ public final class IteItemRules {
         if(!original||!stack.is(Items.QUARTZ))return original;
         int limit=IteConfig.integer("quartz_max_exp_level");
         return limit>0&&player.experienceLevel<limit;
+    }
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void explainBlockedQuartzSacrifice(PlayerInteractEvent.RightClickItem event) {
+        if(event.isCanceled()||!(event.getEntity() instanceof ServerPlayer player)||player.isSpectator()
+                ||!event.getItemStack().is(Items.QUARTZ)||event.getItemStack().isEmpty())return;
+        int limit=IteConfig.integer("quartz_max_exp_level");
+        MutableComponent message;
+        if(limit<=0||IteConfig.integer("quartz_exp")<=0)message=Component.translatable("message.modern_ite.quartz_sacrifice_disabled");
+        else if(player.experienceLevel>=limit)message=Component.translatable("message.modern_ite.quartz_sacrifice_level_limit",limit);
+        else return;
+        player.displayClientMessage(message.withStyle(ChatFormatting.RED),true);
     }
     public static int foodUseDuration(ItemStack stack,LivingEntity user,int original) {
         if(stack.is(Items.GOLDEN_APPLE))return IteConfig.integer("golden_apple_eat_time");

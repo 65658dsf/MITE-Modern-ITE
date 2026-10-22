@@ -98,7 +98,7 @@ public final class IteConfig {
         add(builder, "Item", "quartz_max_exp_level", 55, 0D, 1000000D, "石英献祭等级上限。玩家等级达到此值不再允许石英献祭；0完全禁用石英献祭。");
         add(builder, "Item", "diamond_exp", 500, 0D, 100000000D, "钻石献祭经验。保留本体当前500默认，0禁用此宝石献祭。");
         add(builder, "Item", "emerald_exp", 250, 0D, 100000000D, "绿宝石献祭经验。保留本体当前250默认，0禁用此宝石献祭。");
-        add(builder, "Item", "quartz_exp", 50, 0D, 100000000D, "石英献祭经验。保留本体当前50默认，并受石英等级上限限制。");
+        add(builder, "Item", "quartz_exp", 35, 0D, 100000000D, "石英献祭经验。极难版默认35，已有配置值优先，并受石英等级上限限制。");
         add(builder, "Item", "lapis_exp", 25, 0D, 100000000D, "青金石献祭经验。保留本体当前25默认，0禁用此宝石献祭。");
         add(builder, "Item", "golden_apple_eat_time", 32, 1D, 100000000D, "金苹果食用时间（tick）。只改变金苹果使用耗时；默认32保留现有食物规则，不更改营养与药效。");
         add(builder, "Item", "enchanted_golden_apple_eat_time", 32, 1D, 100000000D, "附魔金苹果食用时间（tick）。只改变附魔金苹果使用耗时；默认32保留现状。");
