@@ -137,7 +137,7 @@ public final class IteItemGameTests {
     public static void restoredExperienceKeepsFractionalPointsAndCumulativeOverflowAcrossSeveralLevels(GameTestHelper h) {
         try(Session session=new Session(h)) {
             int[] grades={1,2,10};
-            long[] expectedTool={1050,1150,3750},expectedArmor={1050,1150,3750};
+            long[] expectedTool={525,575,1875},expectedArmor={525,575,1875};
             for(int index=0;index<grades.length;index++) {
                 ItemStack tool=new ItemStack(MiteTools.get("vibranium_pickaxe")),
                         armor=new ItemStack(MiteArmorContent.get("mite:vibranium_chestplate"));
@@ -145,7 +145,7 @@ public final class IteItemGameTests {
                 GearProgression.award(tool,1000,session.player);GearProgression.award(armor,1000,session.player);
                 h.assertTrue(GearProgression.state(tool).experienceMillis()==expectedTool[index]
                         &&GearProgression.state(armor).experienceMillis()==expectedArmor[index],
-                        "Forging retains fractional points equally for tools and armor, grade "+grades[index]);
+                        "Forging retains fractional points equally for tools and armor before one fifty-percent reduction, grade "+grades[index]);
             }
             for(GrowthCase sample:growthCases()) {
                 ItemStack stack=new ItemStack(sample.item());stack.set(ExtremeGear.FORGE_GRADE.get(),10);
@@ -154,7 +154,7 @@ public final class IteItemGameTests {
                 GearProgression.award(stack,100_000L,session.player);
                 h.assertTrue(GearProgression.state(stack).level()==sample.overflowLevel()
                                 &&GearProgression.state(stack).experienceMillis()==sample.overflowRemainder(),
-                        "One grade-ten 100-point award becomes 375 points and uses the category's thresholds once: "+sample.name());
+                        "One grade-ten 100-point award becomes 187.5 points and uses the category's unchanged thresholds once: "+sample.name());
                 GearProgression.award(stack,Long.MAX_VALUE,session.player);
                 h.assertTrue(GearProgression.state(stack).level()==cap
                                 &&GearProgression.state(stack).experienceMillis()==0,
@@ -183,14 +183,13 @@ public final class IteItemGameTests {
                             "ITE follows the independently expected base category curve, without a material or forging threshold multiplier: "+sample.name()+" L"+level);
                     GearProgress before=GearProgression.state(stack);
                     long deficit=threshold-before.experienceMillis();
-                    // Grade ten is exactly 15/4. Round the raw thousandths upward, then retain any credited surplus.
-                    long rawMillis=(deficit*4L+14L)/15L;
-                    long creditedMillis=rawMillis*15L/4L;
+                    long rawMillis=(deficit*8L+14L)/15L;
+                    long creditedMillis=rawMillis*15L/8L;
                     GearProgression.award(stack,rawMillis,session.player);
                     GearProgress after=GearProgression.state(stack);
                     long remainder=level+1==sample.cap()?0L:before.experienceMillis()+creditedMillis-threshold;
                     h.assertTrue(after.level()==level+1&&after.experienceMillis()==remainder,
-                            "The actual award applies forging once, deducts one reached threshold and retains exact thousandths: "+sample.name()+" L"+level);
+                            "The actual award applies forging and the fifty-percent reduction once, deducts one reached threshold and retains exact thousandths: "+sample.name()+" L"+level);
                 }
             }
         }h.succeed();
@@ -199,13 +198,13 @@ public final class IteItemGameTests {
     private record GrowthCase(String name,Item item,int first,int increment,int cap,int overflowLevel,long overflowRemainder) {}
     private static List<GrowthCase> growthCases() {
         return List.of(
-                new GrowthCase("tool",MiteTools.get("vibranium_pickaxe"),100,50,25,2,125_000L),
-                new GrowthCase("shield",MiteShields.get("vibranium"),100,50,25,2,125_000L),
-                new GrowthCase("weapon",MiteTools.get("vibranium_sword"),150,100,25,1,225_000L),
-                new GrowthCase("helmet",MiteArmorContent.get("mite:vibranium_helmet"),40,20,28,4,95_000L),
-                new GrowthCase("chestplate",MiteArmorContent.get("mite:vibranium_chestplate"),80,40,28,3,15_000L),
-                new GrowthCase("leggings",MiteArmorContent.get("mite:vibranium_leggings"),60,30,28,3,105_000L),
-                new GrowthCase("boots",MiteArmorContent.get("mite:vibranium_boots"),20,10,28,7,25_000L));
+                new GrowthCase("tool",MiteTools.get("vibranium_pickaxe"),100,50,25,1,87_500L),
+                new GrowthCase("shield",MiteShields.get("vibranium"),100,50,25,1,87_500L),
+                new GrowthCase("weapon",MiteTools.get("vibranium_sword"),150,100,25,1,37_500L),
+                new GrowthCase("helmet",MiteArmorContent.get("mite:vibranium_helmet"),40,20,28,3,7_500L),
+                new GrowthCase("chestplate",MiteArmorContent.get("mite:vibranium_chestplate"),80,40,28,1,107_500L),
+                new GrowthCase("leggings",MiteArmorContent.get("mite:vibranium_leggings"),60,30,28,2,37_500L),
+                new GrowthCase("boots",MiteArmorContent.get("mite:vibranium_boots"),20,10,28,4,47_500L));
     }
 
     @GameTest(template="gear_empty")
@@ -216,7 +215,7 @@ public final class IteItemGameTests {
                     new ItemStack(MiteArmorContent.get("mite:vibranium_chestplate")),
                     new ItemStack(MiteArmorContent.get("mite:vibranium_leggings"))};
             int[] grades={0,1,10};
-            long[] expected={334L,349L,1248L};
+            long[] expected={167L,174L,624L};
             for(int index=0;index<armor.length;index++) {
                 armor[index].set(ExtremeGear.FORGE_GRADE.get(),grades[index]);
                 session.player.setItemSlot(ARMOR[index],armor[index]);
@@ -226,7 +225,7 @@ public final class IteItemGameTests {
             for(int index=0;index<armor.length;index++) {
                 GearProgress result=GearProgression.state(armor[index]);
                 h.assertTrue(result.level()==0&&result.experienceMillis()==expected[index],
-                        "One real damage point splits 334/333/333 stored units before grades 0/1/10 yield 334/349/1248: "+ARMOR[index]);
+                        "One real damage point splits 334/333/333 stored units before grades 0/1/10 and one reduction yield 167/174/624: "+ARMOR[index]);
             }
         }h.succeed();
     }
@@ -247,8 +246,8 @@ public final class IteItemGameTests {
             actualArmorExperienceHit(h,session.player,4F);
             for(int index=0;index<armor.length;index++) {
                 GearProgress result=GearProgression.state(armor[index]);
-                h.assertTrue(result.level()==0&&result.experienceMillis()==3750L,
-                        "Four real damage points yield one raw point per piece and grade ten applies exactly one 3.75 multiplier: "+ARMOR[index]);
+                h.assertTrue(result.level()==0&&result.experienceMillis()==1875L,
+                        "Four real damage points yield one raw point per piece before exactly one grade-ten multiplier and one fifty-percent reduction: "+ARMOR[index]);
             }
         }h.succeed();
     }
