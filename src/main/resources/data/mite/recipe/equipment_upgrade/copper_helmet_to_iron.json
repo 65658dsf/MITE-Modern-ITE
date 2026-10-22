@@ -1,0 +1,7 @@
+{
+  "type": "mite:vibranium_upgrade",
+  "category": "equipment",
+  "pattern": ["III", "ICI"],
+  "key": {"I": {"item": "minecraft:iron_ingot"}, "C": {"item": "mite:copper_helmet"}},
+  "result": {"id": "minecraft:iron_helmet", "count": 1}
+}

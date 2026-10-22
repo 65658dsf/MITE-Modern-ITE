@@ -94,7 +94,7 @@ neoForge {
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = file(providers.gradleProperty('modernIteGameTestDirectory').getOrElse('run-gametest'))
-            systemProperty 'neoforge.enabledGameTestNamespaces', providers.gradleProperty('modernIteGameTestNamespaces').getOrElse('modern_ite')
+            systemProperty 'neoforge.enabledGameTestNamespaces', providers.gradleProperty('modernIteGameTestNamespaces').getOrElse('modern_ite,modern_ite_feedback,modern_ite_starting')
         }
     }
     mods {

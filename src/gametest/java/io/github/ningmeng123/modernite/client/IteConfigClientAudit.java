@@ -229,8 +229,8 @@ public final class IteConfigClientAudit {
         check(mc.screen instanceof OreGenerationSettingsScreen, "The actual MITE ore button must open its multiplier page");
         Screen ores = mc.screen;
         findEdit(ores, "mite.config.ore_search").setValue("minecraft:copper_ore");
-        check(widgets(ores).stream().filter(EditBox.class::isInstance).count() == 2,
-                "A filtered ore row must expose only search and one multiplier input");
+        check(widgets(ores).stream().filter(EditBox.class::isInstance).count() == 3,
+                "A filtered ore row exposes search, multiplier and absolute height range inputs");
         selectOreDimension(ores, R196OreRules.Dimension.UNDERWORLD);
         findEdit(ores, "mite.config.ore_multiplier").setValue("0");
         selectOreDimension(ores, R196OreRules.Dimension.OVERWORLD);
@@ -253,6 +253,14 @@ public final class IteConfigClientAudit {
         check(findEdit(ores, "mite.config.ore_multiplier").getValue().equals("NaN"), "Invalid text is preserved when returning to its dimension");
         findEdit(ores, "mite.config.ore_multiplier").setValue("2");
         check(findButton(ores, "mite.config.save").active, "Fixing all dimension drafts re-enables saving");
+        findEdit(ores, "mite.config.ore_height_range").setValue("[100,-100]");
+        selectOreDimension(ores, R196OreRules.Dimension.UNDERWORLD);
+        check(!findButton(ores, "mite.config.save").active, "A reversed hidden height range blocks saving");
+        findEdit(ores, "mite.config.ore_height_range").setValue("[-50,200]");
+        selectOreDimension(ores, R196OreRules.Dimension.OVERWORLD);
+        check(findEdit(ores, "mite.config.ore_height_range").getValue().equals("[100,-100]"), "Invalid height text survives dimension switches");
+        findEdit(ores, "mite.config.ore_height_range").setValue("[-100,100]");
+        check(findButton(ores, "mite.config.save").active, "Valid negative absolute heights re-enable saving");
         check(MiteConfig.localSnapshot() == originalBaseSnapshot, "Draft changes cannot reach gameplay before saving");
         for (var dimension : List.of(R196OreRules.Dimension.OVERWORLD, R196OreRules.Dimension.UNDERWORLD)) {
             selectOreDimension(ores, dimension);
@@ -276,6 +284,7 @@ public final class IteConfigClientAudit {
         report.addProperty("ore_reset_restores_one", true);
         report.addProperty("ore_both_dimension_drafts_saved", true);
         report.addProperty("ore_advanced_settings_preserved", true);
+        report.addProperty("ore_height_drafts_validated_and_saved", true);
     }
 
     private static void checkOreSave() throws Exception {
@@ -285,6 +294,8 @@ public final class IteConfigClientAudit {
         var parsed = new TomlParser().parse(Files.readString(baseConfigFile));
         checkDouble(((Number)parsed.get(List.of("overworld_ores", "copper"))).doubleValue(), 2D, "Native TOML keeps the surface multiplier");
         checkDouble(((Number)parsed.get(List.of("underworld_ores", "copper"))).doubleValue(), .5D, "Native TOML keeps the separate deep multiplier");
+        check(parsed.<String>get(List.of("overworld_generation", "copper", "height_range")).equals("[-100,100]"), "Native TOML stores absolute surface heights");
+        check(parsed.<String>get(List.of("underworld_generation", "copper", "height_range")).equals("[-50,200]"), "Native TOML stores independent underworld heights");
         report.addProperty("ore_multiplier_saved_to_toml", true);
         report.addProperty("ore_multiplier_published_to_gameplay", true);
     }

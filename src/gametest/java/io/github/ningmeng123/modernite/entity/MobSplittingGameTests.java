@@ -55,6 +55,11 @@ public final class MobSplittingGameTests {
                 List<Mob> children=fixture.children(parent);
                 assertChildren(h,parent,children);
                 h.assertTrue(children.stream().allMatch(child->!child.getMainHandItem().isEmpty()),"Finalization gives skeleton miniatures their usable variant weapons: "+type);
+                if (type == EntityType.WITHER_SKELETON)
+                    h.assertTrue(children.stream().allMatch(child -> child.getMainHandItem().is(net.minecraft.world.item.Items.IRON_SWORD)
+                            && io.github.ningmeng123.mite.item.EquipmentDurability.quality(child.getMainHandItem())
+                            == io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.Quality.POOR),
+                            "Finalized wither skeleton miniatures retain the source poor iron sword after retired-item filtering");
                 fixture.clear();
             }
         }

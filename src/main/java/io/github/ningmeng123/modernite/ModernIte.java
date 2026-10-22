@@ -28,5 +28,6 @@ public final class ModernIte {
         io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments.register(bus);
         io.github.ningmeng123.modernite.economy.ExtremeEconomy.register(bus);
         ExtremeRules.register(bus);
+        bus.addListener(net.neoforged.bus.api.EventPriority.LOWEST, io.github.ningmeng123.modernite.item.WholeFlint::creative);
     }
 }

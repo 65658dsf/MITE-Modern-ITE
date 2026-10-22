@@ -87,6 +87,24 @@ def smithing(id, base, addition, result=None):
 def shapeless(id, items, result=None, count=1):
     recipe(id,{'type':'minecraft:crafting_shapeless','category':'misc','ingredients':[ingredient(i) for i in items],'result':{'id':result or 'modern_ite:'+id,'count':count}})
 def smelt(id, source, result, xp=.1):recipe(id,{'type':'minecraft:smelting','category':'misc','ingredient':ingredient(source),'result':{'id':result},'experience':xp,'cookingtime':200})
+for family,pattern in {
+    'helmet':['III','ICI'],
+    'chestplate':['ICI','III','III'],
+    'leggings':['III','ICI','I I'],
+    'boots':['ICI','I I'],
+}.items():
+    save(f'data/mite/recipe/equipment_upgrade/copper_{family}_to_iron.json',{
+        'type':'mite:vibranium_upgrade','category':'equipment','pattern':pattern,
+        'key':{'I':ingredient('minecraft:iron_ingot'),'C':ingredient('mite:copper_'+family)},
+        'result':{'id':'minecraft:iron_'+family,'count':1}})
+for obsolete in ['flint_chips_from_flint', 'flint_from_chips']:
+    for directory in ['recipe', 'advancement/recipes/misc']:
+        save(f'data/mite/{directory}/{obsolete}.json', {'neoforge:conditions': [{'type': 'neoforge:false'}]})
+for definition in ['data/minecraft/recipe/arrow.json', 'data/mite/recipe/fishing_rod_flint_hook.json',
+                   'data/mite/recipe/flint_arrow_dismantle.json', 'data/minecraft/advancement/recipes/tools/arrow.json']:
+    original = ROOT.parent / 'miteto1.21.1neoforge/src/generated/resources' / definition
+    save(definition, json.loads(original.read_text(encoding='utf-8').replace('mite:flint_chip', 'minecraft:flint')))
+
 def tag(namespace, kind, id, values):save(f'data/{namespace}/tags/{kind}/{id}.json',{'replace':False,'values':values})
 def stairs(id, base):
     t='modern_ite:block/'+base

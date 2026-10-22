@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": { "item": "minecraft:stick" },
+    "B": { "item": "minecraft:string" },
+    "C": { "item": "minecraft:flint" }
+  },
+  "pattern": ["  A", " AB", "ACB"],
+  "result": { "count": 1, "id": "mite:fishing_rod_flint_hook" }
+}

@@ -32,7 +32,8 @@ public final class ModernIteJeiPlugin implements IModPlugin {
 
     @Override public void onRuntimeAvailable(IJeiRuntime runtime) {
         runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK,
-                List.of(new ItemStack(ExtremeContent.MITHRIL_CORE.get())));
+                List.of(new ItemStack(ExtremeContent.MITHRIL_CORE.get()),
+                        new ItemStack(io.github.ningmeng123.mite.registry.MiteItems.FLINT_CHIP.get())));
     }
 
     @Override public void registerCategories(IRecipeCategoryRegistration registration) {
