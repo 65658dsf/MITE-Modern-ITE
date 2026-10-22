@@ -104,6 +104,10 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public int gearMaximumLevel(ItemStack stack,int original) { return ExtremeGear.maximumGearLevel(stack,original); }
     @Override public float naturalRegeneration(Player player,float original) { return ExtremeGear.naturalRegeneration(player,original); }
     @Override public long gearExperience(ItemStack stack,long original) { return ExtremeGear.gearExperience(stack,original); }
+    @Override public int materialUpgradeIngots(ItemStack stack,int original) {
+        var itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return itemId.getNamespace().equals("modern_ite")&&itemId.getPath().startsWith("club_")?4:original;
+    }
     @Override public void preserve(ItemStack source,ItemStack result) { ExtremeGear.preserve(source,result);ExtremeEnchantments.preserveStack(source,result); }
     @Override public boolean isMaintenanceRecipe(net.minecraft.world.item.crafting.CraftingRecipe recipe) { return recipe instanceof io.github.ningmeng123.modernite.gear.ProtectionTomeRecipe; }
     @Override public boolean enchantmentSupported(Holder<Enchantment> enchantment,boolean original) { return ExtremeEnchantments.supported(enchantment,original); }

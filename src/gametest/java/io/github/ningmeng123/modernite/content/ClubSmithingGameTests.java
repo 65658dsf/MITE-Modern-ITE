@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.content;
 
 import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
+import io.github.ningmeng123.mite.crafting.TimedSmithingController;
 import io.github.ningmeng123.mite.progression.GearProgress;
 import io.github.ningmeng123.mite.progression.GearProgression;
 import io.github.ningmeng123.mite.registry.MiteUpgradeTemplates;
@@ -58,7 +59,6 @@ import net.neoforged.neoforge.network.registration.NetworkRegistry;
 public final class ClubSmithingGameTests {
     private record Route(String from, String to, String recipe) {}
     private static final List<Route> ROUTES = List.of(
-            new Route("copper", "iron", "equipment_upgrade/club_copper_to_iron"),
             new Route("silver", "iron", "equipment_upgrade/club_silver_to_iron"),
             new Route("gold", "iron", "equipment_upgrade/club_gold_to_iron"),
             new Route("iron", "ancient_metal", "club_ancient_metal"),
@@ -69,7 +69,7 @@ public final class ClubSmithingGameTests {
     private ClubSmithingGameTests() {}
 
     @GameTest(template = "gear_empty")
-    public static void exactlySevenClubRoutesLoadAsNativeSmithingWithoutHighTierCraftingBypasses(GameTestHelper h) {
+    public static void exactlySixClubRoutesLoadAsNativeSmithingWithoutHighTierCraftingBypasses(GameTestHelper h) {
         Set<ResourceLocation> expected = new HashSet<>();
         for (Route route : ROUTES) {
             expected.add(id("modern_ite:" + route.recipe()));
@@ -77,7 +77,7 @@ public final class ClubSmithingGameTests {
             h.assertTrue(recipe.getSerializer() == RecipeSerializer.SMITHING_TRANSFORM, "Club upgrades use the native smithing recipe and network format");
             ItemStack source = new ItemStack(club(route.from())), before = source.copy();
             var input = input(source, ingot(route.to()));
-            h.assertTrue(recipe.matches(input, h.getLevel()), "Each authored route accepts the shared upgrade template and exactly its next ingot");
+            h.assertTrue(recipe.matches(input, h.getLevel()), "Each authored route accepts the shared upgrade template and its next metal");
             var selected = h.getLevel().getRecipeManager().getRecipeFor(RecipeType.SMITHING, input, h.getLevel()).orElseThrow();
             h.assertTrue(selected.id().equals(id("modern_ite:" + route.recipe())), "The real recipe manager selects the intended one-stage club upgrade");
             ItemStack output = selected.value().assemble(input, h.getLevel().registryAccess());
@@ -89,7 +89,7 @@ public final class ClubSmithingGameTests {
         var actual = h.getLevel().getRecipeManager().getAllRecipesFor(RecipeType.SMITHING).stream()
                 .filter(holder -> isClub(holder.value().getResultItem(h.getLevel().registryAccess())))
                 .map(holder -> holder.id()).collect(java.util.stream.Collectors.toSet());
-        h.assertTrue(actual.equals(expected), "The loaded club family has all and only the seven authorized smithing routes");
+        h.assertTrue(actual.equals(expected), "The loaded club family has exactly six smithing routes; copper upgrades only at a workbench");
         for (String material : MATERIALS) {
             boolean directlyCrafted = h.getLevel().getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING).stream()
                     .anyMatch(holder -> holder.value().getResultItem(h.getLevel().registryAccess()).is(club(material)));
@@ -112,7 +112,7 @@ public final class ClubSmithingGameTests {
         }
         for (Route route : ROUTES) {
             var recipe = recipe(h, route);
-            ItemStack base = new ItemStack(club(route.from())), addition = new ItemStack(ingot(route.to()));
+            ItemStack base = new ItemStack(club(route.from())), addition = new ItemStack(ingot(route.to()), 4);
             for (var invalid : List.of(new SmithingRecipeInput(ItemStack.EMPTY, base, addition),
                     new SmithingRecipeInput(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE), base, addition),
                     new SmithingRecipeInput(new ItemStack(Items.PAPER), base, addition),
@@ -127,7 +127,7 @@ public final class ClubSmithingGameTests {
     }
 
     @GameTest(template = "gear_empty")
-    public static void allSevenUpgradesPreserveEveryPersonalComponentAndConvertWearToTargetDefaults(GameTestHelper h) {
+    public static void allSixUpgradesPreserveEveryPersonalComponentAndConvertWearToTargetDefaults(GameTestHelper h) {
         for (Route route : ROUTES) {
             ItemStack source = personalClub(h, route.from());
             ItemStack before = source.copy();
@@ -146,9 +146,9 @@ public final class ClubSmithingGameTests {
             detached.setDamageValue(0);
             h.assertTrue(ItemStack.matches(source, before), "Changing an independent result cannot mutate or clear source components");
         }
-        ItemStack current = personalClub(h, "copper");
+        ItemStack current = personalClub(h, "iron");
         GearProgress identity = GearProgression.state(current);
-        for (var step : List.of(Map.entry("iron", 17), Map.entry("ancient_metal", 17), Map.entry("mithril", 17),
+        for (var step : List.of(Map.entry("ancient_metal", 17), Map.entry("mithril", 17),
                 Map.entry("adamantium", 17), Map.entry("vibranium", 17))) {
             String from = GearProgression.material(current);
             Route route = ROUTES.stream().filter(value -> value.from().equals(from) && value.to().equals(step.getKey())).findFirst().orElseThrow();
@@ -157,14 +157,14 @@ public final class ClubSmithingGameTests {
             assertPersonalComponents(h, before, current);
             assertProportionalWear(h, before, current);
             h.assertTrue(GearProgression.state(current).equals(identity) && GearProgression.maxLevel(current) == step.getValue(),
-                    "Five consecutive upgrades retain UUID, XP, levels and affixes while preserved forge grade two sets the growth cap to 17");
+                    "Four consecutive smithing upgrades retain UUID, XP, levels and affixes while preserved forge grade two sets the growth cap to 17");
         }
-        h.assertTrue(current.is(club("vibranium")), "The complete copper-to-vibranium route ends at the intended top-tier club");
+        h.assertTrue(current.is(club("vibranium")), "The complete iron-to-vibranium smithing route ends at the intended top-tier club");
         h.succeed();
     }
 
     @GameTest(template = "gear_empty")
-    public static void nativeSmithingMenuPreviewPickupAndShiftClickConsumeExactlyOneOfEachInput(GameTestHelper h) {
+    public static void timedSmithingPickupAndShiftClickConsumeOneTemplateAndFourIngots(GameTestHelper h) {
         try (SmithingSession session = new SmithingSession(h)) {
             for (Route route : ROUTES) {
                 session.clear();
@@ -173,28 +173,46 @@ public final class ClubSmithingGameTests {
                 session.menu.getSlot(0).set(templates);
                 session.menu.getSlot(1).set(source);
                 session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 3));
+                h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "Three ingots cannot preview a full-cost club upgrade");
+                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 8));
                 h.assertTrue(session.menu.stillValid(session.player) && session.menu.getSlot(3).getItem().is(club(route.to())),
-                        "The physical native smithing menu previews each of the seven club routes");
+                        "The physical smithing menu previews each of the six routes only with a full four-ingot payment");
                 assertPersonalComponents(h, before, session.menu.getSlot(3).getItem());
                 h.assertTrue(ItemStack.matches(source, before) && session.menu.getSlot(0).getItem().getCount() == 3
-                        && session.menu.getSlot(2).getItem().getCount() == 3, "Preview consumes or modifies no input");
+                        && session.menu.getSlot(2).getItem().getCount() == 8, "Preview consumes or modifies no input");
+                int period = TimedSmithingController.period(session.player, session.menu);
+                h.assertTrue(period >= 25, "Material upgrades require a real production period");
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
+                h.assertTrue(TimedSmithingController.isActive(session.player) && session.menu.getCarried().isEmpty(),
+                        "Picking up the preview starts manufacturing rather than delivering an instant upgrade");
+                for (int tick = 1; tick < period; tick++) TimedSmithingController.tick(session.player);
+                h.assertTrue(TimedSmithingController.progress(session.player) == period - 1
+                        && session.menu.getCarried().isEmpty() && session.player.getInventory().isEmpty()
+                        && ItemStack.matches(session.menu.getSlot(1).getItem(), before)
+                        && session.menu.getSlot(0).getItem().getCount() == 3 && session.menu.getSlot(2).getItem().getCount() == 8,
+                        "No output or payment commits before the final production tick");
+                TimedSmithingController.tick(session.player);
                 ItemStack taken = session.menu.getCarried().copy();
                 h.assertTrue(taken.is(club(route.to())) && taken.getCount() == 1 && session.menu.getSlot(1).getItem().isEmpty()
-                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 2,
-                        "Normal pickup consumes one source club, one template and one matching ingot");
+                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 4,
+                        "Completed pickup consumes one source club, one template and exactly four matching ingots");
                 assertPersonalComponents(h, before, taken); assertProportionalWear(h, before, taken);
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
                 h.assertTrue(ItemStack.matches(session.menu.getCarried(), taken) && session.menu.getSlot(3).getItem().isEmpty()
-                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 2,
+                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 4,
                         "A second pickup cannot retrieve the previous preview or consume another payment");
                 session.menu.setCarried(ItemStack.EMPTY);
                 h.assertTrue(session.player.getInventory().add(taken.copy()), "The first result enters the player inventory exactly once");
                 session.menu.getSlot(1).set(before.copy());
                 ItemStack moved = session.menu.quickMoveStack(session.player, 3);
-                h.assertTrue(moved.is(club(route.to())) && session.player.getInventory().countItem(club(route.to())) == 2
+                h.assertTrue(moved.isEmpty() && TimedSmithingController.isActive(session.player)
+                        && session.player.getInventory().countItem(club(route.to())) == 1,
+                        "Shift-click starts another complete period without returning an immediate item");
+                for (int tick = 0; tick < period; tick++) TimedSmithingController.tick(session.player);
+                h.assertTrue(session.player.getInventory().countItem(club(route.to())) == 2
                         && session.menu.getSlot(1).getItem().isEmpty() && session.menu.getSlot(0).getItem().getCount() == 1
-                        && session.menu.getSlot(2).getItem().getCount() == 1, "Shift-click consumes one new source and one more of each payment, producing one additional item");
+                        && session.menu.getSlot(2).getItem().isEmpty(),
+                        "Completed shift-click consumes one new source, one template and four more ingots for one additional item");
                 for (ItemStack delivered : session.player.getInventory().items) if (delivered.is(club(route.to()))) {
                     assertPersonalComponents(h, before, delivered); assertProportionalWear(h, before, delivered);
                 }
@@ -214,17 +232,29 @@ public final class ClubSmithingGameTests {
                 session.clear();
                 ItemStack source = personalClub(h, route.from()), before = source.copy();
                 session.menu.getSlot(1).set(source);
-                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 2));
+                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 3));
                 h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "The native menu cannot omit the shared upgrade template");
                 session.menu.getSlot(0).set(template());
+                h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "The template cannot bypass an insufficient three-ingot payment");
+                session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
+                h.assertTrue(session.menu.quickMoveStack(session.player, 3).isEmpty() && !TimedSmithingController.isActive(session.player),
+                        "Neither take path can begin an underfunded upgrade");
+                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 4));
                 h.assertTrue(session.menu.getSlot(3).getItem().is(club(route.to())), "The matching template creates the intended preview");
-                session.menu.getSlot(2).set(new ItemStack(Items.STICK, 2));
+                int period = TimedSmithingController.period(session.player, session.menu);
+                session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
+                TimedSmithingController.tick(session.player);
+                h.assertTrue(TimedSmithingController.isActive(session.player) && TimedSmithingController.progress(session.player) == 1,
+                        "A fully funded transaction begins a real production session");
+                session.menu.getSlot(2).set(new ItemStack(Items.STICK, 4));
                 h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "Changing the ingot immediately removes the old result");
+                for (int tick = 0; tick < period; tick++) TimedSmithingController.tick(session.player);
+                h.assertTrue(!TimedSmithingController.isActive(session.player), "Changing an ingredient cancels the unfinished production session");
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
                 h.assertTrue(session.menu.getCarried().isEmpty() && session.menu.quickMoveStack(session.player, 3).isEmpty()
                         && session.player.getInventory().isEmpty(), "Neither take path can retrieve a stale club or create a duplicate");
                 h.assertTrue(session.menu.getSlot(0).getItem().getCount() == 1 && ItemStack.matches(session.menu.getSlot(1).getItem(), before)
-                        && session.menu.getSlot(2).getItem().is(Items.STICK) && session.menu.getSlot(2).getItem().getCount() == 2,
+                        && session.menu.getSlot(2).getItem().is(Items.STICK) && session.menu.getSlot(2).getItem().getCount() == 4,
                         "An invalid transaction preserves all inputs, including every equipment component");
             }
         }
@@ -302,7 +332,7 @@ public final class ClubSmithingGameTests {
         h.assertTrue(holder.value() instanceof SmithingTransformRecipe, "A real native smithing-transform recipe loads at the authored club route ID");
         return (SmithingTransformRecipe)holder.value();
     }
-    private static SmithingRecipeInput input(ItemStack source, Item ingot) { return new SmithingRecipeInput(template(), source, new ItemStack(ingot)); }
+    private static SmithingRecipeInput input(ItemStack source, Item ingot) { return new SmithingRecipeInput(template(), source, new ItemStack(ingot, 4)); }
     private static ItemStack template() { return new ItemStack(MiteUpgradeTemplates.UPGRADE_TEMPLATE.get()); }
     private static Item club(String material) { return item("modern_ite:club_" + material); }
     private static boolean isClub(ItemStack stack) { return !stack.isEmpty() && MATERIALS.stream().anyMatch(material -> stack.is(club(material))); }
@@ -328,12 +358,14 @@ public final class ClubSmithingGameTests {
             player.setGameMode(GameType.SURVIVAL);
             player.moveTo(helper.absolutePos(new BlockPos(1, 2, 2)).getCenter());
             player.setNoGravity(true); player.getInventory().clearContent(); PlayerExperience.setTotal(player, 0);
+            player.getFoodData().setFoodLevel(6);
             table = helper.absolutePos(new BlockPos(1, 1, 1)); previous = helper.getLevel().getBlockState(table);
             helper.getLevel().setBlockAndUpdate(table, Blocks.SMITHING_TABLE.defaultBlockState());
             menu = new SmithingMenu(37, player.getInventory(), ContainerLevelAccess.create(helper.getLevel(), table));
             player.containerMenu = menu;
         }
         private void clear() {
+            TimedSmithingController.cancel(player);
             for (int slot = 0; slot < 3; slot++) menu.getSlot(slot).set(ItemStack.EMPTY);
             menu.setCarried(ItemStack.EMPTY); player.getInventory().clearContent();
         }

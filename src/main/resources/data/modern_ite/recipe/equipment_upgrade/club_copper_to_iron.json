@@ -1,15 +1,14 @@
 {
-  "type": "minecraft:smithing_transform",
-  "template": {
-    "item": "mite:equipment_upgrade_smithing_template"
-  },
-  "base": {
-    "item": "modern_ite:club_copper"
-  },
-  "addition": {
-    "item": "minecraft:iron_ingot"
+  "type": "mite:vibranium_upgrade",
+  "category": "equipment",
+  "pattern": ["#*#", "#*#", "C* "],
+  "key": {
+    "#": {"item": "minecraft:iron_nugget"},
+    "*": {"item": "minecraft:iron_ingot"},
+    "C": {"item": "modern_ite:club_copper"}
   },
   "result": {
-    "id": "modern_ite:club_iron"
+    "id": "modern_ite:club_iron",
+    "count": 1
   }
 }
