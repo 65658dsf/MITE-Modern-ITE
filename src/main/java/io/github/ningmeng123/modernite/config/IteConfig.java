@@ -44,7 +44,8 @@ public final class IteConfig {
         add(builder, "Item.Enchantment", "emergency_health_recover_amount", 10D, 0.01D, 1000000D, "紧急守备恢复至的生命值。实际恢复不会超过玩家最大生命值。");
         add(builder, "Item.Enchantment", "conqueror_damage_boost_per_lvl", 1D, 0D, 10000D, "征服者每级每次叠加伤害。额外伤害=附魔等级×该玩家此前对同一目标成功近战命中次数×此值；与玩家渐进伤害加算，共用成功命中计数。");
         add(builder, "Item.Enchantment", "beheading_chance_boost_per_lvl", 0.05D, 0D, 1D, "斩首每级额外头颅掉落概率。0.05代表5%，总概率最多100%。");
-        add(builder, "Block", "mob_spawner_speed_up_with_players", true, 0D, 1D, "玩家近场加速刷怪笼。玩家在近场时，每tick额外减少2tick刷怪倒计时；旁观者除外。");
+        add(builder, "Block", "mob_spawner_speed_up_with_players", true, 0D, 1D, "玩家近场加速刷怪笼。额外减少量由 mob_spawner_extra_delay_reduction 设置，默认每tick额外减少2tick；旁观者除外。");
+        add(builder, "Block", "mob_spawner_extra_delay_reduction", 2, 0D, 1000000D, "玩家近场时每tick额外减少的刷怪笼冷却（tick）。需要开启近场加速；0保留原生倒计时速度，修改作用于正在运行的倒计时。");
         add(builder, "Entities", "enhance_limit", 366, 0D, 1000000D, "特殊生物属性成长天数上限。控制本拓展特殊生物的种类专属成长曲线；本体通用怪物成长仍由主模组设置控制。");
         add(builder, "Entities", "skeleton_triple_shot", true, 0D, 1D, "三发骷髅。允许已抽中三发特性的骷髅发射额外两支箭。");
         add(builder, "Entities", "compressed_skeleton", true, 0D, 1D, "分裂骷髅。允许各类骷髅以3%概率获得死亡分裂特性，生成同类小型骷髅；幼体不再分裂，仍服从召援数量与密度限制。");
@@ -89,7 +90,15 @@ public final class IteConfig {
         add(builder, "GameMechanics", "player_disarm_player", true, 0D, 1D, "玩家可以缴械玩家。持有缴械附魔近战时按原附魔概率缴落对方主手物品；格挡、创造和旁观者不受影响。");
         add(builder, "GameMechanics.MobSpawning", "blood_moon_max_hostile_fraction", 3D, 0D, 1000D, "血月怪物总额度倍率。在当前共享刷怪额度公式的最后乘此倍率，默认3保留当前平衡；0禁用血月自动敌对额度。");
         add(builder, "GameMechanics.MobSpawning", "ancient_bone_lord_spawn_limit_day", 33, 1D, 1000000D, "远古骷髅公爵自动生成日期。仅覆盖该生物的自动生成门槛，其他领主仍第33天；生成蛋与命令不受限制。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_increase_per_day", 1D, 0D, 10000D, "日期刷怪额度增长系数。当前总额度为floor(50×有效区块/128)+max(100,当前日期×此值)，血月再乘血月倍率。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_increase_per_day", 1D, 0D, 10000D, "日期刷怪额度增长系数。使用当前显示日期×此值，再应用日期额度下限与可选上限。与区块基础额度相加后血月再乘倍率；0停止日期增长。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_chunk_base", 50, 0D, 1000000D, "每128个有效区块的怪物基础额度。按有效区块并集计算并向下取整，再加日期额度；深层和浅层共享总额。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_minimum", 100, 0D, 1000000D, "日期附加刷怪额度下限。附加额度取此值与当前日期×每日增长系数的较大者；默认100保留原行为。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_maximum", 0, 0D, 100000000D, "日期附加刷怪额度增长上限。0表示不限；正数将日期部分限制到不小于日期额度下限的该值。血月倍率在最后应用。");
+        add(builder, "GameMechanics.MobSpawning", "local_hostile_limit", 32, 0D, 1000000D, "普通日期玩家附近的敌对生物数量上限。范围为玩家周围水平32格、垂直8格；自然刷怪和非遭遇战召援使用同一限制。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_local_hostile_limit", 48, 0D, 1000000D, "血月玩家附近的敌对生物数量上限。范围为水平32格、垂直8格；0停止该范围内的自动敌对生成。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_groups", 3, 0D, 64D, "普通日期每个有效区块的敌对生成组数。0停止自然敌对刷怪尝试；全局额度、局部密度、距离和光照仍生效。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_hostile_spawn_groups", 4, 0D, 64D, "血月每个有效区块的敌对生成组数。默认4保留原有血月调度。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_attempts", 4, 0D, 256D, "每组敌对生成尝试次数。0停止自然敌对刷怪尝试；不更改已存在的怪物。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff", true, 0D, 1D, "地底疲劳开关。控制现有地底惩罚和新增第二阶段；关闭清理本机制计时与状态，不移除其他来源药效。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff_period1", 54000, 1D, 100000000D, "地底疲劳第一阶段时间（tick）。默认54000保留当前首阶段；达到阈值产生缓慢I。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff_period2", 108000, 1D, 100000000D, "地底疲劳第二阶段时间（tick）。达到max(第一阶段,此值)后升级为缓慢II，离开一天按现有规则恢复。");

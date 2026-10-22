@@ -54,19 +54,25 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     public static int hostileCap(ServerLevel level,int chunks,boolean deep) {
         return ExtremeWorldState.graceActive(level)?0:ExtremeCalendar.cap(currentDay(level),chunks,blood(level),deep,
                 io.github.ningmeng123.modernite.config.IteConfig.number("blood_moon_max_hostile_fraction"),
-                io.github.ningmeng123.modernite.config.IteConfig.number("mob_max_spawn_count_increase_per_day"));
+                io.github.ningmeng123.modernite.config.IteConfig.number("mob_max_spawn_count_increase_per_day"),
+                io.github.ningmeng123.modernite.config.IteConfig.integer("mob_max_spawn_count_chunk_base"),
+                io.github.ningmeng123.modernite.config.IteConfig.integer("mob_max_spawn_count_day_minimum"),
+                io.github.ningmeng123.modernite.config.IteConfig.integer("mob_max_spawn_count_day_maximum"));
     }
     @Override public int monsterCap(ServerLevel level,boolean deep,int chunks,int original) { return hostileCap(level,chunks,deep); }
     @Override public float hostilePassProbability(ServerLevel level,boolean deep,float original) { return ExtremeWorldState.graceActive(level)?0:original; }
-    @Override public int localDensity(ServerLevel level,Player player,int original) { return blood(level)?48:32; }
+    public static int localHostileLimit(ServerLevel level) {
+        return io.github.ningmeng123.modernite.config.IteConfig.integer(blood(level)?"blood_moon_local_hostile_limit":"local_hostile_limit");
+    }
+    @Override public int localDensity(ServerLevel level,Player player,int original) { return localHostileLimit(level); }
     @Override public int spawnGroups(MiteExtensions.SpawnContext context,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
         boolean blood=blood(context.level());
-        return ExtremeWorldState.graceActive(context.level())?0:blood?4:3;
+        return ExtremeWorldState.graceActive(context.level())?0:io.github.ningmeng123.modernite.config.IteConfig.integer(blood?"blood_moon_hostile_spawn_groups":"hostile_spawn_groups");
     }
     @Override public int spawnAttempts(MiteExtensions.SpawnContext context,EntityType<?> selected,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
-        return ExtremeWorldState.graceActive(context.level())?0:4;
+        return ExtremeWorldState.graceActive(context.level())?0:io.github.ningmeng123.modernite.config.IteConfig.integer("hostile_spawn_attempts");
     }
     @Override public int spawnJitter(MiteExtensions.SpawnContext context,int original) { return context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?8:original; }
     @Override public int distantHostileSkipBound(MiteExtensions.SpawnContext context,int original) { return context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?4:original; }
@@ -79,6 +85,10 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public double monsterSpawnMultiplier(EntityType<?> type,double original) {
         String id=BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
         return IteSpawnConfig.owns(id)?IteSpawnConfig.multiplier(id):original;
+    }
+    @Override public double monsterSpawnWeight(EntityType<?> type,double original) {
+        String id=BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
+        return IteSpawnConfig.owns(id)?IteSpawnConfig.weight(id,original):original;
     }
     @Override public double monsterSpawnWeightMultiplier(MiteExtensions.SpawnContext context,BlockPos pos,EntityType<?> type,double original) {
         if(type!=EntityType.ZOMBIFIED_PIGLIN||!naturalPigmanReplacementAllowed(context.level()))return original;

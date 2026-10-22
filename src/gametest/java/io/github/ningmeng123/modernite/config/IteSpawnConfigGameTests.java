@@ -14,6 +14,7 @@ import io.github.ningmeng123.modernite.world.ExtremeWorldState;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.fml.config.ModConfigs;
 
 /** Addon ownership, synchronized settings and final-identity spawn behavior. @author NingMeng123 */
 @GameTestHolder("modern_ite")
@@ -47,6 +49,105 @@ public final class IteSpawnConfigGameTests {
     private static final String LORD = "modern_ite:zombie_pigman_lord";
 
     private IteSpawnConfigGameTests() {}
+
+    @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
+    public static void absoluteWeightsOverrideTheActualCandidatePoolWithoutCrossModLeaks(GameTestHelper h) {
+        try (Settings settings = new Settings(h)) {
+            String id = "modern_ite:zombie_chaos";
+            var type = ExtremeMobs.type(ExtremeKind.ZOMBIE_CHAOS);
+            settings.ite(List.of(id + "=0.5"));
+            settings.base(List.of());
+            settings.weights(List.of(id + "=200"));
+            var policy = MiteExtensions.policy();
+            h.assertTrue(policy.monsterSpawnWeight(type, 25D) == 200D, "ITE's saved absolute weight replaces the native candidate weight immediately");
+            h.assertTrue(policy.monsterSpawnWeight(EntityType.ZOMBIE, 7D) == 7D, "ITE never replaces a foreign entity's resolved base weight");
+            settings.baseWeights(List.of(id + "=999999", "minecraft:zombie=7"));
+            h.assertTrue(ConfiguredMonsterSpawns.weight(type,25D) == 200D && ConfiguredMonsterSpawns.weight(EntityType.ZOMBIE,10D) == 7D,
+                    "ITE weights use their own file while vanilla weights use the MITE file");
+            settings.weights(List.of());
+            h.assertTrue(ConfiguredMonsterSpawns.weight(type,25D) == 25D, "A stale ITE ID in the MITE file cannot replace an omitted ITE weight");
+            settings.weights(List.of(id + "=200"));
+            settings.baseWeights(List.of(id + "=999999"));
+            var entry = new R196MobSpawning.Entry(type, null, R196SpawnRules.Category.MONSTER, 25, 1, 1, 1, true);
+            var other = new R196MobSpawning.Entry(EntityType.ZOMBIE, null, R196SpawnRules.Category.MONSTER, 10, 1, 1, 1, true);
+            var actualRandom = RandomSource.create(5281);
+            var expectedRandom = RandomSource.create(5281);
+            for(int draw=0;draw<50;draw++) {
+                int expected = io.github.ningmeng123.mite.rules.MonsterSpawnRules.weightedIndex(new double[]{100D,10D}, expectedRandom.nextDouble());
+                h.assertTrue(ConfiguredMonsterSpawns.choose(h.getLevel(), settings.position, R196SpawnRules.Category.MONSTER,
+                        List.of(entry,other), actualRandom, false) == (expected == 0 ? entry : other),
+                        "The real chooser multiplies absolute weight 200 by rate 0.5 before drawing");
+            }
+            settings.ite(List.of());
+            settings.weights(List.of(id + "=0"));
+            h.assertTrue(ConfiguredMonsterSpawns.choose(h.getLevel(), settings.position, R196SpawnRules.Category.MONSTER,
+                    List.of(entry), RandomSource.create(7), true) == null,
+                    "Zero absolute weight disables the candidate even when every multiplier is at its default");
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
+    public static void absoluteWeightsRoundTripAndDisconnectRestoresBothLocalMaps(GameTestHelper h) {
+        var previousRates = IteSpawnConfig.effectiveSnapshot();
+        var previousWeights = IteSpawnConfig.effectiveWeights();
+        boolean wasLocal = previousRates == IteSpawnConfig.localSnapshot();
+        var previousScalar = IteConfig.effectiveSnapshot();
+        boolean scalarWasLocal = previousScalar == IteConfig.localSnapshot();
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), h.getLevel().registryAccess());
+        try {
+            var weights = Map.of("modern_ite:zombie_chaos", 0D, "modern_ite:future_monster", 1000000D);
+            var rates = Map.of("modern_ite:zombie_chaos", .375D);
+            IteConfigSync.CODEC.encode(buffer, new IteConfigSync(IteConfig.localSnapshot(), rates, weights));
+            var decoded = IteConfigSync.CODEC.decode(buffer);
+            h.assertTrue(decoded.naturalSpawnWeights().equals(weights) && decoded.naturalSpawnRates().equals(rates),
+                    "The actual expanded codec preserves independent weight and multiplier maps");
+            IteSpawnConfig.receiveServerSnapshot(decoded.naturalSpawnRates(), decoded.naturalSpawnWeights());
+            h.assertTrue(IteSpawnConfig.weight("modern_ite:zombie_chaos", 25D) == 0D && IteSpawnConfig.multiplier("modern_ite:zombie_chaos") == .375D,
+                    "Server weights and rates become effective together without replacing local preferences");
+            h.assertTrue(immutable(IteSpawnConfig.effectiveWeights()), "Published absolute weights are immutable");
+            IteConfig.clearServerSnapshot();
+            h.assertTrue(IteSpawnConfig.effectiveWeights() == IteSpawnConfig.localWeights(), "Logout clears authoritative weights together with rates");
+            h.assertTrue(new IteConfigSync(IteConfig.localSnapshot(), rates).naturalSpawnWeights().isEmpty(), "Legacy two-argument snapshots inherit native weights");
+            h.assertTrue(IteSpawnConfig.validatedWeights(Map.of("minecraft:zombie", 5D, LORD, .5D,
+                    "modern_ite:bad", Double.NaN, "modern_ite:large", 1000001D, "modern_ite:future_monster", 1000000D))
+                    .equals(Map.of("modern_ite:future_monster", 1000000D)), "Foreign, fractional, nonfinite and out-of-range weights cannot enter snapshots");
+        } finally {
+            buffer.release();
+            if(wasLocal)IteSpawnConfig.clearServerSnapshot();
+            else IteSpawnConfig.receiveServerSnapshot(previousRates,previousWeights);
+            if(!scalarWasLocal)IteConfig.receiveServerSnapshot(previousScalar);
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
+    public static void savedAbsoluteWeightsPublishAtomicallyAndJoinTheCompleteExport(GameTestHelper h) throws Exception {
+        var config = ModConfigs.getModConfigs("modern_ite").stream().filter(value -> value.getSpec() == IteConfig.SPEC).findFirst().orElseThrow();
+        var source = config.getFullPath();
+        byte[] sourceBytes = Files.readAllBytes(source);
+        try(Settings settings = new Settings(h)) {
+            var rates = Map.of("modern_ite:zombie_chaos", .25D);
+            var weights = Map.of("modern_ite:zombie_chaos", 75D, "modern_ite:future_monster", 1000000D);
+            IteSpawnConfig.save(rates,weights);
+            h.assertTrue(IteSpawnConfig.localSnapshot().equals(rates) && IteSpawnConfig.localWeights().equals(weights),
+                    "Saving publishes both edited maps before the next natural-spawn selection");
+            boolean rejected = false;
+            try { IteSpawnConfig.save(Map.of(LORD,0D),Map.of(LORD,.5D)); }
+            catch(IllegalArgumentException expected) { rejected=true; }
+            h.assertTrue(rejected && IteSpawnConfig.localSnapshot().equals(rates) && IteSpawnConfig.localWeights().equals(weights),
+                    "An invalid weight rejects the entire draft before changing either setting");
+            IteSpawnConfig.save(Map.of("modern_ite:zombie_chaos",.5D));
+            h.assertTrue(IteSpawnConfig.localWeights().equals(weights), "The legacy rate-only save preserves explicit weights");
+            var bundle = io.github.ningmeng123.mite.config.GameplayConfigExport.exportBundle(Files.createTempDirectory("ite-absolute-weight-export-"));
+            var exportedFile = bundle.files().stream().filter(path -> path.getFileName().toString().equals("modern_ite-common.toml")).findFirst().orElseThrow();
+            var exported = new com.electronwill.nightconfig.toml.TomlParser().parse(Files.readString(exportedFile));
+            h.assertTrue(IteConfig.SPEC.isCorrect(exported), "The exported complete ITE specification accepts absolute weights");
+            h.assertTrue(exported.get(IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.getPath()).equals(IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.get()),
+                    "The complete server export retains every exact absolute weight override");
+        } finally { Files.write(source,sourceBytes); }
+        h.succeed();
+    }
 
     @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
     public static void registryOwnershipIncludesEveryRegisteredIteMonsterAndExcludesProjectiles(GameTestHelper h) {
@@ -69,6 +170,7 @@ public final class IteSpawnConfigGameTests {
     @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
     public static void typedPayloadPreservesAddonRatesAndDisconnectRestoresLocalRates(GameTestHelper h) {
         var previous = IteSpawnConfig.effectiveSnapshot();
+        var previousWeights = IteSpawnConfig.effectiveWeights();
         boolean wasLocal = previous == IteSpawnConfig.localSnapshot();
         var scalarPrevious = IteConfig.effectiveSnapshot();
         boolean scalarWasLocal = scalarPrevious == IteConfig.localSnapshot();
@@ -90,7 +192,7 @@ public final class IteSpawnConfigGameTests {
             h.assertTrue(validated.equals(Map.of("modern_ite:future_monster", 100D)), "Foreign IDs and invalid rates cannot enter the addon snapshot");
         } finally {
             buffer.release();
-            if (wasLocal) IteSpawnConfig.clearServerSnapshot(); else IteSpawnConfig.receiveServerSnapshot(previous);
+            if (wasLocal) IteSpawnConfig.clearServerSnapshot(); else IteSpawnConfig.receiveServerSnapshot(previous,previousWeights);
             if (!scalarWasLocal) IteConfig.receiveServerSnapshot(scalarPrevious);
         }
         h.succeed();
@@ -160,8 +262,11 @@ public final class IteSpawnConfigGameTests {
         final GameTestHelper helper;
         final BlockPos position;
         final List<? extends String> ite = IteSpawnConfig.NATURAL_SPAWN_RATES.get();
+        final List<? extends String> weights = IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.get();
         final List<? extends String> base = MiteConfig.NATURAL_SPAWN_RATES.get();
+        final List<? extends String> baseWeights = MiteConfig.NATURAL_SPAWN_WEIGHTS.get();
         final Map<String, Double> effective = IteSpawnConfig.effectiveSnapshot();
+        final Map<String, Double> effectiveWeights = IteSpawnConfig.effectiveWeights();
         final MiteConfig.Snapshot baseEffective = MiteConfig.effectiveSnapshot();
         final boolean local = effective == IteSpawnConfig.localSnapshot(), baseLocal = baseEffective == MiteConfig.localSnapshot();
         final long time, highest;
@@ -184,7 +289,9 @@ public final class IteSpawnConfigGameTests {
             for (Entity entity : level.getAllEntities()) if (entity.getType() == ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD)) previousLords.add(entity.getUUID());
         }
         void ite(List<String> values) { IteSpawnConfig.NATURAL_SPAWN_RATES.set(values); IteSpawnConfig.refresh(); }
+        void weights(List<String> values) { IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.set(values); IteSpawnConfig.refresh(); }
         void base(List<String> values) { MiteConfig.NATURAL_SPAWN_RATES.set(values); MiteConfig.refreshEnchantmentRules(); }
+        void baseWeights(List<String> values) { MiteConfig.NATURAL_SPAWN_WEIGHTS.set(values); MiteConfig.refreshEnchantmentRules(); }
         Mob mob(EntityType<?> type) {
             Mob mob = (Mob)type.create(helper.getLevel());
             if (mob == null) throw new AssertionError("Registered entity must create");
@@ -216,9 +323,9 @@ public final class IteSpawnConfigGameTests {
                     && !previousLords.contains(entity.getUUID())) entity.discard();
             mobs.forEach(Mob::discard); players.forEach(ServerPlayer::discard); channels.forEach(EmbeddedChannel::finishAndReleaseAll);
             SpawnPopulation.clearReservations(level);
-            IteSpawnConfig.NATURAL_SPAWN_RATES.set(ite); IteSpawnConfig.refresh();
-            MiteConfig.NATURAL_SPAWN_RATES.set(base); MiteConfig.refreshEnchantmentRules();
-            if (!local) IteSpawnConfig.receiveServerSnapshot(effective);
+            IteSpawnConfig.NATURAL_SPAWN_RATES.set(ite); IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.set(weights); IteSpawnConfig.refresh();
+            MiteConfig.NATURAL_SPAWN_RATES.set(base); MiteConfig.NATURAL_SPAWN_WEIGHTS.set(baseWeights); MiteConfig.refreshEnchantmentRules();
+            if (!local) IteSpawnConfig.receiveServerSnapshot(effective,effectiveWeights);
             if (!baseLocal) MiteConfig.receiveServerSnapshot(baseEffective);
             level.getServer().overworld().setDayTime(time);
             var history = BloodMoonInvasionData.get(level); history.restoreProgress(highest); history.setDirty(dirty);

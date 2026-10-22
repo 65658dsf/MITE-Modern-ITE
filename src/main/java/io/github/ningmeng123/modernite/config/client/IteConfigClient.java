@@ -35,11 +35,15 @@ public final class IteConfigClient {
     }
 
     public static void receive(Map<String, Object> values, Map<String, Double> naturalSpawnRates) {
+        receive(values, naturalSpawnRates, Map.of());
+    }
+
+    public static void receive(Map<String, Object> values, Map<String, Double> naturalSpawnRates, Map<String, Double> naturalSpawnWeights) {
         var minecraft = Minecraft.getInstance();
         // The integrated server shares local configuration with its client.
         if (minecraft.getConnection() != null && !minecraft.hasSingleplayerServer()) {
             IteConfig.receiveServerSnapshot(values);
-            IteSpawnConfig.receiveServerSnapshot(naturalSpawnRates);
+            IteSpawnConfig.receiveServerSnapshot(naturalSpawnRates, naturalSpawnWeights);
         }
     }
 

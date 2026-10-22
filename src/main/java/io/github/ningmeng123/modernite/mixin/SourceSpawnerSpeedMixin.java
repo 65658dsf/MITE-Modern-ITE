@@ -17,6 +17,7 @@ public abstract class SourceSpawnerSpeedMixin {
     @Shadow private int spawnRange;
     @Inject(method="serverTick",at=@At(value="FIELD",target="Lnet/minecraft/world/level/BaseSpawner;spawnDelay:I",opcode=Opcodes.PUTFIELD,ordinal=0,shift=At.Shift.AFTER))
     private void modernite$nearby(ServerLevel level,BlockPos pos,CallbackInfo ci) {
-        if(IteConfig.bool("mob_spawner_speed_up_with_players")&&SourceUtilityRules.closeToSpawner(level,pos,spawnRange))spawnDelay=Math.max(0,spawnDelay-2);
+        if(IteConfig.bool("mob_spawner_speed_up_with_players")&&SourceUtilityRules.closeToSpawner(level,pos,spawnRange))
+            spawnDelay=Math.max(0,spawnDelay-IteConfig.integer("mob_spawner_extra_delay_reduction"));
     }
 }

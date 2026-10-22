@@ -9,8 +9,14 @@ public final class ExtremeCalendar {
         return cap(day,chunks,blood,deep,3D,1D);
     }
     public static int cap(long day,int chunks,boolean blood,boolean deep,double bloodMultiplier,double growthPerDay) {
+        return cap(day,chunks,blood,deep,bloodMultiplier,growthPerDay,50,100,0);
+    }
+    public static int cap(long day,int chunks,boolean blood,boolean deep,double bloodMultiplier,double growthPerDay,
+                          int chunkBase,int dayMinimum,int dayMaximum) {
         if(chunks<=0)return 0;
-        double base=50L*Math.max(0,chunks)/128+Math.max(100D,Math.max(0L,day)*growthPerDay);
+        double growth=Math.max(0L,day)*growthPerDay;
+        if(dayMaximum>0)growth=Math.min(growth,Math.max(dayMinimum,dayMaximum));
+        double base=(long)chunkBase*Math.max(0,chunks)/128+Math.max(dayMinimum,growth);
         double value=base*(blood?bloodMultiplier:1D);
         return (int)Math.min(Integer.MAX_VALUE,Math.max(0D,value));
     }

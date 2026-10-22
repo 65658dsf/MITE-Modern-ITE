@@ -12,15 +12,19 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.logging.LogUtils;
 import io.github.ningmeng123.mite.client.config.MiteSettingsScreen;
 import io.github.ningmeng123.mite.client.config.MonsterSpawnSettingsScreen;
+import io.github.ningmeng123.mite.client.config.MonsterSpawningRulesScreen;
 import io.github.ningmeng123.mite.client.config.OreGenerationSettingsScreen;
 import io.github.ningmeng123.mite.config.MiteConfig;
 import io.github.ningmeng123.mite.rules.R196OreRules;
+import io.github.ningmeng123.mite.rules.MonsterSpawningSettings;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.config.IteSpawnConfig;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.github.ningmeng123.modernite.config.client.IteConfigValuesScreen;
 import io.github.ningmeng123.modernite.config.client.IteSettingsScreen;
+import io.github.ningmeng123.modernite.config.client.IteSpawningSettingsScreen;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,6 +66,7 @@ public final class IteConfigClientAudit {
     private static int ticks, saveTicks;
     private static JsonObject report;
     private static Map<String, Object> originalValues;
+    private static List<? extends String> originalSpawnRates, originalSpawnWeights;
     private static Path configFile;
     private static byte[] originalFile;
     private static String originalLanguage;
@@ -113,6 +118,8 @@ public final class IteConfigClientAudit {
             started = true;
             report = initialReport();
             originalValues = IteConfig.localSnapshot();
+            originalSpawnRates = List.copyOf(IteSpawnConfig.NATURAL_SPAWN_RATES.get());
+            originalSpawnWeights = List.copyOf(IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.get());
             configFile = FMLPaths.CONFIGDIR.get().resolve("modern_ite-common.toml").toAbsolutePath().normalize();
             check(configFile.startsWith(mc.gameDirectory.toPath().toAbsolutePath().normalize()),
                     "Config audit may only write its isolated game directory");
@@ -147,16 +154,23 @@ public final class IteConfigClientAudit {
             mc.setScreen(main);
             capture(mc, main, width, height, "mite-settings", -1, -1);
             bounds(main);
+            auditBaseSpawningRules(mc,main,width,height);
             press(main, "modern_ite.config.open");
             check(mc.screen instanceof IteSettingsScreen, "The injected button must open ITE settings");
             Screen home = mc.screen;
             capture(mc, home, width, height, "ite-settings", -1, -1);
             bounds(home);
+            var legacyRates = new LinkedHashMap<>(IteSpawnConfig.localSnapshot());
+            legacyRates.put("modern_ite:zombie_chaos",.25D);
+            IteSpawnConfig.save(legacyRates,IteSpawnConfig.localWeights());
             press(home, "modern_ite.config.monster_spawns");
             check(mc.screen instanceof MonsterSpawnSettingsScreen, "ITE's spawn button must open the shared registry browser");
             Screen spawns = mc.screen;
             capture(mc, spawns, width, height, "ite-natural-spawns", -1, -1);
             bounds(spawns);
+            check(widgets(spawns).stream().noneMatch(widget -> widget.getMessage().equals(Component.translatable("mite.config.monster_spawn_rate_tab"))
+                            || widget.getMessage().equals(Component.translatable("mite.config.monster_spawn_weight_tab"))),
+                    "The actual ITE browser must expose a single weight editor without multiplier tabs");
             var entriesField = MonsterSpawnSettingsScreen.class.getDeclaredField("entries");
             entriesField.setAccessible(true);
             @SuppressWarnings("unchecked")
@@ -169,8 +183,20 @@ public final class IteConfigClientAudit {
             }
             check(spawnEntries.stream().allMatch(entry -> entry.id().startsWith("modern_ite:")),
                     "ITE's browser must not duplicate the base mod's registered monsters");
-            spawns.onClose();
-            check(mc.screen == home, "Closing the spawn browser must restore ITE settings");
+            check(spawnEntries.stream().anyMatch(entry -> entry.type() == io.github.ningmeng123.modernite.entity.RabidDogContent.RABID_DOG.get()
+                            && entry.baseWeights().equals(List.of(5))), "The registered rabid dog must expose its real weight 5");
+            findEdit(spawns,"mite.config.monster_spawn_search").setValue("modern_ite:zombie_chaos");
+            findEdit(spawns,"mite.config.monster_spawn_weight").setValue("80");
+            capture(mc,spawns,width,height,"ite-natural-spawn-weight-edited",-1,-1);bounds(spawns);
+            press(spawns,"mite.config.save");
+            check(mc.screen == home,"Saving the single weight editor must restore ITE settings");
+            check(IteSpawnConfig.localWeights().get("modern_ite:zombie_chaos")==80D
+                            && !IteSpawnConfig.localSnapshot().containsKey("modern_ite:zombie_chaos"),
+                    "Writing weight 80 must publish 80 and remove that entity's legacy multiplier");
+            check(io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns.weight(ExtremeMobs.type(ExtremeKind.ZOMBIE_CHAOS),25D)==80D
+                            && io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns.multiplier(ExtremeMobs.type(ExtremeKind.ZOMBIE_CHAOS))==1D,
+                    "The actual runtime must read the written weight directly with no hidden legacy multiplier");
+            auditSpawningRules(mc, home, width, height);
             press(home, "modern_ite.config.values");
             check(mc.screen instanceof IteConfigValuesScreen, "The values button must open the effective settings browser");
             Screen values = mc.screen;
@@ -189,6 +215,9 @@ public final class IteConfigClientAudit {
         report.addProperty("mite_entry_button_clicked", true);
         report.addProperty("effective_values_search_verified", true);
         report.addProperty("ite_registry_spawn_browser_and_native_weights_verified", true);
+        report.addProperty("ite_single_weight_editor_clears_edited_legacy_multiplier",true);
+        report.addProperty("ite_spawning_rules_paging_validation_drafts_and_save_verified", true);
+        report.addProperty("mite_spawning_rules_entry_paging_validation_drafts_and_save_verified", true);
         report.addProperty("minimum_and_large_widget_bounds_verified", true);
         auditOres(mc, title);
         var home = new IteSettingsScreen(ite, title);
@@ -314,6 +343,78 @@ public final class IteConfigClientAudit {
         Button button = findButton(screen, "mite.config.ore_dimension." + dimension.name().toLowerCase(java.util.Locale.ROOT));
         if (button.active) button.onPress();
         check(!button.active, "The selected ore dimension must be visibly marked");
+    }
+
+    private static void auditSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {
+        press(home,"modern_ite.config.spawning_rules");
+        check(mc.screen instanceof IteSpawningSettingsScreen,"The focused ITE spawning rules button opens its actual editor");
+        Screen rules=mc.screen;
+        capture(mc,rules,width,height,"ite-spawning-rules",-1,-1);bounds(rules);
+        String key="mob_max_spawn_count_chunk_base";
+        int original=IteConfig.integer(key);
+        findEdit(rules,"modern_ite.config."+key).setValue("-1");
+        check(!findButton(rules,"mite.config.save").active,"Negative cap blocks saving");
+        press(rules,">");bounds(rules);
+        check(!findButton(rules,"mite.config.save").active,"Invalid draft remains blocking on another page");
+        press(rules,"<");
+        check(findEdit(rules,"modern_ite.config."+key).getValue().equals("-1"),"Paging preserves the invalid cap draft");
+        findEdit(rules,"modern_ite.config."+key).setValue(Integer.toString(original+1));
+        check(findButton(rules,"mite.config.save").active,"Correcting the cap restores saving");
+        int pages=0;
+        while(findButton(rules,">").active){press(rules,">");bounds(rules);if(++pages>40)throw new IllegalStateException("Unbounded spawning page list");}
+        capture(mc,rules,width,height,"ite-spawning-rules-last-page",-1,-1);
+        while(findButton(rules,"<").active)press(rules,"<");
+        check(findEdit(rules,"modern_ite.config."+key).getValue().equals(Integer.toString(original+1)),"Every page retains the edited numeric cap");
+        press(rules,"mite.config.save");
+        check(mc.screen==home&&IteConfig.integer(key)==original+1,"Saving returns to the parent and publishes the cap immediately");
+        check(Files.readString(configFile).contains(key+" = "+(original+1)),"The focused spawning editor writes its configured cap to TOML");
+        IteConfig.setting(key).set(original);IteConfig.SPEC.save();IteConfig.refresh();
+    }
+
+    private static void auditBaseSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {
+        check(originalBaseValues.keySet().containsAll(MiteConfig.SPAWNING_CONTROLS.values()),
+                "The final restoration must include every MITE spawning setting");
+        press(home,"mite.config.monster_spawning");
+        check(mc.screen instanceof MonsterSpawnSettingsScreen,"MITE's refresh-rate entry opens its actual registry browser");
+        Screen rates=mc.screen;
+        capture(mc,rates,width,height,"mite-natural-spawns",-1,-1);bounds(rates);
+        press(rates,"mite.config.spawning_rules.button");
+        check(mc.screen instanceof MonsterSpawningRulesScreen,"The cap and spawning rhythm button opens MITE spawning rules");
+        Screen rules=mc.screen;
+        capture(mc,rules,width,height,"mite-spawning-rules",-1,-1);bounds(rules);
+        String base="mite.config.spawning_rules.base_cap";
+        String originalCap=findEdit(rules,base).getValue();
+        findEdit(rules,base).setValue("-1");
+        check(!findButton(rules,"mite.config.save").active,"A negative MITE cap disables saving");
+        press(rules,">");bounds(rules);
+        check(!findButton(rules,"mite.config.save").active,"An invalid MITE cap remains blocking on another page");
+        press(rules,"<");
+        check(findEdit(rules,base).getValue().equals("-1"),"MITE pagination preserves the invalid cap draft");
+        findEdit(rules,base).setValue(originalCap);
+        check(findButton(rules,"mite.config.save").active,"Correcting the MITE cap enables saving");
+        String interval="mite.config.spawning_rules.hostile_interval_ticks";
+        String intervalLabel=Component.translatable(interval).getString();
+        int page=0;
+        while(widgets(rules).stream().noneMatch(widget->widget instanceof EditBox&&widget.getMessage().getString().equals(intervalLabel))) {
+            check(page++<20&&findButton(rules,">").active,"The MITE interval setting must be reachable by paging");
+            press(rules,">");bounds(rules);
+        }
+        var option=MonsterSpawningSettings.Option.HOSTILE_INTERVAL_TICKS;
+        int original=(int)MiteConfig.monsterSpawningSettings().value(option);
+        int edited=original==(int)option.maximum()?original-1:original+1;
+        findEdit(rules,interval).setValue(Integer.toString(edited));
+        press(rules,">");bounds(rules);
+        press(rules,"<");
+        check(findEdit(rules,interval).getValue().equals(Integer.toString(edited)),"The edited MITE interval survives a page round trip");
+        capture(mc,rules,width,height,"mite-spawning-rules-interval",-1,-1);bounds(rules);
+        press(rules,"mite.config.save");
+        check(mc.screen==rates,"Saving the MITE interval returns to its refresh-rate parent");
+        checkDouble(MiteConfig.monsterSpawningSettings().value(option),edited,"The saved MITE interval is immediately published to gameplay");
+        var parsed=new TomlParser().parse(Files.readString(baseConfigFile));
+        checkDouble(((Number)parsed.get(List.of("monster_spawning",option.key()))).doubleValue(),edited,
+                "MITE's spawning editor persists the interval to its TOML file");
+        rates.onClose();
+        check(mc.screen==home,"Closing the MITE refresh-rate browser restores its actual home");
     }
 
     private static EditBox findEdit(Screen screen, String key) {
@@ -454,11 +555,15 @@ public final class IteConfigClientAudit {
         try {
             if (originalValues != null) {
                 originalValues.forEach((key, value) -> IteConfig.setting(key).set(value));
+                IteSpawnConfig.NATURAL_SPAWN_RATES.set(originalSpawnRates);
+                IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.set(originalSpawnWeights);
                 IteConfig.SPEC.save();
                 if (originalFile != null) Files.write(configFile, originalFile);
                 else Files.deleteIfExists(configFile);
                 IteConfig.refresh();
                 check(IteConfig.localSnapshot().equals(originalValues)
+                                && IteSpawnConfig.NATURAL_SPAWN_RATES.get().equals(originalSpawnRates)
+                                && IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.get().equals(originalSpawnWeights)
                                 && (originalFile == null ? !Files.exists(configFile) : Arrays.equals(originalFile, Files.readAllBytes(configFile))),
                         "The original config values and file must be fully restored");
                 report.addProperty("original_config_restored", true);

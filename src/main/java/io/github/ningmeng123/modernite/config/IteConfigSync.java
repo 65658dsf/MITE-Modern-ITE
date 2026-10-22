@@ -19,7 +19,8 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 /** Server-only publication; no client-to-server configuration write channel. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID,bus=EventBusSubscriber.Bus.MOD)
-public record IteConfigSync(Map<String,Object> values, Map<String,Double> naturalSpawnRates) implements CustomPacketPayload {
+public record IteConfigSync(Map<String,Object> values, Map<String,Double> naturalSpawnRates,
+                           Map<String,Double> naturalSpawnWeights) implements CustomPacketPayload {
     private static final Gson GSON=new Gson();
     private static final java.lang.reflect.Type MAP_TYPE=new TypeToken<Map<String,Object>>(){}.getType();
     public static final Type<IteConfigSync> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"gameplay_config"));
@@ -27,21 +28,27 @@ public record IteConfigSync(Map<String,Object> values, Map<String,Double> natura
         @Override public IteConfigSync decode(RegistryFriendlyByteBuf buffer) {
             JsonObject document=GSON.fromJson(buffer.readUtf(262144),JsonObject.class);
             return new IteConfigSync(IteConfig.validated(GSON.fromJson(document.get("values"),MAP_TYPE)),
-                    IteSpawnConfig.validated(GSON.fromJson(document.get("natural_spawn_rates"),MAP_TYPE)));
+                    IteSpawnConfig.validated(GSON.fromJson(document.get("natural_spawn_rates"),MAP_TYPE)),
+                    IteSpawnConfig.validatedWeights(GSON.fromJson(document.get("natural_spawn_weights"),MAP_TYPE)));
         }
         @Override public void encode(RegistryFriendlyByteBuf buffer,IteConfigSync payload) {
             var document=new JsonObject();
             document.add("values",GSON.toJsonTree(payload.values()));
             document.add("natural_spawn_rates",GSON.toJsonTree(payload.naturalSpawnRates()));
+            document.add("natural_spawn_weights",GSON.toJsonTree(payload.naturalSpawnWeights()));
             buffer.writeUtf(GSON.toJson(document),262144);
         }
     };
-    public IteConfigSync { values=Map.copyOf(values);naturalSpawnRates=IteSpawnConfig.validated(naturalSpawnRates); }
-    public IteConfigSync(Map<String,Object> values) { this(values,IteSpawnConfig.localSnapshot()); }
+    public IteConfigSync {
+        values=Map.copyOf(values);naturalSpawnRates=IteSpawnConfig.validated(naturalSpawnRates);
+        naturalSpawnWeights=IteSpawnConfig.validatedWeights(naturalSpawnWeights);
+    }
+    public IteConfigSync(Map<String,Object> values,Map<String,Double> rates) { this(values,rates,Map.of()); }
+    public IteConfigSync(Map<String,Object> values) { this(values,IteSpawnConfig.localSnapshot(),IteSpawnConfig.localWeights()); }
     @Override public Type<IteConfigSync> type() { return TYPE; }
     @SubscribeEvent public static void register(RegisterPayloadHandlersEvent event) {
         event.registrar("2").playToClient(TYPE,CODEC,(payload,context)->context.enqueueWork(()->
-                io.github.ningmeng123.modernite.config.client.IteConfigClient.receive(payload.values(),payload.naturalSpawnRates())));
+                io.github.ningmeng123.modernite.config.client.IteConfigClient.receive(payload.values(),payload.naturalSpawnRates(),payload.naturalSpawnWeights())));
     }
     public static void send(ServerPlayer player) {
         if(player.connection!=null&&player.connection.hasChannel(TYPE))

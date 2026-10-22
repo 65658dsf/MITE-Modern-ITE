@@ -78,7 +78,7 @@ public final class SpawnPopulation {
         ledger.pending.put(candidate.getUUID(),candidate);return true;
     }
     private static boolean localRoom(ServerLevel level,Mob candidate,Ledger ledger) {
-        int cap=ExtremeRules.blood(level)?48:32;
+        int cap=ExtremeRules.localHostileLimit(level);
         for(var player:level.players()) {
             if(!player.isAlive()||player.isSpectator())continue;
             AABB box=player.getBoundingBox().inflate(32,8,32);

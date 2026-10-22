@@ -33,4 +33,12 @@ class ExtremeCalendarTest {
         assertEquals(0,ExtremeCalendar.cap(200,289,true,false,0D,2D));
         assertEquals(212,ExtremeCalendar.cap(200,289,false,false,3D,0D));
     }
+    @Test void configurableChunkAllowanceAndDateBoundsRemainIndependent() {
+        assertEquals(290,ExtremeCalendar.cap(200,256,false,false,3D,2D,20,30,250));
+        assertEquals(870,ExtremeCalendar.cap(200,256,true,true,3D,2D,20,30,250));
+        assertEquals(440,ExtremeCalendar.cap(200,256,false,false,3D,2D,20,30,0));
+        assertEquals(70,ExtremeCalendar.cap(1,256,false,false,3D,2D,20,30,10));
+        assertEquals(0,ExtremeCalendar.cap(1000,289,false,false,3D,0D,0,0,0));
+        assertEquals(0,ExtremeCalendar.cap(1000,0,true,false,3D,2D,20,30,250));
+    }
 }
