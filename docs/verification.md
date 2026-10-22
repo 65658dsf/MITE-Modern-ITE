@@ -2,6 +2,16 @@
 
 开发署名：NingMeng123。
 
+## 振金熔炉右键无法使用修复（2026-10-22）
+
+振金熔炉继承的原版 `FurnaceBlock.openContainer` 只接受 `FurnaceBlockEntity`，而振金炉实体继承 `AbstractFurnaceBlockEntity`，因此右键消耗了交互却未打开菜单。现在为振金炉重写容器入口，打开其真实实体的原生 `FurnaceMenu`，保留炉口可达限制和熔炉交互统计。
+
+新增两项回归在修复前均复现失败，日志 `build/verification/vibranium-furnace-before.log`；修复后 **30项JUnit、5项熔炉GameTest全部通过**，日志 `build/verification/vibranium-furnace-fixed.log`。新增测试覆盖真实方块右键、菜单库存绑定、原生同步器向客户端菜单副本传输热量五、注册ticker第199/200 tick的产出边界、燃料消耗及四朝向阻挡后恢复；另三项为既有熔炉JEI索引和实际批量冶炼回归。新测试使用默认启用的 `modern_ite` 命名空间。
+
+首次在 `build/verification/vibranium-furnace-snapshot` 中以已提交版本仅叠加本次熔炉源码和测试完成修复前后对照；随后对包含其他既有改动的当前完整工作区再次验证：构建、全部GameTest源码编译、30项JUnit和5项熔炉GameTest全部通过，日志为 `build/verification/vibranium-furnace-full-build.log` 和 `build/verification/vibranium-furnace-full-gametest.log`。完整构建与专项测试分别使用 `build/verification/vibranium-furnace-full.init.gradle`、`build/verification/vibranium-furnace.init.gradle` 隔离输出，固定本体为 `build/verification/vibranium-furnace-base/mite-0.2.7.jar`。
+
+最终修复包 `build/libs/modern-ite-0.2.7-furnace-fix.jar` 包含当前完整工作区改动，为1,432,581字节，SHA-256为 `ea7a8b15c37ffa812eefcacfe07539a928a713c31fc8b55f140b6656e5b80f9d`；炉方块类与完整构建及隔离回归的编译输出均一致，无测试类、本体类或嵌套JAR，核对记录为 `build/verification/vibranium-furnace-package.json`。
+
 ## 大力士僵尸与击飞骷髅统一约15格（2026-10-22）
 
 此前将平地受击的小跳高度作为减半基准，导致最终只有约 `0.577` 格，不符合十几格击飞的要求。现将两种怪的有效近战命中最终向上速度统一为 `1.6929821475097433` 格/tick，标准空气、上方无障碍时上升约15格；原生运动包量化后约 `14.998` 格。保留近战末尾设置速度、覆盖快落、金心承伤仍触发以及拒绝伤害不触发的规则。
