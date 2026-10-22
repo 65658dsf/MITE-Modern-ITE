@@ -136,8 +136,10 @@ public final class ExtremeMobs {
         }
         @Override public boolean doHurtTarget(Entity target){
             if(isDoorRaised())return false;
+            float health=target instanceof LivingEntity living?living.getHealth():0;
+            float absorption=target instanceof LivingEntity living?living.getAbsorptionAmount():0;
             boolean landed=super.doHurtTarget(target);
-            if(landed&&target instanceof LivingEntity living)MobAbilities.afterMeleeHit(this,this,living);
+            if(landed&&target instanceof LivingEntity living&&(kind!=ExtremeKind.ZOMBIE_FLY_AWAY||living.getHealth()<health||living.getAbsorptionAmount()<absorption))MobAbilities.afterMeleeHit(this,this,living);
             return landed;
         }
         @Override public void swing(InteractionHand hand,boolean updateSelf){
@@ -163,6 +165,13 @@ public final class ExtremeMobs {
         private final ExtremeKind kind;private final MobMemory memory=new MobMemory();
         public SkeletonVariant(EntityType<? extends SkeletonVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
+        @Override public boolean doHurtTarget(Entity target){
+            float health=target instanceof LivingEntity living?living.getHealth():0;
+            float absorption=target instanceof LivingEntity living?living.getAbsorptionAmount():0;
+            boolean landed=super.doHurtTarget(target);
+            if(landed&&target instanceof LivingEntity living&&(living.getHealth()<health||living.getAbsorptionAmount()<absorption)&&kind==ExtremeKind.SKELETON_KNOCKBACK)MobAbilities.afterMeleeHit(this,this,living);
+            return landed;
+        }
         @Override public void reassessWeaponGoal(){
             // AbstractSkeleton calls this before this variant's kind has been assigned.
             if(kind==null){super.reassessWeaponGoal();return;}

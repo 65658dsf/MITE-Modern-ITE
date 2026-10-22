@@ -40,9 +40,8 @@ import static io.github.ningmeng123.modernite.entity.ExtremeKind.*;
 public final class MobAbilities {
     public static final float MIMIC_HEALTH=10F;
     private static final double DARK_GOLEM_LAUNCH_SPEED=15;
-    // Half the apex height of speed 15 with vanilla air gravity .08 and drag (double).98F.
-    // Halving the velocity instead would reach only 37.68% of the golem's height.
-    private static final double ZOMBIE_LAUNCH_SPEED=9.105464833;
+    // Rises 15 blocks with vanilla air gravity (.08) and drag (.98F), even when hit while falling.
+    private static final double MELEE_LAUNCH_SPEED=1.6929821475097433;
     private MobAbilities(){}
     public static int day(Level level){return level instanceof ServerLevel server?(int)Math.min(Integer.MAX_VALUE,BloodMoonInvasion.highestDay(server)):(int)(level.getDayTime()/24000+1);}
     public static boolean underground(Level level){return level.dimension().location().getPath().equals("underworld");}
@@ -450,7 +449,8 @@ public final class MobAbilities {
             case WITHER_CREEPER -> target.addEffect(new MobEffectInstance(MobEffects.WITHER,160));
             case WITHER_SKELETON_ARROW -> target.addEffect(new MobEffectInstance(MobEffects.WITHER,300));
             case SKELETON_FLOATING -> target.addEffect(new MobEffectInstance(MobEffects.LEVITATION,200));
-            case SKELETON_KNOCKBACK -> knock(mob,target,.6,3.2);
+            // Preserve the skeleton's existing horizontal shove; set upward speed after native knockback.
+            case SKELETON_KNOCKBACK -> knock(mob,target,.6,0);
             default -> {}
         }
     }
@@ -458,6 +458,19 @@ public final class MobAbilities {
     public static void afterMeleeHit(Mob mob,ExtremeMob state,LivingEntity target){
         if(mob.level().isClientSide||!target.isAlive())return;
         var kind=state.extremeKind();
+        if(kind==SKELETON_KNOCKBACK||kind==ZOMBIE_FLY_AWAY){
+            Vec3 velocity=target.getDeltaMovement();
+            if(kind==ZOMBIE_FLY_AWAY){
+                mob.swing(InteractionHand.MAIN_HAND);mob.playSound(SoundEvents.IRON_GOLEM_ATTACK,1,.85F);
+                Vec3 away=target.position().subtract(mob.position()).multiply(1,0,1).normalize();
+                if(away.lengthSqr()<.001)away=mob.getLookAngle().multiply(1,0,1).normalize();
+                velocity=new Vec3(away.x*.25,MELEE_LAUNCH_SPEED,away.z*.25);
+            }
+            target.setDeltaMovement(velocity.x,MELEE_LAUNCH_SPEED,velocity.z);
+            target.hurtMarked=true;
+            if(target instanceof ServerPlayer player)LaunchVelocityPayload.queue(player);
+            return;
+        }
         if(kind==ZOMBIE_IRON_BUCKET&&target instanceof Player){
             // The synchronized status supplies the bucket visuals without touching equipped armor.
             effect(target,"bucket_head",200,0);return;
@@ -466,12 +479,11 @@ public final class MobAbilities {
             // Restore its horizontal shove while preserving ordinary hit, jump or fall motion on Y.
             knock(mob,target,3.2,0);return;
         }
-        if(kind!=ZOMBIE_FLY_AWAY&&kind!=DARK_IRON_GOLEM)return;
-        if(kind==ZOMBIE_FLY_AWAY){mob.swing(InteractionHand.MAIN_HAND);mob.playSound(SoundEvents.IRON_GOLEM_ATTACK,1,.85F);}
+        if(kind!=DARK_IRON_GOLEM)return;
         Vec3 away=target.position().subtract(mob.position()).multiply(1,0,1).normalize();
         if(away.lengthSqr()<.001)away=mob.getLookAngle().multiply(1,0,1).normalize();
         // Keep a small separation from the attacker; existing sprint/fall speed cannot turn this into a horizontal throw.
-        target.setDeltaMovement(away.x*.25,kind==DARK_IRON_GOLEM?DARK_GOLEM_LAUNCH_SPEED:ZOMBIE_LAUNCH_SPEED,away.z*.25);
+        target.setDeltaMovement(away.x*.25,DARK_GOLEM_LAUNCH_SPEED,away.z*.25);
         target.hurtMarked=true;
         if(target instanceof ServerPlayer player)LaunchVelocityPayload.queue(player);
     }

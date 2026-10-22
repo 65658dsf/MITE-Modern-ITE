@@ -2,6 +2,34 @@
 
 开发署名：NingMeng123。
 
+## 大力士僵尸与击飞骷髅统一约15格（2026-10-22）
+
+此前将平地受击的小跳高度作为减半基准，导致最终只有约 `0.577` 格，不符合十几格击飞的要求。现将两种怪的有效近战命中最终向上速度统一为 `1.6929821475097433` 格/tick，标准空气、上方无障碍时上升约15格；原生运动包量化后约 `14.998` 格。保留近战末尾设置速度、覆盖快落、金心承伤仍触发以及拒绝伤害不触发的规则。
+
+23 项战斗 GameTest 全部通过，日志 `build/verification/fifteen-block-launch-gametest.log`。实测 `Player.travel` 覆盖72组运动状态／击退抗性组合、两种怪同高、连续命中及吸收生命；原生 `ServerPlayer` 运动包发送后，使用解码速度再次模拟实际移动，检查上升 `15±0.01` 格。负对照包含无敌、取消、受击冷却及盾牌完全格挡。专项命令为 `./gradlew.bat -I build/verification/launch-height.init.gradle runGameTestServer --console=plain`。
+
+真实客户端在独立新世界完成四项验收：大力士僵尸、默认木剑击飞骷髅分别在平地和三层雪旁土墙攻击真实生存玩家，经原生网络同步和 `LocalPlayer` 正常 tick，两者四次实测均上升 `14.99836672524168` 格。测试玩家临时增加生命避免木剑直接击杀；客户端不注入速度。报告 `build/verification/launch-height-client.json` 状态为 `passed`、失败列表为空，日志 `build/verification/fifteen-block-launch-client.log`。可复跑命令为 `./gradlew.bat runClient -PmodernIteLaunchHeightAudit=true --console=plain`，自动创建并关闭专用测试世界和客户端。本轮未执行真实双客户端联机或完整第三方整合包测试。
+
+`./gradlew.bat build compileGametestJava --console=plain` 成功，30项JUnit及全部GameTest源码编译通过，日志 `build/verification/fifteen-block-launch-build.log`。成品 `build/libs/modern-ite-0.2.7.jar` 的击飞实现与编译输出一致，无测试类；SHA-256：`8d5ea93d63e457fd029a719732ae10bb2dbae1033ba74e7447b26509579ff978`。
+
+## 历史调整：大力士僵尸与击飞骷髅漏击飞修复（2026-10-22）
+
+复现了快落抵消向上冲量，以及金心承伤未减少普通生命导致技能被跳过的问题。现在两种怪在真实近战成功且生命或吸收生命减少后，将最终向上速度固定为 `0.2681150704457247` 格/tick，标准空气中上升约 `0.577` 格；地面、空中、跳跃、快落和击退抗性均不改变此次高度。纵向技能完全移到近战末尾，保留骷髅原有水平击退和大力士的小幅水平分离及动画。
+
+新增回归在修复前复现 5 项失败，日志为 `build/verification/reliable-launch-before.log`。修复后构建、30 项 JUnit、全部 GameTest 源码编译和 23 项战斗 GameTest 全部通过：72 组地面／空中、六种初始纵向速度、三档击退抗性及两种怪的真实命中与 `Player.travel` 高度；金心完全吸收仍起飞；连续有效命中；无敌、取消、伤害冷却和原生盾牌完全格挡负对照；实际 `ServerPlayer` 与 `ServerEntity.sendChanges` 捕获发送给受击者本人的小速度运动包。原生同步确认能发送低于 `3.9` 的最终速度，无需改变协议。日志为 `build/verification/reliable-launch-build.log`、`reliable-launch-gametest.log`，专项启动仍使用 `build/verification/launch-height.init.gradle`。本轮未重跑全量 GameTest 或真实双客户端联机实战。
+
+## 历史调整：大力士僵尸与击飞骷髅高度统一（2026-10-22）
+
+大力士不再采用固定高抛，改为与当前击飞骷髅共用命中向上冲量、原版近战结算及半高反解。普通地面命中最终向上速度均约 `0.268115070` 格/tick，标准空气上升约 `0.577` 格；相同运动状态与击退抗性下两者同高。大力士保留双臂上挑及 `0.25` 格/tick水平分离，完全吸收和拒绝伤害不触发技能，暗黑铁傀儡强度保持。
+
+18 项战斗 GameTest 全部通过，其中用真实近战和 `Player.travel` 对照地面、空中、跳跃、两种下落速度及上升速度、普通／完全击退抗性共 12 组，核对两者最终纵向速度和实际上升高度一致；同时验证地面上升不足一格、快落保持、完全吸收、拒绝伤害和速度同步队列。专项命令仍为 `./gradlew.bat -I build/verification/launch-height.init.gradle runGameTestServer`，日志为 `build/verification/launch-height-aligned-gametest.log`。构建、30 项 JUnit 和全部 GameTest 源码编译通过，日志为 `build/verification/launch-height-aligned-build.log`。本轮未重跑全量 GameTest 或真实联机客户端实战。
+
+## 历史调整：大力士僵尸与击飞骷髅高度减半（2026-10-22）
+
+大力士最终向上速度降为 `5.710941971` 格/tick，标准空气无障碍上升约 `111.142` 格，为此前一半。击飞骷髅在完整近战结束后，按原版重力与空气阻力将最终上升高度减半，覆盖地面受击速度钳制，保留水平击退及既有快落；完全吸收和拒绝伤害不触发额外调整。暗黑铁傀儡保持原强度。
+
+构建、30 项 JUnit、全部 GameTest 源码编译及 18 项战斗 GameTest 通过。真实 `Player.travel` 覆盖大力士半高、骷髅地面／空中／跳跃／下落及普通／完全击退抗性共 8 组半高对照，另覆盖快落、完全吸收、拒绝命中和旧高速度同步队列清除。专项启动包含 `SpawnBalanceTestSetup`，确保原有攻城尸和女巫召援测试满足日期前提。日志为 `build/verification/launch-height-build.log`、`launch-height-gametest.log`，命令为 `./gradlew.bat build compileGametestJava` 和 `./gradlew.bat -I build/verification/launch-height.init.gradle runGameTestServer`。本轮未重跑全量 GameTest 或真实联机客户端实战。
+
 ## 0.2.6 疯狗、矮冬瓜诅咒和末影人大头（2026-10-21）
 
 新增独立敌对疯狗与速度 I、成功咬伤后 120 tick 的服务端自动挥砍；女巫在原诅咒流程中加入半生命、半攻击属性、半体型的矮冬瓜诅咒；末影人头部及原生发光眼睛固定放大 2 倍。玩法与管理员命令见 [三项生物更新](mob-additions.md)。

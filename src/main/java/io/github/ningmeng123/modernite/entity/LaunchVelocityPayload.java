@@ -35,6 +35,7 @@ public record LaunchVelocityPayload(double x,double y,double z) implements Custo
         Vec3 velocity=player.getDeltaMovement();
         if((Math.abs(velocity.x)>3.9||Math.abs(velocity.y)>3.9||Math.abs(velocity.z)>3.9)
                 &&player.connection!=null&&player.connection.hasChannel(TYPE))PENDING.put(player,velocity);
+        else PENDING.remove(player);
     }
     @EventBusSubscriber(modid=ModernIte.MOD_ID)
     public static final class Flush {

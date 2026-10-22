@@ -32,6 +32,11 @@ neoForge {
         client {
             client()
             gameDirectory = file('run-client')
+            if (providers.gradleProperty('modernIteLaunchHeightAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('run-launch-height-client')
+                systemProperty 'modern_ite.launchHeightAudit', 'true'
+                systemProperty 'modern_ite.launchHeightAuditOutput', file('build/verification/launch-height-client.json').absolutePath
+            }
             if (providers.gradleProperty('modernIteResurrectionAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('run-resurrection-audit')
                 systemProperty 'modern_ite.resurrectionAudit', 'true'
@@ -114,7 +119,8 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def configAudit = providers.gradleProperty('modernIteConfigAudit').getOrElse('false').toBoolean()
         def metalAudit = providers.gradleProperty('modernIteMetalAudit').getOrElse('false').toBoolean()
         def resurrectionAudit = providers.gradleProperty('modernIteResurrectionAudit').getOrElse('false').toBoolean()
-        def directory = resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : 'run-client'
+        def launchHeightAudit = providers.gradleProperty('modernIteLaunchHeightAudit').getOrElse('false').toBoolean()
+        def directory = resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : launchHeightAudit ? 'run-launch-height-client' : 'run-client'
         def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()
         def existing = config.exists() ? config.getText('UTF-8') : ''

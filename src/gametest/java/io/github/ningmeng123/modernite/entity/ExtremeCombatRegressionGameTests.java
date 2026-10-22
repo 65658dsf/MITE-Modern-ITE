@@ -58,15 +58,15 @@ public final class ExtremeCombatRegressionGameTests {
         h.assertTrue(mirror.goalSelector.getAvailableGoals().stream().filter(g->g.getGoal() instanceof SourceRangedAttackGoal).count()==1,"Exactly one ranged goal remains");h.succeed();
     }
     @GameTest(template="gear_empty")
-    public static void knockbackAndLaunchSkillsUseTheirStrongerImpulses(GameTestHelper h){
+    public static void launchSkillsUseTheirExpectedImpulses(GameTestHelper h){
         for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.DARK_IRON_GOLEM}){
             var launched=realMeleeLaunch(h,kind,true,new Vec3(1.8,-.0784,-1.2),0);
-            h.assertTrue(launched.getDeltaMovement().y>3.9,"The completed real melee hit retains its strong upward velocity after vanilla knockback: "+kind);
+            if(kind==ExtremeKind.ZOMBIE_FLY_AWAY)h.assertTrue(launched.getDeltaMovement().y>1.69&&launched.getDeltaMovement().y<1.70,"The strong zombie uses the same fifteen-block launch as the skeleton");
+            else h.assertTrue(launched.getDeltaMovement().y>3.9,"The dark golem retains its strong upward velocity after vanilla knockback");
             assertMostlyVertical(h,launched,kind);
         }
-        var target=h.makeMockPlayer(GameType.SURVIVAL);
-        Mob bones=mob(h,ExtremeKind.SKELETON_KNOCKBACK);target.setDeltaMovement(Vec3.ZERO);MobAbilities.hit(bones,(ExtremeMob)bones,target);
-        h.assertTrue(target.getDeltaMovement().y>=3.2,"Launch skeleton throws the player high into the air");
+        var target=realMeleeLaunch(h,ExtremeKind.SKELETON_KNOCKBACK,false,Vec3.ZERO,1);
+        h.assertTrue(target.getDeltaMovement().y>1.69&&target.getDeltaMovement().y<1.70,"Launch skeleton uses the same fifteen-block launch in the air");
         Mob floating=mob(h,ExtremeKind.SKELETON_FLOATING);MobAbilities.hit(floating,(ExtremeMob)floating,target);
         h.assertTrue(target.hasEffect(MobEffects.LEVITATION),"Floating skeleton's real hit handler applies levitation");h.succeed();
     }
@@ -93,18 +93,62 @@ public final class ExtremeCombatRegressionGameTests {
         h.succeed();
     }
     @GameTest(template="gear_empty")
-    public static void zombieLaunchApexIsHalfTheDarkGolemApexUnderRealPlayerTravel(GameTestHelper h){
-        var golemTarget=realMeleeLaunch(h,ExtremeKind.DARK_IRON_GOLEM,true,new Vec3(0,-.0784,0),0);
-        double golemRise=travelToApex(h,golemTarget);
-        h.assertTrue(golemRise>400,"The reference golem launch exercises an unobstructed full-strength ascent, rather than vanilla's clipped ground knockback");
-        var target=realMeleeLaunch(h,ExtremeKind.ZOMBIE_FLY_AWAY,true,new Vec3(0,-.0784,0),0);
-        double rise=travelToApex(h,target);
-        h.assertTrue(Math.abs(rise-golemRise*.5)<.02,"Actual Player.travel ascent reaches half the golem height: strong zombie rose "+rise+" versus golem "+golemRise);
+    public static void zombieAndSkeletonLaunchHeightsMatchUnderRealPlayerTravel(GameTestHelper h){
+        double[] initialVertical={-.0784,0,.6,-.8,3,-4};
+        for(int resistance=0;resistance<=1;resistance++)for(int scenario=0;scenario<initialVertical.length;scenario++){
+            boolean grounded=scenario==0;
+            var initial=new Vec3(1.8,initialVertical[scenario],-1.2);
+            var zombieTarget=realMeleeLaunch(h,ExtremeKind.ZOMBIE_FLY_AWAY,grounded,initial,resistance);
+            var skeletonTarget=realMeleeLaunch(h,ExtremeKind.SKELETON_KNOCKBACK,grounded,initial,resistance);
+            h.assertTrue(Math.abs(zombieTarget.getDeltaMovement().y-skeletonTarget.getDeltaMovement().y)<.000001,"Both real melee hits produce the same vertical velocity: scenario="+scenario+" resistance="+resistance);
+            h.assertTrue(zombieTarget.getDeltaMovement().y>1.69&&zombieTarget.getDeltaMovement().y<1.70,"Every damaging hit gives a fixed positive launch regardless of prior motion and resistance");
+            assertMostlyVertical(h,zombieTarget,ExtremeKind.ZOMBIE_FLY_AWAY);
+            double zombieRise=travelToApex(h,zombieTarget),skeletonRise=travelToApex(h,skeletonTarget);
+            h.assertTrue(Math.abs(zombieRise-skeletonRise)<.000001,"Actual Player.travel reaches the same height for the zombie and skeleton");
+            h.assertTrue(Math.abs(zombieRise-15)<.01,"The real ascent reaches fifteen blocks for ground, air, falling and resistant targets");
+        }
         h.succeed();
     }
     @GameTest(template="gear_empty")
-    public static void launchApexStaysFixedAcrossGroundAirMotionAndKnockbackResistance(GameTestHelper h){
-        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.DARK_IRON_GOLEM}){
+    public static void successiveDamagingHitsEachRestoreTheFifteenBlockLaunch(GameTestHelper h){
+        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.SKELETON_KNOCKBACK}){
+            Mob attacker=mob(h,kind);attacker.setNoAi(true);attacker.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(2);
+            var target=launchTarget(h);
+            for(int hit=0;hit<3;hit++){
+                target.invulnerableTime=0;target.setOnGround(false);target.setDeltaMovement(.2,-4-hit,-.1);
+                attacker.moveTo(target.position().add(-1,0,0));float health=target.getHealth();
+                h.assertTrue(attacker.doHurtTarget(target)&&target.getHealth()<health,"Each successive attack really deals damage: "+kind);
+                h.assertTrue(target.getDeltaMovement().y>1.69&&target.getDeltaMovement().y<1.70,"Every accepted attack restores the same fifteen-block launch");
+                double start=target.getY();target.travel(Vec3.ZERO);
+                h.assertTrue(target.getY()>start,"The victim actually rises after every accepted hit");
+            }
+        }
+        h.succeed();
+    }
+    @GameTest(template="gear_empty")
+    public static void fifteenBlockLaunchOverridesAnExistingFastFall(GameTestHelper h){
+        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.SKELETON_KNOCKBACK}){
+            var target=realMeleeLaunch(h,kind,false,new Vec3(0,-4,0),0);
+            h.assertTrue(Math.abs(travelToApex(h,target)-15)<.01,"The completed hit launches even a fast-falling target fifteen blocks upward: "+kind);
+        }
+        h.succeed();
+    }
+    @GameTest(template="gear_empty")
+    public static void absorbedLaunchHitStillLiftsThePlayer(GameTestHelper h){
+        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.SKELETON_KNOCKBACK}){
+            Mob attacker=mob(h,kind);attacker.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(2);
+            var target=launchTarget(h);target.setOnGround(false);target.setDeltaMovement(0,.6,0);
+            target.getAttribute(Attributes.MAX_ABSORPTION).setBaseValue(100);target.setAbsorptionAmount(100);
+            attacker.moveTo(target.position().add(-1,0,0));
+            float health=target.getHealth();h.assertTrue(attacker.doHurtTarget(target),"An absorbed attack is still a real successful hit");
+            h.assertTrue(target.getHealth()==health&&target.getAbsorptionAmount()<100,"The attack is fully absorbed: "+kind);
+            h.assertTrue(Math.abs(travelToApex(h,target)-15)<.01,"A hit that consumes absorption still launches the player fifteen blocks: "+kind);
+        }
+        h.succeed();
+    }
+    @GameTest(template="gear_empty")
+    public static void darkGolemLaunchApexStaysFixedAcrossGroundAirMotionAndKnockbackResistance(GameTestHelper h){
+        for(var kind:new ExtremeKind[]{ExtremeKind.DARK_IRON_GOLEM}){
             double baseline=-1;
             for(int resistance=0;resistance<=1;resistance++){
                 for(int scenario=0;scenario<3;scenario++){
@@ -122,7 +166,7 @@ public final class ExtremeCombatRegressionGameTests {
     }
     @GameTest(template="gear_empty")
     public static void rejectedMeleeDamageNeverAddsTheSpecialLaunch(GameTestHelper h){
-        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.ZOMBIE_KNOCKBACK,ExtremeKind.DARK_IRON_GOLEM}){
+        for(var kind:new ExtremeKind[]{ExtremeKind.ZOMBIE_FLY_AWAY,ExtremeKind.ZOMBIE_KNOCKBACK,ExtremeKind.SKELETON_KNOCKBACK,ExtremeKind.DARK_IRON_GOLEM}){
             Mob attacker=mob(h,kind);
             var target=launchTarget(h);
             attacker.moveTo(target.position().add(-1,0,0));
@@ -198,6 +242,21 @@ public final class ExtremeCombatRegressionGameTests {
             var restored=LaunchVelocityPayload.STREAM_CODEC.decode(buffer);
             h.assertTrue(restored.x()==9.6&&restored.y()==5&&restored.z()==-9.6,"The special launch packet preserves all three full-strength velocity components");
         }finally{buffer.release();}
+        h.succeed();
+    }
+    @GameTest(template="gear_empty")
+    @SuppressWarnings("unchecked")
+    public static void fifteenBlockLaunchCancelsAnOlderPendingHighVelocity(GameTestHelper h) throws ReflectiveOperationException{
+        var player=new net.minecraft.server.level.ServerPlayer(h.getLevel().getServer(),h.getLevel(),
+            new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(),"test-launch"),net.minecraft.server.level.ClientInformation.createDefault());
+        var field=LaunchVelocityPayload.class.getDeclaredField("PENDING");field.setAccessible(true);
+        var pending=(java.util.Map<net.minecraft.server.level.ServerPlayer,Vec3>)field.get(null);
+        try{
+            pending.put(player,new Vec3(.2,6.2,0));
+            player.setDeltaMovement(.2,1.6929821475097433,0);
+            LaunchVelocityPayload.queue(player);
+            h.assertFalse(pending.containsKey(player),"The fifteen-block launch cancels an older high-speed packet that would override its native synchronization");
+        }finally{pending.remove(player);}
         h.succeed();
     }
     @GameTest(template="gear_empty")
