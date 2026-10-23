@@ -31,7 +31,7 @@ public final class IteConfigGameTests {
                 +"netherrack_damage netherrack_damage_limit_day crit_enchantment_chance_boost_per_lvl crit_enchantment_damage_boost_per_lvl "
                 +"emergency_cooldown_ emergency_cooldown_reduce_every_armor emergency_health_recover_amount conqueror_damage_boost_per_lvl "
                 +"beheading_chance_boost_per_lvl mob_spawner_speed_up_with_players mob_spawner_extra_delay_reduction enhance_limit skeleton_triple_shot compressed_skeleton "
-                +"mob_max_spawn_count_chunk_base mob_max_spawn_count_day_minimum mob_max_spawn_count_day_maximum local_hostile_limit blood_moon_local_hostile_limit hostile_spawn_groups blood_moon_hostile_spawn_groups hostile_spawn_attempts "
+                +"reference_spawning mob_max_spawn_count_chunk_base mob_max_spawn_count_day_minimum mob_max_spawn_count_day_maximum local_hostile_limit blood_moon_local_hostile_limit hostile_spawn_groups blood_moon_hostile_spawn_groups hostile_spawn_attempts "
                 +"compressed_skeleton_crack_stand_time compressed_skeleton_expand_count skeleton_force_melee_attack "
                 +"bone_lord_and_longdead_change_weapon_chance bat_poison_attack zombie_pigman_use_bow zombie_pigman_boost_chance "
                 +"ghast_overworld_boost wolves_attack_players_with_meat can_boost_iron_golem annihilation_skeleton_despawn_time "
@@ -48,7 +48,7 @@ public final class IteConfigGameTests {
             h.assertTrue(option.path().getLast().equals(option.key()),"Config paths retain their old JSON leaf keys");
         }
         h.assertTrue(actual.equals(known)&&actual.equals(IteConfig.defaults().keySet()),"The schema exactly matches the audited implemented settings");
-        h.assertTrue(actual.size()==101,"All 101 selected extension settings are registered");
+        h.assertTrue(actual.size()==102,"All 102 selected extension settings are registered");
         for(String unsupported:Set.of("overworld_adamantite_ore","underworld_mantle_block_offset","copper_frequency_overworld","copper_chance_underworld"))
             h.assertTrue(!actual.contains(unsupported),"An unimplemented legacy effect is not exposed as a nonfunctional control: "+unsupported);
         h.succeed();
@@ -136,6 +136,7 @@ public final class IteConfigGameTests {
         boolean grace=io.github.ningmeng123.modernite.world.ExtremeWorldState.graceEnded(level);
         var before=IteConfig.localSnapshot();
         var changes=Map.<String,Object>ofEntries(
+                Map.entry("reference_spawning",false),
                 Map.entry("mob_max_spawn_count_chunk_base",20),Map.entry("mob_max_spawn_count_day_minimum",30),
                 Map.entry("mob_max_spawn_count_day_maximum",250),Map.entry("mob_max_spawn_count_increase_per_day",2D),
                 Map.entry("blood_moon_max_hostile_fraction",3D),Map.entry("local_hostile_limit",7),

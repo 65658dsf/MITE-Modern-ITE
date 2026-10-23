@@ -38,10 +38,23 @@ public final class SpawnPopulation {
     public static boolean encounter(Mob mob) {return mob!=null&&mob.getPersistentData().getBoolean(ENCOUNTER);}
     public static boolean automaticAllowed(ServerLevel level,EntityType<?> type) {
         return !hostile(type)||!ExtremeWorldState.graceActive(level)
-                &&ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),BloodMoonInvasion.highestDay(level),
-                        io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"));
+                &&(IteReferenceSpawns.enabled()?IteReferenceSpawns.automaticAllowed(level,type):
+                        ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),BloodMoonInvasion.highestDay(level),
+                                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day")));
     }
     public static int localCount(ServerLevel level,AABB box) {return ledger(level).count(null,box,null,false);}
+    /** Includes pending joins whose native entity section is not queryable yet. */
+    public static boolean anyAdmitted(ServerLevel level,Mob excluded,java.util.function.Predicate<Mob> predicate) {
+        Ledger ledger=ledger(level);
+        for(Mob mob:ledger.existing.values())if(!ledger.pending.containsKey(mob.getUUID())
+                &&admittedMatch(mob,excluded,ledger,predicate))return true;
+        for(Mob mob:ledger.pending.values())if(admittedMatch(mob,excluded,ledger,predicate))return true;
+        return false;
+    }
+    private static boolean admittedMatch(Mob mob,Mob excluded,Ledger ledger,java.util.function.Predicate<Mob> predicate) {
+        return (excluded==null||!mob.getUUID().equals(excluded.getUUID()))&&!ledger.excluded.contains(mob.getUUID())
+                &&living(mob)&&predicate.test(mob);
+    }
     public static int supportCount(Mob owner) {return owner.level() instanceof ServerLevel level?ledger(level).count(null,null,owner.getUUID(),false):0;}
     /** Test isolation only; normal accounting resets itself once per game tick. */
     public static void clearReservations(ServerLevel level) {LEDGERS.remove(level);}
@@ -60,12 +73,14 @@ public final class SpawnPopulation {
     public static boolean reserveNatural(Mob mob) {
         if(!(mob.level() instanceof ServerLevel level)||!automaticAllowed(level,mob.getType()))return false;
         Ledger ledger=ledger(level);
-        if(!localRoom(level,mob,ledger))return false;
+        boolean reference=IteReferenceSpawns.enabled();
+        if(reference?!IteReferenceSpawns.naturalAllowed(level,mob):!localRoom(level,mob,ledger))return false;
         if(R196MobSpawning.category(mob)==io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER) {
             if(ledger.chunks<0)ledger.chunks=R196MobSpawning.eligibleChunks(level,true).size();
             int chunks=ledger.chunks;
-            int cap=ExtremeRules.hostileCap(level,chunks,false);
-            if(ledger.count(mob,null,null,true)>=cap)return false;
+            boolean deep=deep(mob,level);
+            int cap=ExtremeRules.hostileCap(level,chunks,reference&&deep);
+            if(ledger.count(mob,null,null,true,reference?deep:null)>=cap)return false;
         }
         ledger.pending.put(mob.getUUID(),mob);return true;
     }
@@ -114,7 +129,7 @@ public final class SpawnPopulation {
         if(!existing&&!explicit(mob)) {
             boolean allowed=automaticAllowed(level,mob.getType());
             if(allowed&&mob.getSpawnType()==MobSpawnType.NATURAL)allowed=reserveNatural(mob);
-            if(allowed&&!encounter(mob)) {
+            if(allowed&&!encounter(mob)&&(!IteReferenceSpawns.enabled()||mob.getSpawnType()!=MobSpawnType.NATURAL)) {
                 Ledger ledger=ledger(level);
                 allowed=localRoom(level,mob,ledger)&&(!mob.getPersistentData().hasUUID(SUMMONER)
                         ||ledger.count(mob,null,mob.getPersistentData().getUUID(SUMMONER),false)<8);
@@ -142,20 +157,27 @@ public final class SpawnPopulation {
         }
         return ledger;
     }
+    private static boolean deep(Mob mob,ServerLevel level) {
+        return io.github.ningmeng123.mite.rules.R196SpawnRules.sourceY(mob.getBlockY(),R196MobSpawning.underworld(level))<60;
+    }
     private static final class Ledger {
         long tick=Long.MIN_VALUE;
         int chunks=-1;
         final Map<UUID,Mob> existing=new HashMap<>(),pending=new HashMap<>();
         final Set<UUID> excluded=new HashSet<>();
         int count(Mob candidate,AABB box,UUID owner,boolean monstersOnly) {
+            return count(candidate,box,owner,monstersOnly,null);
+        }
+        int count(Mob candidate,AABB box,UUID owner,boolean monstersOnly,Boolean deepOnly) {
             int count=0;
-            for(Mob mob:existing.values())if(!pending.containsKey(mob.getUUID())&&matches(mob,candidate,box,owner,monstersOnly))count++;
-            for(Mob mob:pending.values())if(matches(mob,candidate,box,owner,monstersOnly))count++;
+            for(Mob mob:existing.values())if(!pending.containsKey(mob.getUUID())&&matches(mob,candidate,box,owner,monstersOnly,deepOnly))count++;
+            for(Mob mob:pending.values())if(matches(mob,candidate,box,owner,monstersOnly,deepOnly))count++;
             return count;
         }
-        private boolean matches(Mob mob,Mob candidate,AABB box,UUID owner,boolean monstersOnly) {
+        private boolean matches(Mob mob,Mob candidate,AABB box,UUID owner,boolean monstersOnly,Boolean deepOnly) {
             return (candidate==null||!mob.getUUID().equals(candidate.getUUID()))&&!excluded.contains(mob.getUUID())&&living(mob)
                     &&(!monstersOnly||R196MobSpawning.category(mob)==io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER)
+                    &&(deepOnly==null||deep(mob,(ServerLevel)mob.level())==deepOnly)
                     &&(box==null||box.intersects(mob.getBoundingBox()))
                     &&(owner==null||mob.getPersistentData().hasUUID(SUMMONER)&&owner.equals(mob.getPersistentData().getUUID(SUMMONER)));
         }

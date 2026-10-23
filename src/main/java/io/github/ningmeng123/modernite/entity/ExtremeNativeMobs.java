@@ -173,8 +173,8 @@ public final class ExtremeNativeMobs {
     public static void spawned(FinalizeSpawnEvent event){
         Mob m=event.getEntity();if(event.isCanceled()||event.isSpawnCancelled()||m.level().isClientSide)return;
         if(m instanceof Zombie z&&!(m instanceof ExtremeMob)&&MobAbilities.day(m.level())>32&&m.getRandom().nextInt(5)==0){z.setBaby(true);stat(m,Attributes.ATTACK_DAMAGE,m.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)*.5);stat(m,Attributes.MOVEMENT_SPEED,.35);}
-        if(m instanceof Creeper&&!MobSplitting.isChild(m)&&!id(m).contains("infernal")&&m.getRandom().nextInt(5)==0){Mob bat=MobAbilities.summonId(m,"mite:vampire_bat",1);if(bat!=null)m.startRiding(bat,true);}
-        if(id(m).equals("mite:phase_spider")&&m.getRandom().nextInt(100)==0){
+        if(!IteReferenceSpawns.enabled()&&m instanceof Creeper&&!MobSplitting.isChild(m)&&!id(m).contains("infernal")&&m.getRandom().nextInt(5)==0){Mob bat=MobAbilities.summonId(m,"mite:vampire_bat",1);if(bat!=null)m.startRiding(bat,true);}
+        if(!IteReferenceSpawns.enabled()&&id(m).equals("mite:phase_spider")&&m.getRandom().nextInt(100)==0){
             String[] riders={"minecraft:skeleton","mite:longdead_guardian","mite:longdead","modern_ite:skeleton_blaze","mite:bone_lord","mite:ancient_bone_lord","modern_ite:skeleton_elite_lord","modern_ite:skeleton_fast_arrow","modern_ite:skeleton_zombie"};
             if(m.level() instanceof ServerLevel level){
                 var allowed=java.util.Arrays.stream(riders).filter(type->SpawnPopulation.automaticAllowed(level,BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(type)))).toList();

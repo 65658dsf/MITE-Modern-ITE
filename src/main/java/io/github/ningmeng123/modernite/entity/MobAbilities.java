@@ -46,6 +46,7 @@ public final class MobAbilities {
     public static int day(Level level){return level instanceof ServerLevel server?(int)Math.min(Integer.MAX_VALUE,BloodMoonInvasion.highestDay(server)):(int)(level.getDayTime()/24000+1);}
     public static boolean underground(Level level){return level.dimension().location().getPath().equals("underworld");}
     public static boolean maySpawn(ExtremeKind k,ServerLevel l,BlockPos pos){
+        if(IteReferenceSpawns.enabled())return SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))&&IteReferenceSpawns.naturalAllowed(l,ExtremeMobs.type(k),pos);
         if(!SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))||(k!=WANDERING_WITCH&&day(l)<k.firstDay)||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
         boolean nether=l.dimension()==Level.NETHER,under=underground(l),over=l.dimension()==Level.OVERWORLD;
         if(k==ANNIHILATION_SKELETON&&over&&day(l)<33)return false;
@@ -63,6 +64,8 @@ public final class MobAbilities {
         if(reason==MobSpawnType.SPAWN_EGG||reason==MobSpawnType.COMMAND||SpawnPopulation.explicit(mob))return true;
         if(!(mob.level() instanceof ServerLevel server)||!SpawnPopulation.automaticAllowed(server,mob.getType()))return false;
         if(reason==MobSpawnType.MOB_SUMMONED||reason==MobSpawnType.CONVERSION)return true;
+        if(IteReferenceSpawns.enabled())return level instanceof ServerLevelAccessor access
+                &&IteReferenceSpawns.variantQualification(mob,k,access,reason);
         if(!maySpawn(k,server,mob.blockPosition())||level.getDifficulty()==Difficulty.PEACEFUL)return false;
         if(k==DARK_IRON_GOLEM&&mob.getRandom().nextInt(9)>=7)return false;
         if(k.family==Family.WITCH&&mob.getRandom().nextInt(100)>=IteConfig.integer("GameMechanics.MobSpawning.wandering_witch_spawn_chance_"+(underground(server)?"underworld":"overworld")))return false;
@@ -264,6 +267,7 @@ public final class MobAbilities {
         }
         if(k==PHASE_CREEPER){if(s.clock%100==0&&s.phaseCharges<s.phaseMaximum)s.phaseCharges++;if(target!=null&&s.clock%10==0&&mob.getRandom().nextInt(3)==0&&mob.distanceToSqr(target)>9)teleportNear(mob,target);}
         if(k==ANNIHILATION_SKELETON&&s.stage>0&&++s.summons>=IteConfig.integer("Entities.annihilation_skeleton_despawn_time")){mob.spawnAnim();mob.discard();return;}
+        if(IteReferenceSpawns.enabled()&&k==WANDERING_WITCH)referenceWanderingTick(mob,s);
         if(target==null||!target.isAlive()){
             if(k==ZOMBIE_BOSS&&!s.contribution.isEmpty()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}return;
         }
@@ -299,7 +303,7 @@ public final class MobAbilities {
         }
         if(k==ZOMBIE_SIEGE&&s.cooldown==0&&mob.getFirstPassenger()!=null){Entity baby=mob.getFirstPassenger();baby.stopRiding();Vec3 launch=target.position().subtract(mob.position()).normalize().scale(1.5);baby.setDeltaMovement(launch.x,.8,launch.z);baby.hurtMarked=true;s.cooldown=60;}
         if(k==SKELETON_ZOMBIE&&!s.spare.isEmpty()&&s.clock%10==0){boolean bow=mob.getMainHandItem().getItem() instanceof BowItem;if(bow&&mob.distanceToSqr(target)<25||!bow&&mob.distanceToSqr(target)>36){var held=mob.getMainHandItem();mob.setItemSlot(EquipmentSlot.MAINHAND,s.spare);s.spare=held;configureGoals(mob,k);}}
-        if(k.family==Family.WITCH)witchTick(mob,target,s);
+        if(k.family==Family.WITCH&&(!IteReferenceSpawns.enabled()||k!=WANDERING_WITCH))witchTick(mob,target,s);
         if(k==ZOMBIE_BOSS&&target instanceof Player&&mob.distanceToSqr(target)>2.4*2.4){
             if(s.cooldown>0)s.cooldown--;else if(mob.getHealth()<mob.getMaxHealth()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}
             if(++s.summons%20==0&&target.getPersistentData().getLong("modern_ite:boss_melee_grace")<level.getGameTime()){
@@ -330,6 +334,7 @@ public final class MobAbilities {
         mob.playSound(SoundEvents.ENDER_DRAGON_SHOOT,1,.85F);
     }
     public static void witchSupportTick(Mob witch){
+        if(IteReferenceSpawns.enabled()&&!(witch instanceof ExtremeMob)){referenceWolfTick(witch);return;}
         if(!(witch.level() instanceof ServerLevel level)||!(witch.getTarget() instanceof Player target)
                 ||!target.isAlive()||witch.distanceToSqr(target)>1024)return;
         long now=level.getGameTime();var data=witch.getPersistentData();
@@ -343,6 +348,96 @@ public final class MobAbilities {
             summonId(witch,type,1);
         }
         for(var minion:minions)if(minion.getTarget()!=target)minion.setTarget(target);
+    }
+    private static boolean validWitchTarget(Mob witch,Player target){
+        return target!=null&&target.isAlive()&&!target.isSpectator()&&!target.isCreative()&&target.level()==witch.level();
+    }
+    /** R196 tv: one successful wolf call, sixty ticks after a player harms the witch. */
+    private static void referenceWolfTick(Mob witch){
+        if(!(witch.level() instanceof ServerLevel level))return;
+        var data=witch.getPersistentData();
+        if(data.getBoolean("modern_ite:reference_wolves_called"))return;
+        int countdown=data.getInt("modern_ite:reference_wolf_countdown");
+        if(countdown>0){
+            data.putInt("modern_ite:reference_wolf_countdown",--countdown);
+            if(countdown!=0)return;
+            Player target=data.hasUUID("modern_ite:reference_wolf_target")?level.getPlayerByUUID(data.getUUID("modern_ite:reference_wolf_target")):null;
+            if(validWitchTarget(witch,target)&&summonReferenceWolves(witch,target)>0)data.putBoolean("modern_ite:reference_wolves_called",true);
+        }else if(witch.getLastHurtByMob() instanceof Player player&&validWitchTarget(witch,player)){
+            data.putUUID("modern_ite:reference_wolf_target",player.getUUID());data.putInt("modern_ite:reference_wolf_countdown",60);
+        }
+    }
+    private static int summonReferenceWolves(Mob witch,Player target){
+        ServerLevel level=(ServerLevel)witch.level();int count=0,max=1+witch.getRandom().nextInt(3);
+        for(int attempt=0;attempt<16&&count<max;attempt++){
+            var wolf=EntityType.WOLF.create(level);if(wolf==null)break;
+            boolean placed=false;
+            // WorldServer.tryCreateNewLivingEntityCloseTo searches sixteen positions 8--16 blocks from the victim.
+            for(int placement=0;placement<16;placement++){
+                BlockPos pos=target.blockPosition().offset(witch.getRandom().nextInt(33)-16,witch.getRandom().nextInt(7)-3,witch.getRandom().nextInt(33)-16);
+                for(int down=0;down<8&&level.getBlockState(pos.below()).getCollisionShape(level,pos.below()).isEmpty();down++)pos=pos.below();
+                for(int up=0;up<8&&!level.getBlockState(pos).getCollisionShape(level,pos).isEmpty();up++)pos=pos.above();
+                double distance=pos.distSqr(target.blockPosition());if(distance<64||distance>256)continue;
+                Double y=io.github.ningmeng123.mite.worldgen.R196MobSpawning.positionY(level,pos,io.github.ningmeng123.mite.rules.R196SpawnRules.Category.ANIMAL);
+                if(y==null)continue;
+                wolf.moveTo(pos.getX()+.5,y,pos.getZ()+.5,witch.getYRot(),0);
+                if(io.github.ningmeng123.mite.worldgen.R196SpawnQualification.qualifies(wolf,level,false,false)){placed=true;break;}
+            }
+            if(!placed){wolf.discard();continue;}
+            var path=wolf.getNavigation().createPath(target,0);
+            if(path==null||path.getEndNode()==null||path.getEndNode().asBlockPos().distSqr(target.blockPosition())>2){wolf.discard();continue;}
+            if(!SpawnPopulation.reserveSupport(wolf,witch,false)){wolf.discard();continue;}
+            try{
+                net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(wolf,level,level.getCurrentDifficultyAt(wolf.blockPosition()),MobSpawnType.MOB_SUMMONED,null);
+                if(wolf.isSpawnCancelled()||wolf.isRemoved())continue;
+                wolf.getPersistentData().putBoolean("mite_wolf_witch_ally_032",true);
+                wolf.getPersistentData().putBoolean(io.github.ningmeng123.mite.entity.animal.NativeAnimalSpecial032.HOSTILE,true);
+                wolf.setTarget(target);wolf.setPersistentAngerTarget(target.getUUID());wolf.startPersistentAngerTimer();
+                if(level.addFreshEntity(wolf)){wolf.spawnAnim();count++;}
+            }finally{if(!wolf.isAddedToLevel()){wolf.discard();SpawnPopulation.release(wolf);}}
+        }
+        return count;
+    }
+    /** ITE wandering witches call eight bats only after retaliation or the close-range escape action. */
+    private static void referenceWanderingTick(Mob witch,MobMemory memory){
+        ServerLevel level=(ServerLevel)witch.level();var data=witch.getPersistentData();
+        int countdown=data.getInt("modern_ite:reference_bat_countdown");
+        if(countdown>0){
+            data.putInt("modern_ite:reference_bat_countdown",--countdown);
+            if(countdown==0)referenceWanderingBats(witch);
+        }else if(witch.getLastHurtByMob() instanceof Player player&&validWitchTarget(witch,player)){
+            data.putUUID("modern_ite:reference_bat_target",player.getUUID());data.putInt("modern_ite:reference_bat_countdown",160);
+        }
+        Player close=level.getNearestPlayer(witch,4);
+        if(validWitchTarget(witch,close)&&memory.fleeingPotion==0){
+            close.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,20+witch.getRandom().nextInt(30)));
+            throwPotion(witch,close);referenceWanderingBats(witch);memory.fleeingPotion=80;
+        }
+        Player near=level.getNearestPlayer(witch,32);
+        if(!memory.cursed&&near instanceof ServerPlayer player&&validWitchTarget(witch,player)&&player.hasLineOfSight(witch)){
+            if(witch instanceof Witch source)io.github.ningmeng123.modernite.content.DwarfCurse.scheduleSelected(player,source,
+                    io.github.ningmeng123.mite.curse.WitchCursing.selectCurse(io.github.ningmeng123.mite.curse.WitchCursing.seed(source),player.getGameProfile().getName()),0);
+            memory.cursed=true;
+        }
+    }
+    private static void referenceWanderingBats(Mob witch){
+        ServerLevel level=(ServerLevel)witch.level();var data=witch.getPersistentData();
+        Player target=data.hasUUID("modern_ite:reference_bat_target")?level.getPlayerByUUID(data.getUUID("modern_ite:reference_bat_target")):null;
+        if(!validWitchTarget(witch,target))return;
+        int room=8-SpawnPopulation.supportCount(witch);
+        for(int i=0;i<room;i++)summonReferenceBat(witch,target,witch.getRandom().nextInt(10)>8?"mite:nightwing":"mite:giant_vampire_bat");
+    }
+    private static void summonReferenceBat(Mob witch,Player target,String id){
+        ServerLevel level=(ServerLevel)witch.level();Entity entity=BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id)).create(level);
+        if(!(entity instanceof Mob bat))return;
+        bat.moveTo(Math.floor((target.getX()+witch.getX())/2)+.5,Math.floor((target.getY()+witch.getY())/2),Math.floor((target.getZ()+witch.getZ())/2)+.5,witch.getYRot(),0);
+        if(!level.noCollision(bat)||!SpawnPopulation.reserveSupport(bat,witch,false)){bat.discard();return;}
+        try{
+            net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(bat,level,level.getCurrentDifficultyAt(bat.blockPosition()),MobSpawnType.MOB_SUMMONED,null);
+            if(bat.isRemoved()||bat.isSpawnCancelled())return;
+            bat.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,Integer.MAX_VALUE,1));bat.setTarget(target);
+            if(level.addFreshEntity(bat))bat.spawnAnim();
+        }finally{if(!bat.isAddedToLevel()){bat.discard();SpawnPopulation.release(bat);}}
     }
     private static void witchTick(Mob mob,LivingEntity target,MobMemory s){
         if(mob.distanceToSqr(target)<16&&s.fleeingPotion==0){target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,20+mob.getRandom().nextInt(30)));throwPotion(mob,target);s.fleeingPotion=80;}

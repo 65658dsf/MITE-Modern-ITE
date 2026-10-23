@@ -119,7 +119,7 @@ public final class IteMobConfigGameTests {
     public static void nondefaultWitchDaysAndWeightsChangeTheActualSpawnPool(GameTestHelper h){
         var context=new MiteExtensions.SpawnContext(h.getLevel(),R196SpawnRules.Category.MONSTER,false);
         var pos=h.absolutePos(new BlockPos(1,2,1));
-        try(Settings settings=new Settings()){
+        try(var settings=new IteReferenceSpawnGameTests.Preset(false)){
             settings.set("wandering_witch_spawn_limit_day_overworld",1);settings.set("wandering_witch_spawn_frequency",17);
             var entries=new ArrayList<R196MobSpawning.Entry>();ExtremeMobs.addSpawnEntries(context,pos,entries);
             h.assertTrue(entries.stream().anyMatch(e->e.type()==ExtremeMobs.type(ExtremeKind.WANDERING_WITCH)&&e.weight()==17),

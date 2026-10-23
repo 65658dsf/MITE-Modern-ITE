@@ -208,7 +208,7 @@ public final class SpawnBalanceGameTests {
         h.succeed();
     }
 
-    private static final class Site implements AutoCloseable {
+    static final class Site implements AutoCloseable {
         final ServerLevel level;final Vec3 origin;final long time,highest;final boolean dirty,grace;
         final List<Mob> mobs=new ArrayList<>();final List<ServerPlayer> players=new ArrayList<>();
         final List<EmbeddedChannel> channels=new ArrayList<>();

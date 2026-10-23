@@ -9,6 +9,7 @@ import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.github.ningmeng123.modernite.entity.ExtremeSpawnProgression;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.SpawnPopulation;
+import io.github.ningmeng123.modernite.entity.IteReferenceSpawns;
 import io.github.ningmeng123.modernite.config.IteSpawnConfig;
 import io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns;
 import io.github.ningmeng123.modernite.world.ExtremeWorldState;
@@ -50,8 +51,12 @@ public final class ExtremeRules implements MiteExtensions.Policy {
         return new LunarCalendar.State(day,state.phase(),true,state.night(),event);
     }
     @Override public long bloodMoonCount(long day,long original) { return ExtremeCalendar.bloodCount(day); }
-    @Override public boolean independentHostileBudgets(ServerLevel level,boolean original) { return false; }
+    @Override public boolean referenceSpawningSettings(boolean original) { return IteReferenceSpawns.enabled(); }
+    @Override public boolean referenceHostileSpawning(ServerLevel level,boolean original) { return referenceSpawningSettings(original); }
+    @Override public boolean independentHostileBudgets(ServerLevel level,boolean original) { return IteReferenceSpawns.enabled(); }
     public static int hostileCap(ServerLevel level,int chunks,boolean deep) {
+        if(IteReferenceSpawns.enabled())return ExtremeWorldState.graceActive(level)?0:
+                ExtremeCalendar.referenceCap(currentDay(level),chunks,blood(level),deep);
         return ExtremeWorldState.graceActive(level)?0:ExtremeCalendar.cap(currentDay(level),chunks,blood(level),deep,
                 io.github.ningmeng123.modernite.config.IteConfig.number("blood_moon_max_hostile_fraction"),
                 io.github.ningmeng123.modernite.config.IteConfig.number("mob_max_spawn_count_increase_per_day"),
@@ -64,23 +69,26 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     public static int localHostileLimit(ServerLevel level) {
         return io.github.ningmeng123.modernite.config.IteConfig.integer(blood(level)?"blood_moon_local_hostile_limit":"local_hostile_limit");
     }
-    @Override public int localDensity(ServerLevel level,Player player,int original) { return localHostileLimit(level); }
+    @Override public int localDensity(ServerLevel level,Player player,int original) { return IteReferenceSpawns.enabled()?original:localHostileLimit(level); }
     @Override public int spawnGroups(MiteExtensions.SpawnContext context,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
+        if(IteReferenceSpawns.enabled())return ExtremeWorldState.graceActive(context.level())?0:original;
         boolean blood=blood(context.level());
         return ExtremeWorldState.graceActive(context.level())?0:io.github.ningmeng123.modernite.config.IteConfig.integer(blood?"blood_moon_hostile_spawn_groups":"hostile_spawn_groups");
     }
     @Override public int spawnAttempts(MiteExtensions.SpawnContext context,EntityType<?> selected,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
+        if(IteReferenceSpawns.enabled())return ExtremeWorldState.graceActive(context.level())?0:original;
         return ExtremeWorldState.graceActive(context.level())?0:io.github.ningmeng123.modernite.config.IteConfig.integer("hostile_spawn_attempts");
     }
-    @Override public int spawnJitter(MiteExtensions.SpawnContext context,int original) { return context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?8:original; }
-    @Override public int distantHostileSkipBound(MiteExtensions.SpawnContext context,int original) { return context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?4:original; }
+    @Override public int spawnJitter(MiteExtensions.SpawnContext context,int original) { return !IteReferenceSpawns.enabled()&&context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?8:original; }
+    @Override public int distantHostileSkipBound(MiteExtensions.SpawnContext context,int original) { return !IteReferenceSpawns.enabled()&&context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?4:original; }
     @Override public boolean spawnDistance(MiteExtensions.SpawnContext context,BlockPos pos,double nearestSq,double spawnSq,boolean close,boolean original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
+        if(IteReferenceSpawns.enabled())return !ExtremeWorldState.graceActive(context.level())&&original;
         return !ExtremeWorldState.graceActive(context.level())&&spawnSq>=576&&nearestSq>=576;
     }
-    @Override public boolean outdoorAllows(MiteExtensions.SpawnContext context,Mob mob,boolean original) { return blood(context.level())||original; }
+    @Override public boolean outdoorAllows(MiteExtensions.SpawnContext context,Mob mob,boolean original) { return !IteReferenceSpawns.enabled()&&blood(context.level())||original; }
     @Override public boolean ownsMonsterSpawnSettings(String entityId) { return IteSpawnConfig.owns(entityId); }
     @Override public double monsterSpawnMultiplier(EntityType<?> type,double original) {
         String id=BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
@@ -99,9 +107,14 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     /** Same admission gate as the natural pigman finalization path. */
     public static boolean naturalPigmanReplacementAllowed(ServerLevel level) {
         return level.getServer().isSameThread()
+                &&!IteReferenceSpawns.enabled()
                 &&SpawnPopulation.automaticAllowed(level,ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD));
     }
     @Override public List<R196MobSpawning.Entry> spawnPool(MiteExtensions.SpawnContext context,BlockPos pos,List<R196MobSpawning.Entry> original) {
+        if(IteReferenceSpawns.enabled()) {
+            return IteReferenceSpawns.pool(context,pos,original).stream().filter(entry->
+                    !ExtremeWorldState.graceActive(context.level())||!SpawnPopulation.hostile(entry.type())).toList();
+        }
         var result=new ArrayList<>(original);ExtremeMobs.addSpawnEntries(context,pos,result);
         long day=io.github.ningmeng123.mite.worldgen.BloodMoonInvasion.highestDay(context.level());
         result.removeIf(entry->!ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(entry.type()).toString(),day,

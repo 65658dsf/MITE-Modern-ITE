@@ -7,7 +7,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-/** Implemented ITE settings, preserving the current port's defaults. @author NingMeng123 */
+/** Implemented ITE settings, retaining legacy values behind the custom spawning preset. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID, bus=EventBusSubscriber.Bus.MOD)
 public final class IteConfig {
     public record Option(String key, List<String> path, Object defaultValue, double minimum, double maximum) {
@@ -67,12 +67,13 @@ public final class IteConfig {
         add(builder, "Entities", "slime_attack_damage_multiplier", 1D, 0D, 100D, "绿色史莱姆伤害倍率。初始化时按原始伤害×倍率+加成计算；不反复叠加。");
         add(builder, "Entities", "slime_attack_damage_bonus", 4D, 0D, 10000D, "绿色史莱姆伤害加成。仅绿色史莱姆；对新初始化的生物生效。");
         add(builder, "Entities", "giant_zombie_spawn_zombie_cooldown", 1200, 1D, 100000000D, "巨型僵尸召援间隔（tick）。仍保留召援总量、存活随从和局部密度限制。");
-        add(builder, "GameMechanics.MobSpawning", "ghast_spawn_limit_day", 128, 1D, 1000000D, "主世界恶魂开始生成日期（天）。仅影响本拓展添加的主世界自然生成入口。");
-        add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_in_light", false, 0D, 1D, "允许主世界湮灭骷髅在亮处生成。仅放宽该生物的光照检查，仍受平安期、距离和领主日期限制。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_overworld", 33, 0D, 100D, "主世界女巫生成通过率（%）。每次符合其他条件的女巫族自然生成尝试的通过率。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_overworld", 65, 1D, 1000000D, "主世界流浪女巫开始日期（天）。保留当前第65天默认值；统一领主解锁下限继续生效。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_other", 65, 1D, 1000000D, "地底流浪女巫开始日期（天）。当前流浪女巫不在下界自然生成；统一领主解锁下限继续生效。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_underworld", 50, 0D, 100D, "地底女巫生成通过率（%）。每次符合其他条件的女巫族自然生成尝试的通过率。");
+        add(builder, "GameMechanics.MobSpawning", "reference_spawning", true, 0D, 1D, "ITE 2.0.28参考刷怪。默认开启：采用原版独立深浅额度、附近拥挤保护和老ITE自然池。关闭使用现有自定义刷怪参数；切换不清除已有怪物或旧配置值。");
+        add(builder, "GameMechanics.MobSpawning", "ghast_spawn_limit_day", 128, 1D, 1000000D, "仅现有自定义模式：主世界恶魂开始生成日期（天）。参考模式固定第128天。");
+        add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_in_light", false, 0D, 1D, "仅现有自定义模式：允许主世界湮灭骷髅在亮处生成。参考模式使用老ITE物种光照检查。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_overworld", 33, 0D, 100D, "仅现有自定义模式：主世界女巫族自然生成通过率（%）。参考模式使用老ITE检查。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_overworld", 65, 1D, 1000000D, "仅现有自定义模式：主世界流浪女巫开始日期（天）。参考模式固定第65天及老ITE条件。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_other", 65, 1D, 1000000D, "仅现有自定义模式：地底流浪女巫开始日期（天）。参考模式使用老ITE维度及日期条件。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_underworld", 50, 0D, 100D, "仅现有自定义模式：地底女巫族自然生成通过率（%）。参考模式使用老ITE检查。");
         add(builder, "GameMechanics.MobSpawning", "zombie_lord_spawn_frequency", 2, 0D, 1000D, "僵尸领主生成权重。0禁用对应自然池条目；保留其他召援或事件入口。");
         add(builder, "GameMechanics.MobSpawning", "zombie_pigman_lord_spawn_frequency", 1, 0D, 1000D, "僵尸猪人领主生成权重。0禁用对应自然池条目；不改变其他来源的生成。");
         add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_frequency", 1, 0D, 1000D, "湮灭骷髅生成权重。0禁用对应自然池条目。");
@@ -88,17 +89,17 @@ public final class IteConfig {
         add(builder, "GameMechanics", "stepped_player_damage_increase_per_lvl", 0.1D, 0D, 10000D, "玩家连击每等级伤害系数。0禁用无附魔连击部分；不禁用征服者附魔本身。");
         add(builder, "GameMechanics", "fishing_xp", 30, 0D, 1000000D, "每次钓获经验。替换每个实际钓获物结算的原生随机经验，0不产生钓获经验。");
         add(builder, "GameMechanics", "player_disarm_player", true, 0D, 1D, "玩家可以缴械玩家。持有缴械附魔近战时按原附魔概率缴落对方主手物品；格挡、创造和旁观者不受影响。");
-        add(builder, "GameMechanics.MobSpawning", "blood_moon_max_hostile_fraction", 3D, 0D, 1000D, "血月怪物总额度倍率。在当前共享刷怪额度公式的最后乘此倍率，默认3保留当前平衡；0禁用血月自动敌对额度。");
-        add(builder, "GameMechanics.MobSpawning", "ancient_bone_lord_spawn_limit_day", 33, 1D, 1000000D, "远古骷髅公爵自动生成日期。仅覆盖该生物的自动生成门槛，其他领主仍第33天；生成蛋与命令不受限制。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_increase_per_day", 1D, 0D, 10000D, "日期刷怪额度增长系数。使用当前显示日期×此值，再应用日期额度下限与可选上限。与区块基础额度相加后血月再乘倍率；0停止日期增长。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_chunk_base", 50, 0D, 1000000D, "每128个有效区块的怪物基础额度。按有效区块并集计算并向下取整，再加日期额度；深层和浅层共享总额。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_minimum", 100, 0D, 1000000D, "日期附加刷怪额度下限。附加额度取此值与当前日期×每日增长系数的较大者；默认100保留原行为。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_maximum", 0, 0D, 100000000D, "日期附加刷怪额度增长上限。0表示不限；正数将日期部分限制到不小于日期额度下限的该值。血月倍率在最后应用。");
-        add(builder, "GameMechanics.MobSpawning", "local_hostile_limit", 32, 0D, 1000000D, "普通日期玩家附近的敌对生物数量上限。范围为玩家周围水平32格、垂直8格；自然刷怪和非遭遇战召援使用同一限制。");
-        add(builder, "GameMechanics.MobSpawning", "blood_moon_local_hostile_limit", 48, 0D, 1000000D, "血月玩家附近的敌对生物数量上限。范围为水平32格、垂直8格；0停止该范围内的自动敌对生成。");
-        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_groups", 3, 0D, 64D, "普通日期每个有效区块的敌对生成组数。0停止自然敌对刷怪尝试；全局额度、局部密度、距离和光照仍生效。");
-        add(builder, "GameMechanics.MobSpawning", "blood_moon_hostile_spawn_groups", 4, 0D, 64D, "血月每个有效区块的敌对生成组数。默认4保留原有血月调度。");
-        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_attempts", 4, 0D, 256D, "每组敌对生成尝试次数。0停止自然敌对刷怪尝试；不更改已存在的怪物。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_max_hostile_fraction", 3D, 0D, 1000D, "仅现有自定义模式：血月怪物总额度倍率。共享总额度最后乘此倍率；0禁用血月自动敌对额度。参考模式不使用此倍率。");
+        add(builder, "GameMechanics.MobSpawning", "ancient_bone_lord_spawn_limit_day", 33, 1D, 1000000D, "仅现有自定义模式：远古骷髅公爵自动生成日期。参考模式固定第192天及老ITE条件；生成蛋与命令不受限制。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_increase_per_day", 1D, 0D, 10000D, "仅现有自定义模式：日期刷怪额度增长系数。当前日期乘此值，再应用日期额度下限及上限。参考模式固定每日增加1。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_chunk_base", 50, 0D, 1000000D, "仅现有自定义模式：每128个有效区块的基础额度。按区块并集向下取整，加日期额度；深浅共享。参考模式固定普通除数256、血月128，深层翻倍。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_minimum", 100, 0D, 1000000D, "仅现有自定义模式：日期附加额度下限。取此值与日期增长的较大者；参考模式没有此下限。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_maximum", 0, 0D, 100000000D, "仅现有自定义模式：日期附加额度上限。0表示不限；正数不低于日期下限。参考模式不读取此值。");
+        add(builder, "GameMechanics.MobSpawning", "local_hostile_limit", 32, 0D, 1000000D, "普通日期分裂与非遭遇战召援准入上限。玩家周围水平32格、垂直8格，0停止新增；参考模式自然刷怪另用原版8/10/12拥挤保护，自定义模式也用于自然刷怪。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_local_hostile_limit", 48, 0D, 1000000D, "血月分裂与非遭遇战召援准入上限。玩家周围水平32格、垂直8格，0停止新增；参考模式自然刷怪另用原版拥挤保护，自定义模式也用于自然刷怪。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_groups", 3, 0D, 64D, "仅现有自定义模式：普通日期每个有效区块生成组数。0停止自然尝试。参考模式沿用原版通常3组。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_hostile_spawn_groups", 4, 0D, 64D, "仅现有自定义模式：血月每个有效区块生成组数。0停止自然尝试。参考模式沿用原版通常3组。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_attempts", 4, 0D, 256D, "仅现有自定义模式：每组敌对生成尝试次数。0停止自然尝试。参考模式沿用原版通常4次。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff", true, 0D, 1D, "地底疲劳开关。控制现有地底惩罚和新增第二阶段；关闭清理本机制计时与状态，不移除其他来源药效。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff_period1", 54000, 1D, 100000000D, "地底疲劳第一阶段时间（tick）。默认54000保留当前首阶段；达到阈值产生缓慢I。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff_period2", 108000, 1D, 100000000D, "地底疲劳第二阶段时间（tick）。达到max(第一阶段,此值)后升级为缓慢II，离开一天按现有规则恢复。");

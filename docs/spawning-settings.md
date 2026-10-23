@@ -1,40 +1,72 @@
 # 实时刷怪设置
 
-开发者：NingMeng123。更新：2026-10-22。
+开发者：NingMeng123。更新：2026-10-23。
 
-从 MITE 玩法设置进入 ITE 设置，点击“ITE 刷怪规则”，可直接修改总额度、日期增长、局部密度、生成组数、尝试次数、物种解锁日期以及刷怪笼近场加速。分页和窗口大小改变会保留草稿，非法数值会阻止保存；取消放弃草稿。单机保存到 `config/modern_ite-common.toml` 后立即发布新快照，下一次刷怪调度使用新值，无需退出存档。联机客户端仅查看服务端同步值。
+从 MITE 玩法设置进入 ITE 设置，点击“ITE 刷怪规则”。页面首项为刷怪预设，默认“ITE 2.0.28”，关闭后切换为“现有自定义”。分页、缩放窗口和切换预设会保留草稿；非法的生效字段会阻止保存，取消放弃草稿。参考模式中灰显的自定义字段不参与校验，其上一次有效数值继续保留。
 
-自然敌对刷怪冷却、深浅层每轮概率、血月概率倍率和其他维度概率倍率在本体 MITE 的刷怪规则页面设置。安装 ITE 后，总额度与局部密度由 ITE 接管，保留既有的平安期与领主解锁限制。
+单机保存到 `config/modern_ite-common.toml` 后立即发布新快照，下次刷怪调度读取新值；无需退出存档。预设参与登录同步、配置热重载和本体的完整配置导出。联机客户端仅查看服务端同步值。切换模式和降低额度都不会移除已有怪物，也不会重置开局平安期。
 
-ITE 的怪物自然生成设置直接编辑“生成权重”，不再显示百分倍率输入或倍率标签页。生成权重填写 `0–1000000` 的整数，留空沿用各生成池原始值，显式填写时统一覆盖该实体在不同生成池中的原始权重。编辑或还原某个实体的权重时，会同时清除该实体以前保存的百分倍率，保证新输入的权重直接生效。例如输入 80 后，该候选的权重就是 80，不会再被旧的 50% 倍率暗中减为 40。保存后下一次抽选立即使用新值；联机客户端只读服务端权重。
+## 默认的 ITE 2.0.28 参考预设
 
-权重是同一候选池中的相对份额，不是绝对出现概率，也不增加全局刷怪额度。权重 0 移除整个候选条目，包括从该条目转换出来的变种。没有独立自然生成入口的 Boss 和条件变种不开放直接权重输入。狂犬的实际基础池权重为 5；四项原有 `*_spawn_frequency` 若设为 0，原入口仍关闭，新权重不会绕过它。日期、维度、平安期、光照和数量限制保留。
+`GameMechanics.MobSpawning.reference_spawning = true` 时，以 R196 调度和老 ITE 自然池为依据，不叠加老 Extreme 扩大额度和血月尝试次数的规则。
 
-显式权重保存到 `config/modern_ite-common.toml`，参与导出、登录同步和配置热重载；未知 ITE 实体 ID 保留。旧版存档的倍率仍兼容，未编辑的实体继续保持原有效值，页面会说明其当前生效权重；编辑或还原该实体后清除对应旧倍率。只保留底层兼容数据，不再提供另一套倍率编辑界面。
+- 有效区块数按多人覆盖区块并集计算。浅层额度为 `floor(50 × 有效区块数 / 除数) + 当前显示日期`，普通除数为 256，血月为 128；深层额度在整个结果上乘 2。深浅层独立计数，没有前期至少附加 100，也不把血月总额度乘 3。第 1 天按 1 计算，仍受既有平安期约束。
+- 289 个有效区块时，单独 R196 的普通浅层/深层额度为 56/112；ITE 第 3 天为 59/118，第 32 天血月为 144/288。额度是补怪条件，并非每轮实际生成数量。
+- 自然刷怪恢复原版附近拥挤保护：地表普通 8、满月夜 10、血月夜 12，并保留深度和要塞接近度修正。超过门槛会暂停该玩家区域补怪；它不是场上硬上限，已生成的怪物仍可移动过来。
+- 沿用原版深层 10%、浅层 17% 的每 tick 启动概率及随机高低谷、停刷期，通常每区块 3 组、每组 4 次尝试；48 格外有 50% 随机跳过。保留原版月相、距离、光照和物种检查，不额外把血月轮次概率乘 2。
+- 自然池恢复老 ITE 各生物群系、维度、权重和群体大小，包括流浪女巫第 65 天、主世界恶魂第 128 天、远古骷髅公爵第 192 天的具体条件。额外 Extreme 变种和狂犬不进入参考自然池，原有事件、命令和生成蛋入口保留。
+- 普通女巫恢复原有召狼机制，流浪女巫使用老 ITE 自身随从规则。保留老 ITE 的 64 格追踪、巨型僵尸默认 1200 tick 召援间隔及刷怪笼近场加速。
+
+参考预设固定自然额度、日期增量、生成组数、尝试次数和原版物种日期/通过率/光照条件。以下旧字段仅在自定义模式生效，参考模式页面中会灰显：
+
+| 配置键 | 保留的旧默认值 |
+| --- | --- |
+| `mob_max_spawn_count_chunk_base` | 50 |
+| `mob_max_spawn_count_day_minimum` / `mob_max_spawn_count_day_maximum` | 100 / 0 |
+| `mob_max_spawn_count_increase_per_day` | 1 |
+| `blood_moon_max_hostile_fraction` | 3 |
+| `hostile_spawn_groups` / `blood_moon_hostile_spawn_groups` | 3 / 4 |
+| `hostile_spawn_attempts` | 4 |
+| `ghast_spawn_limit_day` | 128 |
+| `ancient_bone_lord_spawn_limit_day` | 33 |
+| `wandering_witch_spawn_limit_day_overworld` / `wandering_witch_spawn_limit_day_other` | 65 / 65 |
+| `wandering_witch_spawn_chance_overworld` / `wandering_witch_spawn_chance_underworld` | 33 / 50 |
+| `annihilation_skeleton_spawn_in_light` | false |
+
+本体的自然刷怪冷却和概率设置不覆盖参考预设的固定 R196 调度；如需保留原现代版调度参数，可关闭参考预设。
+
+## 分裂、召援和刷怪笼
+
+苦力怕与骷髅的现有分裂机制完整保留：默认 3% 获得分裂特性，生成 6～8 只同种小型个体，幼体保持现有体型与属性缩放，且不会再次死亡分裂。`compressed_skeleton`、`compressed_skeleton_expand_count`（默认 7，实际取 ±1）和停滞时间继续生效。
+
+| 两种预设均生效的配置 | 默认值 | 作用 |
+| --- | --- | --- |
+| `local_hostile_limit` / `blood_moon_local_hostile_limit` | 32 / 48 | 玩家周围水平 32 格、垂直 8 格的分裂与非遭遇战召援准入；0 停止新增 |
+| `giant_zombie_spawn_zombie_cooldown` | 1200 | 巨型僵尸召援间隔（tick） |
+| `mob_spawner_speed_up_with_players` | true | 开启玩家近场刷怪笼加速 |
+| `mob_spawner_extra_delay_reduction` | 2 | 加速开启时每 tick 额外减少的冷却 tick；0 保留原生倒计时速度 |
+
+分裂继续遵守每主人最多 8 只活随从、平安期、日期、碰撞和原有 32/48 局部准入。参考模式的自然刷怪单独使用 8/10/12 拥挤保护；32/48 不覆盖它。自定义模式则继续让自然刷怪和非遭遇战召援共用 32/48。刷怪笼加速作用于正在运行的倒计时。
+
+## 现有自定义预设与权重兼容
+
+`reference_spawning = false` 恢复现有自定义调度与自然池。所有旧配置键和值原样保留。普通总额度为 `floor(区块基础值 × 有效区块数 / 128) + 日期额度`，日期额度为 `max(日期下限, 当前显示日期 × 每日增长)`，正数上限将日期部分限制到 `max(日期下限, 日期上限)`；血月最后乘总额度倍率并向下取整。深浅层共享总额。289 个有效区块的旧默认值是前 100 天普通 212、第 32 天血月 636。
+
+四项 `*_spawn_frequency` 继续在两种模式调整已有 ITE 候选，0 关闭对应入口。实体生成权重填写 `0–1000000` 的整数，留空使用各池原始值，0 移除整个候选及其条件变种。权重是池内相对份额，不增加总额度，也不会绕过日期、维度、平安期或创建自然池不存在的条目。因此旧配置为额外 Extreme 怪物填写正权重，也不会使其重新进入参考自然池。
+
+权重页面直接编辑绝对权重。编辑或还原实体时清除该实体旧百分倍率，防止新权重被旧倍率暗中缩放；未编辑的旧倍率仍兼容。未知 ITE ID 的底层数据保留，参与导出、登录同步和热重载。
 
 ```toml
 [GameMechanics.MobSpawning]
+reference_spawning = true
 natural_spawn_rates = []
-natural_spawn_weights = ["modern_ite:zombie_chaos=80.0"]
+natural_spawn_weights = ["modern_ite:zombie_lord=2.0"]
 ```
 
-| 配置键 | 默认值 | 含义 |
-| --- | --- | --- |
-| `mob_max_spawn_count_chunk_base` | 50 | 每 128 个有效区块的基础额度，按区块并集比例向下取整 |
-| `mob_max_spawn_count_day_minimum` | 100 | 日期附加额度的下限 |
-| `mob_max_spawn_count_increase_per_day` | 1 | 当前显示日期乘此值作为日期增长；0 停止增长 |
-| `mob_max_spawn_count_day_maximum` | 0 | 日期附加额度上限；0 不限，正数不得使结果低于日期下限 |
-| `blood_moon_max_hostile_fraction` | 3 | 血月最后乘到总额度上的倍率；0 禁止血月自然敌对额度 |
-| `local_hostile_limit` / `blood_moon_local_hostile_limit` | 32 / 48 | 玩家附近水平 32 格、垂直 8 格的普通/血月密度限制 |
-| `hostile_spawn_groups` / `blood_moon_hostile_spawn_groups` | 3 / 4 | 每轮每个有效区块的普通/血月生成组数；0 停止尝试 |
-| `hostile_spawn_attempts` | 4 | 每组敌对生成尝试次数；0 停止尝试 |
-| `mob_spawner_speed_up_with_players` | true | 开启玩家近场刷怪笼加速 |
-| `mob_spawner_extra_delay_reduction` | 2 | 加速开启时每 tick 额外减少的冷却 tick；0 使用原生倒计时速度 |
+## 验证范围
 
-普通总额度为 `floor(区块基础值 × 有效区块数 / 128) + 日期额度`。日期额度为 `max(日期下限, 当前显示日期 × 每日增长)`；设置正数日期上限时，日期增长先封顶到 `max(日期下限, 日期上限)`。血月再乘血月总额度倍率，最后向下取整。这里沿用原有 `day`（第 1 天计为 1），没有改成 `day - 1`。深层与浅层共享此额度。
+回归覆盖参考预设默认值、旧配置保留、双向切换、同步及导出；刷怪行为覆盖深浅独立额度、多人区块并集、局部门槛、月相、物种条件和两种分裂的单代保护。真实客户端需检查最小 320×240 页面、禁用字段、分页与缩放草稿、切换预设后非法值校验和多人只读状态。历史 2026-10-22 的构建/客户端审计记录不作为本次参考预设的验证证据。
 
-默认 289 个有效区块时，第 1～100 天普通总额度仍为 212，第 32 天血月仍为 636，第 144 天血月仍为 768。提高日期上限只影响未来尝试，降低上限或设置 0 次尝试不会移除已有怪物。局部密度同时接入自然生成与非遭遇战召援的数量检查，刷怪笼加速改动会作用于正在运行的倒计时。
+2026-10-23实际验证：双方编译与生产打包成功，本体1,722项JUnit、2,341项全量服务器GameTest通过；ITE34项JUnit、300项全量服务器GameTest通过，其中11项覆盖现有分裂。ITE日志为`build/verification/reference-spawning/ite-third.log`；本体日志为相邻工程的`build/verification/reference-spawning-full-final.log`。本体固定种子三夜加速夹具也通过，隔离验证附近拥挤后停止新增和血月轮次，不模拟实际地形或战斗。
 
-2026-10-22：加入刷新权重后，构建、31 项 JUnit 与 285 项 GameTest 全部通过，最终服务端日志为 `build/verification/spawn-weights-final-config.log`。本体同时加载新版 ITE 的配置测试为 51 项通过，覆盖直接权重、倍率旧配置兼容、实际抽选、归属隔离、同步和导出。最终单页界面及配套客户端审计编译通过；本体静态客户端审计通过。原上限与冷却验证日志仍保留在 `build/verification/spawning-live-config.log`。
-
-既有 `IteConfigClientAudit` 已补充 320×240 和 854×480 的本体/ITE 专页入口、控件边界、分页草稿、非法值拦截及保存到 TOML。本次真实客户端启动在创建 GLFW 窗口时进入 `Window.bootCrash`，渲染线程停在原生错误提示，未执行到新页面；测试进程已停止。日志为 `build/verification/spawning-client-gui.log`，旧版 `build/verification/config/` 截图和报告不作为本次真实界面通过证据。
+本体`runData -PmiteGameplayConfigClientAudit=true`通过配置入口、后端链接和中英文词条静态检查；本轮未完成真实窗口渲染、双客户端联机或实际生存试玩。最终包校验见`build/verification/reference-spawning/final-package-audit.json`：本体1,409个类及4,598个资源、ITE265个类及743个资源与构建输出逐字节一致，均不包含开发测试条目。新版主模组与ITE的两个JAR应配套替换。

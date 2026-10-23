@@ -313,14 +313,19 @@ public final class ExtremeCombatRegressionGameTests {
     public static void witchesSummonBothHostileBatsAndSpidersWithABoundedEntourage(GameTestHelper h){
         var witch=EntityType.WITCH.create(h.getLevel());witch.moveTo(h.absolutePos(new BlockPos(1,2,1)).getCenter());
         var player=h.makeMockPlayer(GameType.SURVIVAL);player.moveTo(witch.position().add(3,0,0));witch.setTarget(player);
-        for(int wave=0;wave<3;wave++){
-            witch.getPersistentData().putLong("modern_ite:witch_next_summon",0);MobAbilities.witchSupportTick(witch);
+        try(var preset=new IteReferenceSpawnGameTests.Preset(false)){
+            for(int wave=0;wave<3;wave++){
+                witch.getPersistentData().putLong("modern_ite:witch_next_summon",0);MobAbilities.witchSupportTick(witch);
+            }
+            var minions=h.getLevel().getEntitiesOfClass(Mob.class,witch.getBoundingBox().inflate(48),m->m.getPersistentData().hasUUID("modern_ite:summoner")&&m.getPersistentData().getUUID("modern_ite:summoner").equals(witch.getUUID()));
+            h.assertTrue(!minions.isEmpty()&&minions.size()<=8,"Repeated summon waves never exceed eight nearby minions");
+            h.assertTrue(minions.stream().anyMatch(m->m instanceof io.github.ningmeng123.mite.entity.R196Bat)&&minions.stream().anyMatch(m->m instanceof Spider),"The entourage includes vampire bats and spiders");
+            h.assertTrue(minions.stream().allMatch(m->m.getTarget()==player),"Every summoned attacker immediately targets the player");
+        }finally{
+            for(var entity:h.getLevel().getAllEntities())if(entity instanceof Mob minion&&minion.getPersistentData().hasUUID(SpawnPopulation.SUMMONER)
+                    &&minion.getPersistentData().getUUID(SpawnPopulation.SUMMONER).equals(witch.getUUID()))minion.discard();
         }
-        var minions=h.getLevel().getEntitiesOfClass(Mob.class,witch.getBoundingBox().inflate(48),m->m.getPersistentData().hasUUID("modern_ite:summoner")&&m.getPersistentData().getUUID("modern_ite:summoner").equals(witch.getUUID()));
-        h.assertTrue(!minions.isEmpty()&&minions.size()<=8,"Repeated summon waves never exceed eight nearby minions");
-        h.assertTrue(minions.stream().anyMatch(m->m instanceof io.github.ningmeng123.mite.entity.R196Bat)&&minions.stream().anyMatch(m->m instanceof Spider),"The entourage includes vampire bats and spiders");
-        h.assertTrue(minions.stream().allMatch(m->m.getTarget()==player),"Every summoned attacker immediately targets the player");
-        minions.forEach(Entity::discard);h.succeed();
+        h.succeed();
     }
     @GameTest(template="gear_empty")
     public static void siegeRiderRemainsABabyAcrossSave(GameTestHelper h){

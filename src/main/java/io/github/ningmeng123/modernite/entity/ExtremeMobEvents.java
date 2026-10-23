@@ -72,7 +72,7 @@ public final class ExtremeMobEvents {
         if(original.getType()==EntityType.PILLAGER&&original instanceof Pillager&&MobAbilities.day(level)>=33){
             // Keep vanilla patrol/raid identity and AI while retaining a survival source for the addon weapon.
             original.getPersistentData().putBoolean("modern_ite:upgrade_crossbow",true);
-        }else if(original.getType()==EntityType.ZOMBIFIED_PIGLIN
+        }else if(!IteReferenceSpawns.enabled()&&original.getType()==EntityType.ZOMBIFIED_PIGLIN
                 &&level.getServer().isSameThread()&&event.getSpawnType()!=MobSpawnType.STRUCTURE
                 &&event.getSpawnType()!=MobSpawnType.COMMAND&&event.getSpawnType()!=MobSpawnType.SPAWN_EGG
                 &&!SpawnPopulation.explicit(original)&&SpawnPopulation.automaticAllowed(level,ExtremeMobs.type(ZOMBIE_PIGMAN_LORD))

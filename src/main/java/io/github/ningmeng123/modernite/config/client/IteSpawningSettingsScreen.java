@@ -20,10 +20,16 @@ import net.minecraft.network.chat.Component;
 
 /** Focused live settings editor; paging and resizing preserve every draft. @author NingMeng123 */
 public final class IteSpawningSettingsScreen extends Screen {
-    private static final List<String> PRIORITY = List.of("mob_max_spawn_count_chunk_base", "mob_max_spawn_count_day_minimum",
+    private static final List<String> PRIORITY = List.of("reference_spawning", "local_hostile_limit", "blood_moon_local_hostile_limit",
+            "mob_max_spawn_count_chunk_base", "mob_max_spawn_count_day_minimum",
             "mob_max_spawn_count_day_maximum", "mob_max_spawn_count_increase_per_day", "blood_moon_max_hostile_fraction",
-            "local_hostile_limit", "blood_moon_local_hostile_limit", "hostile_spawn_groups",
-            "blood_moon_hostile_spawn_groups", "hostile_spawn_attempts");
+            "hostile_spawn_groups", "blood_moon_hostile_spawn_groups", "hostile_spawn_attempts");
+    private static final Set<String> CUSTOM_ONLY = Set.of("mob_max_spawn_count_chunk_base", "mob_max_spawn_count_day_minimum",
+            "mob_max_spawn_count_day_maximum", "mob_max_spawn_count_increase_per_day", "blood_moon_max_hostile_fraction",
+            "hostile_spawn_groups", "blood_moon_hostile_spawn_groups", "hostile_spawn_attempts", "ghast_spawn_limit_day",
+            "annihilation_skeleton_spawn_in_light", "wandering_witch_spawn_chance_overworld",
+            "wandering_witch_spawn_limit_day_overworld", "wandering_witch_spawn_limit_day_other",
+            "wandering_witch_spawn_chance_underworld", "ancient_bone_lord_spawn_limit_day");
     private record Row(IteConfig.Option option, int y) {}
     private final Screen parent;
     private final boolean editable = IteConfigClient.editable();
@@ -60,22 +66,24 @@ public final class IteSpawningSettingsScreen extends Screen {
             int y = 54 + (index - page * rows) * 34;
             visible.add(new Row(option, y));
             String key = option.key();
-            Tooltip tooltip = Tooltip.create(Component.translatable("modern_ite.config." + key + ".tooltip"));
+            boolean canEdit = editable && !referenceOnlyDisabled(key);
+            Tooltip tooltip = Tooltip.create(optionTooltip(key));
             if (option.defaultValue() instanceof Boolean) {
-                var toggle = addRenderableWidget(Button.builder(booleanLabel((Boolean) values.get(key)), button -> {
+                var toggle = addRenderableWidget(Button.builder(booleanLabel(key, (Boolean) values.get(key)), button -> {
                     boolean value = !(Boolean) values.get(key);
                     values.put(key, value);
-                    button.setMessage(booleanLabel(value));
+                    button.setMessage(booleanLabel(key, value));
                     failure = null;
-                    updateSave();
+                    if (key.equals("reference_spawning")) rebuild(); else updateSave();
                 }).bounds(width - 100, y, 84, 20).build());
-                toggle.active = editable;
+                toggle.active = canEdit;
                 toggle.setTooltip(tooltip);
             } else {
                 var field = new EditBox(font, width - 100, y, 84, 20, Component.translatable("modern_ite.config." + key));
                 field.setMaxLength(32);
                 field.setValue(drafts.getOrDefault(key, number((Number) values.get(key))));
-                field.setEditable(editable);
+                field.setEditable(canEdit);
+                field.active = canEdit;
                 field.setTooltip(tooltip);
                 field.setTextColor(invalid.contains(key) ? 0xFFFF5555 : EditBox.DEFAULT_TEXT_COLOR);
                 field.setResponder(text -> {
@@ -119,13 +127,13 @@ public final class IteSpawningSettingsScreen extends Screen {
 
     private void updateSave() {
         if (save == null) return;
-        save.active = editable && invalid.isEmpty() && failure == null;
+        save.active = editable && !hasInvalidValues() && failure == null;
         save.setTooltip(Tooltip.create(failure != null ? failure : Component.translatable(!editable
-                ? "modern_ite.config.server_owned" : invalid.isEmpty() ? "modern_ite.config.spawning_rules.tooltip" : "modern_ite.config.spawning_invalid")));
+                ? "modern_ite.config.server_owned" : !hasInvalidValues() ? "modern_ite.config.spawning_rules.tooltip" : "modern_ite.config.spawning_invalid")));
     }
 
     private void save() {
-        if (!IteConfigClient.editable() || !invalid.isEmpty()) return;
+        if (!IteConfigClient.editable() || hasInvalidValues()) return;
         var before = IteConfig.localSnapshot();
         try {
             values.forEach((key, value) -> IteConfig.setting(key).set(value));
@@ -148,19 +156,31 @@ public final class IteSpawningSettingsScreen extends Screen {
                 width / 2, 33, 0xAAAAAA);
         for (var row : visible) {
             Component label = Component.translatable("modern_ite.config." + row.option().key());
-            graphics.drawString(font, font.plainSubstrByWidth(label.getString(), width - 128), 16, row.y() + 6, 0xFFFFFF);
+            graphics.drawString(font, font.plainSubstrByWidth(label.getString(), width - 128), 16, row.y() + 6,
+                    referenceOnlyDisabled(row.option().key()) ? 0x888888 : 0xFFFFFF);
         }
         graphics.drawCenteredString(font, Component.translatable("modern_ite.config.spawning_page", page + 1, pages), width / 2, height - 48, 0xCCCCCC);
-        if (!invalid.isEmpty()) graphics.drawCenteredString(font, Component.translatable("modern_ite.config.spawning_invalid"), width / 2, height - 70, 0xFFFF5555);
+        if (hasInvalidValues()) graphics.drawCenteredString(font, Component.translatable("modern_ite.config.spawning_invalid"), width / 2, height - 70, 0xFFFF5555);
         for (var row : visible) if (mouseX >= 16 && mouseX < width - 112 && mouseY >= row.y() && mouseY < row.y() + 24) {
             var option = row.option();
             Component tooltip = Component.translatable("modern_ite.config." + option.key()).append("\n")
-                    .append(Component.translatable("modern_ite.config." + option.key() + ".tooltip"));
+                    .append(optionTooltip(option.key()));
             graphics.renderTooltip(font, font.split(tooltip, Math.max(100, width - 32)), mouseX, mouseY);
         }
     }
 
-    private static Component booleanLabel(boolean value) { return Component.translatable(value ? "options.on" : "options.off"); }
+    private boolean referenceOnlyDisabled(String key) { return Boolean.TRUE.equals(values.get("reference_spawning")) && CUSTOM_ONLY.contains(key); }
+    private boolean hasInvalidValues() { return invalid.stream().anyMatch(key -> !referenceOnlyDisabled(key)); }
+    private Component optionTooltip(String key) {
+        var tooltip = Component.translatable("modern_ite.config." + key + ".tooltip");
+        if (referenceOnlyDisabled(key)) tooltip.append("\n").append(Component.translatable("modern_ite.config.spawning_custom_only"));
+        return tooltip;
+    }
+    private static Component booleanLabel(String key, boolean value) {
+        return Component.translatable(key.equals("reference_spawning")
+                ? value ? "modern_ite.config.spawning_reference" : "modern_ite.config.spawning_custom"
+                : value ? "options.on" : "options.off");
+    }
     private static String number(Number value) { return BigDecimal.valueOf(value.doubleValue()).stripTrailingZeros().toPlainString(); }
     @Override public void onClose() { minecraft.setScreen(parent); }
 }

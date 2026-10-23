@@ -346,32 +346,90 @@ public final class IteConfigClientAudit {
     }
 
     private static void auditSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {
-        press(home,"modern_ite.config.spawning_rules");
-        check(mc.screen instanceof IteSpawningSettingsScreen,"The focused ITE spawning rules button opens its actual editor");
-        Screen rules=mc.screen;
-        capture(mc,rules,width,height,"ite-spawning-rules",-1,-1);bounds(rules);
         String key="mob_max_spawn_count_chunk_base";
         int original=IteConfig.integer(key);
-        findEdit(rules,"modern_ite.config."+key).setValue("-1");
-        check(!findButton(rules,"mite.config.save").active,"Negative cap blocks saving");
-        press(rules,">");bounds(rules);
-        check(!findButton(rules,"mite.config.save").active,"Invalid draft remains blocking on another page");
-        press(rules,"<");
-        check(findEdit(rules,"modern_ite.config."+key).getValue().equals("-1"),"Paging preserves the invalid cap draft");
-        findEdit(rules,"modern_ite.config."+key).setValue(Integer.toString(original+1));
-        check(findButton(rules,"mite.config.save").active,"Correcting the cap restores saving");
-        int pages=0;
-        while(findButton(rules,">").active){press(rules,">");bounds(rules);if(++pages>40)throw new IllegalStateException("Unbounded spawning page list");}
-        capture(mc,rules,width,height,"ite-spawning-rules-last-page",-1,-1);
+        boolean originalReference=IteConfig.bool("reference_spawning");
+        int edited=original==1000000?original-1:original+1;
+        try {
+            check(Boolean.TRUE.equals(IteConfig.defaults().get("reference_spawning")),"The default spawning preset is the old ITE reference");
+            IteConfig.setting("reference_spawning").set(true);IteConfig.refresh();
+            press(home,"modern_ite.config.spawning_rules");
+            check(mc.screen instanceof IteSpawningSettingsScreen,"The focused ITE spawning rules button opens its actual editor");
+            Screen rules=mc.screen;
+            capture(mc,rules,width,height,"ite-spawning-rules",-1,-1);bounds(rules);
+            check(findButton(rules,"modern_ite.config.spawning_reference").active,"The reference preset switch is on the first page");
+            showIteSpawningField(rules,"local_hostile_limit");
+            check(findEdit(rules,"modern_ite.config.local_hostile_limit").active,"Reference splitting and support density remains editable");
+            showIteSpawningField(rules,key);
+            check(!findEdit(rules,"modern_ite.config."+key).active,"Legacy natural cap is disabled in reference mode");
+            firstSpawningPage(rules);
+            press(rules,"modern_ite.config.spawning_reference");
+            showIteSpawningField(rules,key);
+            check(findEdit(rules,"modern_ite.config."+key).active,"Switching to custom enables the legacy natural cap");
+            findEdit(rules,"modern_ite.config."+key).setValue("-1");
+            check(!findButton(rules,"mite.config.save").active,"Negative custom cap blocks saving");
+            press(rules,">");bounds(rules);
+            check(!findButton(rules,"mite.config.save").active,"Invalid custom draft remains blocking on another page");
+            showIteSpawningField(rules,key);
+            check(findEdit(rules,"modern_ite.config."+key).getValue().equals("-1"),"Paging preserves the invalid cap draft");
+            firstSpawningPage(rules);
+            press(rules,"modern_ite.config.spawning_custom");
+            check(findButton(rules,"mite.config.save").active,"Inactive custom drafts do not block saving the reference preset");
+            showIteSpawningField(rules,key);
+            check(!findEdit(rules,"modern_ite.config."+key).active&&findEdit(rules,"modern_ite.config."+key).getValue().equals("-1"),
+                    "Switching presets disables the cap while retaining its draft");
+            firstSpawningPage(rules);
+            press(rules,"modern_ite.config.spawning_reference");
+            check(!findButton(rules,"mite.config.save").active,"Returning to custom revalidates its retained invalid draft");
+            showIteSpawningField(rules,key);
+            findEdit(rules,"modern_ite.config."+key).setValue(Integer.toString(edited));
+            check(findButton(rules,"mite.config.save").active,"Correcting the custom cap restores saving");
+            int pages=0;
+            while(findButton(rules,">").active){press(rules,">");bounds(rules);if(++pages>40)throw new IllegalStateException("Unbounded spawning page list");}
+            capture(mc,rules,width,height,"ite-spawning-rules-last-page",-1,-1);
+            showIteSpawningField(rules,key);
+            check(findEdit(rules,"modern_ite.config."+key).getValue().equals(Integer.toString(edited)),"Every page retains the edited numeric cap");
+            press(rules,"mite.config.save");
+            check(mc.screen==home&&IteConfig.integer(key)==edited&&!IteConfig.bool("reference_spawning"),
+                    "Saving publishes the custom preset and cap together and restores the parent");
+            var parsed=new TomlParser().parse(Files.readString(configFile));
+            check(((Number)parsed.get(List.of("GameMechanics","MobSpawning",key))).intValue()==edited
+                            &&Boolean.FALSE.equals(parsed.get(List.of("GameMechanics","MobSpawning","reference_spawning"))),
+                    "The spawning editor persists the custom preset and cap to TOML");
+            press(home,"modern_ite.config.spawning_rules");
+            rules=mc.screen;rules.init(mc,width,height);
+            press(rules,"modern_ite.config.spawning_custom");
+            press(rules,"mite.config.save");
+            check(IteConfig.bool("reference_spawning")&&IteConfig.integer(key)==edited,
+                    "Saving reference mode retains the stored custom cap");
+            report.addProperty("ite_reference_preset_disables_custom_values_but_retains_support_controls",true);
+            report.addProperty("ite_preset_switch_preserves_and_revalidates_drafts",true);
+        } finally {
+            IteConfig.setting(key).set(original);IteConfig.setting("reference_spawning").set(originalReference);
+            IteConfig.SPEC.save();IteConfig.refresh();
+        }
+    }
+
+    private static void firstSpawningPage(Screen rules) {
         while(findButton(rules,"<").active)press(rules,"<");
-        check(findEdit(rules,"modern_ite.config."+key).getValue().equals(Integer.toString(original+1)),"Every page retains the edited numeric cap");
-        press(rules,"mite.config.save");
-        check(mc.screen==home&&IteConfig.integer(key)==original+1,"Saving returns to the parent and publishes the cap immediately");
-        check(Files.readString(configFile).contains(key+" = "+(original+1)),"The focused spawning editor writes its configured cap to TOML");
-        IteConfig.setting(key).set(original);IteConfig.SPEC.save();IteConfig.refresh();
+    }
+
+    private static void showIteSpawningField(Screen rules,String key) {
+        firstSpawningPage(rules);
+        String label=Component.translatable("modern_ite.config."+key).getString();
+        int pages=0;
+        while(widgets(rules).stream().noneMatch(widget->widget instanceof EditBox&&widget.getMessage().getString().equals(label))) {
+            check(pages++<40&&findButton(rules,">").active,"The ITE setting must be reachable by paging: "+key);
+            press(rules,">");bounds(rules);
+        }
     }
 
     private static void auditBaseSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {
+        Object originalReference=IteConfig.localSnapshot().get("reference_spawning");
+        var originalEffective=IteConfig.effectiveSnapshot();
+        boolean hadRemote=originalEffective!=IteConfig.localSnapshot();
+        IteConfig.setting("reference_spawning").set(false);IteConfig.clearServerSnapshot();IteConfig.refresh();
+        try {
         check(originalBaseValues.keySet().containsAll(MiteConfig.SPAWNING_CONTROLS.values()),
                 "The final restoration must include every MITE spawning setting");
         press(home,"mite.config.monster_spawning");
@@ -382,16 +440,8 @@ public final class IteConfigClientAudit {
         check(mc.screen instanceof MonsterSpawningRulesScreen,"The cap and spawning rhythm button opens MITE spawning rules");
         Screen rules=mc.screen;
         capture(mc,rules,width,height,"mite-spawning-rules",-1,-1);bounds(rules);
-        String base="mite.config.spawning_rules.base_cap";
-        String originalCap=findEdit(rules,base).getValue();
-        findEdit(rules,base).setValue("-1");
-        check(!findButton(rules,"mite.config.save").active,"A negative MITE cap disables saving");
-        press(rules,">");bounds(rules);
-        check(!findButton(rules,"mite.config.save").active,"An invalid MITE cap remains blocking on another page");
-        press(rules,"<");
-        check(findEdit(rules,base).getValue().equals("-1"),"MITE pagination preserves the invalid cap draft");
-        findEdit(rules,base).setValue(originalCap);
-        check(findButton(rules,"mite.config.save").active,"Correcting the MITE cap enables saving");
+        check(!findButton(rules,"mite.config.spawning_rules.custom_mode").active,
+                "The base page displays the effective ITE custom preset and directs preset changes to ITE");
         String interval="mite.config.spawning_rules.hostile_interval_ticks";
         String intervalLabel=Component.translatable(interval).getString();
         int page=0;
@@ -402,7 +452,14 @@ public final class IteConfigClientAudit {
         var option=MonsterSpawningSettings.Option.HOSTILE_INTERVAL_TICKS;
         int original=(int)MiteConfig.monsterSpawningSettings().value(option);
         int edited=original==(int)option.maximum()?original-1:original+1;
+        findEdit(rules,interval).setValue("-1");
+        check(!findButton(rules,"mite.config.save").active,"A negative custom interval disables saving");
+        press(rules,">");bounds(rules);
+        check(!findButton(rules,"mite.config.save").active,"The invalid interval remains blocking on another page");
+        press(rules,"<");
+        check(findEdit(rules,interval).getValue().equals("-1"),"MITE pagination preserves the invalid interval draft");
         findEdit(rules,interval).setValue(Integer.toString(edited));
+        check(findButton(rules,"mite.config.save").active,"Correcting the custom interval enables saving");
         press(rules,">");bounds(rules);
         press(rules,"<");
         check(findEdit(rules,interval).getValue().equals(Integer.toString(edited)),"The edited MITE interval survives a page round trip");
@@ -415,6 +472,10 @@ public final class IteConfigClientAudit {
                 "MITE's spawning editor persists the interval to its TOML file");
         rates.onClose();
         check(mc.screen==home,"Closing the MITE refresh-rate browser restores its actual home");
+        } finally {
+            IteConfig.setting("reference_spawning").set(originalReference);IteConfig.refresh();
+            if(hadRemote)IteConfig.receiveServerSnapshot(originalEffective);else IteConfig.clearServerSnapshot();
+        }
     }
 
     private static EditBox findEdit(Screen screen, String key) {
