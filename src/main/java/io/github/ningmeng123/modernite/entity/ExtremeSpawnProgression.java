@@ -2,16 +2,15 @@ package io.github.ningmeng123.modernite.entity;
 
 /** Shared automatic-spawn unlocks use complete registry identities. @author NingMeng123 */
 public final class ExtremeSpawnProgression {
+    /** The first 64 complete days are reserved for base-game enemies. */
+    public static final int FIRST_ITE_DAY = 65;
+
     private ExtremeSpawnProgression() {}
 
     public static int firstDay(String id) {
+        if (id.startsWith("modern_ite:")) return FIRST_ITE_DAY;
         return switch (id) {
-            case "mite:bone_lord", "mite:ancient_bone_lord",
-                    "modern_ite:zombie_lord", "modern_ite:zombie_pigman_lord",
-                    "modern_ite:zombie_elite_lord", "modern_ite:skeleton_elite_lord",
-                    "modern_ite:witch_lord", "modern_ite:undying_zombie_emperor",
-                    "modern_ite:annihilation_skeleton", "modern_ite:zombie_boss",
-                    "modern_ite:black_infernal_creeper", "modern_ite:dark_iron_golem" -> 33;
+            case "mite:bone_lord", "mite:ancient_bone_lord" -> 33;
             default -> 0;
         };
     }

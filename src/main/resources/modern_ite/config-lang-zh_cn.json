@@ -236,7 +236,7 @@
   "message.modern_ite.nether_recovered": "下界疲劳已消退。",
   "message.modern_ite.underworld_penalty_second": "你在地底停留过久，感到更加疲惫。",
   "modern_ite.config.reference_spawning": "刷怪预设",
-  "modern_ite.config.reference_spawning.tooltip": "默认采用ITE 2.0.28参考规则：深浅层独立额度、原版附近拥挤保护及老ITE自然池。关闭切回现有自定义规则；旧数值保留，切换不清除已有怪物。分裂机制保持现状。",
+  "modern_ite.config.reference_spawning.tooltip": "默认采用ITE 2.0.28参考规则：深浅层独立额度、原版附近拥挤保护及老ITE自然池。两种预设下ITE生物均在满64天后（第65天起）自动生成，更晚的物种日期继续生效。关闭切回现有自定义规则；旧数值保留，切换不清除已有怪物。分裂机制保持现状。",
   "modern_ite.config.spawning_reference": "ITE 2.0.28",
   "modern_ite.config.spawning_custom": "现有自定义",
   "modern_ite.config.spawning_custom_only": "仅现有自定义预设生效；切换预设后可编辑，当前保存值保留。",

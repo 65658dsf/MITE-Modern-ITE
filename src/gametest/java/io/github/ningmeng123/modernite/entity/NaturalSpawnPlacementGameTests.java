@@ -174,8 +174,8 @@ public final class NaturalSpawnPlacementGameTests {
             graceEnded = ExtremeWorldState.graceEnded(level);
             ExtremeWorldState.restoreGraceEnded(level,true);
             if (night) {
-                level.setDayTime(32*24_000L+18000L);
-                progress.restoreProgress(33);
+                level.setDayTime(64*24_000L+18000L);
+                progress.restoreProgress(65);
                 level.updateSkyBrightness();
             }
             for (BlockPos point : BlockPos.betweenClosed(pos.offset(-3, -2, -3), pos.offset(3, 5, 3)))

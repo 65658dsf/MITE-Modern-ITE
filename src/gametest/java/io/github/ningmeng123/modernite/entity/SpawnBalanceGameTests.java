@@ -88,30 +88,86 @@ public final class SpawnBalanceGameTests {
             h.assertTrue(MobAbilities.summonId(tree.getFirst(),"minecraft:zombie",1)==null,"A command-created mob cannot pass its exemption to automatic skill summons");
             Mob egg=site.mob(ExtremeMobs.type(ExtremeKind.UNDYING_ZOMBIE_EMPEROR));
             EventHooks.finalizeMobSpawn(egg,site.level,site.level.getCurrentDifficultyAt(egg.blockPosition()),MobSpawnType.SPAWN_EGG,null);
-            h.assertTrue(!egg.isSpawnCancelled()&&site.level.addFreshEntity(egg),"An explicit spawn egg admits a strong enemy before day 33");
+            h.assertTrue(!egg.isSpawnCancelled()&&site.level.addFreshEntity(egg),"An explicit spawn egg admits an ITE enemy before day 65");
         }
         h.succeed();
     }
 
     @GameTest(template="gear_empty",batch="spawn_balance")
-    public static void allStrongEntriesShareDayThirtyThreeAcrossDimensionsAndRewinds(GameTestHelper h) {
+    public static void iteFloorKeepsBaseLordDatesAcrossDimensionsAndRewinds(GameTestHelper h) {
         try(Site site=new Site(h)) {
-            for(long day:new long[]{31,32,33}) {
+            for(long day:new long[]{31,32,33,63,64,65}) {
                 site.date(day,day,true);
                 for(var level:site.level.getServer().getAllLevels())for(String id:STRONG) {
                     var type=BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id));
                     h.assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(ResourceLocation.parse(id)),"The strong identity really exists: "+id);
-                    h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=33),"Shared strong gate at day "+day+": "+id+" in "+level.dimension().location());
+                    int first=id.startsWith("modern_ite:")?65:33;
+                    h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=first),"Per-namespace gate at day "+day+": "+id+" in "+level.dimension().location());
                 }
                 Mob lord=site.mob(ExtremeMobs.type(ExtremeKind.WITCH_LORD));
                 EventHooks.finalizeMobSpawn(lord,site.level,site.level.getCurrentDifficultyAt(lord.blockPosition()),MobSpawnType.MOB_SUMMONED,null);
-                h.assertTrue(lord.isSpawnCancelled()==(day<33),"Skill finalization consumes the same strong gate on day "+day);
+                h.assertTrue(lord.isSpawnCancelled()==(day<65),"Skill finalization consumes the ITE floor on day "+day);
             }
-            site.date(1,33,true);
-            for(String id:STRONG)h.assertTrue(SpawnPopulation.automaticAllowed(site.level,BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id))),"Historical day 33 survives current-day rewind: "+id);
-            site.date(32,32,true);
+            site.date(1,65,true);
+            for(String id:STRONG)h.assertTrue(SpawnPopulation.automaticAllowed(site.level,BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id))),"Historical unlock survives current-day rewind: "+id);
+            site.date(64,64,true);
             Mob owner=site.mob(EntityType.ENDER_DRAGON);
-            h.assertTrue(MobAbilities.summon(owner,ExtremeKind.ZOMBIE_ELITE_LORD,1,true)==null,"Dragon encounter reinforcements cannot bypass the strong date gate");
+            h.assertTrue(MobAbilities.summon(owner,ExtremeKind.ZOMBIE_ELITE_LORD,1,true)==null,"Dragon encounter reinforcements cannot bypass the ITE date floor");
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="spawn_balance")
+    public static void everyIteMobAndAutomaticEntryWaits64CompleteDaysInBothPresets(GameTestHelper h) {
+        try(Site site=new Site(h)) {
+            var types=new ArrayList<EntityType<?>>();
+            for(var kind:ExtremeKind.values())types.add(ExtremeMobs.type(kind));
+            types.add(RabidDogContent.RABID_DOG.get());
+            for(boolean reference:new boolean[]{true,false})try(var preset=new IteReferenceSpawnGameTests.Preset(reference)) {
+                site.date(64,64,true);
+                site.level.getServer().overworld().setDayTime(1_535_999L);
+                h.assertFalse(SpawnPopulation.automaticAllowed(site.level,ExtremeMobs.type(ExtremeKind.ZOMBIE_LORD)),
+                        "The last tick of day 64 is still locked in both presets");
+                site.level.getServer().overworld().setDayTime(1_536_000L);
+                h.assertTrue(SpawnPopulation.automaticAllowed(site.level,ExtremeMobs.type(ExtremeKind.ZOMBIE_LORD)),
+                        "The first tick of day 65 unlocks ITE without waiting for another server tick");
+                for(long day:new long[]{63,64,65}) {
+                    site.date(day,day,true);
+                    for(var level:site.level.getServer().getAllLevels())for(var type:types)
+                        h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=65),
+                                "Every ITE identity shares the complete-day floor in both presets: "+type+" day="+day+" reference="+reference);
+                    if(day==65)continue;
+                    var pos=BlockPos.containing(site.origin);
+                    var context=new MiteExtensions.SpawnContext(site.level,R196SpawnRules.Category.MONSTER,false);
+                    var pool=MiteExtensions.policy().spawnPool(context,pos,List.of());
+                    h.assertTrue(pool.stream().noneMatch(entry->BuiltInRegistries.ENTITY_TYPE.getKey(entry.type()).getNamespace().equals("modern_ite")),
+                            "Locked ITE mobs are absent from natural candidate pools");
+                }
+                site.date(64,64,true);
+                for(var type:List.of(ExtremeMobs.type(ExtremeKind.ZOMBIE_IRON_BUCKET),ExtremeMobs.type(ExtremeKind.ZOMBIE_LORD))) {
+                    for(var reason:List.of(MobSpawnType.NATURAL,MobSpawnType.CHUNK_GENERATION,MobSpawnType.SPAWNER,
+                            MobSpawnType.TRIAL_SPAWNER,MobSpawnType.MOB_SUMMONED,MobSpawnType.JOCKEY,
+                            MobSpawnType.REINFORCEMENT,MobSpawnType.EVENT,MobSpawnType.CONVERSION)) {
+                        Mob mob=site.mob(type);
+                        EventHooks.finalizeMobSpawn(mob,site.level,site.level.getCurrentDifficultyAt(mob.blockPosition()),reason,null);
+                        h.assertTrue(mob.isSpawnCancelled(),"Real automatic finalization rejects ITE on day 64: "+reason);
+                    }
+                    h.assertFalse(site.level.addFreshEntity(site.mob(type)),"A reasonless ITE join cannot bypass the date floor");
+                    h.assertFalse(SpawnPopulation.reserveSupport(site.mob(type),site.mob(EntityType.ENDER_DRAGON),true),"Encounter summons cannot bypass the date floor");
+                    Mob saved=site.mob(type);var disk=new EntityJoinLevelEvent(saved,site.level,true);NeoForge.EVENT_BUS.post(disk);
+                    h.assertFalse(disk.isCanceled(),"Existing saved ITE mobs survive the new floor");
+                    SpawnPopulation.release(saved);
+                    site.date(65,65,true);
+                    Mob unlocked=site.mob(type);
+                    EventHooks.finalizeMobSpawn(unlocked,site.level,site.level.getCurrentDifficultyAt(unlocked.blockPosition()),MobSpawnType.CONVERSION,null);
+                    h.assertTrue(!unlocked.isSpawnCancelled()&&site.level.addFreshEntity(unlocked),"The real conversion and join unlock on day 65");
+                    site.date(1,65,true);
+                    h.assertTrue(SpawnPopulation.automaticAllowed(site.level,type),"The historical unlock survives current-day rewind in both presets");
+                    site.date(64,64,true);
+                    var transfer=new EntityJoinLevelEvent(unlocked,site.level,false);NeoForge.EVENT_BUS.post(transfer);
+                    h.assertFalse(transfer.isCanceled(),"An admitted ITE mob survives later joins before the floor");
+                }
+            }
         }
         h.succeed();
     }

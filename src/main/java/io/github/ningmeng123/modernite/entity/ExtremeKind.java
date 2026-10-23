@@ -32,7 +32,7 @@ public enum ExtremeKind {
     public final int firstDay, weight;
     ExtremeKind(String chinese, Family family, int firstDay, int weight) {
         int sharedDay=ExtremeSpawnProgression.firstDay("modern_ite:"+name().toLowerCase(java.util.Locale.ROOT));
-        this.chinese = chinese; this.family = family; this.firstDay = sharedDay>0?sharedDay:firstDay; this.weight = weight;
+        this.chinese = chinese; this.family = family; this.firstDay = Math.max(sharedDay,firstDay); this.weight = weight;
     }
     public String id() { return name().toLowerCase(java.util.Locale.ROOT); }
     public boolean boss() { return switch (this) {

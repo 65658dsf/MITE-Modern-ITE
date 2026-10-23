@@ -2,6 +2,20 @@
 
 开发署名：NingMeng123。
 
+## ITE 生物在第 64 天结束后生成（2026-10-23）
+
+参考和自定义两种预设均对全部 `modern_ite` 生物的自动生成增加历史最高日期第 65 天底线，覆盖自然池、刷怪笼、转换、替换、骑手、召援、事件和无生成原因的直接加入。更晚的物种日期与原维度、光照、平安期条件继续生效；本体 `mite` 生物日期、命令、生成蛋和已有存档实体保留。自定义自然池对物种日期取较晚值，防止统一底线把闪电骷髅第 96 天等原有晚期条件提前。
+
+构建、**35 项 JUnit、301 项全量服务端 GameTest 全部通过**。新增真实入口回归覆盖两种预设的 45 种 ExtremeKind 加狂犬、第 64 天最后 tick `1535999` 拒绝、第 65 天首 tick `1536000` 解锁、九种自动生成原因、转换加入、召援、候选池过滤、已有实体与回拨；既有光照与生成权重夹具改为解锁后的日期。铁门防御的控制器恢复测试显式开启怪物 Better Combat 配置并在同步测试结束后恢复，适配其默认关闭的新基线。
+
+初轮命令：`./gradlew.bat build runGameTestServer -PmiteJar=build/verification/ite-day65/mite-base.jar -PmodernIteGameTestDirectory=build/verification/ite-day65/run-final --console=plain`；日志为 `build/verification/ite-day65/gametest-final.log`。该轮固定本体依赖 SHA-256 为 `cf71cf3e58403f1d1c58f689a5b610debdcc3bc7905b641cb44be261b0951af5`。本轮未执行真实客户端或双客户端联机。
+
+随后配套包含日常合成计时补表的新本体重新构建和全量验证，冻结依赖为 `build/verification/final-crafting-day65/mite-final.jar`，SHA-256 `82e2fb2b7c7b5804c1a3f436ae0b9f7e113fb78270f609d0b9995455002d76fb`。新本体首轮 300/301 通过，既有石英等级 2 交易断言偶发失败；只补充其库存、等级、经验和有效配置诊断后，使用独立测试世界再次 **301/301 全部通过**，包括第 64/65 天真实 tick 边界。前后本体仅合成计时相关生产类变化，石英和经验实现逐字节一致；未修改其生产逻辑，未确认该偶发失败的原因。最终日志为 `build/verification/final-crafting-day65/gametest-diagnostic.log`，配套产物核对为 `build/verification/final-crafting-day65/final-pair-audit.json`。
+
+最终交付本体另补齐静态烟花配方 `firework_rocket_simple` 的源难度 100，冻结为 `build/verification/final-crafting-day65/mite-final-firework.jar`，9,584,906 字节，SHA-256 `b078c37b33ed6d319370b9b34bf345587c1588bd821b541e7ecf693b66879368`。使用该依赖再次构建并执行 **301/301 全量 GameTest 全通过**，第 64/65 天真实 tick 边界保留，石英失败未再次出现；ITE 成品哈希保持下方所列值。交付配套日志为 `build/verification/final-crafting-day65/gametest-firework-final.log`，核对记录为 `build/verification/final-crafting-day65/final-pair-firework-audit.json`，先前冻结依赖与日志均保留。
+
+交付 `build/libs/modern-ite-0.2.8.jar`，1,461,791 字节，SHA-256 为 `1aaf25b70e0b755b24e362bf4e35bd83bcaba80bc2638d939bb107735b08b1ef`。`build/verification/ite-day65/package-audit.json` 确认 265 个生产类、743 个资源与编译输出逐字节一致，无测试类、本体类或嵌套 JAR。
+
 ## 振金熔炉右键无法使用修复（2026-10-22）
 
 振金熔炉继承的原版 `FurnaceBlock.openContainer` 只接受 `FurnaceBlockEntity`，而振金炉实体继承 `AbstractFurnaceBlockEntity`，因此右键消耗了交互却未打开菜单。现在为振金炉重写容器入口，打开其真实实体的原生 `FurnaceMenu`，保留炉口可达限制和熔炉交互统计。

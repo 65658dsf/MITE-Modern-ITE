@@ -120,8 +120,17 @@ public final class RabidDogGameTests {
             ExtremeWorldState.restoreGraceEnded(level, true);
             entries.clear();
             ExtremeMobs.addSpawnEntries(monsters, h.absolutePos(BlockPos.ZERO), entries);
+            h.assertFalse(entries.stream().anyMatch(e -> e.type() == RabidDogContent.RABID_DOG.get()),
+                    "Ending grace alone does not bypass the 64-complete-day ITE floor");
+            level.setDayTime(63*24_000L);
+            progress.restoreProgress(64);
+            h.assertFalse(RabidDogContent.maySpawn(level), "Rabid dogs remain locked on day 64");
+            level.setDayTime(64*24_000L);
+            progress.restoreProgress(65);
+            entries.clear();
+            ExtremeMobs.addSpawnEntries(monsters, h.absolutePos(BlockPos.ZERO), entries);
             h.assertTrue(entries.stream().anyMatch(e -> e.type() == RabidDogContent.RABID_DOG.get()),
-                    "The actual extension spawn pool includes rabid dogs after grace");
+                    "The actual extension spawn pool includes rabid dogs on day 65 after grace");
             var nether = level.getServer().getLevel(Level.NETHER);
             var end = level.getServer().getLevel(Level.END);
             h.assertTrue(nether != null && end != null, "Standard non-overworld dimensions exist");

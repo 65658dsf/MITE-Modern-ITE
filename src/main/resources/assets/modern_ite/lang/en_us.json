@@ -583,7 +583,7 @@
   "modern_ite.config.hostile_spawn_attempts": "Hostile attempts per group",
   "modern_ite.config.hostile_spawn_attempts.tooltip": "Custom preset only: attempts per group, default 4. 0 stops natural attempts. Reference mode uses the original usual 4 attempts. Existing monsters are retained.",
   "modern_ite.config.reference_spawning": "Spawning preset",
-  "modern_ite.config.reference_spawning.tooltip": "Default: ITE 2.0.28 reference spawning with independent height caps, original nearby crowd protection and the old ITE natural pools. Turn off for the existing custom rules. Existing values and monsters are retained; splitting is unchanged.",
+  "modern_ite.config.reference_spawning.tooltip": "Default: ITE 2.0.28 reference spawning with independent height caps, original nearby crowd protection and the old ITE natural pools. In both presets, ITE mobs spawn automatically only after 64 complete days (day 65 onward); later species dates still apply. Turn off for the existing custom rules. Existing values and monsters are retained; splitting is unchanged.",
   "modern_ite.config.spawning_reference": "ITE 2.0.28",
   "modern_ite.config.spawning_custom": "Custom",
   "modern_ite.config.spawning_custom_only": "Applies only to the custom preset. Switch presets to edit; the saved value is retained."

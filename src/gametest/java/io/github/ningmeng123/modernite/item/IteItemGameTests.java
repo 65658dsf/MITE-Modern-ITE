@@ -88,7 +88,9 @@ public final class IteItemGameTests {
             awaitGemCooldown(h,session.player);
             PlayerExperience.setLevels(session.player,2);int before=session.player.totalExperience;
             useGem(session.player);
-            h.assertTrue(stack.getCount()==2&&session.player.totalExperience==before,"At the exact level limit quartz is neither consumed nor credited");
+            h.assertTrue(stack.getCount()==2&&session.player.totalExperience==before,"At the exact level limit quartz is neither consumed nor credited; count="+stack.getCount()
+                    +", level="+session.player.experienceLevel+", xp="+session.player.totalExperience+", before="+before
+                    +", effectiveLimit="+IteConfig.integer("quartz_max_exp_level")+", effectiveReward="+IteConfig.integer("quartz_exp"));
             config.set("quartz_max_exp_level",0);PlayerExperience.setTotal(session.player,0);
             useGem(session.player);
             h.assertTrue(stack.getCount()==2&&session.player.totalExperience==0,"A zero level limit explicitly disables quartz sacrifice");

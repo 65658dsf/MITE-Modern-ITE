@@ -583,7 +583,7 @@
   "modern_ite.config.hostile_spawn_attempts": "每组敌对生成尝试次数",
   "modern_ite.config.hostile_spawn_attempts.tooltip": "仅现有自定义模式：每组尝试次数，默认4，0停止自然尝试。参考模式沿用原版通常4次；不清除已有怪物。",
   "modern_ite.config.reference_spawning": "刷怪预设",
-  "modern_ite.config.reference_spawning.tooltip": "默认采用ITE 2.0.28参考规则：深浅层独立额度、原版附近拥挤保护及老ITE自然池。关闭切回现有自定义规则；旧数值保留，切换不清除已有怪物。分裂机制保持现状。",
+  "modern_ite.config.reference_spawning.tooltip": "默认采用ITE 2.0.28参考规则：深浅层独立额度、原版附近拥挤保护及老ITE自然池。两种预设下ITE生物均在满64天后（第65天起）自动生成，更晚的物种日期继续生效。关闭切回现有自定义规则；旧数值保留，切换不清除已有怪物。分裂机制保持现状。",
   "modern_ite.config.spawning_reference": "ITE 2.0.28",
   "modern_ite.config.spawning_custom": "现有自定义",
   "modern_ite.config.spawning_custom_only": "仅现有自定义预设生效；切换预设后可编辑，当前保存值保留。"

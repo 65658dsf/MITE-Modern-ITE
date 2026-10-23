@@ -67,7 +67,7 @@ public final class IteConfig {
         add(builder, "Entities", "slime_attack_damage_multiplier", 1D, 0D, 100D, "绿色史莱姆伤害倍率。初始化时按原始伤害×倍率+加成计算；不反复叠加。");
         add(builder, "Entities", "slime_attack_damage_bonus", 4D, 0D, 10000D, "绿色史莱姆伤害加成。仅绿色史莱姆；对新初始化的生物生效。");
         add(builder, "Entities", "giant_zombie_spawn_zombie_cooldown", 1200, 1D, 100000000D, "巨型僵尸召援间隔（tick）。仍保留召援总量、存活随从和局部密度限制。");
-        add(builder, "GameMechanics.MobSpawning", "reference_spawning", true, 0D, 1D, "ITE 2.0.28参考刷怪。默认开启：采用原版独立深浅额度、附近拥挤保护和老ITE自然池。关闭使用现有自定义刷怪参数；切换不清除已有怪物或旧配置值。");
+        add(builder, "GameMechanics.MobSpawning", "reference_spawning", true, 0D, 1D, "ITE 2.0.28参考刷怪。默认开启：采用原版独立深浅额度、附近拥挤保护和老ITE自然池。两种预设下ITE生物均在满64天后（第65天起）自动生成，更晚的物种日期继续生效。关闭使用现有自定义刷怪参数；切换不清除已有怪物或旧配置值。");
         add(builder, "GameMechanics.MobSpawning", "ghast_spawn_limit_day", 128, 1D, 1000000D, "仅现有自定义模式：主世界恶魂开始生成日期（天）。参考模式固定第128天。");
         add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_in_light", false, 0D, 1D, "仅现有自定义模式：允许主世界湮灭骷髅在亮处生成。参考模式使用老ITE物种光照检查。");
         add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_overworld", 33, 0D, 100D, "仅现有自定义模式：主世界女巫族自然生成通过率（%）。参考模式使用老ITE检查。");

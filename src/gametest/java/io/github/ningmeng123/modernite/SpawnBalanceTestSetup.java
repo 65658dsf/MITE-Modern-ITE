@@ -19,8 +19,8 @@ public final class SpawnBalanceTestSetup {
         // Export/reload fixtures restore this isolated file. Keep its disk and live baselines identical.
         IteConfig.setting("reference_spawning").set(false);IteConfig.SPEC.save();IteConfig.refresh();
         var level=event.getServer().overworld();
-        level.setDayTime(32*24_000L+18_000L);
-        BloodMoonInvasionData.get(level).restoreProgress(33);
+        level.setDayTime(64*24_000L+18_000L);
+        BloodMoonInvasionData.get(level).restoreProgress(65);
         ExtremeWorldState.restoreGraceEnded(level,true);
         level.getGameRules().getRule(GameRules.RULE_DAYLIGHT).set(false,event.getServer());
     }

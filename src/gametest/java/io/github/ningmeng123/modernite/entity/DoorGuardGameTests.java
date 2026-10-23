@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.compat.bettercombat.BetterMobCombat;
+import io.github.ningmeng123.mite.config.MiteConfig;
 import io.github.ningmeng123.mite.entity.MobShields;
 import io.github.ningmeng123.mite.entity.SourceMeleeGoal;
 import java.lang.reflect.Method;
@@ -474,7 +475,11 @@ public final class DoorGuardGameTests {
             }
             try (Fight fight = fights.get(1)) {
                 var zombie = fight.zombie();
+                var previousConfig=MiteConfig.effectiveSnapshot();
+                boolean localConfig=previousConfig==MiteConfig.localSnapshot();
+                boolean previousMobCombat=MiteConfig.BETTER_COMBAT_MOBS.get();
                 try {
+                    MiteConfig.BETTER_COMBAT_MOBS.set(true);MiteConfig.refreshEnchantmentRules();MiteConfig.clearServerSnapshot();
                     // A genuine controller recovery state is meaningful even without the optional client mod.
                     var statesField = BetterMobCombat.class.getDeclaredField("STATES");
                     statesField.setAccessible(true);
@@ -515,6 +520,9 @@ public final class DoorGuardGameTests {
                     }
                 } catch (ReflectiveOperationException error) {
                     throw new IllegalStateException("Native combat recovery fixture cannot initialize", error);
+                } finally {
+                    MiteConfig.BETTER_COMBAT_MOBS.set(previousMobCombat);MiteConfig.refreshEnchantmentRules();
+                    if(!localConfig)MiteConfig.receiveServerSnapshot(previousConfig);
                 }
             }
         });

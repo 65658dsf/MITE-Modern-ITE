@@ -53,17 +53,20 @@ public final class IteReferenceSpawnGameTests {
     }
 
     @GameTest(template="gear_empty",batch="reference_ite_spawns")
-    public static void speciesKeepTheirOwnDatesAndExtraExtremeRemainsEventOnly(GameTestHelper h) {
+    public static void iteFloorPreservesLaterBaseDatesAndExtraExtremeRemainsEventOnly(GameTestHelper h) {
         try(Fixture f=new Fixture(h)) {
             var site=f.site;var pos=net.minecraft.core.BlockPos.containing(site.origin);
             site.date(32,32,true);
-            h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ZOMBIE_LORD),pos),"ITE zombie lord has no invented shared day-33 gate");
+            h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ZOMBIE_LORD),pos),"ITE zombie lord waits for 64 complete days");
             h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ANNIHILATION_SKELETON),pos),"Overworld annihilation skeleton waits until after day 32");
             site.date(33,33,true);
-            h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ANNIHILATION_SKELETON),pos),"Annihilation skeleton unlocks on day 33");
+            h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ANNIHILATION_SKELETON),pos),"The ITE floor also delays the old day-33 species");
             site.date(64,64,true);
+            h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ZOMBIE_LORD),pos),"Day 64 is still inside the complete-day floor");
             h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(WANDERING_WITCH),pos),"Wandering witch's strict >64 comparison is preserved");
             site.date(65,65,true);
+            h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ZOMBIE_LORD),pos),"Zombie lord unlocks on day 65");
+            h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(ANNIHILATION_SKELETON),pos),"Annihilation skeleton unlocks on day 65");
             h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(WANDERING_WITCH),pos),"Wandering witch unlocks on day 65");
             site.date(160,160,true);site.level.setDayTime(159*24_000L+18_000L);
             h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,EntityType.GHAST,pos),"A late blood night permits the overworld ghast");

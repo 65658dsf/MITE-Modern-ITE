@@ -43,6 +43,8 @@ public final class IteReferenceSpawns {
     public static boolean automaticAllowed(ServerLevel level,EntityType<?> type) {
         boolean over=level.dimension()==Level.OVERWORLD;
         int day=MobAbilities.day(level);
+        if(BuiltInRegistries.ENTITY_TYPE.getKey(type).getNamespace().equals(ModernIte.MOD_ID)
+                &&day<ExtremeSpawnProgression.FIRST_ITE_DAY)return false;
         if(type==MiteMobs.type(MobKind.ANCIENT_BONE_LORD))return !over||day>=192;
         if(type==EntityType.GHAST)return !over||day>=128;
         if(type==ExtremeMobs.type(WANDERING_WITCH))return day>64;

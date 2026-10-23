@@ -283,8 +283,8 @@ public final class IteSpawnConfigGameTests {
             time = level.getServer().overworld().getDayTime();
             var history = BloodMoonInvasionData.get(level);
             highest = history.highestDay(); dirty = history.isDirty(); grace = ExtremeWorldState.graceEnded(level);
-            level.getServer().overworld().setDayTime(32L * 24000 + 1000);
-            history.restoreProgress(33); ExtremeWorldState.restoreGraceEnded(level, true);
+            level.getServer().overworld().setDayTime(64L * 24000 + 1000);
+            history.restoreProgress(65); ExtremeWorldState.restoreGraceEnded(level, true);
             IteSpawnConfig.clearServerSnapshot(); MiteConfig.clearServerSnapshot(); SpawnPopulation.clearReservations(level);
             for (Entity entity : level.getAllEntities()) if (entity.getType() == ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD)) previousLords.add(entity.getUUID());
         }
