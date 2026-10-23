@@ -108,21 +108,27 @@ public final class CalendarGameTests {
     }
     @GameTest(template="gear_empty",batch="spawn_balance")
     public static void passengersAndCanceledJoinsAreOneBudgetTransaction(GameTestHelper h) {
-        var root=EntityType.CREEPER.create(h.getLevel());var rider=EntityType.CREEPER.create(h.getLevel());
-        root.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
-        rider.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
-        root.setPos(h.absolutePos(new net.minecraft.core.BlockPos(1,1,1)).getCenter());rider.startRiding(root,true);
-        rider.setPos(root.getX(),70,root.getZ());
-        var rejected=R196MobSpawning.finalizeNaturalMonster(h.getLevel(),root,null,1);
-        h.assertTrue(rejected.monsters()==0&&root.isRemoved()&&rider.isRemoved(),"A two-monster tree cannot spend a single shared slot across height intervals");
-        var canceled=EntityType.CREEPER.create(h.getLevel());canceled.setPos(h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)).getCenter());
-        canceled.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
-        Consumer<EntityJoinLevelEvent> listener=event->{if(event.getEntity()==canceled)event.setCanceled(true);};
-        NeoForge.EVENT_BUS.addListener(listener);
+        long time=h.getLevel().getDayTime();
+        h.getLevel().setDayTime(time-Math.floorMod(time,24_000L)+18_000L);
+        h.getLevel().updateSkyBrightness();
         try {
-            var result=R196MobSpawning.finalizeNaturalMonster(h.getLevel(),canceled,null,2);
-            h.assertTrue(result.monsters()==0&&canceled.isRemoved(),"Canceled join discards the tree without reporting a committed monster");
-        } finally {NeoForge.EVENT_BUS.unregister(listener);}
+            var root=EntityType.CREEPER.create(h.getLevel());var rider=EntityType.CREEPER.create(h.getLevel());
+            root.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
+            rider.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
+            root.setPos(h.absolutePos(new net.minecraft.core.BlockPos(1,1,1)).getCenter());rider.startRiding(root,true);
+            rider.setPos(root.getX(),70,root.getZ());
+            var rejected=R196MobSpawning.finalizeNaturalMonster(h.getLevel(),root,null,1);
+            h.assertTrue(rejected.monsters()==0&&root.isRemoved()&&rider.isRemoved(),"A two-monster tree cannot spend a single shared slot across height intervals");
+            var canceled=EntityType.CREEPER.create(h.getLevel());canceled.setPos(h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)).getCenter());
+            canceled.getPersistentData().putBoolean(io.github.ningmeng123.modernite.entity.SpawnPopulation.EXPLICIT_COMMAND,true);
+            boolean[] joined={false};
+            Consumer<EntityJoinLevelEvent> listener=event->{if(event.getEntity()==canceled){joined[0]=true;event.setCanceled(true);}};
+            NeoForge.EVENT_BUS.addListener(listener);
+            try {
+                var result=R196MobSpawning.finalizeNaturalMonster(h.getLevel(),canceled,null,2);
+                h.assertTrue(joined[0]&&result.monsters()==0&&canceled.isRemoved(),"The real canceled join discards the tree without reporting a committed monster");
+            } finally {NeoForge.EVENT_BUS.unregister(listener);}
+        } finally {h.getLevel().setDayTime(time);h.getLevel().updateSkyBrightness();}
         h.succeed();
     }
 }
