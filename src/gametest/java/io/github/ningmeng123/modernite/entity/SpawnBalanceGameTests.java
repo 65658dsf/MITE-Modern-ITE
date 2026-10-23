@@ -96,19 +96,19 @@ public final class SpawnBalanceGameTests {
     @GameTest(template="gear_empty",batch="spawn_balance")
     public static void iteFloorKeepsBaseLordDatesAcrossDimensionsAndRewinds(GameTestHelper h) {
         try(Site site=new Site(h)) {
-            for(long day:new long[]{31,32,33,63,64,65}) {
+            for(long day:new long[]{31,32,33,63,64,65,191,192}) {
                 site.date(day,day,true);
                 for(var level:site.level.getServer().getAllLevels())for(String id:STRONG) {
                     var type=BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id));
                     h.assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(ResourceLocation.parse(id)),"The strong identity really exists: "+id);
-                    int first=id.startsWith("modern_ite:")?65:33;
+                    int first=id.startsWith("modern_ite:")?65:id.equals("mite:ancient_bone_lord")?192:33;
                     h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=first),"Per-namespace gate at day "+day+": "+id+" in "+level.dimension().location());
                 }
                 Mob lord=site.mob(ExtremeMobs.type(ExtremeKind.WITCH_LORD));
                 EventHooks.finalizeMobSpawn(lord,site.level,site.level.getCurrentDifficultyAt(lord.blockPosition()),MobSpawnType.MOB_SUMMONED,null);
                 h.assertTrue(lord.isSpawnCancelled()==(day<65),"Skill finalization consumes the ITE floor on day "+day);
             }
-            site.date(1,65,true);
+            site.date(1,192,true);
             for(String id:STRONG)h.assertTrue(SpawnPopulation.automaticAllowed(site.level,BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id))),"Historical unlock survives current-day rewind: "+id);
             site.date(64,64,true);
             Mob owner=site.mob(EntityType.ENDER_DRAGON);
@@ -118,16 +118,17 @@ public final class SpawnBalanceGameTests {
     }
 
     @GameTest(template="gear_empty",batch="spawn_balance")
-    public static void everyIteMobAndAutomaticEntryWaits64CompleteDaysInBothPresets(GameTestHelper h) {
-        try(Site site=new Site(h)) {
+    public static void everyIteMobAndAutomaticEntryWaits64CompleteDays(GameTestHelper h) {
+        try(Site site=new Site(h);var settings=new IteReferenceSpawnGameTests.Settings()) {
+            settings.set("extreme_mob_spawn_limit_day",65);
             var types=new ArrayList<EntityType<?>>();
             for(var kind:ExtremeKind.values())types.add(ExtremeMobs.type(kind));
             types.add(RabidDogContent.RABID_DOG.get());
-            for(boolean reference:new boolean[]{true,false})try(var preset=new IteReferenceSpawnGameTests.Preset(reference)) {
+            {
                 site.date(64,64,true);
                 site.level.getServer().overworld().setDayTime(1_535_999L);
                 h.assertFalse(SpawnPopulation.automaticAllowed(site.level,ExtremeMobs.type(ExtremeKind.ZOMBIE_LORD)),
-                        "The last tick of day 64 is still locked in both presets");
+                        "The last tick of day 64 is still locked");
                 site.level.getServer().overworld().setDayTime(1_536_000L);
                 h.assertTrue(SpawnPopulation.automaticAllowed(site.level,ExtremeMobs.type(ExtremeKind.ZOMBIE_LORD)),
                         "The first tick of day 65 unlocks ITE without waiting for another server tick");
@@ -135,7 +136,7 @@ public final class SpawnBalanceGameTests {
                     site.date(day,day,true);
                     for(var level:site.level.getServer().getAllLevels())for(var type:types)
                         h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=65),
-                                "Every ITE identity shares the complete-day floor in both presets: "+type+" day="+day+" reference="+reference);
+                                "Every ITE identity shares the complete-day floor: "+type+" day="+day);
                     if(day==65)continue;
                     var pos=BlockPos.containing(site.origin);
                     var context=new MiteExtensions.SpawnContext(site.level,R196SpawnRules.Category.MONSTER,false);
@@ -162,7 +163,7 @@ public final class SpawnBalanceGameTests {
                     EventHooks.finalizeMobSpawn(unlocked,site.level,site.level.getCurrentDifficultyAt(unlocked.blockPosition()),MobSpawnType.CONVERSION,null);
                     h.assertTrue(!unlocked.isSpawnCancelled()&&site.level.addFreshEntity(unlocked),"The real conversion and join unlock on day 65");
                     site.date(1,65,true);
-                    h.assertTrue(SpawnPopulation.automaticAllowed(site.level,type),"The historical unlock survives current-day rewind in both presets");
+                    h.assertTrue(SpawnPopulation.automaticAllowed(site.level,type),"The historical unlock survives current-day rewind");
                     site.date(64,64,true);
                     var transfer=new EntityJoinLevelEvent(unlocked,site.level,false);NeoForge.EVENT_BUS.post(transfer);
                     h.assertFalse(transfer.isCanceled(),"An admitted ITE mob survives later joins before the floor");
@@ -173,14 +174,15 @@ public final class SpawnBalanceGameTests {
     }
 
     @GameTest(template="gear_empty",batch="spawn_balance")
-    public static void naturalDistanceUsesTwentyFourBlocksOnOrdinaryAndBloodDays(GameTestHelper h) {
+    public static void naturalDistancePreservesTheSourceDarknessExceptionAndWorldSpawnProtection(GameTestHelper h) {
         try(Site site=new Site(h)) {
             var context=new MiteExtensions.SpawnContext(site.level,R196SpawnRules.Category.MONSTER,false);
             for(long day:new long[]{31,32,33}) {
                 site.date(day,33,true);
-                h.assertFalse(MiteExtensions.policy().spawnDistance(context,BlockPos.containing(site.origin),23*23,10000,true,true),"A dark or blood-moon candidate at 23 blocks is rejected");
-                h.assertTrue(MiteExtensions.policy().spawnDistance(context,BlockPos.containing(site.origin),24*24,10000,true,false),"A candidate at exactly 24 blocks is accepted by the distance rule");
-                h.assertFalse(MiteExtensions.policy().spawnDistance(context,BlockPos.containing(site.origin),10000,23*23,false,true),"The world-spawn protection distance remains 24 blocks");
+                h.assertTrue(MiteExtensions.policy().spawnDistance(context,BlockPos.containing(site.origin),23*23,10000,true,true),"The source distance result remains authoritative for a dark candidate");
+                h.assertFalse(MiteExtensions.policy().spawnDistance(context,BlockPos.containing(site.origin),23*23,10000,true,false),"A failed ordinary source distance result is not overridden on a blood date");
+                h.assertTrue(MiteExtensions.policy().spawnDistance(context,BlockPos.containing(site.origin),24*24,10000,true,R196SpawnRules.distanceAllows(24*24,10000,true)),"A candidate at exactly 24 blocks is accepted by the distance rule");
+                h.assertFalse(MiteExtensions.policy().spawnDistance(context,BlockPos.containing(site.origin),10000,23*23,false,R196SpawnRules.distanceAllows(10000,23*23,false)),"The world-spawn protection distance remains 24 blocks");
             }
         }
         h.succeed();
@@ -211,23 +213,29 @@ public final class SpawnBalanceGameTests {
     }
 
     @GameTest(template="gear_empty",batch="spawn_balance")
-    public static void deepAndShallowPendingNaturalsSpendTheSameWorldAllowance(GameTestHelper h) {
+    public static void deepAndShallowPendingNaturalsSpendIndependentWorldAllowances(GameTestHelper h) {
         try(Site site=new Site(h)) {
             site.date(33,33,true);site.player(0);
             h.assertTrue(R196MobSpawning.eligibleChunks(site.level,true).size()==289,"One real player contributes the expected seventeen-by-seventeen chunk set");
-            int existing=0;
+            int shallowExisting=0,deepExisting=0;
             for(Entity entity:site.level.getAllEntities())if(entity instanceof Mob mob&&mob.isAlive()&&!mob.isRemoved()
-                    &&R196MobSpawning.category(mob)==R196SpawnRules.Category.MONSTER)existing++;
-            h.assertTrue(existing<212,"The isolated server has room for the shared-budget control");
-            for(int i=existing;i<212;i++) {
+                    &&R196MobSpawning.category(mob)==R196SpawnRules.Category.MONSTER) {
+                if(R196SpawnRules.sourceY(mob.getBlockY(),R196MobSpawning.underworld(site.level))<60)deepExisting++;else shallowExisting++;
+            }
+            h.assertTrue(shallowExisting<89&&deepExisting<178,"The isolated server has room for both independent budget controls");
+            for(int i=shallowExisting;i<89;i++) {
                 Mob mob=site.mob(EntityType.ZOMBIE);
-                mob.setPos(site.origin.x,i%2==0?-49:120,site.origin.z);
-                h.assertTrue(SpawnPopulation.reserveNatural(mob),"Alternating deep and shallow reservations share slot "+i);
+                mob.setPos(site.origin.x,120,site.origin.z);
+                h.assertTrue(SpawnPopulation.reserveNatural(mob),"The shallow source budget admits slot "+i);
+            }
+            Mob shallow=site.mob(EntityType.ZOMBIE);shallow.setPos(site.origin.x,120,site.origin.z);
+            h.assertFalse(SpawnPopulation.reserveNatural(shallow),"A full shallow allowance rejects its ninetieth candidate");
+            for(int i=deepExisting;i<178;i++) {
+                Mob mob=site.mob(EntityType.ZOMBIE);mob.setPos(site.origin.x,-49,site.origin.z);
+                h.assertTrue(SpawnPopulation.reserveNatural(mob),"The full shallow budget leaves deep slot available: "+i);
             }
             Mob deep=site.mob(EntityType.ZOMBIE);deep.setPos(site.origin.x,-49,site.origin.z);
-            Mob shallow=site.mob(EntityType.ZOMBIE);shallow.setPos(site.origin.x,120,site.origin.z);
-            h.assertFalse(SpawnPopulation.reserveNatural(deep),"A full shared world allowance rejects a further deep candidate");
-            h.assertFalse(SpawnPopulation.reserveNatural(shallow),"A full shared world allowance rejects a further shallow candidate");
+            h.assertFalse(SpawnPopulation.reserveNatural(deep),"The independent deep budget rejects its one-hundred-seventy-ninth candidate");
         }
         h.succeed();
     }

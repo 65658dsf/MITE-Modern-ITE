@@ -1,13 +1,16 @@
 package io.github.ningmeng123.modernite.config;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-/** Implemented ITE settings, retaining legacy values behind the custom spawning preset. @author NingMeng123 */
+/** Implemented ITE settings with editable ITE 2.0.28 spawning defaults. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID, bus=EventBusSubscriber.Bus.MOD)
 public final class IteConfig {
     public record Option(String key, List<String> path, Object defaultValue, double minimum, double maximum) {
@@ -67,13 +70,13 @@ public final class IteConfig {
         add(builder, "Entities", "slime_attack_damage_multiplier", 1D, 0D, 100D, "绿色史莱姆伤害倍率。初始化时按原始伤害×倍率+加成计算；不反复叠加。");
         add(builder, "Entities", "slime_attack_damage_bonus", 4D, 0D, 10000D, "绿色史莱姆伤害加成。仅绿色史莱姆；对新初始化的生物生效。");
         add(builder, "Entities", "giant_zombie_spawn_zombie_cooldown", 1200, 1D, 100000000D, "巨型僵尸召援间隔（tick）。仍保留召援总量、存活随从和局部密度限制。");
-        add(builder, "GameMechanics.MobSpawning", "reference_spawning", true, 0D, 1D, "ITE 2.0.28参考刷怪。默认开启：采用原版独立深浅额度、附近拥挤保护和老ITE自然池。两种预设下ITE生物均在满64天后（第65天起）自动生成，更晚的物种日期继续生效。关闭使用现有自定义刷怪参数；切换不清除已有怪物或旧配置值。");
-        add(builder, "GameMechanics.MobSpawning", "ghast_spawn_limit_day", 128, 1D, 1000000D, "仅现有自定义模式：主世界恶魂开始生成日期（天）。参考模式固定第128天。");
-        add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_in_light", false, 0D, 1D, "仅现有自定义模式：允许主世界湮灭骷髅在亮处生成。参考模式使用老ITE物种光照检查。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_overworld", 33, 0D, 100D, "仅现有自定义模式：主世界女巫族自然生成通过率（%）。参考模式使用老ITE检查。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_overworld", 65, 1D, 1000000D, "仅现有自定义模式：主世界流浪女巫开始日期（天）。参考模式固定第65天及老ITE条件。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_other", 65, 1D, 1000000D, "仅现有自定义模式：地底流浪女巫开始日期（天）。参考模式使用老ITE维度及日期条件。");
-        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_underworld", 50, 0D, 100D, "仅现有自定义模式：地底女巫族自然生成通过率（%）。参考模式使用老ITE检查。");
+        add(builder, "GameMechanics.MobSpawning", "extreme_mob_spawn_limit_day", 65, 1D, 1000000D, "极难怪物开始生成日期（天），默认第65天。到达日期后额外极难怪物加入对应维度自然池，更晚的物种日期及其他生成条件继续生效。玩家死亡有10%概率生成玩家僵尸，不受此日期限制；生成蛋、命令与已有怪物不受影响。");
+        add(builder, "GameMechanics.MobSpawning", "ghast_spawn_limit_day", 128, 1D, 1000000D, "主世界恶魂开始生成日期（天），默认第128天；仍需满足血月夜晚等物种生成条件。");
+        add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_in_light", false, 0D, 1D, "允许主世界湮灭骷髅在亮处自然生成。关闭使用物种原有光照检查；日期、空间与其他条件仍生效。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_overworld", 33, 0D, 100D, "主世界流浪女巫自然生成通过率（%），默认33。0停止自然生成，100跳过此概率筛选；日期与其他条件仍生效。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_overworld", 65, 1D, 1000000D, "主世界流浪女巫开始自然生成日期（天），默认第65天；极难怪物开始日期及其他条件仍生效。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_other", 65, 1D, 1000000D, "地底流浪女巫开始自然生成日期（天），默认第65天；极难怪物开始日期及其他条件仍生效。");
+        add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_underworld", 50, 0D, 100D, "地底流浪女巫自然生成通过率（%），默认50。0停止自然生成，100跳过此概率筛选。");
         add(builder, "GameMechanics.MobSpawning", "zombie_lord_spawn_frequency", 2, 0D, 1000D, "僵尸领主生成权重。0禁用对应自然池条目；保留其他召援或事件入口。");
         add(builder, "GameMechanics.MobSpawning", "zombie_pigman_lord_spawn_frequency", 1, 0D, 1000D, "僵尸猪人领主生成权重。0禁用对应自然池条目；不改变其他来源的生成。");
         add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_frequency", 1, 0D, 1000D, "湮灭骷髅生成权重。0禁用对应自然池条目。");
@@ -89,17 +92,26 @@ public final class IteConfig {
         add(builder, "GameMechanics", "stepped_player_damage_increase_per_lvl", 0.1D, 0D, 10000D, "玩家连击每等级伤害系数。0禁用无附魔连击部分；不禁用征服者附魔本身。");
         add(builder, "GameMechanics", "fishing_xp", 30, 0D, 1000000D, "每次钓获经验。替换每个实际钓获物结算的原生随机经验，0不产生钓获经验。");
         add(builder, "GameMechanics", "player_disarm_player", true, 0D, 1D, "玩家可以缴械玩家。持有缴械附魔近战时按原附魔概率缴落对方主手物品；格挡、创造和旁观者不受影响。");
-        add(builder, "GameMechanics.MobSpawning", "blood_moon_max_hostile_fraction", 3D, 0D, 1000D, "仅现有自定义模式：血月怪物总额度倍率。共享总额度最后乘此倍率；0禁用血月自动敌对额度。参考模式不使用此倍率。");
-        add(builder, "GameMechanics.MobSpawning", "ancient_bone_lord_spawn_limit_day", 33, 1D, 1000000D, "仅现有自定义模式：远古骷髅公爵自动生成日期。参考模式固定第192天及老ITE条件；生成蛋与命令不受限制。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_increase_per_day", 1D, 0D, 10000D, "仅现有自定义模式：日期刷怪额度增长系数。当前日期乘此值，再应用日期额度下限及上限。参考模式固定每日增加1。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_chunk_base", 50, 0D, 1000000D, "仅现有自定义模式：每128个有效区块的基础额度。按区块并集向下取整，加日期额度；深浅共享。参考模式固定普通除数256、血月128，深层翻倍。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_minimum", 100, 0D, 1000000D, "仅现有自定义模式：日期附加额度下限。取此值与日期增长的较大者；参考模式没有此下限。");
-        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_maximum", 0, 0D, 100000000D, "仅现有自定义模式：日期附加额度上限。0表示不限；正数不低于日期下限。参考模式不读取此值。");
-        add(builder, "GameMechanics.MobSpawning", "local_hostile_limit", 32, 0D, 1000000D, "普通日期分裂与非遭遇战召援准入上限。玩家周围水平32格、垂直8格，0停止新增；参考模式自然刷怪另用原版8/10/12拥挤保护，自定义模式也用于自然刷怪。");
-        add(builder, "GameMechanics.MobSpawning", "blood_moon_local_hostile_limit", 48, 0D, 1000000D, "血月分裂与非遭遇战召援准入上限。玩家周围水平32格、垂直8格，0停止新增；参考模式自然刷怪另用原版拥挤保护，自定义模式也用于自然刷怪。");
-        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_groups", 3, 0D, 64D, "仅现有自定义模式：普通日期每个有效区块生成组数。0停止自然尝试。参考模式沿用原版通常3组。");
-        add(builder, "GameMechanics.MobSpawning", "blood_moon_hostile_spawn_groups", 4, 0D, 64D, "仅现有自定义模式：血月每个有效区块生成组数。0停止自然尝试。参考模式沿用原版通常3组。");
-        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_attempts", 4, 0D, 256D, "仅现有自定义模式：每组敌对生成尝试次数。0停止自然尝试。参考模式沿用原版通常4次。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_max_hostile_fraction", 2D, 0D, 1000D, "血月区块基础额度倍率，默认2。仅乘区块部分，不放大日期附加额度；深层额度随后单独乘深层倍率。");
+        add(builder, "GameMechanics.MobSpawning", "ancient_bone_lord_spawn_limit_day", 192, 1D, 1000000D, "远古骷髅公爵开始自动生成日期（天），默认第192天；极难怪物日期与其他物种条件仍生效，生成蛋和命令不受限制。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_increase_per_day", 1D, 0D, 10000D, "当前显示日期每一天增加的刷怪额度，默认1。日期额度受下限与上限限制，不额外乘血月倍率。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_chunk_base", 50, 0D, 1000000D, "每256个有效区块的基础刷怪额度，默认50。与日期附加额度相加；血月只将区块部分乘血月倍率，深浅层独立计数。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_minimum", 0, 0D, 1000000D, "日期附加额度下限，默认0。取此值与当前日期增长额度的较大者。");
+        add(builder, "GameMechanics.MobSpawning", "mob_max_spawn_count_day_maximum", 0, 0D, 100000000D, "日期附加额度上限，默认0表示不限。正数限制日期部分，且不低于日期下限。");
+        add(builder, "GameMechanics.MobSpawning", "deep_hostile_cap_multiplier", 2D, 0D, 1000D, "深层敌对额度倍率，默认2。深层独立计数，普通与血月均在基础加日期额度后乘此值；0停止深层自然补怪。");
+        add(builder, "GameMechanics.MobSpawning", "natural_local_hostile_limit", 8, 0D, 1000000D, "普通自然刷怪附近拥挤阈值，默认8。超过阈值时跳过该玩家周围候选区块；深度与要塞修正继续生效，不限制分裂和召援。");
+        add(builder, "GameMechanics.MobSpawning", "full_moon_natural_local_hostile_limit", 10, 0D, 1000000D, "满月夜自然刷怪附近拥挤阈值，默认10。与普通阈值的深度修正取较大值，再应用要塞修正；不限制分裂和召援。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_natural_local_hostile_limit", 12, 0D, 1000000D, "血月夜自然刷怪附近拥挤阈值，默认12。与普通阈值的深度修正取较大值，再应用要塞修正；不限制分裂和召援。");
+        add(builder, "GameMechanics.MobSpawning", "local_hostile_limit", 32, 0D, 1000000D, "普通日期分裂与非遭遇战召援准入上限。玩家周围水平32格、垂直8格，默认32；0停止此类新增。自然刷怪使用单独的附近拥挤阈值，不移除已有怪物。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_local_hostile_limit", 48, 0D, 1000000D, "血月分裂与非遭遇战召援准入上限。玩家周围水平32格、垂直8格，默认48；0停止此类新增。自然刷怪使用单独的附近拥挤阈值。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_groups", 3, 0D, 64D, "普通日期每轮每个有效区块的生成组数，默认3。0停止自然生成尝试，不清除已有怪物。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_hostile_spawn_groups", 3, 0D, 64D, "血月每轮每个有效区块的生成组数，默认3。0停止自然生成尝试，不清除已有怪物。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_attempts", 4, 0D, 256D, "每组敌对生成尝试次数，默认4。0停止自然生成尝试；保留相位蜘蛛等物种专属处理。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_interval_ticks", 1, 1D, 72000D, "敌对自然刷怪调度间隔（tick），默认1。每次间隔后仍需通过深浅层概率与随机节奏筛选；增大此值降低刷新频率。");
+        add(builder, "GameMechanics.MobSpawning", "deep_spawn_chance_percent", 10D, 0D, 100D, "每轮深层刷怪通过率（%），默认10。调度间隔后判定，之后仍应用随机节奏、密度及物种条件；0停止深层自然尝试。");
+        add(builder, "GameMechanics.MobSpawning", "surface_spawn_chance_percent", 17D, 0D, 100D, "每轮浅层刷怪通过率（%），默认17。调度间隔后判定，之后仍应用随机节奏、密度及物种条件；0停止浅层自然尝试。");
+        add(builder, "GameMechanics.MobSpawning", "blood_moon_spawn_chance_multiplier", 1D, 0D, 100D, "血月刷怪轮次概率倍率，默认1。乘深浅层通过率，不改变每轮组数或额度；最终概率最多100%。");
+        add(builder, "GameMechanics.MobSpawning", "other_dimension_spawn_chance_multiplier", 0.25D, 0D, 100D, "主世界以外维度的刷怪轮次概率倍率，默认0.25。乘深浅层通过率，最终概率最多100%；0停止这些维度自然尝试。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff", true, 0D, 1D, "地底疲劳开关。控制现有地底惩罚和新增第二阶段；关闭清理本机制计时与状态，不移除其他来源药效。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff_period1", 54000, 1D, 100000000D, "地底疲劳第一阶段时间（tick）。默认54000保留当前首阶段；达到阈值产生缓慢I。");
         add(builder, "GameMechanics.Underworld", "underworld_debuff_period2", 108000, 1D, 100000000D, "地底疲劳第二阶段时间（tick）。达到max(第一阶段,此值)后升级为缓慢II，离开一天按现有规则恢复。");
@@ -135,6 +147,27 @@ public final class IteConfig {
         local=defaults();
     }
     private IteConfig() {}
+    /** Migrate the retired preset once, before ConfigSpec removes its unknown key. */
+    public static void migrateLegacySpawningConfig(Path file) {
+        if(!Files.isRegularFile(file)) return;
+        try(var config=CommentedFileConfig.builder(file).sync().build()) {
+            config.load();
+            String prefix="GameMechanics.MobSpawning.";
+            if(!config.contains(prefix+"reference_spawning")) return;
+            var previous=Map.<String,Number>of("blood_moon_max_hostile_fraction",3D,
+                    "ancient_bone_lord_spawn_limit_day",33,"mob_max_spawn_count_day_minimum",100,
+                    "blood_moon_hostile_spawn_groups",4);
+            previous.forEach((key,oldDefault)-> {
+                Object value=config.get(prefix+key);
+                if(value instanceof Number number&&Double.compare(number.doubleValue(),oldDefault.doubleValue())==0)
+                    config.set(prefix+key,defaults().get(key));
+            });
+            config.remove(prefix+"reference_spawning");
+            config.save();
+        } catch(RuntimeException exception) {
+            org.slf4j.LoggerFactory.getLogger(IteConfig.class).warn("Could not migrate retired spawning preset in {}",file,exception);
+        }
+    }
     private static void add(ModConfigSpec.Builder builder,String category,String key,Object fallback,double min,double max,String comment) {
         var path=new ArrayList<>(List.of(category.split("\\.")));path.add(key);
         OPTIONS.add(new Option(key,path,fallback,min,max));

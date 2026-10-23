@@ -222,16 +222,25 @@ public final class IteSpawnConfigGameTests {
     }
 
     @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
-    public static void pigmanFamilyWeightsAndNaturalReplacementRespectTheFinalMonsterRate(GameTestHelper h) {
+    public static void pigmanAndLordKeepIndependentCandidateWeightsWithoutNaturalReplacement(GameTestHelper h) {
         try (Settings settings = new Settings(h)) {
             settings.player();
             h.assertTrue(!R196MobSpawning.eligibleChunks(h.getLevel(), true).isEmpty(),
                     "A natural-spawn fixture needs a real survival player to provide a positive world allowance");
             var context = new MiteExtensions.SpawnContext(h.getLevel(), R196SpawnRules.Category.MONSTER, false);
+            var nether=h.getLevel().getServer().getLevel(net.minecraft.world.level.Level.NETHER);
+            h.assertTrue(nether!=null,"The independent lord's source Nether habitat exists");
+            var netherContext=new MiteExtensions.SpawnContext(nether,R196SpawnRules.Category.MONSTER,false);
+            var parentEntry=new R196MobSpawning.Entry(EntityType.ZOMBIFIED_PIGLIN,"tn",R196SpawnRules.Category.MONSTER,100,1,4,4,false);
+            var lordEntry=MiteExtensions.policy().spawnPool(netherContext,settings.position,List.of(parentEntry)).stream()
+                    .filter(entry->entry.type()==ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD)).findFirst().orElseThrow();
             settings.base(List.of());
             settings.ite(List.of(LORD + "=0.0"));
             double weight = MiteExtensions.policy().monsterSpawnWeightMultiplier(context, settings.position, EntityType.ZOMBIFIED_PIGLIN, 1D);
-            h.assertTrue(Math.abs(weight - .8D) < 1E-12, "Disabling the lord removes only its one-fifth family share");
+            h.assertTrue(Math.abs(weight - 1D) < 1E-12, "Disabling the lord preserves the parent's entire independent weight");
+            h.assertTrue(ConfiguredMonsterSpawns.choose(nether,settings.position,R196SpawnRules.Category.MONSTER,List.of(parentEntry),RandomSource.create(65),true)!=null
+                    &&ConfiguredMonsterSpawns.choose(nether,settings.position,R196SpawnRules.Category.MONSTER,List.of(lordEntry),RandomSource.create(65),true)==null,
+                    "A zero lord rate removes only the independent lord candidate");
             for (int attempt = 0; attempt < 12; attempt++) {
                 Mob pigman = settings.mob(EntityType.ZOMBIFIED_PIGLIN);
                 EventHooks.finalizeMobSpawn(pigman, h.getLevel(), h.getLevel().getCurrentDifficultyAt(settings.position), MobSpawnType.NATURAL, null);
@@ -240,11 +249,14 @@ public final class IteSpawnConfigGameTests {
             settings.base(List.of("minecraft:zombified_piglin=0.0"));
             settings.ite(List.of(LORD + "=1.0"));
             weight = MiteExtensions.policy().monsterSpawnWeightMultiplier(context, settings.position, EntityType.ZOMBIFIED_PIGLIN, 0D);
-            h.assertTrue(Math.abs(weight - .2D) < 1E-12, "An enabled lord retains its natural family entry when its parent is disabled");
+            h.assertTrue(Math.abs(weight) < 1E-12, "The disabled parent retains zero weight and does not borrow a lord share");
+            h.assertTrue(ConfiguredMonsterSpawns.choose(nether,settings.position,R196SpawnRules.Category.MONSTER,List.of(parentEntry),RandomSource.create(65),true)==null
+                    &&ConfiguredMonsterSpawns.choose(nether,settings.position,R196SpawnRules.Category.MONSTER,List.of(lordEntry),RandomSource.create(65),true)!=null,
+                    "An enabled independent lord remains selectable when the parent candidate is disabled");
             Mob parent = settings.mob(EntityType.ZOMBIFIED_PIGLIN);
             EventHooks.finalizeMobSpawn(parent, h.getLevel(), h.getLevel().getCurrentDifficultyAt(settings.position), MobSpawnType.NATURAL, null);
-            h.assertTrue(parent.isSpawnCancelled(), "The surviving natural family share converts to the enabled lord with probability one");
-            h.assertTrue(settings.newLords() == 1, "The enabled replacement actually joins the level");
+            h.assertFalse(parent.isSpawnCancelled(), "Finalizing an existing parent candidate does not convert it into a different identity");
+            h.assertTrue(settings.newLords() == 0, "Natural finalization never creates an additional lord replacement");
             settings.ite(List.of(LORD + "=0.0"));
             Mob egg = settings.mob(ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD));
             EventHooks.finalizeMobSpawn(egg, h.getLevel(), h.getLevel().getCurrentDifficultyAt(settings.position), MobSpawnType.SPAWN_EGG, null);

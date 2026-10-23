@@ -29,11 +29,14 @@ public enum ExtremeKind {
     public enum Family { ZOMBIE, SKELETON, CREEPER, WITCH, GHAST, GOLEM, PILLAGER, PIGMAN }
     public final String chinese;
     public final Family family;
-    public final int firstDay, weight;
+    public final int firstDay, speciesFirstDay, weight;
     ExtremeKind(String chinese, Family family, int firstDay, int weight) {
         int sharedDay=ExtremeSpawnProgression.firstDay("modern_ite:"+name().toLowerCase(java.util.Locale.ROOT));
-        this.chinese = chinese; this.family = family; this.firstDay = Math.max(sharedDay,firstDay); this.weight = weight;
+        this.chinese = chinese; this.family = family; this.speciesFirstDay = firstDay;
+        this.firstDay = Math.max(sharedDay,firstDay); this.weight = weight;
     }
+    /** Keep the species floor while allowing the shared setting to move in either direction. */
+    public int naturalFirstDay(int iteDay) { return Math.max(Math.max(1,iteDay),speciesFirstDay); }
     public String id() { return name().toLowerCase(java.util.Locale.ROOT); }
     public boolean boss() { return switch (this) {
         case ZOMBIE_BOSS, ZOMBIE_ELITE_LORD, UNDYING_ZOMBIE_EMPEROR, SKELETON_ELITE_LORD,

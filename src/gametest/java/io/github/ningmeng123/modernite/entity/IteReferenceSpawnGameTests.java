@@ -32,18 +32,18 @@ public final class IteReferenceSpawnGameTests {
                 List<R196MobSpawning.Entry> entries=new ArrayList<>();
                 IteReferenceSpawns.addEntries(context(level),net.minecraft.core.BlockPos.containing(site.origin),entries);
                 if(level.dimension()==Level.OVERWORLD) {
-                    h.assertTrue(entries.size()==6,"The base biome gains exactly the six old ITE entries");
+                    h.assertTrue(originalEntries(entries)==6,"The six old ITE additions survive alongside the unlocked Extra candidates");
                     assertEntry(h,entries,EntityType.GIANT,10,1,1,4);
                     assertEntry(h,entries,EntityType.GHAST,10,1,1,1);
                     assertEntry(h,entries,MiteMobs.type(MobKind.ANCIENT_BONE_LORD),10,1,1,1);
                     assertEntry(h,entries,ExtremeMobs.type(ZOMBIE_LORD),2,1,1,1);
                 }else if(MobAbilities.underground(level)) {
-                    h.assertTrue(entries.size()==10,"Underworld retains the six parent additions and four child additions");
+                    h.assertTrue(originalEntries(entries)==10,"Underworld retains the six parent additions and four child additions");
                     for(var kind:List.of(ZOMBIE_LORD,ANNIHILATION_SKELETON,WANDERING_WITCH))
                         h.assertTrue(entries.stream().filter(entry->entry.type()==ExtremeMobs.type(kind)).count()==2,"Both constructor additions survive: "+kind);
                     assertEntry(h,entries,MiteMobs.type(MobKind.HELLHOUND),15,1,2,8);
                 }else if(level.dimension()==Level.NETHER) {
-                    h.assertTrue(entries.size()==3,"Hell clears the superclass list before its three additions");
+                    h.assertTrue(originalEntries(entries)==3,"Hell retains its three old ITE additions alongside eligible Extra candidates");
                     assertEntry(h,entries,MiteMobs.type(MobKind.HELLHOUND),20,1,2,8);
                     h.assertTrue(entries.stream().noneMatch(entry->entry.type()==ExtremeMobs.type(ZOMBIE_LORD)),"Hell does not inherit the overworld lord entry");
                 }else if(level.dimension()==Level.END)h.assertTrue(entries.isEmpty(),"End clears the parent additions");
@@ -53,7 +53,7 @@ public final class IteReferenceSpawnGameTests {
     }
 
     @GameTest(template="gear_empty",batch="reference_ite_spawns")
-    public static void iteFloorPreservesLaterBaseDatesAndExtraExtremeRemainsEventOnly(GameTestHelper h) {
+    public static void defaultIteFloorPreservesLaterBaseDatesAndAddsUnlockedExtraSpecies(GameTestHelper h) {
         try(Fixture f=new Fixture(h)) {
             var site=f.site;var pos=net.minecraft.core.BlockPos.containing(site.origin);
             site.date(32,32,true);
@@ -74,7 +74,7 @@ public final class IteReferenceSpawnGameTests {
             site.date(192,192,true);
             h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,MiteMobs.type(MobKind.ANCIENT_BONE_LORD),pos),"Ancient bone lord permits the full blood date from day 192");
             for(var kind:List.of(ZOMBIE_IRON_BUCKET,RUN_CREEPER,WITCH_LORD,UNDYING_ZOMBIE_EMPEROR)) {
-                h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(kind),pos),"Extra Extreme identity has no reference natural entry: "+kind);
+                h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(kind),pos),"Unlocked Extra identity has its eligible reference natural entry: "+kind);
                 h.assertTrue(IteReferenceSpawns.automaticAllowed(site.level,ExtremeMobs.type(kind)),"Scripted event remains available: "+kind);
             }
         }
@@ -99,6 +99,53 @@ public final class IteReferenceSpawnGameTests {
                 SpawnPopulation.release(pending);
                 h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,type,pos),"A canceled or failed reservation releases the rare slot");
                 pending.discard();SpawnPopulation.clearReservations(site.level);
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="reference_ite_spawns")
+    public static void liveSpeciesDatesAndWanderingChanceApplyToSourceCandidates(GameTestHelper h) {
+        try(Fixture f=new Fixture(h)) {
+            var site=f.site;var pos=net.minecraft.core.BlockPos.containing(site.origin);
+            f.preset.set("extreme_mob_spawn_limit_day",1);site.date(32,32,true);site.level.setDayTime(31*24_000L+18_000L);
+            h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,EntityType.GHAST,pos),"The default ghast date still excludes an early blood night");
+            f.preset.set("ghast_spawn_limit_day",32);
+            h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,EntityType.GHAST,pos),"Editing the ghast date immediately permits the existing blood-night candidate");
+            f.preset.set("ghast_spawn_limit_day",33);
+            h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,EntityType.GHAST,pos),"Raising the same live ghast date immediately relocks it");
+            var ancient=MiteMobs.type(MobKind.ANCIENT_BONE_LORD);
+            f.preset.set("ancient_bone_lord_spawn_limit_day",32);
+            h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ancient,pos),"The ancient lord now consumes its editable date while keeping its blood-date condition");
+            f.preset.set("ancient_bone_lord_spawn_limit_day",33);
+            h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,ancient,pos),"Raising the ancient-lord date relocks only new candidates");
+            f.preset.set("wandering_witch_spawn_limit_day_overworld",32);
+            h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,ExtremeMobs.type(WANDERING_WITCH),pos),"The wandering-witch date is editable below the old hard-coded day 65");
+            Mob witch=site.mob(ExtremeMobs.type(WANDERING_WITCH));witch.setPos(site.origin.x,-49,site.origin.z);
+            f.preset.set("wandering_witch_spawn_chance_overworld",0);
+            for(int seed=0;seed<32;seed++) {
+                witch.getRandom().setSeed(seed);
+                h.assertFalse(witch.checkSpawnRules(site.level,net.minecraft.world.entity.MobSpawnType.NATURAL),"A zero configured chance blocks the real species predicate");
+            }
+            f.preset.set("wandering_witch_spawn_chance_overworld",100);
+            h.assertTrue(hasQualifiedSeed(witch,site.level),"A hundred-percent configured chance permits a candidate when the independent source sky/light rolls pass");
+            f.preset.set("wandering_witch_spawn_limit_day_overworld",33);
+            h.assertFalse(witch.checkSpawnRules(site.level,net.minecraft.world.entity.MobSpawnType.NATURAL),"The live species date also reaches its actual qualification predicate");
+            ServerLevel underworld=null;
+            for(ServerLevel level:site.level.getServer().getAllLevels())if(MobAbilities.underground(level)){underworld=level;break;}
+            // The minimal GameTest server creates three vanilla dimensions. Exercise the real
+            // Underworld path too when the configured server includes that optional dimension.
+            if(underworld!=null){
+            f.preset.set("wandering_witch_spawn_limit_day_other",32);
+            h.assertTrue(IteReferenceSpawns.naturalAllowed(underworld,ExtremeMobs.type(WANDERING_WITCH),pos),"The independent Underworld date permits its own source candidate");
+            Mob underWitch=(Mob)ExtremeMobs.type(WANDERING_WITCH).create(underworld);site.mobs.add(underWitch);
+            underWitch.moveTo(pos.getX()+.5,-49,pos.getZ()+.5,0,0);
+            f.preset.set("wandering_witch_spawn_chance_underworld",0);
+            h.assertFalse(underWitch.checkSpawnRules(underworld,net.minecraft.world.entity.MobSpawnType.NATURAL),"The Underworld chance independently blocks the real species predicate");
+            f.preset.set("wandering_witch_spawn_chance_underworld",100);
+            h.assertTrue(hasQualifiedSeed(underWitch,underworld),"The Underworld chance permits a candidate when its other source rolls pass without changing the overworld date");
+            f.preset.set("wandering_witch_spawn_limit_day_other",33);
+            h.assertFalse(underWitch.checkSpawnRules(underworld,net.minecraft.world.entity.MobSpawnType.NATURAL),"Raising the Underworld date reaches its actual qualification predicate");
             }
         }
         h.succeed();
@@ -134,22 +181,36 @@ public final class IteReferenceSpawnGameTests {
     }
 
     private static MiteExtensions.SpawnContext context(ServerLevel level) {return new MiteExtensions.SpawnContext(level,R196SpawnRules.Category.MONSTER,null);}
+    private static boolean hasQualifiedSeed(Mob mob,ServerLevel level){
+        for(int seed=0;seed<1024;seed++){
+            mob.getRandom().setSeed(seed);
+            if(mob.checkSpawnRules(level,net.minecraft.world.entity.MobSpawnType.NATURAL))return true;
+        }
+        return false;
+    }
+    private static long originalEntries(List<R196MobSpawning.Entry> entries) {
+        return entries.stream().filter(entry->entry.type()==EntityType.GIANT||entry.type()==EntityType.GHAST
+                ||entry.type()==MiteMobs.type(MobKind.ANCIENT_BONE_LORD)||entry.type()==MiteMobs.type(MobKind.HELLHOUND)
+                ||entry.type()==ExtremeMobs.type(ZOMBIE_LORD)||entry.type()==ExtremeMobs.type(ZOMBIE_PIGMAN_LORD)
+                ||entry.type()==ExtremeMobs.type(ANNIHILATION_SKELETON)||entry.type()==ExtremeMobs.type(WANDERING_WITCH)).count();
+    }
     private static void assertEntry(GameTestHelper h,List<R196MobSpawning.Entry> entries,EntityType<?> type,int weight,int min,int max,int pack) {
         h.assertTrue(entries.stream().anyMatch(entry->entry.type()==type&&entry.weight()==weight&&entry.minimum()==min&&entry.maximum()==max&&entry.pack()==pack),"Old entry preserves weight/group/pack: "+type);
     }
     private static final class Fixture implements AutoCloseable {
-        final SpawnBalanceGameTests.Site site;final Preset preset;
+        final SpawnBalanceGameTests.Site site;final Settings preset;
         Fixture(GameTestHelper h) {
-            preset=new Preset(true);
+            preset=new Settings();
+            preset.set("extreme_mob_spawn_limit_day",65);
             site=new SpawnBalanceGameTests.Site(h);
         }
         @Override public void close() {site.close();preset.close();}
     }
     /** Test snapshots must override a previously received server snapshot, not just the local config cache. */
-    static final class Preset implements AutoCloseable {
+    static final class Settings implements AutoCloseable {
         private final java.util.Map<String,Object> previous=IteConfig.effectiveSnapshot();
         private final boolean hadRemote=previous!=IteConfig.localSnapshot();
-        Preset(boolean reference) {set("reference_spawning",reference);}
+        Settings() {IteConfig.receiveServerSnapshot(previous);}
         void set(String key,Object value) {
             var values=new java.util.LinkedHashMap<>(IteConfig.effectiveSnapshot());
             values.put(key.substring(key.lastIndexOf('.')+1),value);IteConfig.receiveServerSnapshot(values);

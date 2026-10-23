@@ -119,17 +119,17 @@ public final class IteMobConfigGameTests {
     public static void nondefaultWitchDaysAndWeightsChangeTheActualSpawnPool(GameTestHelper h){
         var context=new MiteExtensions.SpawnContext(h.getLevel(),R196SpawnRules.Category.MONSTER,false);
         var pos=h.absolutePos(new BlockPos(1,2,1));
-        try(var settings=new IteReferenceSpawnGameTests.Preset(false)){
+        try(var settings=new IteReferenceSpawnGameTests.Settings()){
             settings.set("wandering_witch_spawn_limit_day_overworld",1);settings.set("wandering_witch_spawn_frequency",17);
-            var entries=new ArrayList<R196MobSpawning.Entry>();ExtremeMobs.addSpawnEntries(context,pos,entries);
+            var entries=MiteExtensions.policy().spawnPool(context,pos,java.util.List.of());
             h.assertTrue(entries.stream().anyMatch(e->e.type()==ExtremeMobs.type(ExtremeKind.WANDERING_WITCH)&&e.weight()==17),
                     "Lowering the configured day exposes a real weight-seventeen wandering-witch entry");
             settings.set("wandering_witch_spawn_frequency",0);
-            entries.clear();ExtremeMobs.addSpawnEntries(context,pos,entries);
+            entries=MiteExtensions.policy().spawnPool(context,pos,java.util.List.of());
             h.assertFalse(entries.stream().anyMatch(e->e.type()==ExtremeMobs.type(ExtremeKind.WANDERING_WITCH)),
                     "A zero natural-pool weight removes the actual wandering-witch entry");
             settings.set("wandering_witch_spawn_frequency",17);settings.set("wandering_witch_spawn_limit_day_overworld",1000000);
-            entries.clear();ExtremeMobs.addSpawnEntries(context,pos,entries);
+            entries=MiteExtensions.policy().spawnPool(context,pos,java.util.List.of());
             h.assertFalse(entries.stream().anyMatch(e->e.type()==ExtremeMobs.type(ExtremeKind.WANDERING_WITCH)),
                     "A future configured day blocks the same natural-pool entry");
         }

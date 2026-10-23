@@ -22,7 +22,7 @@ import net.neoforged.neoforge.event.level.LevelEvent;
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class SpawnPopulation {
     public static final String SUMMONER="modern_ite:summoner", ENCOUNTER="modern_ite:spawn_encounter", EXPLICIT_COMMAND="modern_ite:explicit_command_spawn";
-    private static final String EXPLICIT_EGG="modern_ite:explicit_egg_spawn", ADMITTED="modern_ite:spawn_admitted";
+    private static final String EXPLICIT_EGG="modern_ite:explicit_egg_spawn", ADMITTED="modern_ite:spawn_admitted", PLAYER_DEATH_MIMIC="modern_ite:player_death_mimic";
     private static final Set<String> OTHER_HOSTILES=Set.of("mite:dire_wolf","mite:vampire_bat","mite:giant_vampire_bat","mite:nightwing");
     private static final Map<ServerLevel,Ledger> LEDGERS=new WeakHashMap<>();
     private SpawnPopulation() {}
@@ -36,11 +36,20 @@ public final class SpawnPopulation {
         return mob.getPersistentData().getBoolean(EXPLICIT_COMMAND)||mob.getPersistentData().getBoolean(EXPLICIT_EGG)||mob.getSpawnType()==MobSpawnType.SPAWN_EGG;
     }
     public static boolean encounter(Mob mob) {return mob!=null&&mob.getPersistentData().getBoolean(ENCOUNTER);}
+    /** A real player-death substitute can appear before automatic hostile spawning unlocks. */
+    static void markPlayerDeathMimic(Mob mob) {
+        if(mob.getType()!=ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE))throw new IllegalArgumentException("Only player mimics can use death admission");
+        mob.getPersistentData().putBoolean(PLAYER_DEATH_MIMIC,true);
+    }
+    private static boolean playerDeathMimic(Mob mob) {
+        return mob.getType()==ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE)&&mob.getPersistentData().getBoolean(PLAYER_DEATH_MIMIC);
+    }
     public static boolean automaticAllowed(ServerLevel level,EntityType<?> type) {
         return !hostile(type)||!ExtremeWorldState.graceActive(level)
                 &&(IteReferenceSpawns.enabled()?IteReferenceSpawns.automaticAllowed(level,type):
                         ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),BloodMoonInvasion.highestDay(level),
-                                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day")));
+                                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"),
+                                io.github.ningmeng123.modernite.config.IteConfig.integer("extreme_mob_spawn_limit_day")));
     }
     public static int localCount(ServerLevel level,AABB box) {return ledger(level).count(null,box,null,false);}
     /** Includes pending joins whose native entity section is not queryable yet. */
@@ -127,7 +136,7 @@ public final class SpawnPopulation {
         if(event.isCanceled()||!(event.getLevel() instanceof ServerLevel level)||!(event.getEntity() instanceof Mob mob)||!counted(mob))return;
         boolean existing=event.loadedFromDisk()||mob.getPersistentData().getBoolean(ADMITTED);
         if(!existing&&!explicit(mob)) {
-            boolean allowed=automaticAllowed(level,mob.getType());
+            boolean allowed=playerDeathMimic(mob)||automaticAllowed(level,mob.getType());
             if(allowed&&mob.getSpawnType()==MobSpawnType.NATURAL)allowed=reserveNatural(mob);
             if(allowed&&!encounter(mob)&&(!IteReferenceSpawns.enabled()||mob.getSpawnType()!=MobSpawnType.NATURAL)) {
                 Ledger ledger=ledger(level);

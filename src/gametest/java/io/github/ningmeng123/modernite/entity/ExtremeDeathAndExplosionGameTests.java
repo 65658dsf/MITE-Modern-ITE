@@ -3,8 +3,11 @@ package io.github.ningmeng123.modernite.entity;
 import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.entity.MonsterDayScaling;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasionData;
+import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.config.IteSpawnConfig;
 import io.github.ningmeng123.modernite.content.ExtremeContent;
 import io.github.ningmeng123.modernite.content.ExtremeEffects;
+import io.github.ningmeng123.modernite.world.ExtremeWorldState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -61,7 +64,7 @@ public final class ExtremeDeathAndExplosionGameTests {
     private static void mimicRoll(ServerPlayer player,int roll){
         for(long seed=0;seed<10_000;seed++){
             player.getRandom().setSeed(seed);
-            if(player.getRandom().nextInt(4)==roll){player.getRandom().setSeed(seed);return;}
+            if(player.getRandom().nextInt(10)==roll){player.getRandom().setSeed(seed);return;}
         }
         throw new IllegalStateException("No deterministic player random seed for mimic roll "+roll);
     }
@@ -134,8 +137,47 @@ public final class ExtremeDeathAndExplosionGameTests {
     }
 
     @GameTest(template="gear_empty")
+    public static void playerDeathMimicIgnoresConfiguredUnlockAndOpeningGrace(GameTestHelper h){
+        var settingsBefore=IteConfig.effectiveSnapshot();boolean localSettings=settingsBefore==IteConfig.localSnapshot();
+        var ratesBefore=IteSpawnConfig.effectiveSnapshot();var weightsBefore=IteSpawnConfig.effectiveWeights();
+        boolean localSpawns=ratesBefore==IteSpawnConfig.localSnapshot()&&weightsBefore==IteSpawnConfig.localWeights();
+        try(var site=new SpawnBalanceGameTests.Site(h)){
+            {
+                var settings=new java.util.HashMap<>(settingsBefore);
+                settings.put("extreme_mob_spawn_limit_day",999);
+                IteConfig.receiveServerSnapshot(settings);
+                site.date(33,33,true);
+                h.assertFalse(SpawnPopulation.automaticAllowed(site.level,ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE)),
+                        "An ordinary automatic mimic still obeys the configured day 999 gate");
+                site.date(1,1,false);
+                h.assertTrue(ExtremeWorldState.graceActive(site.level),"The fixture is inside the real first-day grace period");
+                Mob ordinary=site.mob(ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE));
+                h.assertFalse(site.level.addFreshEntity(ordinary),"A mimic without the actual death-source marker cannot bypass opening grace");
+                String name="EarlyDeath"+UUID.randomUUID().toString().substring(0,5);
+                ServerPlayer player=new ServerPlayer(site.level.getServer(),site.level,new GameProfile(UUID.randomUUID(),name),ClientInformation.createDefault());
+                player.setPos(site.origin);
+                List<ItemEntity> incoming=new ArrayList<>(List.of(new ItemEntity(site.level,player.getX(),player.getY(),player.getZ(),new ItemStack(Items.DIAMOND,23))));
+                mimicRoll(player,0);ExtremeMobEvents.drops(new LivingDropsEvent(player,site.level.damageSources().generic(),incoming,false));
+                var mimics=site.level.getEntitiesOfClass(Mob.class,player.getBoundingBox().inflate(2),
+                        m->m instanceof ExtremeMob e&&e.extremeKind()==ExtremeKind.MIMIC_ZOMBIE&&name.equals(e.extremeMemory().mimicName));
+                h.assertTrue(mimics.size()==1&&incoming.isEmpty(),"A successful ten-percent death roll creates exactly one mimic on day one before day 999");
+                Mob mimic=mimics.getFirst();site.mobs.add(mimic);
+                h.assertTrue(SpawnPopulation.localCount(site.level,mimic.getBoundingBox().inflate(2))>=1,"A death substitute remains in population accounting");
+                List<ItemEntity> recovered=new ArrayList<>();PlayerMimicInventory.release(mimic,recovered);PlayerMimicInventory.release(mimic,recovered);
+                h.assertTrue(recovered.size()==1&&recovered.getFirst().getItem().getCount()==23,"The early death transfers the real drops once without duplication");
+                mimic.discard();SpawnPopulation.clearReservations(site.level);
+            }
+        }finally{
+            IteConfig.clearServerSnapshot();
+            if(!localSettings)IteConfig.receiveServerSnapshot(settingsBefore);
+            if(!localSpawns)IteSpawnConfig.receiveServerSnapshot(ratesBefore,weightsBefore);
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
     public static void unsuccessfulMimicRollLeavesTheOriginalPlayerDropsUntouched(GameTestHelper h){
-        for(int roll=1;roll<4;roll++){
+        for(int roll=1;roll<10;roll++){
             String name="DeathDrops"+UUID.randomUUID().toString().substring(0,5);
             ServerPlayer player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),name),ClientInformation.createDefault());
             player.setPos(h.absolutePos(new BlockPos(2,2,2)).getCenter());

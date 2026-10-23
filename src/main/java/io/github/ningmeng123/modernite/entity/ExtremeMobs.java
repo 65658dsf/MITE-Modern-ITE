@@ -111,6 +111,16 @@ public final class ExtremeMobs {
             default -> kind.weight;
         };
     }
+    /** Extend the reference candidate list without adding another scheduling pass or budget. */
+    static void addExtraSpawnEntries(MiteExtensions.SpawnContext context,BlockPos position,List<R196MobSpawning.Entry> entries){
+        RabidDogContent.addSpawnEntries(context,entries);
+        for(var kind:ExtremeKind.values()) {
+            if(IteReferenceSpawns.referenceIdentity(kind))continue;
+            int weight=spawnWeight(kind);
+            if(weight>0&&MobAbilities.maySpawn(kind,context.level(),position))
+                entries.add(new R196MobSpawning.Entry(type(kind),null,context.category(),weight,1,1,1,true));
+        }
+    }
     public static boolean isBoss(Mob mob){return mob instanceof ExtremeMob e&&e.extremeKind().boss();}
     public static class ZombieVariant extends Zombie implements ExtremeMob {
         private static final EntityDataAccessor<Byte> DATA_DOOR_GUARD=SynchedEntityData.defineId(ZombieVariant.class,EntityDataSerializers.BYTE);

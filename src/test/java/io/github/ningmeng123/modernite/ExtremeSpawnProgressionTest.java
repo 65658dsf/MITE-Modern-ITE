@@ -5,7 +5,7 @@ import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** ITE's complete-day floor is independent of the base mod's lord dates. @author NingMeng123 */
+/** Configurable ITE unlocks remain independent of base dates and later species floors. @author NingMeng123 */
 class ExtremeSpawnProgressionTest {
     @Test void everyIteIdentityWaitsUntilSixtyFourCompleteDays() {
         for(String id:new String[]{"modern_ite:zombie_lord","modern_ite:zombie_pigman_lord","modern_ite:zombie_elite_lord",
@@ -45,5 +45,22 @@ class ExtremeSpawnProgressionTest {
         assertEquals(96,ExtremeKind.SKELETON_LIGHTNING.firstDay);
         assertEquals(96,ExtremeKind.WITCH_LORD.firstDay);
         assertEquals(128,ExtremeKind.UNDYING_ZOMBIE_EMPEROR.firstDay);
+    }
+    @Test void configuredFloorCanMoveEarlierOrLaterWithoutACompiledSixtyFiveDayMinimum() {
+        for(String id:new String[]{"modern_ite:zombie_iron_bucket","modern_ite:run_creeper","modern_ite:rabid_dog"}) {
+            assertFalse(ExtremeSpawnProgression.unlocked(id,32,192,33));
+            assertTrue(ExtremeSpawnProgression.unlocked(id,33,192,33));
+            assertFalse(ExtremeSpawnProgression.unlocked(id,172,192,173));
+            assertTrue(ExtremeSpawnProgression.unlocked(id,173,192,173));
+        }
+        assertEquals(33,ExtremeKind.ZOMBIE_IRON_BUCKET.naturalFirstDay(33));
+        assertEquals(64,ExtremeKind.EXCHANGER.naturalFirstDay(33));
+        assertEquals(96,ExtremeKind.SKELETON_LIGHTNING.naturalFirstDay(33));
+        assertEquals(128,ExtremeKind.UNDYING_ZOMBIE_EMPEROR.naturalFirstDay(33));
+        assertEquals(173,ExtremeKind.UNDYING_ZOMBIE_EMPEROR.naturalFirstDay(173));
+        assertTrue(ExtremeSpawnProgression.unlocked("minecraft:zombie",1,192,173));
+        assertTrue(ExtremeSpawnProgression.unlocked("mite:bone_lord",33,192,173));
+        assertFalse(ExtremeSpawnProgression.unlocked("mite:ancient_bone_lord",191,192,1));
+        assertTrue(ExtremeSpawnProgression.unlocked("mite:ancient_bone_lord",192,192,173));
     }
 }

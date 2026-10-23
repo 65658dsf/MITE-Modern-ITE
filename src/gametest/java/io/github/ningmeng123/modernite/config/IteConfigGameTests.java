@@ -31,7 +31,7 @@ public final class IteConfigGameTests {
                 +"netherrack_damage netherrack_damage_limit_day crit_enchantment_chance_boost_per_lvl crit_enchantment_damage_boost_per_lvl "
                 +"emergency_cooldown_ emergency_cooldown_reduce_every_armor emergency_health_recover_amount conqueror_damage_boost_per_lvl "
                 +"beheading_chance_boost_per_lvl mob_spawner_speed_up_with_players mob_spawner_extra_delay_reduction enhance_limit skeleton_triple_shot compressed_skeleton "
-                +"reference_spawning mob_max_spawn_count_chunk_base mob_max_spawn_count_day_minimum mob_max_spawn_count_day_maximum local_hostile_limit blood_moon_local_hostile_limit hostile_spawn_groups blood_moon_hostile_spawn_groups hostile_spawn_attempts "
+                +"extreme_mob_spawn_limit_day natural_local_hostile_limit full_moon_natural_local_hostile_limit blood_moon_natural_local_hostile_limit deep_hostile_cap_multiplier hostile_spawn_interval_ticks deep_spawn_chance_percent surface_spawn_chance_percent blood_moon_spawn_chance_multiplier other_dimension_spawn_chance_multiplier mob_max_spawn_count_chunk_base mob_max_spawn_count_day_minimum mob_max_spawn_count_day_maximum local_hostile_limit blood_moon_local_hostile_limit hostile_spawn_groups blood_moon_hostile_spawn_groups hostile_spawn_attempts "
                 +"compressed_skeleton_crack_stand_time compressed_skeleton_expand_count skeleton_force_melee_attack "
                 +"bone_lord_and_longdead_change_weapon_chance bat_poison_attack zombie_pigman_use_bow zombie_pigman_boost_chance "
                 +"ghast_overworld_boost wolves_attack_players_with_meat can_boost_iron_golem annihilation_skeleton_despawn_time "
@@ -48,7 +48,7 @@ public final class IteConfigGameTests {
             h.assertTrue(option.path().getLast().equals(option.key()),"Config paths retain their old JSON leaf keys");
         }
         h.assertTrue(actual.equals(known)&&actual.equals(IteConfig.defaults().keySet()),"The schema exactly matches the audited implemented settings");
-        h.assertTrue(actual.size()==102,"All 102 selected extension settings are registered");
+        h.assertTrue(actual.size()==111,"All 111 selected extension settings are registered");
         for(String unsupported:Set.of("overworld_adamantite_ore","underworld_mantle_block_offset","copper_frequency_overworld","copper_chance_underworld"))
             h.assertTrue(!actual.contains(unsupported),"An unimplemented legacy effect is not exposed as a nonfunctional control: "+unsupported);
         h.succeed();
@@ -136,10 +136,9 @@ public final class IteConfigGameTests {
         boolean grace=io.github.ningmeng123.modernite.world.ExtremeWorldState.graceEnded(level);
         var before=IteConfig.localSnapshot();
         var changes=Map.<String,Object>ofEntries(
-                Map.entry("reference_spawning",false),
                 Map.entry("mob_max_spawn_count_chunk_base",20),Map.entry("mob_max_spawn_count_day_minimum",30),
                 Map.entry("mob_max_spawn_count_day_maximum",250),Map.entry("mob_max_spawn_count_increase_per_day",2D),
-                Map.entry("blood_moon_max_hostile_fraction",3D),Map.entry("local_hostile_limit",7),
+                Map.entry("blood_moon_max_hostile_fraction",3D),Map.entry("deep_hostile_cap_multiplier",2D),Map.entry("local_hostile_limit",7),
                 Map.entry("blood_moon_local_hostile_limit",9),Map.entry("hostile_spawn_groups",6),
                 Map.entry("blood_moon_hostile_spawn_groups",8),Map.entry("hostile_spawn_attempts",2));
         var policy=io.github.ningmeng123.mite.api.MiteExtensions.policy();
@@ -149,21 +148,21 @@ public final class IteConfigGameTests {
             changes.forEach((key,value)->IteConfig.setting(key).set(value));IteConfig.refresh();
             level.setDayTime(144*24000L);
             io.github.ningmeng123.modernite.world.ExtremeWorldState.restoreGraceEnded(level,true);
-            h.assertTrue(policy.monsterCap(level,false,256,0)==290&&policy.monsterCap(level,true,256,0)==290,
-                    "Live ordinary caps use the configured chunk base and capped date allowance with a shared height budget");
-            h.assertTrue(policy.localDensity(level,null,0)==7&&policy.spawnGroups(context,3)==6&&policy.spawnAttempts(context,null,4)==2,
-                    "The actual natural-spawn policy immediately reads refreshed density, groups and attempts");
+            h.assertTrue(policy.monsterCap(level,false,256,0)==270&&policy.monsterCap(level,true,256,0)==540,
+                    "Live ordinary caps use the configured chunk base and capped date allowance with independent deep and shallow budgets");
+            h.assertTrue(policy.spawnGroups(context,3)==6&&policy.spawnAttempts(context,null,4)==2,
+                    "The actual natural-spawn policy immediately reads refreshed groups and attempts");
             level.setDayTime(143*24000L);
-            h.assertTrue(policy.monsterCap(level,false,256,0)==870&&policy.localDensity(level,null,0)==9&&policy.spawnGroups(context,3)==8,
-                    "Blood dates multiply the final configured cap and use their own local density and groups");
+            h.assertTrue(policy.monsterCap(level,false,256,0)==310&&policy.monsterCap(level,true,256,0)==620&&policy.spawnGroups(context,3)==8,
+                    "Blood dates multiply only the chunk cap and use their own configured groups");
             IteConfig.setting("mob_max_spawn_count_day_maximum").set(0);IteConfig.refresh();
-            h.assertTrue(policy.monsterCap(level,false,256,0)==984,"Zero date maximum removes the ceiling rather than disabling growth");
+            h.assertTrue(policy.monsterCap(level,false,256,0)==348,"Zero date maximum removes the ceiling rather than disabling growth");
             IteConfig.setting("hostile_spawn_attempts").set(0);IteConfig.refresh();
             h.assertTrue(policy.spawnAttempts(context,null,4)==0,"Zero attempts stops the active spawning loop without removing monsters");
             level.setDayTime(1000);history.restoreProgress(1);
             io.github.ningmeng123.modernite.world.ExtremeWorldState.restoreGraceEnded(level,false);
             h.assertTrue(policy.monsterCap(level,false,256,0)==0&&policy.spawnGroups(context,3)==0,
-                    "Live custom population values cannot bypass the existing grace period");
+                    "Live editable population values cannot bypass the existing grace period");
         } finally {
             changes.keySet().forEach(key->IteConfig.setting(key).set(before.get(key)));IteConfig.refresh();
             level.setDayTime(time);history.restoreProgress(highest);history.setDirty(dirty);

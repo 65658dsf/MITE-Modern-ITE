@@ -53,33 +53,95 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public long bloodMoonCount(long day,long original) { return ExtremeCalendar.bloodCount(day); }
     @Override public boolean referenceSpawningSettings(boolean original) { return IteReferenceSpawns.enabled(); }
     @Override public boolean referenceHostileSpawning(ServerLevel level,boolean original) { return referenceSpawningSettings(original); }
+    @Override public boolean configurableHostileSpawningSettings() { return true; }
+    private static List<io.github.ningmeng123.modernite.config.IteConfig.Option> spawningOptions() {
+        var priority=List.of("extreme_mob_spawn_limit_day","natural_local_hostile_limit","full_moon_natural_local_hostile_limit",
+                "blood_moon_natural_local_hostile_limit","local_hostile_limit","blood_moon_local_hostile_limit",
+                "mob_max_spawn_count_chunk_base","mob_max_spawn_count_day_minimum","mob_max_spawn_count_day_maximum",
+                "mob_max_spawn_count_increase_per_day","blood_moon_max_hostile_fraction","deep_hostile_cap_multiplier");
+        return io.github.ningmeng123.modernite.config.IteConfig.options().stream().filter(option->option.path().contains("MobSpawning")
+                ||Set.of("mob_spawner_speed_up_with_players","mob_spawner_extra_delay_reduction","giant_zombie_spawn_zombie_cooldown").contains(option.key()))
+                .sorted(Comparator.comparingInt(option->priority.contains(option.key())?priority.indexOf(option.key()):priority.size())).toList();
+    }
+    @Override public List<MiteExtensions.SpawningControl> spawningControls() {
+        return spawningOptions().stream().map(option->new MiteExtensions.SpawningControl(option.key(),"modern_ite.config."+option.key(),
+                option.defaultValue(),option.minimum(),option.maximum())).toList();
+    }
+    @Override public Map<String,Object> spawningControlValues() {
+        var result=new LinkedHashMap<String,Object>();
+        spawningOptions().forEach(option->result.put(option.key(),io.github.ningmeng123.modernite.config.IteConfig.value(option.key())));
+        return Map.copyOf(result);
+    }
+    @Override public boolean saveSpawningControls(Map<String,Object> values) {
+        var options=spawningOptions();
+        if(values==null||!values.keySet().equals(spawningControlValues().keySet()))return false;
+        var validated=new LinkedHashMap<String,Object>();
+        for(var option:options) {
+            Object value=values.get(option.key());
+            if(option.defaultValue() instanceof Boolean) {if(!(value instanceof Boolean))return false;}
+            else if(!(value instanceof Number number)||!Double.isFinite(number.doubleValue())||number.doubleValue()<option.minimum()
+                    ||number.doubleValue()>option.maximum()||option.defaultValue() instanceof Integer&&number.doubleValue()!=Math.rint(number.doubleValue()))return false;
+            validated.put(option.key(),option.validated(value));
+        }
+        var before=spawningControlValues();
+        try {
+            validated.forEach((key,value)->io.github.ningmeng123.modernite.config.IteConfig.setting(key).set(value));
+            io.github.ningmeng123.modernite.config.IteConfig.SPEC.save();
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            io.github.ningmeng123.modernite.config.IteConfigSync.broadcast();
+            return true;
+        } catch(RuntimeException exception) {
+            before.forEach((key,value)->io.github.ningmeng123.modernite.config.IteConfig.setting(key).set(value));
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            throw exception;
+        }
+    }
+    @Override public MonsterSpawningSettings.Settings hostileSpawningSettings(MonsterSpawningSettings.Settings original) {
+        var values=new HashMap<>(original.values());
+        values.put(MonsterSpawningSettings.Option.HOSTILE_INTERVAL_TICKS.key(),io.github.ningmeng123.modernite.config.IteConfig.number("hostile_spawn_interval_ticks"));
+        values.put(MonsterSpawningSettings.Option.DEEP_CHANCE_PERCENT.key(),io.github.ningmeng123.modernite.config.IteConfig.number("deep_spawn_chance_percent"));
+        values.put(MonsterSpawningSettings.Option.SURFACE_CHANCE_PERCENT.key(),io.github.ningmeng123.modernite.config.IteConfig.number("surface_spawn_chance_percent"));
+        values.put(MonsterSpawningSettings.Option.BLOOD_CHANCE_MULTIPLIER.key(),io.github.ningmeng123.modernite.config.IteConfig.number("blood_moon_spawn_chance_multiplier"));
+        values.put(MonsterSpawningSettings.Option.DIMENSION_CHANCE_MULTIPLIER.key(),io.github.ningmeng123.modernite.config.IteConfig.number("other_dimension_spawn_chance_multiplier"));
+        return MonsterSpawningSettings.Settings.from(values);
+    }
     @Override public boolean independentHostileBudgets(ServerLevel level,boolean original) { return IteReferenceSpawns.enabled(); }
     public static int hostileCap(ServerLevel level,int chunks,boolean deep) {
-        if(IteReferenceSpawns.enabled())return ExtremeWorldState.graceActive(level)?0:
-                ExtremeCalendar.referenceCap(currentDay(level),chunks,blood(level),deep);
-        return ExtremeWorldState.graceActive(level)?0:ExtremeCalendar.cap(currentDay(level),chunks,blood(level),deep,
+        return ExtremeWorldState.graceActive(level)?0:ExtremeCalendar.configuredCap(currentDay(level),chunks,blood(level),deep,
                 io.github.ningmeng123.modernite.config.IteConfig.number("blood_moon_max_hostile_fraction"),
                 io.github.ningmeng123.modernite.config.IteConfig.number("mob_max_spawn_count_increase_per_day"),
                 io.github.ningmeng123.modernite.config.IteConfig.integer("mob_max_spawn_count_chunk_base"),
                 io.github.ningmeng123.modernite.config.IteConfig.integer("mob_max_spawn_count_day_minimum"),
-                io.github.ningmeng123.modernite.config.IteConfig.integer("mob_max_spawn_count_day_maximum"));
+                io.github.ningmeng123.modernite.config.IteConfig.integer("mob_max_spawn_count_day_maximum"),
+                io.github.ningmeng123.modernite.config.IteConfig.number("deep_hostile_cap_multiplier"));
     }
     @Override public int monsterCap(ServerLevel level,boolean deep,int chunks,int original) { return hostileCap(level,chunks,deep); }
     @Override public float hostilePassProbability(ServerLevel level,boolean deep,float original) { return ExtremeWorldState.graceActive(level)?0:original; }
     public static int localHostileLimit(ServerLevel level) {
         return io.github.ningmeng123.modernite.config.IteConfig.integer(blood(level)?"blood_moon_local_hostile_limit":"local_hostile_limit");
     }
-    @Override public int localDensity(ServerLevel level,Player player,int original) { return IteReferenceSpawns.enabled()?original:localHostileLimit(level); }
+    @Override public int localDensity(ServerLevel level,Player player,int original) {
+        int base=io.github.ningmeng123.modernite.config.IteConfig.integer("natural_local_hostile_limit");
+        var moon=LunarCalendar.state(level.getDayTime(),level.dimension()==Level.OVERWORLD);
+        int minimum=moon.bloodNight()?io.github.ningmeng123.modernite.config.IteConfig.integer("blood_moon_natural_local_hostile_limit"):
+                moon.night()&&moon.phase()==0?io.github.ningmeng123.modernite.config.IteConfig.integer("full_moon_natural_local_hostile_limit"):base;
+        int sourceY=player==null?64:R196SpawnRules.sourceY(player.getBlockY(),R196MobSpawning.underworld(level));
+        double density=level.dimension()==Level.OVERWORLD?Math.max(base*(1D+(64-Math.max(0,sourceY))/32D),minimum):base;
+        // The original value includes the base scheduler's stronghold proximity factor.
+        int source=R196SpawnRules.referenceDensity(sourceY,level.dimension()==Level.OVERWORLD,!moon.night(),R196SpawnRules.moon(level.getDayTime(),level.dimension()==Level.OVERWORLD),0);
+        double stronghold=source>0?Math.clamp((double)original/source,1D,2D):1D;
+        return (int)Math.min(Integer.MAX_VALUE,Math.max(0D,density*stronghold));
+    }
     @Override public int spawnGroups(MiteExtensions.SpawnContext context,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
-        if(IteReferenceSpawns.enabled())return ExtremeWorldState.graceActive(context.level())?0:original;
         boolean blood=blood(context.level());
         return ExtremeWorldState.graceActive(context.level())?0:io.github.ningmeng123.modernite.config.IteConfig.integer(blood?"blood_moon_hostile_spawn_groups":"hostile_spawn_groups");
     }
     @Override public int spawnAttempts(MiteExtensions.SpawnContext context,EntityType<?> selected,int original) {
         if(context.category()!=R196SpawnRules.Category.MONSTER)return original;
-        if(IteReferenceSpawns.enabled())return ExtremeWorldState.graceActive(context.level())?0:original;
-        return ExtremeWorldState.graceActive(context.level())?0:io.github.ningmeng123.modernite.config.IteConfig.integer("hostile_spawn_attempts");
+        if(ExtremeWorldState.graceActive(context.level()))return 0;
+        int configured=io.github.ningmeng123.modernite.config.IteConfig.integer("hostile_spawn_attempts");
+        return original>4&&configured>0?(int)Math.min(Integer.MAX_VALUE,(long)configured*original/4):configured;
     }
     @Override public int spawnJitter(MiteExtensions.SpawnContext context,int original) { return !IteReferenceSpawns.enabled()&&context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?8:original; }
     @Override public int distantHostileSkipBound(MiteExtensions.SpawnContext context,int original) { return !IteReferenceSpawns.enabled()&&context.category()==R196SpawnRules.Category.MONSTER&&blood(context.level())?4:original; }
@@ -118,7 +180,8 @@ public final class ExtremeRules implements MiteExtensions.Policy {
         var result=new ArrayList<>(original);ExtremeMobs.addSpawnEntries(context,pos,result);
         long day=io.github.ningmeng123.mite.worldgen.BloodMoonInvasion.highestDay(context.level());
         result.removeIf(entry->!ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(entry.type()).toString(),day,
-                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"))
+                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"),
+                io.github.ningmeng123.modernite.config.IteConfig.integer("extreme_mob_spawn_limit_day"))
                 ||ExtremeWorldState.graceActive(context.level())&&io.github.ningmeng123.modernite.entity.SpawnPopulation.hostile(entry.type()));
         return List.copyOf(result);
     }

@@ -26,4 +26,13 @@ final class IteReferenceCalendarTest {
         assertEquals(Integer.MAX_VALUE,ExtremeCalendar.referenceCap(Long.MAX_VALUE,Integer.MAX_VALUE,true,true));
         assertEquals(56,ExtremeCalendar.referenceCap(Long.MIN_VALUE,289,false,false));
     }
+    @Test void editableDefaultsMatchTheSourceForEveryHeightAndSmallChunkRounding() {
+        for(int chunks:new int[]{0,1,13,128,256,289,578})for(boolean blood:new boolean[]{false,true})for(boolean deep:new boolean[]{false,true})
+            assertEquals(ExtremeCalendar.referenceCap(32,chunks,blood,deep),
+                    ExtremeCalendar.configuredCap(32,chunks,blood,deep,2D,1D,50,0,0,2D));
+        assertEquals(95,ExtremeCalendar.configuredCap(32,256,true,false,3D,2D,20,0,35,2D));
+        assertEquals(190,ExtremeCalendar.configuredCap(32,256,true,true,3D,2D,20,0,35,2D));
+        assertEquals(0,ExtremeCalendar.configuredCap(32,256,true,true,3D,2D,20,0,35,0D));
+        assertEquals(Integer.MAX_VALUE,ExtremeCalendar.configuredCap(Long.MAX_VALUE,Integer.MAX_VALUE,true,true,1000D,10000D,1000000,0,0,1000D));
+    }
 }

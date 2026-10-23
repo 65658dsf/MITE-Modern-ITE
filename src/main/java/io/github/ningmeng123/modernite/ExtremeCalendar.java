@@ -12,6 +12,16 @@ public final class ExtremeCalendar {
                 +Math.min(Integer.MAX_VALUE,Math.max(0L,day)));
         return (int)Math.min(Integer.MAX_VALUE,allowance*(deep?2L:1L));
     }
+    /** Editable ITE 2.0.28 defaults: scale the chunk term for blood dates, then add date growth. */
+    public static int configuredCap(long day,int chunks,boolean blood,boolean deep,double bloodMultiplier,double growthPerDay,
+                                    int chunkBase,int dayMinimum,int dayMaximum,double deepMultiplier) {
+        if(chunks<=0)return 0;
+        double growth=Math.max(0L,day)*growthPerDay;
+        if(dayMaximum>0)growth=Math.min(growth,Math.max(dayMinimum,dayMaximum));
+        double base=Math.floor((double)chunkBase*chunks/256D*(blood?bloodMultiplier:1D));
+        double value=(base+Math.max(dayMinimum,growth))*(deep?deepMultiplier:1D);
+        return (int)Math.min(Integer.MAX_VALUE,Math.max(0D,Math.floor(value)));
+    }
     public static int cap(long day,int chunks,boolean blood,boolean deep) {
         return cap(day,chunks,blood,deep,3D,1D);
     }

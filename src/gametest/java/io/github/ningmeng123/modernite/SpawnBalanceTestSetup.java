@@ -9,7 +9,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
-/** Legacy fixtures explicitly use custom rules; reference suites select and restore their own preset. @author NingMeng123 */
+/** A single source-rules baseline is shared by the isolated GameTest server. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class SpawnBalanceTestSetup {
     private SpawnBalanceTestSetup() {}
@@ -17,7 +17,7 @@ public final class SpawnBalanceTestSetup {
     public static void prepare(ServerStartedEvent event) {
         if(!(event.getServer() instanceof GameTestServer))return;
         // Export/reload fixtures restore this isolated file. Keep its disk and live baselines identical.
-        IteConfig.setting("reference_spawning").set(false);IteConfig.SPEC.save();IteConfig.refresh();
+        IteConfig.SPEC.save();IteConfig.refresh();
         var level=event.getServer().overworld();
         level.setDayTime(64*24_000L+18_000L);
         BloodMoonInvasionData.get(level).restoreProgress(65);

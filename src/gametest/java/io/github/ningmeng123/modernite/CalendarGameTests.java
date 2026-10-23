@@ -34,24 +34,24 @@ public final class CalendarGameTests {
         try {
             level.setDayTime(31*24000L);
             ExtremeWorldState.restoreGraceEnded(level,true);
-            h.assertFalse(policy.independentHostileBudgets(level,true),"Deep and shallow monsters consume the same budget");
-            h.assertTrue(policy.monsterCap(level,false,289,0)==636&&policy.monsterCap(level,true,289,0)==636,"First blood moon retains date growth without a deep multiplier");
-            h.assertTrue(policy.spawnGroups(context,3)==4&&policy.spawnAttempts(context,null,4)==4&&policy.spawnJitter(context,6)==8,"Blood moon uses four groups of four attempts");
+            h.assertTrue(policy.independentHostileBudgets(level,false),"Deep and shallow monsters retain independent source budgets");
+            h.assertTrue(policy.monsterCap(level,false,289,0)==144&&policy.monsterCap(level,true,289,0)==288,"The first blood date doubles the chunk contribution and preserves the ordinary day addition before deep scaling");
+            h.assertTrue(policy.spawnGroups(context,3)==3&&policy.spawnAttempts(context,null,4)==4&&policy.spawnJitter(context,6)==6,"Blood dates default to the source three groups of four attempts and original scatter");
             var phase=net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(net.minecraft.resources.ResourceLocation.parse("mite:phase_spider"));
-            h.assertTrue(policy.spawnAttempts(context,phase,4)==4,"Phase spiders use the same four attempts as other monsters");
-            h.assertTrue(policy.distantHostileSkipBound(context,2)==4,"Blood moon distant candidate rejection is one in four");
+            h.assertTrue(policy.spawnAttempts(context,phase,64)==64,"Phase spiders retain the source sixty-four-attempt special case");
+            h.assertTrue(policy.distantHostileSkipBound(context,2)==2,"Distant candidate rejection retains the source one-in-two draw on a blood date");
             level.setDayTime(127*24000L);
-            h.assertTrue(policy.monsterCap(level,false,289,0)==240&&policy.spawnGroups(context,3)==3&&policy.distantHostileSkipBound(context,2)==2,"Blue moon day 128 does not inherit blood spawning");
+            h.assertTrue(policy.monsterCap(level,false,289,0)==184&&policy.monsterCap(level,true,289,0)==368&&policy.spawnGroups(context,3)==3&&policy.distantHostileSkipBound(context,2)==2,"Blue moon day 128 uses the ordinary independent source budgets");
             level.setDayTime(143*24000L);
-            h.assertTrue(policy.monsterCap(level,false,289,0)==768&&policy.spawnAttempts(context,null,4)==4,"Day 144 retains the accelerated calendar and shared cap growth");
+            h.assertTrue(policy.monsterCap(level,false,289,0)==256&&policy.monsterCap(level,true,289,0)==512&&policy.spawnAttempts(context,null,4)==4,"Day 144 retains the accelerated blood calendar with the source default cap formula");
             var nether=h.getLevel().getServer().getLevel(net.minecraft.world.level.Level.NETHER);
             var netherContext=new MiteExtensions.SpawnContext(nether,io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER,false);
             int groups=policy.spawnGroups(netherContext,3);
             h.assertTrue(groups==3&&policy.spawnAttempts(netherContext,null,4)==4,"Nether uses three ordinary groups of four attempts");
             level.setDayTime(32*24000L);
-            h.assertTrue(policy.spawnGroups(context,3)==3&&policy.localDensity(level,null,0)==32,"Ordinary days keep three groups and a thirty-two monster local limit");
-            level.setDayTime(31*24000L);
-            h.assertTrue(policy.localDensity(level,null,0)==48,"Blood moon local limit is forty-eight");
+            h.assertTrue(policy.spawnGroups(context,3)==3&&policy.localDensity(level,null,8)==8&&ExtremeRules.localHostileLimit(level)==32,"Ordinary natural crowd protection and the preserved support limit keep separate defaults");
+            level.setDayTime(31*24000L+18000L);
+            h.assertTrue(policy.localDensity(level,null,12)==12&&ExtremeRules.localHostileLimit(level)==48,"Blood-night natural crowd protection is twelve while the preserved support limit remains forty-eight");
         } finally {level.setDayTime(old);history.restoreProgress(highest);history.setDirty(dirty);ExtremeWorldState.restoreGraceEnded(level,grace);}
         h.succeed();
     }

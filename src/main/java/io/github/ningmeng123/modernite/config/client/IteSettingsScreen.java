@@ -38,7 +38,7 @@ public final class IteSettingsScreen extends Screen {
                 .bounds((width - buttonWidth) / 2, y, buttonWidth, 20).build());
         spawns.setTooltip(Tooltip.create(Component.translatable("modern_ite.config.monster_spawns.tooltip")));
         var rules = addRenderableWidget(Button.builder(Component.translatable("modern_ite.config.spawning_rules"),
-                ignored -> minecraft.setScreen(new IteSpawningSettingsScreen(this)))
+                ignored -> minecraft.setScreen(new io.github.ningmeng123.mite.client.config.MonsterSpawningRulesScreen(this)))
                 .bounds((width - buttonWidth) / 2, y + 24, buttonWidth, 20).build());
         rules.setTooltip(Tooltip.create(Component.translatable("modern_ite.config.spawning_rules.tooltip")));
         var edit = addRenderableWidget(Button.builder(Component.translatable("modern_ite.config.edit"),

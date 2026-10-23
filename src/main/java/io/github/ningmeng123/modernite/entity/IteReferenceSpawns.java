@@ -37,17 +37,22 @@ import static io.github.ningmeng123.modernite.entity.ExtremeKind.*;
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class IteReferenceSpawns {
     private IteReferenceSpawns() {}
-    public static boolean enabled() {return IteConfig.bool("reference_spawning");}
+    /** Source behavior is the sole rule set; its numeric controls are always editable. */
+    public static boolean enabled() {return true;}
+    public static boolean referenceIdentity(ExtremeKind kind) {
+        return kind==ZOMBIE_LORD||kind==ZOMBIE_PIGMAN_LORD||kind==ANNIHILATION_SKELETON||kind==WANDERING_WITCH;
+    }
 
     /** Automatic scripted encounters keep their identities; natural-only restrictions are below. */
     public static boolean automaticAllowed(ServerLevel level,EntityType<?> type) {
         boolean over=level.dimension()==Level.OVERWORLD;
         int day=MobAbilities.day(level);
         if(BuiltInRegistries.ENTITY_TYPE.getKey(type).getNamespace().equals(ModernIte.MOD_ID)
-                &&day<ExtremeSpawnProgression.FIRST_ITE_DAY)return false;
-        if(type==MiteMobs.type(MobKind.ANCIENT_BONE_LORD))return !over||day>=192;
-        if(type==EntityType.GHAST)return !over||day>=128;
-        if(type==ExtremeMobs.type(WANDERING_WITCH))return day>64;
+                &&day<IteConfig.integer("extreme_mob_spawn_limit_day"))return false;
+        if(type==MiteMobs.type(MobKind.BONE_LORD))return day>=33;
+        if(type==MiteMobs.type(MobKind.ANCIENT_BONE_LORD))return day>=IteConfig.integer("ancient_bone_lord_spawn_limit_day");
+        if(type==EntityType.GHAST)return !over||day>=IteConfig.integer("ghast_spawn_limit_day");
+        if(type==ExtremeMobs.type(WANDERING_WITCH))return day>=IteConfig.integer("wandering_witch_spawn_limit_day_"+(over?"overworld":"other"));
         return type!=ExtremeMobs.type(ANNIHILATION_SKELETON)||!over||day>32;
     }
 
@@ -67,6 +72,8 @@ public final class IteReferenceSpawns {
             if(type==ExtremeMobs.type(ZOMBIE_PIGMAN_LORD))return nether;
             if(type==ExtremeMobs.type(ANNIHILATION_SKELETON))return over||under||nether;
             if(type==ExtremeMobs.type(WANDERING_WITCH))return over||under;
+            if(type==RabidDogContent.RABID_DOG.get())return RabidDogContent.maySpawn(level);
+            for(var kind:ExtremeKind.values())if(type==ExtremeMobs.type(kind))return MobAbilities.customNaturalAllowed(kind,level);
             return false;
         }
         if(type==EntityType.GIANT)return over&&blood(level,false)&&noneWithin(level,type,pos,96,false,candidate);
@@ -112,6 +119,7 @@ public final class IteReferenceSpawns {
             add(entries,ExtremeMobs.type(ZOMBIE_PIGMAN_LORD),null,frequency(ZOMBIE_PIGMAN_LORD),1,1,1);
             add(entries,ExtremeMobs.type(ANNIHILATION_SKELETON),null,frequency(ANNIHILATION_SKELETON),1,1,1);
             add(entries,MiteMobs.type(MobKind.HELLHOUND),MobKind.HELLHOUND.sourceClass(),20,1,2,8);
+            ExtremeMobs.addExtraSpawnEntries(context,pos,entries);
             return;
         }
         if(biome==9||biome==14||biome==15||surface.unwrapKey().map(key->key.location().getPath().equals("mushroom_fields")).orElse(false))return;
@@ -124,6 +132,7 @@ public final class IteReferenceSpawns {
             addIteBase(entries);
             add(entries,MiteMobs.type(MobKind.HELLHOUND),MobKind.HELLHOUND.sourceClass(),15,1,2,8);
         }
+        ExtremeMobs.addExtraSpawnEntries(context,pos,entries);
     }
     private static void addIteBase(List<R196MobSpawning.Entry> entries) {
         for(var kind:List.of(ZOMBIE_LORD,ANNIHILATION_SKELETON,WANDERING_WITCH))
@@ -158,9 +167,9 @@ public final class IteReferenceSpawns {
         if(kind==ANNIHILATION_SKELETON) {
             if(server.dimension()!=Level.OVERWORLD)return true;
             return MobAbilities.day(server)>32&&mob.getRandom().nextInt(4)==0&&server.getNearestPlayer(mob,24)==null
-                    &&R196SpawnQualification.mobLight(mob,level,reason==MobSpawnType.SPAWNER);
+                    &&(IteConfig.bool("annihilation_skeleton_spawn_in_light")||R196SpawnQualification.mobLight(mob,level,reason==MobSpawnType.SPAWNER));
         }
-        if(kind==WANDERING_WITCH&&mob.getRandom().nextInt(100)>=(MobAbilities.underground(server)?50:33))return false;
+        if(kind==WANDERING_WITCH&&mob.getRandom().nextInt(100)>=IteConfig.integer("wandering_witch_spawn_chance_"+(MobAbilities.underground(server)?"underworld":"overworld")))return false;
         return R196SpawnQualification.mobLight(mob,level,reason==MobSpawnType.SPAWNER);
     }
 }

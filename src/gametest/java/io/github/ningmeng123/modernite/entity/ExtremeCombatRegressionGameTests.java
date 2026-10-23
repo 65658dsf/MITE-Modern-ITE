@@ -13,7 +13,6 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -310,21 +309,40 @@ public final class ExtremeCombatRegressionGameTests {
         h.assertTrue(!lord.isNoAi()&&!lord.isInvulnerable(),"Legacy frozen or invulnerable lord state is repaired once");h.succeed();
     }
     @GameTest(template="gear_empty")
-    public static void witchesSummonBothHostileBatsAndSpidersWithABoundedEntourage(GameTestHelper h){
-        var witch=EntityType.WITCH.create(h.getLevel());witch.moveTo(h.absolutePos(new BlockPos(1,2,1)).getCenter());
-        var player=h.makeMockPlayer(GameType.SURVIVAL);player.moveTo(witch.position().add(3,0,0));witch.setTarget(player);
-        try(var preset=new IteReferenceSpawnGameTests.Preset(false)){
-            for(int wave=0;wave<3;wave++){
-                witch.getPersistentData().putLong("modern_ite:witch_next_summon",0);MobAbilities.witchSupportTick(witch);
+    public static void ordinaryWitchCallsOneToThreeHostileWolvesOnceAfterPlayerInjury(GameTestHelper h){
+        var before=new java.util.LinkedHashMap<BlockPos,net.minecraft.world.level.block.state.BlockState>();
+        try(var site=new SpawnBalanceGameTests.Site(h)){
+            site.date(65,65,true);var player=site.player(0);
+            BlockPos center=player.blockPosition();
+            for(BlockPos point:BlockPos.betweenClosed(center.offset(-18,-1,-18),center.offset(18,3,18))){
+                before.put(point.immutable(),site.level.getBlockState(point));
+                site.level.setBlock(point,point.getY()==center.getY()-1?net.minecraft.world.level.block.Blocks.GRASS_BLOCK.defaultBlockState():net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),2);
             }
-            var minions=h.getLevel().getEntitiesOfClass(Mob.class,witch.getBoundingBox().inflate(48),m->m.getPersistentData().hasUUID("modern_ite:summoner")&&m.getPersistentData().getUUID("modern_ite:summoner").equals(witch.getUUID()));
-            h.assertTrue(!minions.isEmpty()&&minions.size()<=8,"Repeated summon waves never exceed eight nearby minions");
-            h.assertTrue(minions.stream().anyMatch(m->m instanceof io.github.ningmeng123.mite.entity.R196Bat)&&minions.stream().anyMatch(m->m instanceof Spider),"The entourage includes vampire bats and spiders");
-            h.assertTrue(minions.stream().allMatch(m->m.getTarget()==player),"Every summoned attacker immediately targets the player");
-        }finally{
-            for(var entity:h.getLevel().getAllEntities())if(entity instanceof Mob minion&&minion.getPersistentData().hasUUID(SpawnPopulation.SUMMONER)
-                    &&minion.getPersistentData().getUUID(SpawnPopulation.SUMMONER).equals(witch.getUUID()))minion.discard();
-        }
+            Mob navigationControl=site.mob(EntityType.WOLF);navigationControl.moveTo(center.getX()+10.5,center.getY()+.005,center.getZ()+.5,0,0);
+            h.assertTrue(io.github.ningmeng123.mite.worldgen.R196SpawnQualification.qualifies(navigationControl,site.level,false,false),
+                    "The wolf control passes the real source grass, volume and collision qualification");
+            navigationControl.setOnGround(true);
+            var path=navigationControl.getNavigation().createPath(player,0);
+            h.assertTrue(path!=null&&path.getEndNode()!=null&&path.getEndNode().asBlockPos().distSqr(player.blockPosition())<=2,
+                    "The supported wolf control can navigate to the actual player on the fixture platform");
+            Mob witch=site.mob(EntityType.WITCH);witch.getRandom().setSeed(196);
+            witch.moveTo(site.origin.add(20,0,0));witch.setTarget(player);
+            h.assertTrue(site.level.addFreshEntity(witch),"The real witch joins on an isolated walkable platform");
+            for(int i=0;i<200;i++)MobAbilities.witchSupportTick(witch);
+            h.assertTrue(SpawnPopulation.supportCount(witch)==0,"A target without player injury cannot start a passive summon loop");
+            witch.setLastHurtByMob(player);MobAbilities.witchSupportTick(witch);
+            for(int i=0;i<59;i++)MobAbilities.witchSupportTick(witch);
+            h.assertTrue(SpawnPopulation.supportCount(witch)==0,"No wolf appears before the sixty-tick retaliation countdown ends");
+            MobAbilities.witchSupportTick(witch);
+            var wolves=site.level.getEntitiesOfClass(Mob.class,witch.getBoundingBox().inflate(48),m->m.getPersistentData().hasUUID(SpawnPopulation.SUMMONER)
+                    &&m.getPersistentData().getUUID(SpawnPopulation.SUMMONER).equals(witch.getUUID()));
+            site.mobs.addAll(wolves);
+            h.assertTrue(wolves.size()>=1&&wolves.size()<=3,"The successful source call creates one to three followers: "+wolves.size());
+            h.assertTrue(wolves.stream().allMatch(m->m.getType()==EntityType.WOLF&&m.getTarget()==player
+                    &&m.getPersistentData().getBoolean("mite_wolf_witch_ally_032")),"Every follower is an allied hostile wolf targeting the attacker");
+            for(int i=0;i<400;i++)MobAbilities.witchSupportTick(witch);
+            h.assertTrue(SpawnPopulation.supportCount(witch)==wolves.size(),"Continued targeting and the old injury cannot repeat a successful call");
+        }finally{before.forEach((pos,state)->h.getLevel().setBlock(pos,state,2));}
         h.succeed();
     }
     @GameTest(template="gear_empty")

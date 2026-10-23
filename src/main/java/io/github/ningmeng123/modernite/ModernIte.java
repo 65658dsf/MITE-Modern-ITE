@@ -17,6 +17,7 @@ import io.github.ningmeng123.modernite.world.ConfigurableNetherOre;
 public final class ModernIte {
     public static final String MOD_ID = "modern_ite";
     public ModernIte(IEventBus bus, ModContainer container) {
+        IteConfig.migrateLegacySpawningConfig(net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get().resolve("modern_ite-common.toml"));
         container.registerConfig(ModConfig.Type.COMMON, IteConfig.SPEC);
         if (FMLEnvironment.dist == Dist.CLIENT) io.github.ningmeng123.modernite.config.client.IteConfigClient.register(container);
         ConfigurableNetherOre.register(bus);

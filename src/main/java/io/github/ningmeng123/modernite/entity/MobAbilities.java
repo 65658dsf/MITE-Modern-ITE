@@ -47,7 +47,11 @@ public final class MobAbilities {
     public static boolean underground(Level level){return level.dimension().location().getPath().equals("underworld");}
     public static boolean maySpawn(ExtremeKind k,ServerLevel l,BlockPos pos){
         if(IteReferenceSpawns.enabled())return SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))&&IteReferenceSpawns.naturalAllowed(l,ExtremeMobs.type(k),pos);
-        if(!SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))||(k!=WANDERING_WITCH&&day(l)<k.firstDay)||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
+        return SpawnPopulation.automaticAllowed(l,ExtremeMobs.type(k))&&customNaturalAllowed(k,l);
+    }
+    /** Shared habitats for the extra Extreme species in either natural-spawn preset. */
+    static boolean customNaturalAllowed(ExtremeKind k,ServerLevel l){
+        if((k!=WANDERING_WITCH&&day(l)<k.naturalFirstDay(IteConfig.integer("extreme_mob_spawn_limit_day")))||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
         boolean nether=l.dimension()==Level.NETHER,under=underground(l),over=l.dimension()==Level.OVERWORLD;
         if(k==ANNIHILATION_SKELETON&&over&&day(l)<33)return false;
         if(!over&&!nether&&!under)return false;
@@ -64,7 +68,7 @@ public final class MobAbilities {
         if(reason==MobSpawnType.SPAWN_EGG||reason==MobSpawnType.COMMAND||SpawnPopulation.explicit(mob))return true;
         if(!(mob.level() instanceof ServerLevel server)||!SpawnPopulation.automaticAllowed(server,mob.getType()))return false;
         if(reason==MobSpawnType.MOB_SUMMONED||reason==MobSpawnType.CONVERSION)return true;
-        if(IteReferenceSpawns.enabled())return level instanceof ServerLevelAccessor access
+        if(IteReferenceSpawns.enabled()&&IteReferenceSpawns.referenceIdentity(k))return level instanceof ServerLevelAccessor access
                 &&IteReferenceSpawns.variantQualification(mob,k,access,reason);
         if(!maySpawn(k,server,mob.blockPosition())||level.getDifficulty()==Difficulty.PEACEFUL)return false;
         if(k==DARK_IRON_GOLEM&&mob.getRandom().nextInt(9)>=7)return false;
@@ -384,6 +388,8 @@ public final class MobAbilities {
                 if(io.github.ningmeng123.mite.worldgen.R196SpawnQualification.qualifies(wolf,level,false,false)){placed=true;break;}
             }
             if(!placed){wolf.discard();continue;}
+            // Placement has confirmed a supporting surface; a fresh entity has not ticked its ground state yet.
+            wolf.setOnGround(true);
             var path=wolf.getNavigation().createPath(target,0);
             if(path==null||path.getEndNode()==null||path.getEndNode().asBlockPos().distSqr(target.blockPosition())>2){wolf.discard();continue;}
             if(!SpawnPopulation.reserveSupport(wolf,witch,false)){wolf.discard();continue;}

@@ -8,7 +8,11 @@ public final class ExtremeSpawnProgression {
     private ExtremeSpawnProgression() {}
 
     public static int firstDay(String id) {
-        if (id.startsWith("modern_ite:")) return FIRST_ITE_DAY;
+        return firstDay(id,FIRST_ITE_DAY);
+    }
+
+    public static int firstDay(String id,int iteDay) {
+        if (id.startsWith("modern_ite:")) return Math.max(1,iteDay);
         return switch (id) {
             case "mite:bone_lord", "mite:ancient_bone_lord" -> 33;
             default -> 0;
@@ -19,6 +23,9 @@ public final class ExtremeSpawnProgression {
         return highestDay >= firstDay(id);
     }
     public static boolean unlocked(String id,long highestDay,int ancientBoneLordDay) {
-        return highestDay >= (id.equals("mite:ancient_bone_lord")?ancientBoneLordDay:firstDay(id));
+        return unlocked(id,highestDay,ancientBoneLordDay,FIRST_ITE_DAY);
+    }
+    public static boolean unlocked(String id,long highestDay,int ancientBoneLordDay,int iteDay) {
+        return highestDay >= (id.equals("mite:ancient_bone_lord")?ancientBoneLordDay:firstDay(id,iteDay));
     }
 }
