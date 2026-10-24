@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.entity.*;
+import io.github.ningmeng123.mite.enchantment.SourceEnchantmentCombat;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
@@ -222,11 +223,17 @@ public final class ExtremeNativeMobs {
                 ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,day/32*10,pig.getRandom().nextInt(Math.max((day-128)/96,1))));
             }
         }
-        if(m instanceof AbstractSkeleton skeleton&&!BloodMoonEquipment.spawnEquipmentLocked(m)&&IteConfig.number("Entities.bone_lord_and_longdead_change_weapon_chance")>0&&m.tickCount%10==0&&m.getTarget()!=null&&m.getSensing().hasLineOfSight(m.getTarget())&&m.getPersistentData().getBoolean("modern_ite:switch_weapon")){
+        if(m instanceof AbstractSkeleton skeleton&&!BloodMoonEquipment.spawnEquipmentLocked(m)&&!SourceEnchantmentCombat.disarmed(m)&&IteConfig.number("Entities.bone_lord_and_longdead_change_weapon_chance")>0&&m.tickCount%10==0&&m.getTarget()!=null&&m.getSensing().hasLineOfSight(m.getTarget())&&m.getPersistentData().getBoolean("modern_ite:switch_weapon")){
             boolean bow=m.getMainHandItem().getItem() instanceof BowItem;
             if(bow&&m.distanceToSqr(m.getTarget())<25||!bow&&m.distanceToSqr(m.getTarget())>36){
                 var data=m.getPersistentData();ItemStack spare=ItemStack.parseOptional(m.registryAccess(),data.getCompound("modern_ite:stocked_weapon"));
-                if(!spare.isEmpty()){var held=m.getMainHandItem();m.setItemSlot(EquipmentSlot.MAINHAND,spare);data.put("modern_ite:stocked_weapon",held.save(m.registryAccess()));skeleton.reassessWeaponGoal();}
+                if(!spare.isEmpty()){
+                    // A broken weapon leaves a valid empty hand; encode it before changing equipment.
+                    var stored=m.getMainHandItem().saveOptional(m.registryAccess());
+                    m.setItemSlot(EquipmentSlot.MAINHAND,spare);
+                    data.put("modern_ite:stocked_weapon",stored);
+                    skeleton.reassessWeaponGoal();
+                }
             }
         }
         int giantCooldown=IteConfig.integer("Entities.giant_zombie_spawn_zombie_cooldown");
