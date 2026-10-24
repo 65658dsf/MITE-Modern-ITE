@@ -37,6 +37,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -88,6 +89,34 @@ public final class IteSpawnConfigGameTests {
     }
 
     @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
+    public static void fractionalWeightsReachTheRealLotteryWithoutRounding(GameTestHelper h) {
+        try (Settings settings = new Settings(h)) {
+            String id = "modern_ite:zombie_chaos";
+            var type = ExtremeMobs.type(ExtremeKind.ZOMBIE_CHAOS);
+            settings.baseWeights(List.of()); settings.base(List.of());
+            settings.weights(List.of(id + "=2.5")); settings.ite(List.of(id + "=0.5"));
+            h.assertTrue(IteSpawnConfig.weight(id,25D) == 2.5D && ConfiguredMonsterSpawns.weight(type,25D) == 2.5D,
+                    "Both ITE's snapshot and the actual shared runtime retain the exact2.5 candidate weight");
+            var entry = new R196MobSpawning.Entry(type,null,R196SpawnRules.Category.MONSTER,25,1,1,1,true);
+            var other = new R196MobSpawning.Entry(EntityType.ZOMBIE,null,R196SpawnRules.Category.MONSTER,10,1,1,1,true);
+            // Effective weights1.25 and10 put the first candidate's boundary at1/9.
+            // 0.10 fails if2.5 is truncated;0.12 fails if it is rounded upward.
+            h.assertTrue(ConfiguredMonsterSpawns.choose(h.getLevel(),settings.position,R196SpawnRules.Category.MONSTER,
+                    List.of(entry,other),exactDraw(.10D),false) == entry,
+                    "The real candidate lottery keeps the fractional tail below its independently known1/9 boundary");
+            h.assertTrue(ConfiguredMonsterSpawns.choose(h.getLevel(),settings.position,R196SpawnRules.Category.MONSTER,
+                    List.of(entry,other),exactDraw(.12D),false) == other,
+                    "The real candidate lottery does not round2.5 upward above its independently known1/9 boundary");
+            settings.ite(List.of()); settings.weights(List.of(id + "=0.125"));
+            h.assertTrue(ConfiguredMonsterSpawns.choose(h.getLevel(),settings.position,R196SpawnRules.Category.MONSTER,
+                    List.of(entry),exactDraw(.75D),false) == entry,"A positive sub-unit weight is not truncated to a disabled candidate");
+            settings.weights(List.of());
+            h.assertTrue(ConfiguredMonsterSpawns.weight(type,25D) == 25D,"An omitted decimal override restores the native candidate weight");
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty", batch="ite_natural_spawn_config")
     public static void absoluteWeightsRoundTripAndDisconnectRestoresBothLocalMaps(GameTestHelper h) {
         var previousRates = IteSpawnConfig.effectiveSnapshot();
         var previousWeights = IteSpawnConfig.effectiveWeights();
@@ -96,22 +125,31 @@ public final class IteSpawnConfigGameTests {
         boolean scalarWasLocal = previousScalar == IteConfig.localSnapshot();
         var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), h.getLevel().registryAccess());
         try {
-            var weights = Map.of("modern_ite:zombie_chaos", 0D, "modern_ite:future_monster", 1000000D);
+            var weights = Map.of("modern_ite:zombie_chaos", 0D, "modern_ite:future_monster", 2.5D,
+                    "modern_ite:small", .125D, "modern_ite:limit", 1000000D);
             var rates = Map.of("modern_ite:zombie_chaos", .375D);
             IteConfigSync.CODEC.encode(buffer, new IteConfigSync(IteConfig.localSnapshot(), rates, weights));
             var decoded = IteConfigSync.CODEC.decode(buffer);
             h.assertTrue(decoded.naturalSpawnWeights().equals(weights) && decoded.naturalSpawnRates().equals(rates),
-                    "The actual expanded codec preserves independent weight and multiplier maps");
+                    "The actual expanded codec preserves exact decimal weights, unknown IDs, zero and the inclusive upper bound");
             IteSpawnConfig.receiveServerSnapshot(decoded.naturalSpawnRates(), decoded.naturalSpawnWeights());
             h.assertTrue(IteSpawnConfig.weight("modern_ite:zombie_chaos", 25D) == 0D && IteSpawnConfig.multiplier("modern_ite:zombie_chaos") == .375D,
                     "Server weights and rates become effective together without replacing local preferences");
+            h.assertTrue(IteSpawnConfig.weight("modern_ite:future_monster",25D) == 2.5D
+                            && IteSpawnConfig.weight("modern_ite:small",25D) == .125D,
+                    "The effective authoritative snapshot retains both ordinary and sub-unit decimal weights");
             h.assertTrue(immutable(IteSpawnConfig.effectiveWeights()), "Published absolute weights are immutable");
             IteConfig.clearServerSnapshot();
             h.assertTrue(IteSpawnConfig.effectiveWeights() == IteSpawnConfig.localWeights(), "Logout clears authoritative weights together with rates");
             h.assertTrue(new IteConfigSync(IteConfig.localSnapshot(), rates).naturalSpawnWeights().isEmpty(), "Legacy two-argument snapshots inherit native weights");
-            h.assertTrue(IteSpawnConfig.validatedWeights(Map.of("minecraft:zombie", 5D, LORD, .5D,
-                    "modern_ite:bad", Double.NaN, "modern_ite:large", 1000001D, "modern_ite:future_monster", 1000000D))
-                    .equals(Map.of("modern_ite:future_monster", 1000000D)), "Foreign, fractional, nonfinite and out-of-range weights cannot enter snapshots");
+            h.assertTrue(IteSpawnConfig.validatedWeights(Map.of("minecraft:zombie",5D,LORD,.5D,
+                    "modern_ite:nan",Double.NaN,"modern_ite:positive_infinity",Double.POSITIVE_INFINITY,
+                    "modern_ite:negative_infinity",Double.NEGATIVE_INFINITY,"modern_ite:negative",-.25D,
+                    "modern_ite:large",1000000.25D,"modern_ite:future_monster",1000000D,
+                    "modern_ite:decimal",2.5D,"modern_ite:zero",0D))
+                    .equals(Map.of(LORD,.5D,"modern_ite:future_monster",1000000D,"modern_ite:decimal",2.5D,"modern_ite:zero",0D)),
+                    "Only finite in-range ITE decimal and integer weights enter snapshots; foreign IDs and invalid numbers are rejected");
+            h.assertTrue(IteSpawnConfig.validatedWeights(Map.of(LORD,2)).equals(Map.of(LORD,2D)),"Legacy integer-valued weights remain compatible");
         } finally {
             buffer.release();
             if(wasLocal)IteSpawnConfig.clearServerSnapshot();
@@ -128,15 +166,20 @@ public final class IteSpawnConfigGameTests {
         byte[] sourceBytes = Files.readAllBytes(source);
         try(Settings settings = new Settings(h)) {
             var rates = Map.of("modern_ite:zombie_chaos", .25D);
-            var weights = Map.of("modern_ite:zombie_chaos", 75D, "modern_ite:future_monster", 1000000D);
+            var weights = Map.of("modern_ite:zombie_chaos",2.5D,"modern_ite:future_monster",.125D,"modern_ite:limit",1000000D);
             IteSpawnConfig.save(rates,weights);
             h.assertTrue(IteSpawnConfig.localSnapshot().equals(rates) && IteSpawnConfig.localWeights().equals(weights),
                     "Saving publishes both edited maps before the next natural-spawn selection");
-            boolean rejected = false;
-            try { IteSpawnConfig.save(Map.of(LORD,0D),Map.of(LORD,.5D)); }
-            catch(IllegalArgumentException expected) { rejected=true; }
-            h.assertTrue(rejected && IteSpawnConfig.localSnapshot().equals(rates) && IteSpawnConfig.localWeights().equals(weights),
-                    "An invalid weight rejects the entire draft before changing either setting");
+            for(double invalid : new double[]{Double.NaN,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY,-.25D,1000000.25D}) {
+                boolean rejected = false;
+                try { IteSpawnConfig.save(Map.of(LORD,0D),Map.of(LORD,invalid)); }
+                catch(IllegalArgumentException expected) { rejected=true; }
+                h.assertTrue(rejected && IteSpawnConfig.localSnapshot().equals(rates) && IteSpawnConfig.localWeights().equals(weights),
+                        "An invalid weight rejects the entire draft before changing either setting: "+invalid);
+            }
+            var saved = new com.electronwill.nightconfig.toml.TomlParser().parse(Files.readString(source));
+            h.assertTrue(saved.get(IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.getPath()).equals(IteSpawnConfig.NATURAL_SPAWN_WEIGHTS.get()),
+                    "The actual saved TOML retains2.5 and0.125 exactly before export or synchronization");
             IteSpawnConfig.save(Map.of("modern_ite:zombie_chaos",.5D));
             h.assertTrue(IteSpawnConfig.localWeights().equals(weights), "The legacy rate-only save preserves explicit weights");
             var bundle = io.github.ningmeng123.mite.config.GameplayConfigExport.exportBundle(Files.createTempDirectory("ite-absolute-weight-export-"));
@@ -263,6 +306,13 @@ public final class IteSpawnConfigGameTests {
             h.assertTrue(!egg.isSpawnCancelled() && h.getLevel().addFreshEntity(egg), "Zero natural rate still permits an explicit spawn egg");
         }
         h.succeed();
+    }
+
+    private static RandomSource exactDraw(double draw) {
+        return new LegacyRandomSource(0L) {
+            @Override public double nextDouble() { return draw; }
+            @Override public int nextInt(int bound) { throw new AssertionError("Edited decimal weights must use the double lottery rather than an integer draw"); }
+        };
     }
 
     private static boolean immutable(Map<String, Double> values) {

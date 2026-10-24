@@ -24,7 +24,7 @@ public final class IteSpawnConfig {
                 .defineListAllowEmpty(List.of("GameMechanics", "MobSpawning", "natural_spawn_rates"),
                         () -> BundledGameplayDefaults.list("GameMechanics.MobSpawning.natural_spawn_rates"), () -> "modern_ite:zombie_chaos=1.0", IteSpawnConfig::validEntry);
         NATURAL_SPAWN_WEIGHTS = builder.translation("modern_ite.config.natural_spawn_weights")
-                .comment("Absolute natural candidate weights: modern_ite:entity=integer (0..1000000). Omitted IDs retain each pool's native weight. The selected weight is multiplied by natural_spawn_rates. 0 removes the whole candidate family, including its conditional replacements. Does not create natural entries or bypass legacy zero spawn_frequency, dates, dimensions or population limits. Unknown ITE IDs are retained.")
+                .comment("Absolute natural candidate weights: modern_ite:entity=weight (finite decimals allowed, 0..1000000). Omitted IDs retain each pool's native weight. The selected weight is multiplied by natural_spawn_rates. 0 removes the whole candidate family, including its conditional replacements. Does not create natural entries or bypass legacy zero spawn_frequency, dates, dimensions or population limits. Unknown ITE IDs are retained.")
                 .defineListAllowEmpty(List.of("GameMechanics", "MobSpawning", "natural_spawn_weights"),
                         () -> BundledGameplayDefaults.list("GameMechanics.MobSpawning.natural_spawn_weights"), () -> "modern_ite:zombie_chaos=50", IteSpawnConfig::validWeightEntry);
         local = new Snapshot(defaultRates(), defaultWeights());
@@ -58,8 +58,7 @@ public final class IteSpawnConfig {
     public static Map<String, Double> validatedWeights(Map<String, ?> input) { return validated(input, true); }
 
     private static boolean validValue(double value, boolean weight) {
-        return Double.isFinite(value) && value >= 0D && value <= (weight ? 1000000D : 100D)
-                && (!weight || value == Math.rint(value));
+        return Double.isFinite(value) && value >= 0D && value <= (weight ? 1000000D : 100D);
     }
 
     private static Map<String, Double> validated(Map<String, ?> input, boolean weight) {

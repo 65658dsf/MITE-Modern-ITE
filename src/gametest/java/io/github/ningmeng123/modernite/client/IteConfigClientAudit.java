@@ -184,16 +184,29 @@ public final class IteConfigClientAudit {
             check(spawnEntries.stream().anyMatch(entry -> entry.type() == io.github.ningmeng123.modernite.entity.RabidDogContent.RABID_DOG.get()
                             && entry.baseWeights().equals(List.of(5))), "The registered rabid dog must expose its real weight 5");
             findEdit(spawns,"mite.config.monster_spawn_search").setValue("modern_ite:zombie_chaos");
-            findEdit(spawns,"mite.config.monster_spawn_weight").setValue("80");
+            findEdit(spawns,"mite.config.monster_spawn_weight").setValue("2.5");
+            var invalidWeights = MonsterSpawnSettingsScreen.class.getDeclaredField("invalidWeights");
+            invalidWeights.setAccessible(true);
+            check(((java.util.Set<?>)invalidWeights.get(spawns)).isEmpty(),"A finite2.5 weight must not be marked invalid or rendered as a rejected draft");
+            check(findButton(spawns,"mite.config.save").active,"A finite decimal weight must leave native saving enabled");
             capture(mc,spawns,width,height,"ite-natural-spawn-weight-edited",-1,-1);bounds(spawns);
             press(spawns,"mite.config.save");
             check(mc.screen == home,"Saving the single weight editor must restore ITE settings");
-            check(IteSpawnConfig.localWeights().get("modern_ite:zombie_chaos")==80D
+            check(IteSpawnConfig.localWeights().get("modern_ite:zombie_chaos")==2.5D
                             && !IteSpawnConfig.localSnapshot().containsKey("modern_ite:zombie_chaos"),
-                    "Writing weight 80 must publish 80 and remove that entity's legacy multiplier");
-            check(io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns.weight(ExtremeMobs.type(ExtremeKind.ZOMBIE_CHAOS),25D)==80D
+                    "Writing weight2.5 must publish exactly2.5 and remove that entity's legacy multiplier");
+            check(io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns.weight(ExtremeMobs.type(ExtremeKind.ZOMBIE_CHAOS),25D)==2.5D
                             && io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns.multiplier(ExtremeMobs.type(ExtremeKind.ZOMBIE_CHAOS))==1D,
                     "The actual runtime must read the written weight directly with no hidden legacy multiplier");
+            press(home,"modern_ite.config.monster_spawns");
+            Screen reopened = mc.screen;
+            findEdit(reopened,"mite.config.monster_spawn_search").setValue("modern_ite:zombie_chaos");
+            check(findEdit(reopened,"mite.config.monster_spawn_weight").getValue().equals("2.5"),
+                    "Reopening the actual native editor must display the saved decimal2.5 without rounding");
+            check(((java.util.Set<?>)invalidWeights.get(reopened)).isEmpty() && findButton(reopened,"mite.config.save").active,
+                    "The saved decimal remains a valid editable draft after a complete screen round trip");
+            reopened.onClose();
+            check(mc.screen == home,"Closing the reopened weight editor restores the actual ITE settings parent");
             auditSpawningRules(mc, home, width, height);
             press(home, "modern_ite.config.values");
             check(mc.screen instanceof IteConfigValuesScreen, "The values button must open the effective settings browser");
@@ -214,6 +227,7 @@ public final class IteConfigClientAudit {
         report.addProperty("effective_values_search_verified", true);
         report.addProperty("ite_registry_spawn_browser_and_native_weights_verified", true);
         report.addProperty("ite_single_weight_editor_clears_edited_legacy_multiplier",true);
+        report.addProperty("ite_fractional_spawn_weight_editor_accepts_saves_and_reopens_exact_value",true);
         report.addProperty("ite_spawning_rules_paging_validation_drafts_and_save_verified", true);
         report.addProperty("mite_spawning_rules_entry_paging_validation_drafts_and_save_verified", true);
         report.addProperty("minimum_and_large_widget_bounds_verified", true);
@@ -285,7 +299,9 @@ public final class IteConfigClientAudit {
         selectOreDimension(ores, R196OreRules.Dimension.OVERWORLD);
         check(findEdit(ores, "mite.config.ore_multiplier").getValue().equals("0.5"), "A half-rate surface draft survives switching dimension");
         press(ores, "mite.config.reset");
-        check(findEdit(ores, "mite.config.ore_multiplier").getValue().equals("1"), "The ore reset button restores the multiplier to one");
+        checkDouble(Double.parseDouble(findEdit(ores,"mite.config.ore_multiplier").getValue()),
+                MiteConfig.factoryOreMultiplier(R196OreRules.Kind.COPPER,R196OreRules.Dimension.OVERWORLD,false),
+                "The ore reset button restores the current bundled surface copper multiplier");
         findEdit(ores, "mite.config.ore_multiplier").setValue("NaN");
         selectOreDimension(ores, R196OreRules.Dimension.UNDERWORLD);
         check(!findButton(ores, "mite.config.save").active, "An invalid hidden dimension must disable the joint save button");
@@ -323,7 +339,7 @@ public final class IteConfigClientAudit {
         report.addProperty("ore_multiplier_ui_clicked", true);
         report.addProperty("ore_zero_half_double_drafts_survived_dimension_switches", true);
         report.addProperty("ore_invalid_hidden_draft_blocked_save", true);
-        report.addProperty("ore_reset_restores_one", true);
+        report.addProperty("ore_reset_restores_bundled_default", true);
         report.addProperty("ore_both_dimension_drafts_saved", true);
         report.addProperty("ore_advanced_settings_preserved", true);
         report.addProperty("ore_height_drafts_validated_and_saved", true);
@@ -352,10 +368,18 @@ public final class IteConfigClientAudit {
         }
     }
 
-    private static void selectOreDimension(Screen screen, R196OreRules.Dimension dimension) {
-        Button button = findButton(screen, "mite.config.ore_dimension." + dimension.name().toLowerCase(java.util.Locale.ROOT));
+    private static void selectOreDimension(Screen screen, R196OreRules.Dimension dimension) throws ReflectiveOperationException {
+        check(screen instanceof OreGenerationSettingsScreen && (dimension == R196OreRules.Dimension.OVERWORLD
+                || dimension == R196OreRules.Dimension.UNDERWORLD),"The ore selector targets an actual supported dimension tab");
+        String target = dimension == R196OreRules.Dimension.OVERWORLD ? "overworld" : "underworld";
+        String opposite = dimension == R196OreRules.Dimension.OVERWORLD ? "underworld" : "overworld";
+        var targetField = OreGenerationSettingsScreen.class.getDeclaredField(target);
+        var oppositeField = OreGenerationSettingsScreen.class.getDeclaredField(opposite);
+        targetField.setAccessible(true); oppositeField.setAccessible(true);
+        Button button = (Button)targetField.get(screen), other = (Button)oppositeField.get(screen);
+        check(widgets(screen).contains(button) && widgets(screen).contains(other),"Both dimension selectors are the actual attached native buttons");
         if (button.active) button.onPress();
-        check(!button.active, "The selected ore dimension must be visibly marked");
+        check(!button.active && other.active,"The real button click marks the requested ore dimension selected and keeps the opposite tab available");
     }
 
     private static void auditSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {
@@ -383,8 +407,8 @@ public final class IteConfigClientAudit {
             check(findEdit(rules,"modern_ite.config."+key).active,"The ITE default natural cap is directly editable");
             findEdit(rules,"modern_ite.config."+key).setValue("-1");
             check(!findButton(rules,"mite.config.save").active,"Negative cap blocks saving");
-            press(rules,">");bounds(rules);
-            check(!findButton(rules,"mite.config.save").active,"Invalid drafts remain blocking on other pages");
+            auditSpawningDraftNavigation(rules,width,height,"ite-cap");
+            check(!findButton(rules,"mite.config.save").active,"Invalid drafts remain blocking after the actual available page navigation");
             showIteSpawningField(rules,key);
             check(findEdit(rules,"modern_ite.config."+key).getValue().equals("-1"),"Paging preserves the invalid cap draft");
             findEdit(rules,"modern_ite.config."+key).setValue(Integer.toString(edited));
@@ -438,6 +462,35 @@ public final class IteConfigClientAudit {
         }
     }
 
+    private static void auditSpawningDraftNavigation(Screen rules,int width,int height,String context) throws ReflectiveOperationException {
+        var pageField = MonsterSpawningRulesScreen.class.getDeclaredField("page");
+        var countField = MonsterSpawningRulesScreen.class.getDeclaredField("pageCount");
+        pageField.setAccessible(true); countField.setAccessible(true);
+        int before = pageField.getInt(rules), count = countField.getInt(rules);
+        var next = findButton(rules,">"); var previous = findButton(rules,"<");
+        check(count >= 1 && before >= 0 && before < count,"The real spawning page and page count are valid");
+        check(next.active == (before + 1 < count) && previous.active == (before > 0),
+                "The native paging arrows exactly reflect the current page boundaries");
+        if (height <= 240) check(count > 1,"The small-window audit must exercise real pagination rather than skip its draft-preservation check");
+        String navigation;
+        int expected;
+        if (next.active) {
+            press(rules,">"); expected = before + 1; navigation = "next";
+        } else if (previous.active) {
+            press(rules,"<"); expected = before - 1; navigation = "previous_from_last_page";
+        } else {
+            check(count == 1 && before == 0,"Both arrows are disabled only when the whole editor fits on one page");
+            expected = before; navigation = "single_page_no_navigation";
+        }
+        check(pageField.getInt(rules) == expected,"The actual screen moves by exactly one page, or stays put for a verified single-page layout");
+        bounds(rules);
+        if (!report.has("spawning_draft_navigation")) report.add("spawning_draft_navigation",new JsonArray());
+        JsonObject result = new JsonObject(); result.addProperty("context",context);
+        result.addProperty("width",width); result.addProperty("height",height);
+        result.addProperty("page_count",count); result.addProperty("from_page",before); result.addProperty("to_page",expected);
+        result.addProperty("navigation",navigation); report.getAsJsonArray("spawning_draft_navigation").add(result);
+    }
+
     private static void auditBaseSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {
         check(originalBaseValues.keySet().containsAll(MiteConfig.SPAWNING_CONTROLS.values()),
                 "The final restoration must include every MITE spawning setting");
@@ -458,8 +511,8 @@ public final class IteConfigClientAudit {
             check(interval.active,"The unified ITE interval is directly editable from the MITE entry");
             interval.setValue("0");
             check(!findButton(rules,"mite.config.save").active,"A zero interval disables saving");
-            press(rules,">");bounds(rules);
-            check(!findButton(rules,"mite.config.save").active,"The invalid interval remains blocking on another page");
+            auditSpawningDraftNavigation(rules,width,height,"mite-entry-ite-interval");
+            check(!findButton(rules,"mite.config.save").active,"The invalid interval remains blocking after the actual available page navigation");
             showIteSpawningField(rules,key);
             check(findEdit(rules,"modern_ite.config."+key).getValue().equals("0"),"Pagination preserves the invalid interval draft");
             findEdit(rules,"modern_ite.config."+key).setValue(Integer.toString(edited));
