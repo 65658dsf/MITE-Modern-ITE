@@ -130,6 +130,7 @@ public final class ExtremeMobRenderers {
                     if(kind==ExtremeKind.RUN_CREEPER||kind==ExtremeKind.PHASE_CREEPER||kind==ExtremeKind.CHAOS_CREEPER)
                         this.model=new VariantCreeperModel(context.bakeLayer(kind==ExtremeKind.RUN_CREEPER?RUN_CREEPER:kind==ExtremeKind.PHASE_CREEPER?PHASE_CREEPER:CHAOS_CREEPER),kind);
                     if(kind==ExtremeKind.PHASE_CREEPER)addLayer(new SourceGlowLayer<Creeper,CreeperModel<Creeper>>(this,creeper->texture("phase_creeper_glow")));
+                    if(kind==ExtremeKind.BLACK_INFERNAL_CREEPER)addLayer(new SourceGlowLayer<Creeper,CreeperModel<Creeper>>(this,creeper->texture("black_infernal_creeper_glow")));
                     if(kind==ExtremeKind.CHAOS_CREEPER)addLayer(new ChaosArrowLayer(this));
                     if(kind==ExtremeKind.INVISIBLE_CREEPER||kind==ExtremeKind.INVISIBLE_REVERSED_CREEPER)this.model=new CreeperModel<Creeper>(context.bakeLayer(ModelLayers.CREEPER)){
                         @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,0x0DFFFFFF);}

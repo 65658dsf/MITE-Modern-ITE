@@ -60,6 +60,13 @@ public final class ExtremeMobParticles {
                 case PHASE_CREEPER -> {
                     if (clock % 5 == 0) point(living, ParticleTypes.PORTAL, .5, 1, .015);
                 }
+                case BLACK_INFERNAL_CREEPER -> {
+                    if (clock % 3 == 0) {
+                        point(living, ParticleTypes.LARGE_SMOKE, .5, .2, .025);
+                        point(living, ParticleTypes.SMOKE, .45, 1, .035);
+                        point(living, ParticleTypes.SMOKE, .35, 1.65, .025);
+                    }
+                }
                 default -> {}
             }
         }

@@ -12,6 +12,7 @@ public final class ExtremeSpawnProgression {
     }
 
     public static int firstDay(String id,int iteDay) {
+        if (id.equals("modern_ite:dragon_zombie")||id.equals("modern_ite:skeleton_elite_lord")) return Math.max(33,iteDay);
         if (id.startsWith("modern_ite:")) return Math.max(1,iteDay);
         return switch (id) {
             case "mite:bone_lord", "mite:ancient_bone_lord" -> 33;

@@ -48,7 +48,8 @@ public final class IteReferenceSpawns {
         boolean over=level.dimension()==Level.OVERWORLD;
         int day=MobAbilities.day(level);
         if(BuiltInRegistries.ENTITY_TYPE.getKey(type).getNamespace().equals(ModernIte.MOD_ID)
-                &&day<IteConfig.integer("extreme_mob_spawn_limit_day"))return false;
+                &&day<ExtremeSpawnProgression.firstDay(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),
+                        IteConfig.integer("extreme_mob_spawn_limit_day")))return false;
         if(type==MiteMobs.type(MobKind.BONE_LORD))return day>=33;
         if(type==MiteMobs.type(MobKind.ANCIENT_BONE_LORD))return day>=IteConfig.integer("ancient_bone_lord_spawn_limit_day");
         if(type==EntityType.GHAST)return !over||day>=IteConfig.integer("ghast_spawn_limit_day");

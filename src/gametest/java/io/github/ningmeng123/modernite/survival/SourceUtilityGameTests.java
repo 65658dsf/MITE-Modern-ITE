@@ -34,17 +34,17 @@ public final class SourceUtilityGameTests {
     private SourceUtilityGameTests() {}
 
     @GameTest(template="gear_empty")
-    public static void aClosePlayerSpeedsTheActualSpawnerWithoutChangingItsActivationRadius(GameTestHelper h) {
+    public static void aClosePlayerPreservesTheFixedBlockSpawnerCountdownAndActivationRadius(GameTestHelper h) {
         try(Session session=new Session(h)) {
             var level=h.getLevel();BlockPos pos=h.absolutePos(new BlockPos(2,2,2));level.setBlockAndUpdate(pos,Blocks.SPAWNER.defaultBlockState());
             var spawner=((SpawnerBlockEntity)level.getBlockEntity(pos)).getSpawner();var tag=new CompoundTag();
             tag.putShort("Delay",(short)30);tag.putShort("SpawnRange",(short)4);tag.putShort("RequiredPlayerRange",(short)16);spawner.load(level,pos,tag);
             session.player.moveTo(Vec3.atCenterOf(pos).add(1,1,0));spawner.serverTick(level,pos);
-            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==27,"A close player advances the real native countdown by three");
+            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==29,"A close player advances the fixed block-spawner countdown by one");
             session.player.moveTo(Vec3.atCenterOf(pos).add(12,0,0));spawner.serverTick(level,pos);
-            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==26,"A player inside normal activation but outside the source close box only advances one");
+            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==28,"A player inside normal activation but outside the source close box only advances one");
             session.player.moveTo(Vec3.atCenterOf(pos).add(40,0,0));spawner.serverTick(level,pos);
-            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==26,"The bonus cannot activate a spawner without a player in its native activation range");
+            h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==28,"A player beyond normal activation cannot activate the spawner");
         }h.succeed();
     }
 
@@ -66,7 +66,7 @@ public final class SourceUtilityGameTests {
                 h.assertTrue(spawner.save(new CompoundTag()).getShort("Delay")==29,"A close player now advances only the native one tick");
                 IteConfig.setting("mob_spawner_speed_up_with_players").set(true);IteConfig.refresh();spawner.serverTick(level,pos);
                 int actual=spawner.save(new CompoundTag()).getShort("Delay");
-                h.assertTrue(actual==26,"Refreshing the setting restores the existing three-tick countdown; actual delay="+actual);
+                h.assertTrue(actual==28,"Enabling the legacy setting cannot accelerate an ordinary block spawner; actual delay="+actual);
             }finally{IteConfig.setting("mob_spawner_speed_up_with_players").set(previous);IteConfig.refresh();}
             h.succeed();
         });

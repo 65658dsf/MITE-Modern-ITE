@@ -251,7 +251,7 @@ public final class ExtremeMobEvents {
         if(state.extremeKind()!=BLACK_INFERNAL_CREEPER||mob.getPersistentData().getBoolean("modern_ite:processing_blast"))return;
         event.setCanceled(true);mob.getPersistentData().putBoolean("modern_ite:processing_blast",true);
         float scale=MobSplitting.isChild(mob)?.5F:1F;
-        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new R196ExplosionCalculator(mob,34.375F*scale),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),37.5F*scale,false,Level.ExplosionInteraction.MOB);}
+        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new R196ExplosionCalculator(mob,68.75F*scale),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),75F*scale,false,Level.ExplosionInteraction.MOB);}
         finally{mob.getPersistentData().remove("modern_ite:processing_blast");}
     }
     private static boolean invisibleCreeper(ExtremeKind kind){return kind==INVISIBLE_CREEPER||kind==INVISIBLE_REVERSED_CREEPER;}

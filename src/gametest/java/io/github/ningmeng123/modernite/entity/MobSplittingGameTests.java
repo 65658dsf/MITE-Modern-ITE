@@ -70,7 +70,7 @@ public final class MobSplittingGameTests {
     public static void everyCreeperFamilySplitsIntoSixToEightSameTypeMiniatures(GameTestHelper h) {
         try (Fixture fixture=new Fixture(h)) {
             List<EntityType<?>> types=new ArrayList<>(List.of(EntityType.CREEPER,MiteMobs.type(MobKind.INFERNAL_CREEPER)));
-            for (var kind:ExtremeKind.values()) if (kind.family==ExtremeKind.Family.CREEPER) types.add(ExtremeMobs.type(kind));
+            for (var kind:ExtremeKind.values()) if (kind.family==ExtremeKind.Family.CREEPER&&kind!=ExtremeKind.BLACK_INFERNAL_CREEPER) types.add(ExtremeMobs.type(kind));
             for (var type:types) {
                 Mob parent=fixture.spawn(type);roll(parent,true);
                 parent.setHealth(0);parent.die(parent.damageSources().generic());

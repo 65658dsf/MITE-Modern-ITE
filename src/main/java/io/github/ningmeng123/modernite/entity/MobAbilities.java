@@ -310,7 +310,8 @@ public final class MobAbilities {
         if(k.family==Family.WITCH&&(!IteReferenceSpawns.enabled()||k!=WANDERING_WITCH))witchTick(mob,target,s);
         if(k==ZOMBIE_BOSS&&target instanceof Player&&mob.distanceToSqr(target)>2.4*2.4){
             if(s.cooldown>0)s.cooldown--;else if(mob.getHealth()<mob.getMaxHealth()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}
-            if(++s.summons%20==0&&target.getPersistentData().getLong("modern_ite:boss_melee_grace")<level.getGameTime()){
+            if(++s.summons%20==0&&Math.abs(target.getX()-mob.getX())<=5&&Math.abs(target.getZ()-mob.getZ())<=5
+                    &&target.getPersistentData().getLong("modern_ite:boss_melee_grace")<level.getGameTime()){
                 LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.setVisualOnly(true);bolt.moveTo(target.position());level.addFreshEntity(bolt);}target.hurt(mob.damageSources().magic(),10);
             }
             if(s.summons>=60){var nearby=level.getEntitiesOfClass(Player.class,mob.getBoundingBox().inflate(16),p->p.isAlive()&&!p.isCreative()&&!p.isSpectator());if(!nearby.isEmpty())mob.setTarget(nearby.get(mob.getRandom().nextInt(nearby.size())));s.summons=0;}

@@ -274,9 +274,22 @@ public final class SpawnBalanceGameTests {
 
     static final class Site implements AutoCloseable {
         final ServerLevel level;final Vec3 origin;final long time,highest;final boolean dirty,grace;
+        final IteReferenceSpawnGameTests.Settings legacyDates;
         final List<Mob> mobs=new ArrayList<>();final List<ServerPlayer> players=new ArrayList<>();
         final List<EmbeddedChannel> channels=new ArrayList<>();
         Site(GameTestHelper h) {
+            legacyDates=new IteReferenceSpawnGameTests.Settings();
+            legacyDates.set("extreme_mob_spawn_limit_day",65);
+            legacyDates.set("ancient_bone_lord_spawn_limit_day",192);
+            // These admission tests assert the historical reference profile; user factory defaults are verified separately.
+            java.util.Map.<String,Object>ofEntries(
+                    java.util.Map.entry("blood_moon_max_hostile_fraction",2D),java.util.Map.entry("mob_max_spawn_count_chunk_base",50),
+                    java.util.Map.entry("mob_max_spawn_count_day_minimum",0),java.util.Map.entry("mob_max_spawn_count_day_maximum",0),
+                    java.util.Map.entry("mob_max_spawn_count_increase_per_day",1D),java.util.Map.entry("deep_hostile_cap_multiplier",2D),
+                    java.util.Map.entry("natural_local_hostile_limit",8),java.util.Map.entry("full_moon_natural_local_hostile_limit",10),
+                    java.util.Map.entry("blood_moon_natural_local_hostile_limit",12),java.util.Map.entry("local_hostile_limit",32),
+                    java.util.Map.entry("blood_moon_local_hostile_limit",48))
+                    .forEach(legacyDates::set);
             level=h.getLevel();origin=h.absolutePos(new BlockPos(2,2,2)).getCenter().add(0,150,0);
             time=level.getServer().overworld().getDayTime();var history=BloodMoonInvasionData.get(level);
             highest=history.highestDay();dirty=history.isDirty();grace=ExtremeWorldState.graceEnded(level);
@@ -306,6 +319,7 @@ public final class SpawnBalanceGameTests {
             SpawnPopulation.clearReservations(level);level.getServer().overworld().setDayTime(time);
             var history=BloodMoonInvasionData.get(level);history.restoreProgress(highest);history.setDirty(dirty);
             ExtremeWorldState.restoreGraceEnded(level,grace);
+            legacyDates.close();
         }
     }
 }

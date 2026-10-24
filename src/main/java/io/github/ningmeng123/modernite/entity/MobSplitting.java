@@ -26,7 +26,7 @@ import net.neoforged.neoforge.event.entity.EntityEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
-/** Rare, single-generation miniature offspring of every creeper and skeleton identity. @author NingMeng123 */
+/** Rare, single-generation miniature offspring; black infernal creepers never split. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class MobSplitting {
     public static final String CHILD="modern_ite:split_child", HANDLED="modern_ite:split_handled";
@@ -88,6 +88,7 @@ public final class MobSplitting {
     public static void trySplit(Mob parent){
         if(!(parent.level() instanceof ServerLevel)||isChild(parent)
                 ||!(parent instanceof Creeper||parent instanceof AbstractSkeleton))return;
+        if(parent instanceof ExtremeMob extreme&&extreme.extremeKind()==ExtremeKind.BLACK_INFERNAL_CREEPER)return;
         var data=parent.getPersistentData();
         if(data.getBoolean(HANDLED))return;
         data.putBoolean(HANDLED,true);

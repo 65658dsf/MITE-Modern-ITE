@@ -28,6 +28,7 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BuiltinStructures;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -170,6 +171,9 @@ public final class ExtremeUnlockDayGameTests {
                 h.assertTrue(pool(f.site.level,f.pos).isEmpty(),"A swamp-hut pool does not gain Extra or ordinary ITE additions");
             }
             try(MushroomBiome ignored=new MushroomBiome(f.site.level,f.pos)) {
+                BlockPos surface=new BlockPos(f.pos.getX(),f.site.level.getHeight(Heightmap.Types.WORLD_SURFACE,f.pos.getX(),f.pos.getZ())-1,f.pos.getZ());
+                h.assertTrue(f.site.level.getBiome(surface).is(Biomes.MUSHROOM_FIELDS),
+                        "The real surface-biome query samples mushroom fields even when the randomized test site lies on a chunk boundary");
                 h.assertTrue(pool(f.site.level,f.pos).isEmpty(),"A mushroom constructor remains free of Extra additions");
             }
             ServerLevel nether=f.site.level.getServer().getLevel(Level.NETHER),end=f.site.level.getServer().getLevel(Level.END);
@@ -263,14 +267,19 @@ public final class ExtremeUnlockDayGameTests {
     }
 
     private static final class MushroomBiome implements AutoCloseable {
-        final LevelChunk chunk;final Map<BlockPos,Holder<Biome>> before=new LinkedHashMap<>();
+        final Map<LevelChunk,Map<BlockPos,Holder<Biome>>> before=new LinkedHashMap<>();
         MushroomBiome(ServerLevel level,BlockPos pos) {
-            chunk=level.getChunkAt(pos);int x=chunk.getPos().getMinBlockX()>>2,z=chunk.getPos().getMinBlockZ()>>2;
-            for(int qx=x;qx<x+4;qx++)for(int qz=z;qz<z+4;qz++)for(int qy=level.getMinBuildHeight()>>2;qy<(level.getMaxBuildHeight()>>2);qy++)
-                before.put(new BlockPos(qx,qy,qz),chunk.getNoiseBiome(qx,qy,qz));
             var mushroom=level.registryAccess().registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.MUSHROOM_FIELDS);
-            chunk.fillBiomesFromNoise((qx,qy,qz,sampler)->mushroom,null);
+            int centerX=pos.getX()>>4,centerZ=pos.getZ()>>4;
+            // BiomeManager's Voronoi sampling can choose a neighboring chunk at the random test-grid boundary.
+            for(int cx=centerX-1;cx<=centerX+1;cx++)for(int cz=centerZ-1;cz<=centerZ+1;cz++) {
+                LevelChunk chunk=level.getChunk(cx,cz);var samples=new LinkedHashMap<BlockPos,Holder<Biome>>();
+                int x=chunk.getPos().getMinBlockX()>>2,z=chunk.getPos().getMinBlockZ()>>2;
+                for(int qx=x;qx<x+4;qx++)for(int qz=z;qz<z+4;qz++)for(int qy=level.getMinBuildHeight()>>2;qy<(level.getMaxBuildHeight()>>2);qy++)
+                    samples.put(new BlockPos(qx,qy,qz),chunk.getNoiseBiome(qx,qy,qz));
+                before.put(chunk,samples);chunk.fillBiomesFromNoise((qx,qy,qz,sampler)->mushroom,null);
+            }
         }
-        @Override public void close() {chunk.fillBiomesFromNoise((qx,qy,qz,sampler)->before.get(new BlockPos(qx,qy,qz)),null);}
+        @Override public void close() {before.forEach((chunk,samples)->chunk.fillBiomesFromNoise((qx,qy,qz,sampler)->samples.get(new BlockPos(qx,qy,qz)),null));}
     }
 }

@@ -161,6 +161,8 @@ public final class ExtremeRules implements MiteExtensions.Policy {
         return IteSpawnConfig.owns(id)?IteSpawnConfig.weight(id,original):original;
     }
     @Override public double monsterSpawnWeightMultiplier(MiteExtensions.SpawnContext context,BlockPos pos,EntityType<?> type,double original) {
+        // A species balance factor is independent of the player's saved natural-spawn preset.
+        if(type==ExtremeMobs.type(ExtremeKind.DRAGON_ZOMBIE))return original*.5D;
         if(type!=EntityType.ZOMBIFIED_PIGLIN||!naturalPigmanReplacementAllowed(context.level()))return original;
         double parent=ConfiguredMonsterSpawns.multiplier(type);
         double lord=ConfiguredMonsterSpawns.multiplier(ExtremeMobs.type(ExtremeKind.ZOMBIE_PIGMAN_LORD));

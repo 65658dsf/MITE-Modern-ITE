@@ -63,4 +63,14 @@ class ExtremeSpawnProgressionTest {
         assertFalse(ExtremeSpawnProgression.unlocked("mite:ancient_bone_lord",191,192,1));
         assertTrue(ExtremeSpawnProgression.unlocked("mite:ancient_bone_lord",192,192,173));
     }
+    @Test void tyrantsAndDragonZombiesAlwaysWaitForThirtyTwoCompleteDays() {
+        for(var kind:new ExtremeKind[]{ExtremeKind.SKELETON_ELITE_LORD,ExtremeKind.DRAGON_ZOMBIE}) {
+            String id="modern_ite:"+kind.id();
+            assertEquals(33,kind.naturalFirstDay(3));
+            assertEquals(33,ExtremeSpawnProgression.firstDay(id,3));
+            assertFalse(ExtremeSpawnProgression.unlocked(id,32,33,3));
+            assertTrue(ExtremeSpawnProgression.unlocked(id,33,33,3));
+            assertEquals(96,ExtremeSpawnProgression.firstDay(id,96));
+        }
+    }
 }
