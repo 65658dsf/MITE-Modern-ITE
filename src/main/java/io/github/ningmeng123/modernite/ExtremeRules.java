@@ -38,6 +38,15 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public float creeperExplosionRadius(net.minecraft.world.entity.monster.Creeper creeper,float original) { return io.github.ningmeng123.modernite.entity.IteMobSettingsRules.creeperExplosionRadius(creeper,original); }
     @Override public void villagerOffers(net.minecraft.world.entity.npc.Villager villager,net.minecraft.world.item.trading.MerchantOffers offers) { io.github.ningmeng123.modernite.entity.IteMobSettingsRules.villagerOffers(villager,offers); }
     @Override public boolean mobDefense(Mob mob,boolean original) { return original && io.github.ningmeng123.modernite.config.IteConfig.bool("mob_defense"); }
+    @Override public boolean earlyEquipmentArcher(Mob mob,boolean original) {
+        if(!(mob instanceof io.github.ningmeng123.modernite.entity.ExtremeMob extreme))return original;
+        return switch(extreme.extremeKind()) {
+            case MIRROR_SKELETON,SKELETON_FAST_ARROW,SKELETON_LIGHTNING,SKELETON_FLOATING,
+                    SKELETON_BLAZE,WITHER_SKELETON_ARROW,SKELETON_ZOMBIE -> true;
+            default -> false;
+        };
+    }
+    @Override public void clearEarlySpawnEquipment(Mob mob) { io.github.ningmeng123.modernite.entity.MobAbilities.clearEarlySpawnEquipment(mob); }
     @Override public float playerInWallDamage(Player player,float original) { return (float)io.github.ningmeng123.modernite.config.IteConfig.number("in_wall_damage_for_player"); }
     @Override public int fishingExperience(Player player,int original) { return io.github.ningmeng123.modernite.config.IteConfig.integer("fishing_xp"); }
     @Override public boolean canDisarmPlayer(Player attacker,Player target,boolean original) { return original || io.github.ningmeng123.modernite.config.IteConfig.bool("player_disarm_player"); }

@@ -3,6 +3,7 @@ package io.github.ningmeng123.modernite.entity;
 import io.github.ningmeng123.mite.entity.SourceRangedAttackGoal;
 import io.github.ningmeng123.mite.entity.SourceMeleeGoal;
 import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
+import io.github.ningmeng123.mite.entity.BloodMoonEquipment;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasion;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
@@ -137,6 +138,11 @@ public final class MobAbilities {
             if(protection)enchant(mob,s,"minecraft:protection",5);mob.setItemSlot(slots[i],s);
         }
     }
+    /** Birth locks clear only addon-owned hidden stock, retaining visible custom or picked-up equipment. */
+    public static void clearEarlySpawnEquipment(Mob mob){
+        if(mob instanceof ExtremeMob extreme)extreme.extremeMemory().spare=ItemStack.EMPTY;
+        ExtremeNativeMobs.clearEarlySpawnEquipment(mob);
+    }
     public static void initialize(Mob mob,ExtremeMob state){
         var k=state.extremeKind();var s=state.extremeMemory();
         if(k==MIMIC_ZOMBIE){
@@ -150,12 +156,13 @@ public final class MobAbilities {
         if(s.initialized){upgradeSavedCombat(mob,k);return;}s.initialized=true;
         s.phaseMaximum=s.phaseCharges=mob.getRandom().nextInt(3)+2;
         if(mob instanceof Zombie zombie)zombie.setCanBreakDoors(true);
+        boolean fixedBossGear=k==ZOMBIE_LORD||k==ZOMBIE_ELITE_LORD||k==SKELETON_ELITE_LORD||k==ZOMBIE_BOSS||k==UNDYING_ZOMBIE_EMPEROR||k==ZOMBIE_PIGMAN_LORD;
+        if(!BloodMoonEquipment.spawnEquipmentLocked(mob)){
         if(k.family==Family.SKELETON)equip(mob,EquipmentSlot.MAINHAND,"minecraft:bow");
         if(k.family==Family.PILLAGER)equip(mob,EquipmentSlot.MAINHAND,"modern_ite:crossbow","minecraft:crossbow");
-        if(k==ZOMBIE_LORD||k==ZOMBIE_ELITE_LORD||k==SKELETON_ELITE_LORD||k==ZOMBIE_BOSS||k==UNDYING_ZOMBIE_EMPEROR||k==ZOMBIE_PIGMAN_LORD){
+        if(fixedBossGear){
             armor(mob,"vibranium",k==UNDYING_ZOMBIE_EMPEROR);
             equip(mob,EquipmentSlot.MAINHAND,k==ZOMBIE_BOSS||k==ZOMBIE_ELITE_LORD?"mite:vibranium_war_hammer":"mite:vibranium_sword","minecraft:iron_sword");
-            mob.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,Integer.MAX_VALUE,0));mob.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,Integer.MAX_VALUE,0));
         }
         switch(k){
             case ZOMBIE_DOOR -> equip(mob,EquipmentSlot.MAINHAND,"minecraft:iron_door");
@@ -175,6 +182,8 @@ public final class MobAbilities {
             case MIMIC_ZOMBIE,ZOMBIE_CHAOS,ZOMBIE_INVISIBLE_LOOK_UP -> {for(var slot:EquipmentSlot.values())if(slot!=EquipmentSlot.BODY)mob.setItemSlot(slot,ItemStack.EMPTY);}
             default -> {}
         }
+        }
+        if(fixedBossGear){mob.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,Integer.MAX_VALUE,0));mob.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,Integer.MAX_VALUE,0));}
         if(k.mirrors()||k==MIMIC_ZOMBIE||k==UNDYING_ZOMBIE_EMPEROR||k==ANNIHILATION_SKELETON)for(var slot:EquipmentSlot.values())mob.setDropChance(slot,0);
         if(k==ZOMBIE_FLY_AWAY||k==ZOMBIE_KNOCKBACK||k==ZOMBIE_JUMP||k==ZOMBIE_DOOR||k==DARK_IRON_GOLEM)mob.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,Integer.MAX_VALUE,k==ZOMBIE_FLY_AWAY||k==DARK_IRON_GOLEM?1:0));
         if(k==INVISIBLE_CREEPER||k==INVISIBLE_REVERSED_CREEPER)mob.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY,Integer.MAX_VALUE,0,false,false));
@@ -184,8 +193,8 @@ public final class MobAbilities {
     }
     private static void upgradeSavedCombat(Mob mob,ExtremeKind kind){
         var data=mob.getPersistentData();if(data.getInt("modern_ite:combat_revision")>=1)return;
-        if(kind==FISHING_ROD_ZOMBIE&&mob.getMainHandItem().getItem() instanceof FishingRodItem)mob.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
-        if(kind==UNDYING_ZOMBIE_EMPEROR){
+        if(kind==FISHING_ROD_ZOMBIE&&!BloodMoonEquipment.spawnEquipmentLocked(mob)&&mob.getMainHandItem().getItem() instanceof FishingRodItem)mob.setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);
+        if(kind==UNDYING_ZOMBIE_EMPEROR&&!BloodMoonEquipment.spawnEquipmentLocked(mob)){
             EquipmentSlot[] slots={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
             String[] pieces={"helmet","chestplate","leggings","boots"};
             for(int i=0;i<slots.length;i++){
@@ -306,7 +315,7 @@ public final class MobAbilities {
             if(s.stage==2&&s.clock>=400){level.explode(mob,Explosion.getDefaultDamageSource(level,mob),new R196ExplosionCalculator(mob,3.3F),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),3F,false,Level.ExplosionInteraction.MOB);summonId(mob,"minecraft:silverfish",7+mob.getRandom().nextInt(3));mob.discard();}
         }
         if(k==ZOMBIE_SIEGE&&s.cooldown==0&&mob.getFirstPassenger()!=null){Entity baby=mob.getFirstPassenger();baby.stopRiding();Vec3 launch=target.position().subtract(mob.position()).normalize().scale(1.5);baby.setDeltaMovement(launch.x,.8,launch.z);baby.hurtMarked=true;s.cooldown=60;}
-        if(k==SKELETON_ZOMBIE&&!s.spare.isEmpty()&&s.clock%10==0){boolean bow=mob.getMainHandItem().getItem() instanceof BowItem;if(bow&&mob.distanceToSqr(target)<25||!bow&&mob.distanceToSqr(target)>36){var held=mob.getMainHandItem();mob.setItemSlot(EquipmentSlot.MAINHAND,s.spare);s.spare=held;configureGoals(mob,k);}}
+        if(k==SKELETON_ZOMBIE&&!BloodMoonEquipment.spawnEquipmentLocked(mob)&&!s.spare.isEmpty()&&s.clock%10==0){boolean bow=mob.getMainHandItem().getItem() instanceof BowItem;if(bow&&mob.distanceToSqr(target)<25||!bow&&mob.distanceToSqr(target)>36){var held=mob.getMainHandItem();mob.setItemSlot(EquipmentSlot.MAINHAND,s.spare);s.spare=held;configureGoals(mob,k);}}
         if(k.family==Family.WITCH&&(!IteReferenceSpawns.enabled()||k!=WANDERING_WITCH))witchTick(mob,target,s);
         if(k==ZOMBIE_BOSS&&target instanceof Player&&mob.distanceToSqr(target)>2.4*2.4){
             if(s.cooldown>0)s.cooldown--;else if(mob.getHealth()<mob.getMaxHealth()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}
@@ -319,7 +328,7 @@ public final class MobAbilities {
     }
     private static void mirror(Mob mob,LivingEntity player,MobMemory s){
         if(!s.mirrored){if(player.getMaxHealth()>(MobSplitting.isChild(mob)?mob.getMaxHealth()*4F:mob.getMaxHealth())){stat(mob,Attributes.MAX_HEALTH,player.getMaxHealth());mob.setHealth(mob.getMaxHealth());}s.mirrored=true;}
-        for(var slot:new EquipmentSlot[]{EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET,EquipmentSlot.MAINHAND}){if(!ItemStack.isSameItemSameComponents(mob.getItemBySlot(slot),player.getItemBySlot(slot)))mob.setItemSlot(slot,player.getItemBySlot(slot).copy());mob.setDropChance(slot,0);}
+        if(!BloodMoonEquipment.spawnEquipmentLocked(mob))for(var slot:new EquipmentSlot[]{EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET,EquipmentSlot.MAINHAND}){if(!ItemStack.isSameItemSameComponents(mob.getItemBySlot(slot),player.getItemBySlot(slot)))mob.setItemSlot(slot,player.getItemBySlot(slot).copy());mob.setDropChance(slot,0);}
         for(var p:player.getActiveEffects())mob.addEffect(new MobEffectInstance(p));configureGoals(mob,((ExtremeMob)mob).extremeKind());
     }
     public static void startCaller(Mob mob,MobMemory s){if(s.stage!=0)return;s.stage=1;s.clock=0;summonZombie(mob,4);}

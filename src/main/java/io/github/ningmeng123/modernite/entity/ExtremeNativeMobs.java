@@ -69,7 +69,7 @@ public final class ExtremeNativeMobs {
             var data=pig.getPersistentData();
             if(!data.getBoolean("modern_ite:pigman_rolls")){
                 data.putBoolean("modern_ite:pigman_rolls",true);data.putBoolean("modern_ite:pigman_boosted",pig.getRandom().nextDouble()<IteConfig.number("Entities.zombie_pigman_boost_chance"));
-                if(IteConfig.bool("Entities.zombie_pigman_use_bow")&&pig.getRandom().nextInt(10)>8)pig.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.BOW));
+                if(!BloodMoonEquipment.spawnEquipmentLocked(pig)&&IteConfig.bool("Entities.zombie_pigman_use_bow")&&pig.getRandom().nextInt(10)>8)pig.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.BOW));
             }
             if(R196DiggerGoal.first(pig)==null)pig.goalSelector.addGoal(1,new R196DiggerGoal(pig));
             var attacks=pig.goalSelector.getAvailableGoals().stream().filter(w->w.getGoal() instanceof SourceMeleeGoal
@@ -90,6 +90,7 @@ public final class ExtremeNativeMobs {
         }
         if(m instanceof AbstractSkeleton skeleton){
             var data=m.getPersistentData();
+            if(BloodMoonEquipment.spawnEquipmentLocked(m)){clearEarlySpawnEquipment(m);return;}
             if(!data.contains("modern_ite:melee_roll"))data.putBoolean("modern_ite:melee_roll",m.getRandom().nextInt(100)<15);
             data.remove("modern_ite:forced_melee_active");syncSkeletonMelee(skeleton);
             if(m instanceof R196Skeleton bones&&bones.miteKind()!=MobKind.LONGDEAD_GUARDIAN&&(bones.isLongdead()||bones.isLord())&&!data.contains("modern_ite:stock_roll")){
@@ -134,7 +135,7 @@ public final class ExtremeNativeMobs {
     private static void syncSkeletonMelee(AbstractSkeleton skeleton){
         var data=skeleton.getPersistentData();
         boolean before=data.getBoolean("modern_ite:forced_melee_active");
-        boolean desired=IteConfig.bool("Entities.skeleton_force_melee_attack")&&data.getBoolean("modern_ite:melee_roll")&&skeleton.getMainHandItem().getItem() instanceof BowItem;
+        boolean desired=!BloodMoonEquipment.spawnEquipmentLocked(skeleton)&&IteConfig.bool("Entities.skeleton_force_melee_attack")&&data.getBoolean("modern_ite:melee_roll")&&skeleton.getMainHandItem().getItem() instanceof BowItem;
         if(before==desired)return;
         if(before){
             skeleton.goalSelector.removeAllGoals(g->g instanceof SourceMeleeGoal);
@@ -145,6 +146,18 @@ public final class ExtremeNativeMobs {
             skeleton.goalSelector.addGoal(4,new SourceMeleeGoal(skeleton,1.2,false));
         }
         data.putBoolean("modern_ite:forced_melee_active",desired);
+    }
+    /** Remove internal backup weapons and their forced-melee goal without washing visible inventory. */
+    public static void clearEarlySpawnEquipment(Mob mob){
+        var data=mob.getPersistentData();
+        data.remove("modern_ite:stocked_weapon");data.remove("modern_ite:switch_weapon");data.putBoolean("modern_ite:stock_roll",true);
+        boolean forced=data.getBoolean("modern_ite:forced_melee_active");data.remove("modern_ite:forced_melee_active");
+        if(mob instanceof AbstractSkeleton skeleton){
+            if(forced||BloodMoonEquipment.earlyEquipmentArcher(mob))skeleton.goalSelector.getAvailableGoals().stream().map(w->w.getGoal())
+                    .filter(g->g instanceof SourceMeleeGoal||g instanceof net.minecraft.world.entity.ai.goal.MeleeAttackGoal)
+                    .toList().forEach(skeleton.goalSelector::removeGoal);
+            skeleton.reassessWeaponGoal();
+        }
     }
     private static boolean golemBoosted(Mob mob){return IteConfig.bool("Entities.can_boost_iron_golem")&&mob.getPersistentData().getBoolean("modern_ite:golem_boost");}
     private static void syncGolemBoost(Mob mob){
@@ -209,7 +222,7 @@ public final class ExtremeNativeMobs {
                 ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,day/32*10,pig.getRandom().nextInt(Math.max((day-128)/96,1))));
             }
         }
-        if(m instanceof AbstractSkeleton skeleton&&IteConfig.number("Entities.bone_lord_and_longdead_change_weapon_chance")>0&&m.tickCount%10==0&&m.getTarget()!=null&&m.getSensing().hasLineOfSight(m.getTarget())&&m.getPersistentData().getBoolean("modern_ite:switch_weapon")){
+        if(m instanceof AbstractSkeleton skeleton&&!BloodMoonEquipment.spawnEquipmentLocked(m)&&IteConfig.number("Entities.bone_lord_and_longdead_change_weapon_chance")>0&&m.tickCount%10==0&&m.getTarget()!=null&&m.getSensing().hasLineOfSight(m.getTarget())&&m.getPersistentData().getBoolean("modern_ite:switch_weapon")){
             boolean bow=m.getMainHandItem().getItem() instanceof BowItem;
             if(bow&&m.distanceToSqr(m.getTarget())<25||!bow&&m.distanceToSqr(m.getTarget())>36){
                 var data=m.getPersistentData();ItemStack spare=ItemStack.parseOptional(m.registryAccess(),data.getCompound("modern_ite:stocked_weapon"));
