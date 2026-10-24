@@ -50,6 +50,7 @@ public final class VibraniumCosmicShaders {
 
     @SubscribeEvent
     public static void registerShaders(RegisterShadersEvent event) throws IOException {
+        VibraniumCosmicIrisCompat.reload();
         DEFERRED_GLINT.values().forEach(DeferredGlint::close);
         DEFERRED_GLINT.clear();
         GLINT_POOL.forEach(DeferredGlint::close);
@@ -77,6 +78,7 @@ public final class VibraniumCosmicShaders {
 
     public static void render(PoseStack pose, MultiBufferSource caller, VibraniumCosmicModel<?> model,
             ResourceLocation texture, int light, float ticks) {
+        if (VibraniumCosmicIrisCompat.render(pose, caller, model, texture)) return;
         if (!isReady()) return;
         RenderSystem.assertOnRenderThread();
         RenderType type = TYPES.computeIfAbsent(texture, VibraniumCosmicShaders::createType);
@@ -108,7 +110,8 @@ public final class VibraniumCosmicShaders {
     /** Includes growth-affix protection V even when ItemStack.hasFoil() is false. */
     private static boolean shouldDeferGlint(LivingEntity entity, MultiBufferSource caller,
             HumanoidArmorLayer<?, ?, ?> armorLayer) {
-        return outputBuffers(caller) != null && ArmorAuraRules.fullProtectionFive(entity)
+        return !VibraniumCosmicIrisCompat.activeShaderPack()
+                && outputBuffers(caller) != null && ArmorAuraRules.fullProtectionFive(entity)
                 && VibraniumGildingLayer.followsArmorLayer(entity, armorLayer);
     }
 
