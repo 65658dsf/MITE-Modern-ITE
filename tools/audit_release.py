@@ -30,7 +30,11 @@ for p in json_files:json.loads(p.read_text(encoding='utf-8'))
 version=re.search(r'^mod_version=(.+)$',(ROOT/'gradle.properties').read_text(),re.M)[1].strip()
 jar=ROOT/f'build/libs/modern-ite-{version}.jar'
 report={'author':'NingMeng123','version':version,'source_archives':source_hashes,'json_files_checked':len(json_files),'asset_count':len(assets),'assets':assets}
-base_jar=ROOT.parent/'miteto1.21.1neoforge/build/libs/mite-0.2.3.jar'
+base_root=ROOT.parent/'miteto1.21.1neoforge'
+base_version=re.search(r'^mod_version=(.+)$',(base_root/'gradle.properties').read_text(),re.M)[1].strip()
+base_jar=base_root/f'build/libs/mite-{base_version}.jar'
+source_metadata=(RES/'META-INF/neoforge.mods.toml').read_text(encoding='utf-8')
+base_dependency=re.search(r'\[\[dependencies\.modern_ite\]\]\s*modId="mite"\s+type="required"\s+versionRange="([^"]+)"',source_metadata)[1]
 if base_jar.exists():
     with ZipFile(base_jar) as archive:
         required=['io/github/ningmeng123/mite/api/MiteExtensions.class',
@@ -39,8 +43,8 @@ if base_jar.exists():
                   'io/github/ningmeng123/mite/client/config/MiteSettingsScreen.class',
                   'data/mite/recipe/equipment_upgrade_smithing_template.json']
         assert all(name in archive.namelist() for name in required), 'Base JAR must contain extension APIs and the new upgrade template'
-        assert 'version="0.2.3"' in archive.read('META-INF/neoforge.mods.toml').decode()
-    report['base_mod']={'version':'0.2.3','path':str(base_jar),'sha256':sha256(base_jar.read_bytes()).hexdigest(),
+        assert f'version="{base_version}"' in archive.read('META-INF/neoforge.mods.toml').decode()
+    report['base_mod']={'version':base_version,'required_range':base_dependency,'path':str(base_jar),'sha256':sha256(base_jar.read_bytes()).hexdigest(),
                         'bytes':base_jar.stat().st_size,'upgrade_template_present':True,'extension_api_present':True}
 if jar.exists():
     with ZipFile(jar) as archive:
@@ -48,7 +52,7 @@ if jar.exists():
         forbidden=[n for n in names if n.endswith('.jar') or n.startswith(('net/minecraft/','cn/wensc/','net/xiaoyu233/','io/github/ningmeng123/mite/','mezz/jei/')) or n.endswith('GameTests.class') or any(audit in n for audit in ['ModernIteClientAudit','IteConfigClientAudit','MetalUpgradingClientAudit','MobRenderRegressionAudit','ForgeJeiClientAudit','MobAuraPreviews','SovereignGuardPreviews','VibraniumGildingPreviews','VibraniumRuneClientAudit','ForgingClientAudit','LanternClientAudit'])]
         if forbidden:raise SystemExit('Release includes forbidden runtime or test entries: '+str(forbidden))
         metadata=archive.read('META-INF/neoforge.mods.toml').decode()
-        assert 'modId="modern_ite"' in metadata and 'versionRange="[0.2.3,)"' in metadata
+        assert 'modId="modern_ite"' in metadata and f'versionRange="{base_dependency}"' in metadata
         assert f'version="{version}"' in metadata, 'Release version differs from gradle.properties'
         assert re.search(r'modId="jei"\s+type="optional".*?side="CLIENT"',metadata,re.S)
         assert all(s.name not in names for s in sources)
