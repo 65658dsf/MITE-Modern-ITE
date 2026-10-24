@@ -113,15 +113,15 @@ public final class LegacyMechanicsGameTests {
     public static void aRealFishingCatchSpawnsTheConfiguredExperience(GameTestHelper h) {
         try(ConfigRestore config=new ConfigRestore();Session session=new Session(h)) {
             config.set("fishing_xp",37);var rod=new ItemStack(Items.FISHING_ROD);session.player.setItemInHand(InteractionHand.MAIN_HAND,rod);
-            var before=h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class,session.player.getBoundingBox().inflate(8))
-                    .stream().map(net.minecraft.world.entity.Entity::getUUID).collect(java.util.stream.Collectors.toSet());
             var hook=new FishingHook(session.player,h.getLevel(),0,0);hook.setPos(session.player.position().add(1,0,0));h.getLevel().addFreshEntity(hook);
-            try {
+            try(var joined=new JoinedEntities<>(h.getLevel(),net.minecraft.world.entity.ExperienceOrb.class)) {
                 var nibble=FishingHook.class.getDeclaredField("nibble");nibble.setAccessible(true);nibble.setInt(hook,20);
                 h.assertTrue(hook.retrieve(rod)>0,"The actual native retrieve transaction catches loot");
-                var experience=h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.ExperienceOrb.class,session.player.getBoundingBox().inflate(8),orb->!before.contains(orb.getUUID()));
-                h.assertTrue(!experience.isEmpty()&&experience.stream().allMatch(orb->orb.getValue()==37),"The spawned catch XP orbs carry the configured amount");
-                experience.forEach(net.minecraft.world.entity.Entity::discard);
+                var experience=joined.live();
+                h.assertValueEqual(experience.size(),1,"The one real catch inserts exactly one new XP orb");
+                h.assertTrue(experience.stream().allMatch(orb->orb.getValue()==37),"The spawned catch XP orb carries the configured amount");
+                h.assertValueEqual(experience.stream().mapToInt(net.minecraft.world.entity.ExperienceOrb::getValue).sum(),37,
+                        "The complete catch transaction creates exactly37 total XP without deletion or duplication");
             }catch(ReflectiveOperationException error){throw new IllegalStateException(error);}finally{hook.discard();}
         }h.succeed();
     }
@@ -152,10 +152,14 @@ public final class LegacyMechanicsGameTests {
             }
             target.player.setGameMode(GameType.SURVIVAL);attacker.player.setGameMode(GameType.CREATIVE);melee(attacker.player,target.player);
             h.assertTrue(!target.player.getMainHandItem().isEmpty(),"Creative attacks do not enter the survival disarm branch");attacker.player.setGameMode(GameType.SURVIVAL);
-            melee(attacker.player,target.player);
-            h.assertTrue(target.player.getMainHandItem().isEmpty(),"A successful unblocked hit with Disarming V performs the real item transfer");
-            var drops=h.getLevel().getEntitiesOfClass(ItemEntity.class,target.player.getBoundingBox().inflate(4),drop->drop.getItem().is(Items.DIAMOND));
-            h.assertTrue(!drops.isEmpty(),"The disarmed item remains in the real world rather than being deleted");drops.forEach(ItemEntity::discard);
+            try(var joined=new JoinedEntities<>(h.getLevel(),ItemEntity.class)) {
+                melee(attacker.player,target.player);
+                h.assertTrue(target.player.getMainHandItem().isEmpty(),"A successful unblocked hit with Disarming V performs the real item transfer");
+                var drops=joined.live().stream().filter(drop->drop.getItem().is(Items.DIAMOND)).toList();
+                h.assertValueEqual(drops.size(),1,"The disarmed diamond is inserted into the real world exactly once");
+                h.assertValueEqual(drops.stream().mapToInt(drop->drop.getItem().getCount()).sum(),1,
+                        "The item transfer preserves exactly one diamond without deletion or duplication");
+            }
         }finally{h.getLevel().getServer().setPvpAllowed(pvp);}h.succeed();
     }
 
@@ -210,6 +214,17 @@ public final class LegacyMechanicsGameTests {
 
     private static float hit(LivingEntity target,DamageSource source,float amount) {
         target.setHealth(1000);target.invulnerableTime=0;target.hurt(source,amount);return 1000-target.getHealth();
+    }
+    /** Native joins are synchronous even when the random test-grid entity section is not query-visible yet. */
+    private static final class JoinedEntities<T extends net.minecraft.world.entity.Entity> implements AutoCloseable {
+        private final java.util.List<T> entities=new java.util.ArrayList<>();
+        private final java.util.function.Consumer<net.neoforged.neoforge.event.entity.EntityJoinLevelEvent> listener;
+        JoinedEntities(net.minecraft.server.level.ServerLevel level,Class<T> type) {
+            listener=event->{if(!event.isCanceled()&&event.getLevel()==level&&type.isInstance(event.getEntity()))entities.add(type.cast(event.getEntity()));};
+            NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,net.neoforged.neoforge.event.entity.EntityJoinLevelEvent.class,listener);
+        }
+        java.util.List<T> live() {return entities.stream().filter(entity->entity.isAddedToLevel()&&!entity.isRemoved()).toList();}
+        @Override public void close() {NeoForge.EVENT_BUS.unregister(listener);entities.forEach(net.minecraft.world.entity.Entity::discard);}
     }
     private static final class ConfigRestore implements AutoCloseable {
         private final Map<String,Object> previous=new LinkedHashMap<>();
