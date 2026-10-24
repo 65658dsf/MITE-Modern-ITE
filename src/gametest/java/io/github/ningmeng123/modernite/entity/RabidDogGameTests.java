@@ -108,7 +108,11 @@ public final class RabidDogGameTests {
         var progress = BloodMoonInvasionData.get(level);
         long oldDay = progress.highestDay(), oldTime = level.getDayTime();
         boolean dirty = progress.isDirty(), graceEnded = ExtremeWorldState.graceEnded(level);
+        var startSetting=io.github.ningmeng123.modernite.config.IteConfig.setting("extreme_mob_spawn_limit_day");
+        Object startBefore=startSetting.get();
         try {
+            // Exercise the historical sixty-four-day boundary independently of the new day-three factory preset.
+            startSetting.set(65);io.github.ningmeng123.modernite.config.IteConfig.refresh();
             level.setDayTime(0);
             progress.restoreProgress(1);
             ExtremeWorldState.restoreGraceEnded(level, false);
@@ -137,6 +141,7 @@ public final class RabidDogGameTests {
             h.assertFalse(RabidDogContent.maySpawn(nether) || RabidDogContent.maySpawn(end),
                     "Rabid dogs do not spill into Nether or End pools");
         } finally {
+            startSetting.set(startBefore);io.github.ningmeng123.modernite.config.IteConfig.refresh();
             level.setDayTime(oldTime);
             progress.restoreProgress(oldDay);
             progress.setDirty(dirty);

@@ -24,11 +24,11 @@ public final class IteReferenceConfigGameTests {
                         &&!IteConfig.defaults().containsKey("reference_spawning"),
                 "The retired preset is absent from generated settings and every editor");
         var defaults=IteConfig.defaults();
-        helper.assertTrue(defaults.get("blood_moon_max_hostile_fraction").equals(2D)
-                        &&defaults.get("ancient_bone_lord_spawn_limit_day").equals(192)
-                        &&defaults.get("mob_max_spawn_count_day_minimum").equals(0)
-                        &&defaults.get("blood_moon_hostile_spawn_groups").equals(3),
-                "Generated values use the lower-density ITE defaults directly");
+        helper.assertTrue(defaults.get("blood_moon_max_hostile_fraction").equals(3D)
+                        &&defaults.get("ancient_bone_lord_spawn_limit_day").equals(33)
+                        &&defaults.get("mob_max_spawn_count_day_minimum").equals(100)
+                        &&defaults.get("blood_moon_hostile_spawn_groups").equals(4),
+                "Generated values adopt the supplied 2026-10-24 factory preset");
         var old=Map.<String,Object>of("reference_spawning",false,"mob_max_spawn_count_chunk_base",37,
                 "mob_max_spawn_count_day_minimum",123,"blood_moon_max_hostile_fraction",5D,
                 "local_hostile_limit",19,"compressed_skeleton_expand_count",9);
@@ -36,8 +36,8 @@ public final class IteReferenceConfigGameTests {
         helper.assertTrue(!validated.containsKey("reference_spawning"),"Legacy payload flags cannot select a second rule set");
         old.forEach((key,value)-> {if(!key.equals("reference_spawning"))helper.assertTrue(value.equals(validated.get(key)),
                 "Explicit editable and splitting values remain exact: "+key);});
-        helper.assertTrue(Integer.valueOf(65).equals(validated.get("extreme_mob_spawn_limit_day")),
-                "Missing extreme start dates retain the day-sixty-five default");
+        helper.assertTrue(Integer.valueOf(3).equals(validated.get("extreme_mob_spawn_limit_day")),
+                "Missing extreme start dates retain the day-three default");
         helper.succeed();
     }
 
@@ -63,10 +63,10 @@ public final class IteReferenceConfigGameTests {
                 var parsed=new com.electronwill.nightconfig.toml.TomlParser().parse(Files.readString(file));
                 String prefix="GameMechanics.MobSpawning.";
                 helper.assertTrue(!parsed.contains(prefix+"reference_spawning")
-                                &&((Number)parsed.get(prefix+"blood_moon_max_hostile_fraction")).doubleValue()==2D
-                                &&((Number)parsed.get(prefix+"ancient_bone_lord_spawn_limit_day")).intValue()==192
-                                &&((Number)parsed.get(prefix+"mob_max_spawn_count_day_minimum")).intValue()==0
-                                &&((Number)parsed.get(prefix+"blood_moon_hostile_spawn_groups")).intValue()==3,
+                                &&((Number)parsed.get(prefix+"blood_moon_max_hostile_fraction")).doubleValue()==3D
+                                &&((Number)parsed.get(prefix+"ancient_bone_lord_spawn_limit_day")).intValue()==33
+                                &&((Number)parsed.get(prefix+"mob_max_spawn_count_day_minimum")).intValue()==100
+                                &&((Number)parsed.get(prefix+"blood_moon_hostile_spawn_groups")).intValue()==4,
                         "Either retired preset migrates only its four obsolete defaults");
                 helper.assertTrue(((Number)parsed.get(prefix+"mob_max_spawn_count_chunk_base")).intValue()==73
                                 &&((Number)parsed.get(prefix+"extreme_mob_spawn_limit_day")).intValue()==17
@@ -110,11 +110,11 @@ public final class IteReferenceConfigGameTests {
         String key="extreme_mob_spawn_limit_day";
         var option=IteConfig.options().stream().filter(value->value.key().equals(key)).findFirst().orElseThrow();
         helper.assertTrue(option.path().equals(List.of("GameMechanics","MobSpawning",key))
-                        &&Integer.valueOf(65).equals(option.defaultValue())&&Integer.valueOf(65).equals(IteConfig.setting(key).getDefault())
+                        &&Integer.valueOf(3).equals(option.defaultValue())&&Integer.valueOf(3).equals(IteConfig.setting(key).getDefault())
                         &&option.minimum()==1D&&option.maximum()==1000000D,
                 "The editable start day retains its public path, integer default and bounds");
         for(Object invalid:List.of(0,-1,1000001,3.5D,Double.NaN,"65"))
-            helper.assertTrue(Integer.valueOf(65).equals(IteConfig.validated(Map.of(key,invalid)).get(key)),"Invalid start days use sixty-five: "+invalid);
+            helper.assertTrue(Integer.valueOf(3).equals(IteConfig.validated(Map.of(key,invalid)).get(key)),"Invalid start days use the supplied day-three default: "+invalid);
         var before=IteConfig.localSnapshot();
         try {
             for(int day:new int[]{1,65,173,1000000}) {
@@ -128,9 +128,9 @@ public final class IteReferenceConfigGameTests {
 
     @GameTest(template="gear_empty",batch="ite_reference_config")
     public static void newCrowdAndPacingFieldsHaveTypedBoundsAndPublishImmediately(GameTestHelper helper) {
-        var defaults=Map.<String,Object>of("natural_local_hostile_limit",8,"full_moon_natural_local_hostile_limit",10,
+        var defaults=Map.<String,Object>of("natural_local_hostile_limit",5,"full_moon_natural_local_hostile_limit",10,
                 "blood_moon_natural_local_hostile_limit",12,"deep_hostile_cap_multiplier",2D,
-                "hostile_spawn_interval_ticks",1,"deep_spawn_chance_percent",10D,"surface_spawn_chance_percent",17D,
+                "hostile_spawn_interval_ticks",5,"deep_spawn_chance_percent",10D,"surface_spawn_chance_percent",17D,
                 "blood_moon_spawn_chance_multiplier",1D,"other_dimension_spawn_chance_multiplier",.25D);
         var before=IteConfig.localSnapshot();
         try {

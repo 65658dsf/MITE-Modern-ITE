@@ -34,7 +34,7 @@ public final class IteSettingsScreen extends Screen {
                 ignored -> minecraft.setScreen(new MonsterSpawnSettingsScreen(this, ModernIte.MOD_ID,
                         IteSpawnConfig::effectiveSnapshot, IteSpawnConfig::effectiveWeights, (rates,weights) -> {
                             if(IteConfigClient.editable())IteSpawnConfig.save(rates,weights);
-                        }, IteSettingsScreen::nativeSpawnWeights)))
+                        }, IteSettingsScreen::nativeSpawnWeights, IteSpawnConfig::defaultRates, IteSpawnConfig::defaultWeights)))
                 .bounds((width - buttonWidth) / 2, y, buttonWidth, 20).build());
         spawns.setTooltip(Tooltip.create(Component.translatable("modern_ite.config.monster_spawns.tooltip")));
         var rules = addRenderableWidget(Button.builder(Component.translatable("modern_ite.config.spawning_rules"),

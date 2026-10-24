@@ -31,7 +31,13 @@ public final class CalendarGameTests {
         var history=BloodMoonInvasionData.get(level);long highest=history.highestDay();boolean dirty=history.isDirty();
         boolean grace=ExtremeWorldState.graceEnded(level);
         var policy=MiteExtensions.policy();var context=new MiteExtensions.SpawnContext(level,io.github.ningmeng123.mite.rules.R196SpawnRules.Category.MONSTER,false);
+        var settingsBefore=io.github.ningmeng123.modernite.config.IteConfig.localSnapshot();
         try {
+            // This source-rule test selects its historical settings explicitly; factory presets are tested separately.
+            Map.<String,Object>of("blood_moon_max_hostile_fraction",2D,"mob_max_spawn_count_chunk_base",50,
+                    "mob_max_spawn_count_day_minimum",0,"blood_moon_hostile_spawn_groups",3,
+                    "natural_local_hostile_limit",8).forEach((key,value)->io.github.ningmeng123.modernite.config.IteConfig.setting(key).set(value));
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
             level.setDayTime(31*24000L);
             ExtremeWorldState.restoreGraceEnded(level,true);
             h.assertTrue(policy.independentHostileBudgets(level,false),"Deep and shallow monsters retain independent source budgets");
@@ -52,7 +58,11 @@ public final class CalendarGameTests {
             h.assertTrue(policy.spawnGroups(context,3)==3&&policy.localDensity(level,null,8)==8&&ExtremeRules.localHostileLimit(level)==32,"Ordinary natural crowd protection and the preserved support limit keep separate defaults");
             level.setDayTime(31*24000L+18000L);
             h.assertTrue(policy.localDensity(level,null,12)==12&&ExtremeRules.localHostileLimit(level)==48,"Blood-night natural crowd protection is twelve while the preserved support limit remains forty-eight");
-        } finally {level.setDayTime(old);history.restoreProgress(highest);history.setDirty(dirty);ExtremeWorldState.restoreGraceEnded(level,grace);}
+        } finally {
+            settingsBefore.forEach((key,value)->io.github.ningmeng123.modernite.config.IteConfig.setting(key).set(value));
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            level.setDayTime(old);history.restoreProgress(highest);history.setDirty(dirty);ExtremeWorldState.restoreGraceEnded(level,grace);
+        }
         h.succeed();
     }
     @GameTest(template="gear_empty")

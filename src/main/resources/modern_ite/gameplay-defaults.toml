@@ -1,0 +1,138 @@
+# Factory defaults adopted from the user export dated 2026-10-24.
+# Explicit gameplay adjustments take precedence. Author: NingMeng123
+[GameMechanics]
+	first_day_longer_day_time = true
+	in_rain_debuff_time = 3600
+	player_enchant_defense = true
+	player_defense_cooldown = 160
+	player_defence_max_time = 40
+	in_wall_damage_for_player = 1.0
+	stepped_mob_damage_factor = 0.5
+	stepped_mob_damage_progress_max = 2.0
+	stepped_mob_damage_progress_increase_day = 50
+	stepped_player_damage_progress = 2.0
+	stepped_player_damage_increase_per_lvl = 0.1
+	fishing_xp = 30
+	player_disarm_player = true
+
+	[GameMechanics.Underworld]
+		underworld_random_teleport = true
+		underworld_random_teleport_time_new = 132000
+		underworld_debuff = true
+		underworld_debuff_period1 = 54000
+		underworld_debuff_period2 = 108000
+
+	[GameMechanics.Nether]
+		netherrack_damage = true
+		netherrack_damage_limit_day = 96
+		nether_debuff = true
+		nether_debuff_time = 72000
+
+	[GameMechanics.MobSpawning]
+		extreme_mob_spawn_limit_day = 3
+		ghast_spawn_limit_day = 128
+		annihilation_skeleton_spawn_in_light = false
+		wandering_witch_spawn_chance_overworld = 33
+		wandering_witch_spawn_limit_day_overworld = 65
+		wandering_witch_spawn_limit_day_other = 65
+		wandering_witch_spawn_chance_underworld = 50
+		zombie_lord_spawn_frequency = 2
+		zombie_pigman_lord_spawn_frequency = 1
+		annihilation_skeleton_spawn_frequency = 1
+		wandering_witch_spawn_frequency = 1
+		blood_moon_max_hostile_fraction = 3.0
+		ancient_bone_lord_spawn_limit_day = 33
+		mob_max_spawn_count_increase_per_day = 1.0
+		mob_max_spawn_count_chunk_base = 25
+		mob_max_spawn_count_day_minimum = 100
+		mob_max_spawn_count_day_maximum = 0
+		deep_hostile_cap_multiplier = 2.0
+		natural_local_hostile_limit = 5
+		full_moon_natural_local_hostile_limit = 10
+		blood_moon_natural_local_hostile_limit = 12
+		local_hostile_limit = 32
+		blood_moon_local_hostile_limit = 48
+		hostile_spawn_groups = 3
+		blood_moon_hostile_spawn_groups = 4
+		hostile_spawn_attempts = 4
+		hostile_spawn_interval_ticks = 5
+		deep_spawn_chance_percent = 10.0
+		surface_spawn_chance_percent = 17.0
+		blood_moon_spawn_chance_multiplier = 1.0
+		other_dimension_spawn_chance_multiplier = 0.25
+		natural_spawn_rates = []
+		natural_spawn_weights = ["modern_ite:dragon_zombie=1", "modern_ite:skeleton_elite_lord=1", "modern_ite:skeleton_zombie=10"]
+
+[Item]
+	quartz_max_exp_level = 55
+	diamond_exp = 500
+	emerald_exp = 250
+	quartz_exp = 50
+	lapis_exp = 25
+	golden_apple_eat_time = 32
+	enchanted_golden_apple_eat_time = 32
+
+	[Item.Enchantment]
+		crit_enchantment_chance_boost_per_lvl = 20.0
+		crit_enchantment_damage_boost_per_lvl = 0.4
+		emergency_cooldown_ = 120000
+		emergency_cooldown_reduce_every_armor = 0.2
+		emergency_health_recover_amount = 10.0
+		conqueror_damage_boost_per_lvl = 1.0
+		beheading_chance_boost_per_lvl = 0.05
+		all_protection_v_defence_fraction = 0.1
+
+	[Item.Recipes]
+		iron_to_mithril_cook_time = 6000
+		iron_block_count_to_mithril = 2
+		mithril_to_adamantium_cook_time = 9000
+		mithril_block_count_to_adamantium = 1
+
+[Block]
+	mob_spawner_speed_up_with_players = true
+	mob_spawner_extra_delay_reduction = 2
+
+[Entities]
+	enhance_limit = 366
+	skeleton_triple_shot = true
+	compressed_skeleton = true
+	compressed_skeleton_crack_stand_time = 20
+	compressed_skeleton_expand_count = 7
+	skeleton_force_melee_attack = true
+	bone_lord_and_longdead_change_weapon_chance = 0.25
+	bat_poison_attack = true
+	zombie_pigman_use_bow = true
+	zombie_pigman_boost_chance = 0.025
+	ghast_overworld_boost = 1.25
+	wolves_attack_players_with_meat = true
+	can_boost_iron_golem = true
+	annihilation_skeleton_despawn_time = 3600
+	ender_dragon_attack_wither_chance = 0.2
+	ender_dragon_immune_to_arrow_health_percent = 0.3
+	ender_dragon_attack_slowness = true
+	nether_mod_attack_fire_chance = 0.5
+	slime_attack_damage_multiplier = 1.0
+	slime_attack_damage_bonus = 4.0
+	giant_zombie_spawn_zombie_cooldown = 1200
+	zombie_pigman_attack_animails = false
+	bone_lord_tweak = true
+	infernal_creeper_boost = true
+	villager_wool_to_emerald_shard_count = 4
+	villager_wool_to_emerald_shard_shard_count = 1
+	mob_defense = true
+	mob_attack_cause_fire = true
+	mob_disarm_when_defence = true
+
+	[Entities.Animals]
+		animal_ill_to_death_time = 144000
+		breed_xp_chicken = 15
+		breed_xp_sheep = 30
+		breed_xp_pig = 25
+		breed_xp_cow = 45
+
+	[WorldGen.Nether]
+		nether_adamantium_max_count_per_chunk = 4
+		nether_adamantium_max_count_per_vein = 3
+
+[Misc]
+	log_players_interact_with_portal = true

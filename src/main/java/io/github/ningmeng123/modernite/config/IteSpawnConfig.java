@@ -22,11 +22,12 @@ public final class IteSpawnConfig {
         NATURAL_SPAWN_RATES = builder.translation("modern_ite.config.natural_spawn_rates")
                 .comment("Natural spawn rate multipliers for registered ITE entity IDs, written as modern_ite:entity=multiplier (0..100). Omitted IDs preserve their existing rate; 0 disables natural spawning only. This does not create natural entries or bypass day, dimension, light, or population restrictions. Unknown ITE IDs are retained for future or temporarily removed entities.")
                 .defineListAllowEmpty(List.of("GameMechanics", "MobSpawning", "natural_spawn_rates"),
-                        List::of, () -> "modern_ite:zombie_chaos=1.0", IteSpawnConfig::validEntry);
+                        () -> BundledGameplayDefaults.list("GameMechanics.MobSpawning.natural_spawn_rates"), () -> "modern_ite:zombie_chaos=1.0", IteSpawnConfig::validEntry);
         NATURAL_SPAWN_WEIGHTS = builder.translation("modern_ite.config.natural_spawn_weights")
                 .comment("Absolute natural candidate weights: modern_ite:entity=integer (0..1000000). Omitted IDs retain each pool's native weight. The selected weight is multiplied by natural_spawn_rates. 0 removes the whole candidate family, including its conditional replacements. Does not create natural entries or bypass legacy zero spawn_frequency, dates, dimensions or population limits. Unknown ITE IDs are retained.")
                 .defineListAllowEmpty(List.of("GameMechanics", "MobSpawning", "natural_spawn_weights"),
-                        List::of, () -> "modern_ite:zombie_chaos=50", IteSpawnConfig::validWeightEntry);
+                        () -> BundledGameplayDefaults.list("GameMechanics.MobSpawning.natural_spawn_weights"), () -> "modern_ite:zombie_chaos=50", IteSpawnConfig::validWeightEntry);
+        local = new Snapshot(defaultRates(), defaultWeights());
     }
 
     public static boolean owns(String id) {
@@ -88,6 +89,16 @@ public final class IteSpawnConfig {
     }
 
     private static Snapshot effective() { var server = remote; return server == null ? local : server; }
+    private static Map<String, Double> defaults(ModConfigSpec.ConfigValue<List<? extends String>> setting) {
+        var result = new LinkedHashMap<String, Double>();
+        for (String entry : setting.getDefault()) {
+            int split = entry.lastIndexOf('=');
+            result.put(entry.substring(0, split), Double.parseDouble(entry.substring(split + 1)));
+        }
+        return Map.copyOf(result);
+    }
+    public static Map<String, Double> defaultRates() { return defaults(NATURAL_SPAWN_RATES); }
+    public static Map<String, Double> defaultWeights() { return defaults(NATURAL_SPAWN_WEIGHTS); }
     public static Map<String, Double> localSnapshot() { return local.rates(); }
     public static Map<String, Double> localWeights() { return local.weights(); }
     public static Map<String, Double> effectiveSnapshot() { return effective().rates(); }

@@ -30,12 +30,26 @@ public final class EnchantmentGameTests {
   return h.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(net.minecraft.resources.ResourceKey.create(Registries.ENCHANTMENT,ExtremeEnchantments.key(id)));
  }
  @GameTest(template="gear_empty") public static void allTwelveEnchantmentIdentitiesExistWithTheirSourceCaps(GameTestHelper h) {
-  for(var definition:ExtremeEnchantments.DEFINITIONS) {
-   var registered=enchant(h,definition.id());
-   h.assertTrue(registered.value().getMaxLevel()==definition.maximum(),"Source maximum for "+definition.id());
-   h.assertTrue(R196EnchantmentCatalog.definition("modern_ite:"+definition.id())!=null,"The source enchanting table can find "+definition.id());
+  var before=io.github.ningmeng123.mite.config.MiteConfig.ENCHANTMENT_MAX_LEVELS.get();
+  var effective=io.github.ningmeng123.mite.config.MiteConfig.effectiveSnapshot();
+  boolean remote=effective!=io.github.ningmeng123.mite.config.MiteConfig.localSnapshot();
+  try {
+   // Registry source caps are tested without the separately validated user's Extend-I override.
+   io.github.ningmeng123.mite.config.MiteConfig.clearServerSnapshot();
+   io.github.ningmeng123.mite.config.MiteConfig.ENCHANTMENT_MAX_LEVELS.set(List.of());
+   io.github.ningmeng123.mite.config.MiteConfig.refreshEnchantmentRules();
+   for(var definition:ExtremeEnchantments.DEFINITIONS) {
+    var registered=enchant(h,definition.id());
+    h.assertTrue(registered.value().getMaxLevel()==definition.maximum(),"Source maximum for "+definition.id());
+    h.assertTrue(R196EnchantmentCatalog.definition("modern_ite:"+definition.id())!=null,"The source enchanting table can find "+definition.id());
+   }
+   h.assertTrue(ExtremeEnchantments.DEFINITIONS.size()==12,"Five Extreme, six ITE and Experience are distinct registered identities");
+  } finally {
+   io.github.ningmeng123.mite.config.MiteConfig.ENCHANTMENT_MAX_LEVELS.set(before);
+   io.github.ningmeng123.mite.config.MiteConfig.refreshEnchantmentRules();
+   if(remote)io.github.ningmeng123.mite.config.MiteConfig.receiveServerSnapshot(effective);
   }
-  h.assertTrue(ExtremeEnchantments.DEFINITIONS.size()==12,"Five Extreme, six ITE and Experience are distinct registered identities");h.succeed();
+  h.succeed();
  }
  @GameTest(template="gear_empty") public static void chainBookRejectsSilkAndOnlyAcceptsIronOrHigherPickOrHammer(GameTestHelper h) {
   h.assertTrue(!R196EnchantmentCatalog.compatible("modern_ite:chain","minecraft:silk_touch"),"Chain and Silk Touch cannot be combined by the actual source anvil catalog");
