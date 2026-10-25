@@ -34,65 +34,86 @@ public final class BucketHeadSyncGameTests {
 
     @GameTest(template = "gear_empty")
     public static void startingNativeTrackingReceivesAnAlreadyActiveBucket(GameTestHelper h) {
-        try (var session = new Session(h)) {
-            session.target.player.addEffect(new MobEffectInstance(ExtremeEffects.VALUES.get("bucket_head"), 200, 0));
-            h.assertTrue(session.updates().isEmpty(), "An observer outside the native tracking set receives no bucket packet");
+        verifyInitialTracking(h, "bucket_head");
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void startingNativeTrackingReceivesAnAlreadyReversedPlayer(GameTestHelper h) {
+        verifyInitialTracking(h, "reversed");
+    }
+
+    private static void verifyInitialTracking(GameTestHelper h, String effectId) {
+        try (var session = new Session(h, effectId)) {
+            session.target.player.addEffect(new MobEffectInstance(ExtremeEffects.VALUES.get(effectId), 200, 0));
+            h.assertTrue(session.updates().isEmpty(), "An observer outside the native tracking set receives no visual effect packet");
             session.trackViewer();
             h.assertTrue(session.updates().size() == 1,
-                    "The real native pairing event sends exactly one active bucket update to the new observer");
-            assertUpdate(h, session.updates().getFirst(), session.target.player, 200);
+                    "The real native pairing event sends exactly one active visual effect update to the new observer");
+            assertUpdate(h, session.updates().getFirst(), session.target.player, effectId, 200);
         }
         h.succeed();
     }
 
     @GameTest(template = "gear_empty")
     public static void observersReceiveBucketChangesWithoutCountdownPacketSpam(GameTestHelper h) {
-        try (var session = new Session(h)) {
+        verifyEffectLifecycle(h, "bucket_head");
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void observersReceiveReversedChangesWithoutCountdownPacketSpam(GameTestHelper h) {
+        verifyEffectLifecycle(h, "reversed");
+    }
+
+    private static void verifyEffectLifecycle(GameTestHelper h, String effectId) {
+        var holder = ExtremeEffects.VALUES.get(effectId);
+        try (var session = new Session(h, effectId)) {
             session.trackViewer();
             session.viewer.packets.clear();
-            session.target.player.addEffect(new MobEffectInstance(ExtremeEffects.VALUES.get("bucket_head"), 200, 0));
+            session.target.player.addEffect(new MobEffectInstance(holder, 200, 0));
             session.tickTarget();
-            h.assertTrue(session.updates().size() == 1, "Adding bucket head sends one update to the native observer");
-            assertUpdate(h, session.updates().getFirst(), session.target.player, 199);
+            h.assertTrue(session.updates().size() == 1, "Adding a visual effect sends one update to the native observer");
+            assertUpdate(h, session.updates().getFirst(), session.target.player, effectId, 199);
             for (int tick = 0; tick < 10; tick++) session.tickTarget();
-            h.assertTrue(session.target.player.getEffect(ExtremeEffects.VALUES.get("bucket_head")).getDuration() == 189,
+            h.assertTrue(session.target.player.getEffect(holder).getDuration() == 189,
                     "Real player effect ticks advance the native countdown");
-            h.assertTrue(session.updates().size() == 1, "An ordinary countdown never broadcasts a bucket update every tick");
-            session.target.player.addEffect(new MobEffectInstance(ExtremeEffects.VALUES.get("bucket_head"), 200, 0));
+            h.assertTrue(session.updates().size() == 1, "An ordinary countdown never broadcasts a visual effect update every tick");
+            session.target.player.addEffect(new MobEffectInstance(holder, 200, 0));
             session.tickTarget();
-            h.assertTrue(session.updates().size() == 2, "Refreshing bucket head sends one new observer update");
-            assertUpdate(h, session.updates().getLast(), session.target.player, 199);
-            session.target.player.removeEffect(ExtremeEffects.VALUES.get("bucket_head"));
+            h.assertTrue(session.updates().size() == 2, "Refreshing a visual effect sends one new observer update");
+            assertUpdate(h, session.updates().getLast(), session.target.player, effectId, 199);
+            session.target.player.removeEffect(holder);
             session.tickTarget();
             h.assertTrue(session.removals().size() == 1, "Explicit removal sends the observer one native remove-effect packet");
             for (int tick = 0; tick < 3; tick++) session.tickTarget();
             h.assertTrue(session.removals().size() == 1, "An absent effect never repeatedly sends remove packets");
-            session.target.player.addEffect(new MobEffectInstance(ExtremeEffects.VALUES.get("bucket_head"), 3, 0));
+            session.target.player.addEffect(new MobEffectInstance(holder, 3, 0));
             session.tickTarget();
-            h.assertTrue(session.updates().size() == 3, "A later bucket application is visible after an earlier cure");
+            h.assertTrue(session.updates().size() == 3, "A later visual effect application is visible after an earlier cure");
             session.tickTarget();
             session.tickTarget();
-            h.assertTrue(!session.target.player.hasEffect(ExtremeEffects.VALUES.get("bucket_head"))
+            h.assertTrue(!session.target.player.hasEffect(holder)
                             && session.removals().size() == 2,
                     "Native expiry also sends exactly one observer removal packet");
         }
         h.succeed();
     }
 
-    private static void assertUpdate(GameTestHelper h, ClientboundUpdateMobEffectPacket packet, ServerPlayer target, int duration) {
+    private static void assertUpdate(GameTestHelper h, ClientboundUpdateMobEffectPacket packet, ServerPlayer target, String effectId, int duration) {
         h.assertTrue(packet.getEntityId() == target.getId()
-                        && packet.getEffect().equals(ExtremeEffects.VALUES.get("bucket_head"))
+                        && packet.getEffect().equals(ExtremeEffects.VALUES.get(effectId))
                         && packet.getEffectAmplifier() == 0 && packet.getEffectDurationTicks() == duration,
-                "The captured native packet identifies the affected player, bucket effect, fixed level and remaining duration");
+                "The captured native packet identifies the affected player, visual effect, fixed level and remaining duration");
     }
 
     private static final class Session implements AutoCloseable {
         private final GameTestHelper helper;
         private final Peer target;
         private final Peer viewer;
+        private final String effectId;
 
-        private Session(GameTestHelper helper) {
+        private Session(GameTestHelper helper, String effectId) {
             this.helper = helper;
+            this.effectId = effectId;
             var origin = helper.absolutePos(new BlockPos(1, 160, 1)).getCenter();
             target = new Peer(helper);
             target.player.moveTo(origin);
@@ -126,14 +147,14 @@ public final class BucketHeadSyncGameTests {
         private List<ClientboundUpdateMobEffectPacket> updates() {
             return viewer.packets.stream().filter(packet -> packet instanceof ClientboundUpdateMobEffectPacket update
                             && update.getEntityId() == target.player.getId()
-                            && update.getEffect().equals(ExtremeEffects.VALUES.get("bucket_head")))
+                            && update.getEffect().equals(ExtremeEffects.VALUES.get(effectId)))
                     .map(packet -> (ClientboundUpdateMobEffectPacket) packet).toList();
         }
 
         private List<ClientboundRemoveMobEffectPacket> removals() {
             return viewer.packets.stream().filter(packet -> packet instanceof ClientboundRemoveMobEffectPacket remove
                             && remove.entityId() == target.player.getId()
-                            && remove.effect().equals(ExtremeEffects.VALUES.get("bucket_head")))
+                            && remove.effect().equals(ExtremeEffects.VALUES.get(effectId)))
                     .map(packet -> (ClientboundRemoveMobEffectPacket) packet).toList();
         }
 

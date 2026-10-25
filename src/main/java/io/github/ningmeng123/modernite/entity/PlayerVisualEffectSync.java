@@ -13,20 +13,25 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
-/** Share the bucket's visible state with nearby players through native effect packets. @author NingMeng123 */
+/** Share visible player effects with nearby players through native effect packets. @author NingMeng123 */
 @EventBusSubscriber(modid = ModernIte.MOD_ID)
-public final class BucketHeadSync {
-    private static final Map<ServerPlayer, Snapshot> PREVIOUS = new WeakHashMap<>();
+public final class PlayerVisualEffectSync {
+    private static final Map<String, Map<ServerPlayer, Snapshot>> PREVIOUS = Map.of(
+            "bucket_head", new WeakHashMap<>(), "reversed", new WeakHashMap<>());
 
-    private BucketHeadSync() {}
+    private PlayerVisualEffectSync() {}
 
     @SubscribeEvent public static void tick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        var holder = ExtremeEffects.VALUES.get("bucket_head");
+        PREVIOUS.forEach((id, previous) -> sync(player, id, previous));
+    }
+
+    private static void sync(ServerPlayer player, String id, Map<ServerPlayer, Snapshot> snapshots) {
+        var holder = ExtremeEffects.VALUES.get(id);
         var effect = player.getEffect(holder);
-        Snapshot previous = PREVIOUS.get(player);
+        Snapshot previous = snapshots.get(player);
         if (effect == null) {
-            if (PREVIOUS.remove(player) != null)
+            if (snapshots.remove(player) != null)
                 player.serverLevel().getChunkSource().broadcast(player,
                         new ClientboundRemoveMobEffectPacket(player.getId(), holder));
             return;
@@ -36,15 +41,17 @@ public final class BucketHeadSync {
         if (previous == null || !current.follows(previous))
             player.serverLevel().getChunkSource().broadcast(player,
                     new ClientboundUpdateMobEffectPacket(player.getId(), effect, false));
-        PREVIOUS.put(player, current);
+        snapshots.put(player, current);
     }
 
     @SubscribeEvent public static void startTracking(PlayerEvent.StartTracking event) {
         if (!(event.getEntity() instanceof ServerPlayer viewer)
                 || !(event.getTarget() instanceof ServerPlayer target)) return;
-        var effect = target.getEffect(ExtremeEffects.VALUES.get("bucket_head"));
-        if (effect != null)
-            viewer.connection.send(new ClientboundUpdateMobEffectPacket(target.getId(), effect, false));
+        for (String id : PREVIOUS.keySet()) {
+            var effect = target.getEffect(ExtremeEffects.VALUES.get(id));
+            if (effect != null)
+                viewer.connection.send(new ClientboundUpdateMobEffectPacket(target.getId(), effect, false));
+        }
     }
 
     private record Snapshot(int tick, int duration, int amplifier, boolean ambient, boolean visible, boolean showIcon) {

@@ -295,7 +295,7 @@ public final class BucketHeadClientAudit {
                 "The independent bucket geometry must copy the final animated head transform");
     }
 
-    private static NativeImage playerFrame(Minecraft mc, AbstractClientPlayer player) {
+    static NativeImage playerFrame(Minecraft mc, AbstractClientPlayer player) {
         return frame(mc, SIZE, SIZE, 0xFF101820, () -> {
             PoseStack pose = new PoseStack(); pose.translate(SIZE / 2F, SIZE - 24F, 50);
             pose.scale(110, 110, -110);

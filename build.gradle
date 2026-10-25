@@ -74,6 +74,12 @@ neoForge {
                 systemProperty 'modern_ite.lanternAudit', 'true'
                 systemProperty 'modern_ite.mobRenderAuditOutput', file('build/verification/lantern-client-audit.json').absolutePath
             }
+            if (providers.gradleProperty('modernIteReversedPlayerAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('run-reversed-player-audit')
+                systemProperty 'modern_ite.mobRenderAudit', 'true'
+                systemProperty 'modern_ite.reversedPlayerAudit', 'true'
+                systemProperty 'modern_ite.mobRenderAuditOutput', file('build/verification/reversed-player/client-audit.json').absolutePath
+            }
             if (providers.gradleProperty('modernIteForgingAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('run-forging-audit')
                 systemProperty 'modern_ite.mobRenderAudit', 'true'
@@ -120,7 +126,8 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def metalAudit = providers.gradleProperty('modernIteMetalAudit').getOrElse('false').toBoolean()
         def resurrectionAudit = providers.gradleProperty('modernIteResurrectionAudit').getOrElse('false').toBoolean()
         def launchHeightAudit = providers.gradleProperty('modernIteLaunchHeightAudit').getOrElse('false').toBoolean()
-        def directory = resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : launchHeightAudit ? 'run-launch-height-client' : 'run-client'
+        def reversedPlayerAudit = providers.gradleProperty('modernIteReversedPlayerAudit').getOrElse('false').toBoolean()
+        def directory = reversedPlayerAudit ? 'run-reversed-player-audit' : resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : launchHeightAudit ? 'run-launch-height-client' : 'run-client'
         def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()
         def existing = config.exists() ? config.getText('UTF-8') : ''

@@ -2,6 +2,16 @@
 
 开发署名：NingMeng123。
 
+## 颠倒效果同步翻转玩家模型（2026-10-25）
+
+`modern_ite:reversed` 现在接入原版玩家倒立渲染，按实体高度平移后绕 Z 轴翻转 180°，玩家皮肤、盔甲和手持物品一起倒立。保留原有镜头翻转和移动输入反向；效果解除后立即恢复正常，原版 Dinnerbone／Grumm 行为保持。可见状态同步共用 `PlayerVisualEffectSync`，对附近追踪玩家补发颠倒效果，支持开始追踪、刷新、移除和自然到期，正常倒计时不逐 tick 刷包。
+
+隔离客户端 `./gradlew.bat runClient -PmodernIteReversedPlayerAudit=true --console=plain` 通过。真实混入后的本地／远程玩家判定、玩家旋转矩阵和普通僵尸对照均通过；宽／细两种装备玩家的 GPU 截图确认整体倒立，解除后逐像素恢复。报告为 `build/verification/reversed-player/client-audit.json`，截图位于同目录的 `mob-render-audit/`，日志为 `client.log`。
+
+服务端通过 `build/verification/reversed-player/sync.init.gradle` 仅筛选 `BucketHeadSyncGameTests`，4 项真实 ChunkMap 追踪和原生效果包测试全部通过，覆盖铁桶效果回归及新增颠倒同步，日志为 `build/verification/reversed-player/sync-gametest.log`。本轮使用远程玩家渲染与原生观察者数据包验证两端，未运行两个真实客户端联机。
+
+最终 `build compileGametestJava` 和 38 项 JUnit 通过，日志为 `build/verification/reversed-player/build.log`。产物 `build/libs/modern-ite-0.2.12.jar` 包含新渲染 Mixin 和同步类，已排除旧同步类与测试类；1,502,919 字节，SHA-256 `e9b84f6184cb211960411bf569c4dacdff0994e347ec1950e94074c5145d3212`，记录见 `build/verification/reversed-player/package-audit.json`。
+
 ## 主模组统一刷怪配置与可编辑默认值（2026-10-23）
 
 ITE 0.2.9取消参考／自定义切换，以ITE 2.0.28数值为可编辑默认值。主模组的“怪物刷新权重 → 上限与刷怪节奏”页面通过可选接口接入34个刷怪控件；未安装ITE时不注册这些字段，仍显示本体配置。ITE入口仅打开同一主页面，原重复ITE规则页已移除。所有额度、日期、自然拥挤阈值、深层倍率、尝试次数和调度概率均有实际读写路径，保留独立深浅预算和来源物种条件。
