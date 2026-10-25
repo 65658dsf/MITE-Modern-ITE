@@ -1,7 +1,6 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.api.MiteExtensions;
-import io.github.ningmeng123.mite.crafting.TimedCraftingController;
 import io.github.ningmeng123.mite.entity.R196DiggerGoal;
 import io.github.ningmeng123.mite.rules.R196SpawnRules;
 import io.github.ningmeng123.modernite.content.ExtremeContent;
@@ -22,10 +21,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.EventPriority;
@@ -176,30 +172,6 @@ public final class FeedbackMobBalanceGameTests {
             memory.summons=19;MobAbilities.tick(boss,(ExtremeMob)boss);
             h.assertTrue(player.getHealth()<100,"The square's 5,5 boundary remains in range even beyond a five-block circle");
             player.discard();
-        }
-        h.succeed();
-    }
-
-    @GameTest(template="gear_empty",batch="feedback_balance")
-    public static void allTorchBundleRecipesCraftAndUnpackImmediatelyThroughNativeClicks(GameTestHelper h) {
-        try(var site=new SpawnBalanceGameTests.Site(h)) {
-            var player=site.player(0);var menu=player.inventoryMenu;player.containerMenu=menu;
-            var grid=(CraftingContainer)menu.getSlot(1).container;
-            for(var binding:List.of(Items.STRING,io.github.ningmeng123.mite.registry.MiteItems.SINEW.get()))
-                for(var fuel:List.of(Items.COAL,Items.CHARCOAL)) {
-                    menu.setCarried(ItemStack.EMPTY);grid.clearContent();
-                    grid.setItem(0,new ItemStack(Items.OAK_LOG));grid.setItem(1,new ItemStack(binding));
-                    grid.setItem(2,new ItemStack(fuel));grid.setItem(3,new ItemStack(fuel));menu.slotsChanged(grid);
-                    h.assertTrue(menu.getSlot(0).getItem().is(ExtremeContent.TORCH_BUNDLE.get()),"The registered recipe supplies a torch bundle");
-                    h.assertFalse(TimedCraftingController.isTimed(player,menu),"Bundle manufacture bypasses timed sessions");
-                    menu.clicked(0,0,ClickType.PICKUP,player);
-                    h.assertTrue(menu.getCarried().is(ExtremeContent.TORCH_BUNDLE.get())&&grid.isEmpty(),"Native click instantly takes one bundle and consumes four ingredients");
-                }
-            menu.setCarried(ItemStack.EMPTY);grid.clearContent();grid.setItem(0,new ItemStack(ExtremeContent.TORCH_BUNDLE.get()));menu.slotsChanged(grid);
-            h.assertFalse(TimedCraftingController.isTimed(player,menu),"Unpacking bypasses timed sessions");
-            menu.clicked(0,0,ClickType.PICKUP,player);
-            h.assertTrue(menu.getCarried().is(Items.TORCH)&&menu.getCarried().getCount()==16&&grid.isEmpty(),"Native click immediately unpacks exactly sixteen torches");
-            menu.setCarried(ItemStack.EMPTY);
         }
         h.succeed();
     }

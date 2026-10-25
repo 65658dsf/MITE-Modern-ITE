@@ -205,6 +205,17 @@ public final class ExtremeRules implements MiteExtensions.Policy {
         var itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());
         return itemId.getNamespace().equals("modern_ite")&&itemId.getPath().startsWith("club_")?4:original;
     }
+    @Override public float craftingDifficulty(ItemStack stack,float original) {
+        var itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if(!itemId.getNamespace().equals("modern_ite"))return original;
+        // Extreme EXItemsRegistryInit explicitly overrides every club's lowest
+        // production difficulty. Recipe batches retain their own component sum.
+        return switch(itemId.getPath()) {
+            case "club_copper","club_silver","club_gold","club_iron","club_ancient_metal",
+                    "club_mithril","club_adamantium","club_vibranium" -> 1F;
+            default -> original;
+        };
+    }
     @Override public void preserve(ItemStack source,ItemStack result) { ExtremeGear.preserve(source,result);ExtremeEnchantments.preserveStack(source,result); }
     @Override public boolean isMaintenanceRecipe(net.minecraft.world.item.crafting.CraftingRecipe recipe) { return recipe instanceof io.github.ningmeng123.modernite.gear.ProtectionTomeRecipe; }
     @Override public boolean enchantmentSupported(Holder<Enchantment> enchantment,boolean original) { return ExtremeEnchantments.supported(enchantment,original); }

@@ -1,0 +1,1386 @@
+{
+  "author": "NingMeng123",
+  "source": "R196 RecipeHelper / frozen runtime-registry.json, MITE-ITE 2.0.28 and Extreme LH 0.6.6 decompiled registrations; explicit overrides precede float32 whole-batch component sums",
+  "registry_sha256": "4a2990b4972402bd659654375918bd374b19f7dde14b327893adb9733d544712",
+  "notes": [
+    "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
+    "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
+    "Gem upgrades preserve the old counted-stack expansion into three components; lanterns and the metal upgrading furnace use explicitly identified modern adaptations.",
+    "Coverage: 154 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+    "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
+  ],
+  "components": {
+    "#minecraft:logs": {
+      "difficulty": 120.00000762939453,
+      "evidence": "R196 runtime-registry.json item 17: crafting_difficulty_as_component"
+    },
+    "minecraft:anvil": {
+      "difficulty": 24800.0,
+      "evidence": "R196 item 145 component -1; RecipeHelper fallback to lowest recipe, source_order 196"
+    },
+    "minecraft:blaze_powder": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 377: crafting_difficulty_as_component"
+    },
+    "minecraft:book": {
+      "difficulty": 175.0,
+      "evidence": "R196 runtime-registry.json item 340: crafting_difficulty_as_component"
+    },
+    "minecraft:charcoal": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 263: crafting_difficulty_as_component"
+    },
+    "minecraft:coal": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 263: crafting_difficulty_as_component"
+    },
+    "minecraft:coal_block": {
+      "difficulty": 120.00000762939453,
+      "evidence": "R196 runtime-registry.json item 173: crafting_difficulty_as_component"
+    },
+    "minecraft:copper_ingot": {
+      "difficulty": 400.0,
+      "evidence": "R196 runtime-registry.json item 962: crafting_difficulty_as_component"
+    },
+    "minecraft:diamond": {
+      "difficulty": 1600.0,
+      "evidence": "R196 runtime-registry.json item 264: crafting_difficulty_as_component"
+    },
+    "minecraft:ender_pearl": {
+      "difficulty": 100.0,
+      "evidence": "R196 runtime-registry.json item 368: crafting_difficulty_as_component"
+    },
+    "minecraft:furnace": {
+      "difficulty": 1600.0,
+      "evidence": "R196 runtime-registry.json item 61: crafting_difficulty_as_component"
+    },
+    "minecraft:ghast_tear": {
+      "difficulty": 5.0,
+      "evidence": "ITE MITEITEItemRegistryInit.registerRecipes explicitly sets ghastTear component to 5F"
+    },
+    "minecraft:glass": {
+      "difficulty": 200.0,
+      "evidence": "R196 runtime-registry.json item 20: crafting_difficulty_as_component"
+    },
+    "minecraft:glowstone_dust": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 348: crafting_difficulty_as_component"
+    },
+    "minecraft:gold_ingot": {
+      "difficulty": 400.0,
+      "evidence": "R196 runtime-registry.json item 266: crafting_difficulty_as_component"
+    },
+    "minecraft:gold_nugget": {
+      "difficulty": 44.44444274902344,
+      "evidence": "R196 runtime-registry.json item 371: crafting_difficulty_as_component"
+    },
+    "minecraft:iron_ingot": {
+      "difficulty": 800.0,
+      "evidence": "R196 runtime-registry.json item 265: crafting_difficulty_as_component"
+    },
+    "minecraft:iron_nugget": {
+      "difficulty": 88.88888549804688,
+      "evidence": "R196 runtime-registry.json item 958: crafting_difficulty_as_component"
+    },
+    "minecraft:oak_planks": {
+      "difficulty": 80.0,
+      "evidence": "R196 runtime-registry.json item 5: crafting_difficulty_as_component"
+    },
+    "minecraft:obsidian": {
+      "difficulty": 240.00001525878906,
+      "evidence": "R196 runtime-registry.json item 49: crafting_difficulty_as_component"
+    },
+    "minecraft:redstone_block": {
+      "difficulty": 0.0,
+      "evidence": "R196 runtime-registry.json item 152 component 0; preserve explicit zero"
+    },
+    "minecraft:skeleton_skull": {
+      "difficulty": 0.0,
+      "evidence": "R196 item 397 has no component or producing recipe; RecipeHelper skips unresolved negative components"
+    },
+    "minecraft:string": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 287: crafting_difficulty_as_component"
+    },
+    "minecraft:torch": {
+      "difficulty": 0.0,
+      "evidence": "R196 runtime-registry.json item 50: crafting_difficulty_as_component"
+    },
+    "mite:adamantium_ingot": {
+      "difficulty": 25600.0,
+      "evidence": "R196 runtime-registry.json item 965: crafting_difficulty_as_component"
+    },
+    "mite:bottle_of_disenchanting": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 1214: crafting_difficulty_as_component"
+    },
+    "mite:copper_nugget": {
+      "difficulty": 44.44444274902344,
+      "evidence": "R196 runtime-registry.json item 956: crafting_difficulty_as_component"
+    },
+    "mite:iron_crafting_table": {
+      "difficulty": 160.0,
+      "evidence": "R196 item 58 / BlockWorkbench hardness 1.6 * 100; metadata 7"
+    },
+    "mite:mithril_ingot": {
+      "difficulty": 6400.0,
+      "evidence": "R196 runtime-registry.json item 964: crafting_difficulty_as_component"
+    },
+    "mite:netherrack_furnace": {
+      "difficulty": 1280.0,
+      "evidence": "R196 item 224 component -1; RecipeHelper fallback to lowest recipe, source_order 95"
+    },
+    "mite:silver_ingot": {
+      "difficulty": 400.0,
+      "evidence": "R196 runtime-registry.json item 963: crafting_difficulty_as_component"
+    },
+    "mite:silver_nugget": {
+      "difficulty": 44.44444274902344,
+      "evidence": "R196 runtime-registry.json item 957: crafting_difficulty_as_component"
+    },
+    "mite:sinew": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 1174: crafting_difficulty_as_component"
+    },
+    "mite:vibranium_ingot": {
+      "difficulty": 51200.0,
+      "evidence": "ITE EarlyRiser durability 512F; ItemIngot component = material durability * 100F"
+    },
+    "modern_ite:adamantium_forging_table": {
+      "difficulty": 800.0,
+      "evidence": "ITE MITEITEBlockRegistryInit: every BlockForgingTable metadata has hardness 8F; Block component = hardness * 100F"
+    },
+    "modern_ite:diamond_chunk": {
+      "difficulty": 400.0,
+      "evidence": "ITE MITEITEItemRegistryInit DIAMOND_CHUNK: diamond component 1600F / 4F"
+    },
+    "modern_ite:fancy_red": {
+      "difficulty": 1600.0,
+      "evidence": "Extreme ItemFancyRed extends ItemRock with diamond material: explicit rock component 1600F precedes lowest-production override 1F"
+    },
+    "modern_ite:gem_damage_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_damage_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_damage_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_damage_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_damage_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_damage_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_durable_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_durable_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_durable_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_durable_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_durable_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_durable_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_effect_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_effect_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_effect_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_effect_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_effect_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_effect_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_explosionproof_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_explosionproof_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_explosionproof_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_explosionproof_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_explosionproof_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_explosionproof_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_fireproof_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_fireproof_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_fireproof_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_fireproof_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_fireproof_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_fireproof_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_health_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_health_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_health_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_health_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_health_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_health_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_nutrition_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_nutrition_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_nutrition_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_nutrition_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_nutrition_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_nutrition_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_protection_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_protection_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_protection_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_protection_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_protection_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_protection_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_recover_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_recover_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_recover_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_recover_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_recover_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_recover_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_shard_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_shard_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_shard_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_shard_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_shard_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_speed_1": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_speed_2": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_speed_3": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_speed_4": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_speed_5": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:gem_speed_6": {
+      "difficulty": 25.0,
+      "evidence": "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F"
+    },
+    "modern_ite:iron_forging_table": {
+      "difficulty": 800.0,
+      "evidence": "ITE MITEITEBlockRegistryInit: every BlockForgingTable metadata has hardness 8F; Block component = hardness * 100F"
+    },
+    "modern_ite:maple_log": {
+      "difficulty": 120.00000762939453,
+      "evidence": "Extreme BlockEXLog uses BlockHardness.log; same component as R196 log"
+    },
+    "modern_ite:maple_planks": {
+      "difficulty": 80.0,
+      "evidence": "Extreme BlockEXWood inherits BlockWood component; same as R196 planks"
+    },
+    "modern_ite:mithril_forging_table": {
+      "difficulty": 800.0,
+      "evidence": "ITE MITEITEBlockRegistryInit: every BlockForgingTable metadata has hardness 8F; Block component = hardness * 100F"
+    },
+    "modern_ite:stack_torch": {
+      "difficulty": 9.999999717180685e-10,
+      "evidence": "Extreme EXItemsRegistryInit.registerItems: Stack_Torch component 1.0E-9F"
+    },
+    "modern_ite:voucher_fishing": {
+      "difficulty": 1.0,
+      "evidence": "Extreme EXItemsRegistryInit.registerItems: voucher lowest crafting difficulty override 1F"
+    },
+    "modern_ite:voucher_planting": {
+      "difficulty": 1.0,
+      "evidence": "Extreme EXItemsRegistryInit.registerItems: voucher lowest crafting difficulty override 1F"
+    },
+    "modern_ite:voucher_villager": {
+      "difficulty": 1.0,
+      "evidence": "Extreme EXItemsRegistryInit.registerItems: voucher lowest crafting difficulty override 1F"
+    }
+  },
+  "recipes": {
+    "modern_ite:adamantium_enhance_stone": {
+      "difficulty": 40000.0,
+      "required_bench": "adamantium",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * minecraft:diamond (1600.0); 2 * mite:mithril_ingot (6400.0); 1 * mite:adamantium_ingot (25600.0); 1 * minecraft:redstone_block (0.0)"
+    },
+    "modern_ite:adamantium_forging_table": {
+      "difficulty": 77600.0,
+      "required_bench": "iron",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * mite:adamantium_ingot (25600.0); 1 * modern_ite:mithril_forging_table (800.0); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
+    },
+    "modern_ite:blaze_coal_powder": {
+      "difficulty": 125.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:blaze_powder (25.0); 1 * minecraft:coal (25.0)"
+    },
+    "modern_ite:club_copper": {
+      "difficulty": 1377.77783203125,
+      "required_bench": "copper",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * mite:copper_nugget (44.44444274902344); 3 * minecraft:copper_ingot (400.0)"
+    },
+    "modern_ite:club_gold": {
+      "difficulty": 1377.77783203125,
+      "required_bench": "gold",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:gold_nugget (44.44444274902344); 3 * minecraft:gold_ingot (400.0)"
+    },
+    "modern_ite:club_iron": {
+      "difficulty": 2755.5556640625,
+      "required_bench": "iron",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:iron_nugget (88.88888549804688); 3 * minecraft:iron_ingot (800.0)"
+    },
+    "modern_ite:club_silver": {
+      "difficulty": 1377.77783203125,
+      "required_bench": "silver",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * mite:silver_nugget (44.44444274902344); 3 * mite:silver_ingot (400.0)"
+    },
+    "modern_ite:diamond_from_chunks": {
+      "difficulty": 1600.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * modern_ite:diamond_chunk (400.0)"
+    },
+    "modern_ite:dynamic_core_adamantium": {
+      "difficulty": 128200.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 5 * mite:adamantium_ingot (25600.0); 1 * minecraft:glass (200.0); 1 * minecraft:torch (0.0); modern material-lantern adaptation uses the existing modern recipe; preserve its existing absence of a workbench-material gate"
+    },
+    "modern_ite:dynamic_core_vibranium": {
+      "difficulty": 256200.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 5 * mite:vibranium_ingot (51200.0); 1 * minecraft:glass (200.0); 1 * minecraft:torch (0.0); modern material-lantern adaptation uses the existing modern recipe; preserve its existing absence of a workbench-material gate"
+    },
+    "modern_ite:gem_box_from_gem_damage_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_damage_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_damage_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_damage_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_damage_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_damage_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_damage_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_damage_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_damage_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_damage_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_damage_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_damage_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_durable_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_durable_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_durable_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_durable_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_durable_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_durable_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_durable_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_durable_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_durable_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_durable_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_durable_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_durable_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_effect_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_effect_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_effect_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_effect_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_effect_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_effect_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_effect_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_effect_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_effect_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_effect_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_effect_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_effect_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_explosionproof_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_explosionproof_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_explosionproof_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_explosionproof_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_explosionproof_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_explosionproof_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_explosionproof_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_explosionproof_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_explosionproof_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_explosionproof_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_explosionproof_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_explosionproof_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_fireproof_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_fireproof_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_fireproof_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_fireproof_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_fireproof_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_fireproof_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_fireproof_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_fireproof_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_fireproof_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_fireproof_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_fireproof_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_fireproof_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_health_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_health_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_health_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_health_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_health_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_health_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_health_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_health_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_health_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_health_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_health_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_health_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_nutrition_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_nutrition_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_nutrition_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_nutrition_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_nutrition_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_nutrition_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_nutrition_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_nutrition_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_nutrition_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_nutrition_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_nutrition_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_nutrition_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_protection_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_protection_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_protection_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_protection_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_protection_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_protection_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_protection_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_protection_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_protection_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_protection_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_protection_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_protection_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_recover_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_recover_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_recover_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_recover_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_recover_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_recover_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_recover_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_recover_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_recover_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_recover_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_recover_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_recover_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_speed_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_speed_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_speed_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_speed_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_speed_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_speed_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_speed_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_speed_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_speed_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_speed_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_speed_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_speed_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_damage_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_damage_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_damage_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_damage_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_damage_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_damage_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_damage_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_damage_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_damage_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_damage_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_durable_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_durable_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_durable_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_durable_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_durable_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_durable_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_durable_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_durable_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_durable_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_durable_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_effect_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_effect_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_effect_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_effect_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_effect_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_effect_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_effect_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_effect_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_effect_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_effect_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_explosionproof_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_explosionproof_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_explosionproof_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_explosionproof_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_explosionproof_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_explosionproof_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_explosionproof_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_explosionproof_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_explosionproof_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_explosionproof_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_fireproof_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_fireproof_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_fireproof_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_fireproof_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_fireproof_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_fireproof_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_fireproof_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_fireproof_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_fireproof_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_fireproof_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_health_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_health_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_health_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_health_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_health_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_health_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_health_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_health_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_health_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_health_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_nutrition_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_nutrition_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_nutrition_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_nutrition_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_nutrition_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_nutrition_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_nutrition_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_nutrition_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_nutrition_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_nutrition_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_protection_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_protection_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_protection_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_protection_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_protection_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_protection_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_protection_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_protection_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_protection_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_protection_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_recover_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_recover_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_recover_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_recover_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_recover_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_recover_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_recover_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_recover_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_recover_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_recover_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_setting": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_damage_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_damage": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_damage_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_durable": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_durable_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_effect": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_effect_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_explosionproof": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_explosionproof_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_fireproof": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_fireproof_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_health": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_health_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_nutrition": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_nutrition_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_protection": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_protection_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_recover": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_recover_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_speed": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_speed_1 (25.0)"
+    },
+    "modern_ite:gem_speed_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_speed_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_speed_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_speed_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_speed_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_speed_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_speed_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_speed_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_speed_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_speed_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:grinder": {
+      "difficulty": 52800.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 8 * mite:mithril_ingot (6400.0); 1 * modern_ite:fancy_red (1600.0)"
+    },
+    "modern_ite:iron_enhance_stone": {
+      "difficulty": 2400.0,
+      "required_bench": "iron",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * minecraft:copper_ingot (400.0); 2 * mite:silver_ingot (400.0); 1 * minecraft:iron_ingot (800.0)"
+    },
+    "modern_ite:iron_forging_table": {
+      "difficulty": 26560.0,
+      "required_bench": "iron",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * minecraft:oak_planks (80.0); 1 * minecraft:iron_ingot (800.0); 1 * mite:iron_crafting_table (160.0); 1 * minecraft:anvil (24800.0); 3 * minecraft:obsidian (240.00001525878906); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
+    },
+    "modern_ite:maple_planks": {
+      "difficulty": 120.00001,
+      "required_bench": "wood",
+      "source_order": 503,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:maple_log (120.00000762939453); same wood operation as the existing R196 oak manufacturing rule"
+    },
+    "modern_ite:maple_slab": {
+      "difficulty": 240.0,
+      "required_bench": null,
+      "source_order": 396,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:maple_planks (80.0); same wood operation as the existing R196 oak manufacturing rule"
+    },
+    "modern_ite:maple_stairs": {
+      "difficulty": 480.0,
+      "required_bench": null,
+      "source_order": 171,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 6 * modern_ite:maple_planks (80.0); same wood operation as the existing R196 oak manufacturing rule"
+    },
+    "modern_ite:metal_upgrading_furnace": {
+      "difficulty": 3520.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 8 * minecraft:obsidian (240.00001525878906); 1 * minecraft:furnace (1600.0); modern-only furnace adaptation uses eight obsidian and the regular furnace component"
+    },
+    "modern_ite:mithril_enhance_stone": {
+      "difficulty": 8800.0,
+      "required_bench": "mithril",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * minecraft:iron_ingot (800.0); 2 * minecraft:gold_ingot (400.0); 1 * mite:mithril_ingot (6400.0)"
+    },
+    "modern_ite:mithril_forging_table": {
+      "difficulty": 20000.0,
+      "required_bench": "iron",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * mite:mithril_ingot (6400.0); 1 * modern_ite:iron_forging_table (800.0); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
+    },
+    "modern_ite:nether_ender_eye": {
+      "difficulty": 100.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "Extreme RecipesArmorMixin.addRecipes explicitly calls setDifficulty(100F) for fortress eye"
+    },
+    "modern_ite:protection_tome": {
+      "difficulty": 225.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * modern_ite:gem_protection_1 (25.0); 1 * minecraft:book (175.0)"
+    },
+    "modern_ite:resurrection_array": {
+      "difficulty": 25.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "Extreme RecipesToolsMixin.addRecipes explicitly sets 25F; select explicit source override over duplicate EXBlocksRegistryInit registration"
+    },
+    "modern_ite:stack_torch_sinew_charcoal": {
+      "difficulty": 195.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * #minecraft:logs (120.00000762939453); 1 * mite:sinew (25.0); 2 * minecraft:charcoal (25.0)"
+    },
+    "modern_ite:stack_torch_sinew_coal": {
+      "difficulty": 195.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * #minecraft:logs (120.00000762939453); 1 * mite:sinew (25.0); 2 * minecraft:coal (25.0)"
+    },
+    "modern_ite:stack_torch_string_charcoal": {
+      "difficulty": 195.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * #minecraft:logs (120.00000762939453); 1 * minecraft:string (25.0); 2 * minecraft:charcoal (25.0)"
+    },
+    "modern_ite:stack_torch_string_coal": {
+      "difficulty": 195.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * #minecraft:logs (120.00000762939453); 1 * minecraft:string (25.0); 2 * minecraft:coal (25.0)"
+    },
+    "modern_ite:universal_enhance_stone": {
+      "difficulty": 580.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * minecraft:glowstone_dust (25.0); 1 * mite:bottle_of_disenchanting (25.0); 2 * minecraft:blaze_powder (25.0); 1 * minecraft:ghast_tear (5.0); 2 * minecraft:book (175.0); 1 * minecraft:ender_pearl (100.0)"
+    },
+    "modern_ite:unpack_torches_1": {
+      "difficulty": 9.999999717180685e-10,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:stack_torch (9.999999717180685e-10)"
+    },
+    "modern_ite:vibranium_chest": {
+      "difficulty": 409600.0,
+      "required_bench": "vibranium",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 8 * mite:vibranium_ingot (51200.0)"
+    },
+    "modern_ite:vibranium_forging_table": {
+      "difficulty": 154400.0,
+      "required_bench": "iron",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * mite:vibranium_ingot (51200.0); 1 * modern_ite:adamantium_forging_table (800.0); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
+    },
+    "modern_ite:vibranium_furnace": {
+      "difficulty": 158560.0,
+      "required_bench": "vibranium",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * mite:vibranium_ingot (51200.0); 2 * minecraft:obsidian (240.00001525878906); 2 * mite:adamantium_ingot (25600.0); 2 * minecraft:diamond (1600.0); 1 * mite:netherrack_furnace (1280.0)"
+    },
+    "modern_ite:voucher_club_core": {
+      "difficulty": 3.0,
+      "required_bench": "copper",
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:voucher_fishing (1.0); 1 * modern_ite:voucher_planting (1.0); 1 * modern_ite:voucher_villager (1.0); Extreme ItemMobVoucher declares copper material"
+    },
+    "modern_ite:wither_skull": {
+      "difficulty": 960.0000610351562,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * minecraft:skeleton_skull (0.0); 8 * minecraft:coal_block (120.00000762939453)"
+    },
+    "minecraft:lantern": {
+      "difficulty": 711.111083984375,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "Extreme EXBlocksRegistryInit.registerRecipes line 209: eight iron nuggets and one torch; the modern vanilla recipe has identical inputs. RecipeHelper float32 sum = 711.1111F; old blockLantern uses circuits, so no metal workbench gate."
+    }
+  }
+}
