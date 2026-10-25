@@ -1,0 +1,12 @@
+// Disposable client verification only. Author: NingMeng123.
+gradle.projectsEvaluated {
+    def p = rootProject
+    def client = p.extensions.getByName('neoForge').runs.getByName('client')
+    client.systemProperty 'modern_ite.cosmicShaderWorldAudit', 'true'
+    client.systemProperty 'modern_ite.cosmicExpectedShaderPack', p.providers.gradleProperty('cosmicExpected').get()
+    client.systemProperty 'modern_ite.cosmicLifecycleAudit', p.providers.gradleProperty('cosmicLifecycleAudit').getOrElse('false')
+    client.systemProperty 'modern_ite.cosmicNativeLayerAudit', p.providers.gradleProperty('cosmicNativeLayerAudit').getOrElse('false')
+    client.systemProperty 'modern_ite.cosmicExpectedPack', p.providers.gradleProperty('cosmicExpectedPack').getOrElse('')
+    client.systemProperty 'modern_ite.cosmicShaderWorldAuditOutput', p.file(p.providers.gradleProperty('cosmicOutput').get()).absolutePath
+    client.programArguments.addAll '--width', '1600', '--height', '900'
+}

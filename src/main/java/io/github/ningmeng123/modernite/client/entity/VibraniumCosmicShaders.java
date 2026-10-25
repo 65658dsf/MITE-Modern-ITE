@@ -3,9 +3,9 @@ package io.github.ningmeng123.modernite.client.entity;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.entity.ArmorAuraRules;
 import java.io.IOException;
@@ -38,6 +38,15 @@ public final class VibraniumCosmicShaders {
     public static final int PERIOD_TICKS = 400;
     private static final int MAX_DEFERRED_GLINT = 8;
     private static final ResourceLocation SHADER = ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "vibranium_cosmic");
+    // Keep the native entity layout, but own its identity: Iris extends the shared NEW_ENTITY
+    // format while capturing world meshes, even when those meshes are drawn after its pipeline.
+    private static final VertexFormat FORMAT = VertexFormat.builder()
+            .add("Position", VertexFormatElement.POSITION)
+            .add("Color", VertexFormatElement.COLOR)
+            .add("UV0", VertexFormatElement.UV0)
+            .add("UV1", VertexFormatElement.UV1)
+            .add("UV2", VertexFormatElement.UV2)
+            .add("Normal", VertexFormatElement.NORMAL).padding(1).build();
     private static final Map<ResourceLocation, RenderType> TYPES = new HashMap<>();
     private static final Map<LivingEntity, DeferredGlint> DEFERRED_GLINT = new IdentityHashMap<>();
     private static final Deque<DeferredGlint> GLINT_POOL = new ArrayDeque<>();
@@ -60,7 +69,7 @@ public final class VibraniumCosmicShaders {
         cosmicYaw = null;
         cosmicPitch = null;
         TYPES.clear();
-        event.registerShader(new ShaderInstance(event.getResourceProvider(), SHADER, DefaultVertexFormat.NEW_ENTITY), loaded -> {
+        event.registerShader(new ShaderInstance(event.getResourceProvider(), SHADER, FORMAT), loaded -> {
             cosmicTime = requiredUniform(loaded, "CosmicTime");
             cosmicYaw = requiredUniform(loaded, "CosmicYaw");
             cosmicPitch = requiredUniform(loaded, "CosmicPitch");
@@ -78,27 +87,40 @@ public final class VibraniumCosmicShaders {
 
     public static void render(PoseStack pose, MultiBufferSource caller, VibraniumCosmicModel<?> model,
             ResourceLocation texture, int light, float ticks) {
-        if (VibraniumCosmicIrisCompat.render(pose, caller, model, texture)) return;
+        if (VibraniumCosmicIrisCompat.shadowPass()) return;
         if (!isReady()) return;
         RenderSystem.assertOnRenderThread();
         RenderType type = TYPES.computeIfAbsent(texture, VibraniumCosmicShaders::createType);
+        var camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        float yaw = (float)Math.toRadians(camera.getYRot());
+        float pitch = (float)Math.toRadians(camera.getXRot());
+        if (VibraniumCosmicIrisCompat.deferWorldSurface()) {
+            // Snapshot posed vertices, never retain a mutable model or entity.
+            ShaderPackSurfaceRenderer.submit(pose, model, type, light, () -> setUniforms(ticks, yaw, pitch));
+            return;
+        }
         MultiBufferSource.BufferSource output = outputBuffers(caller);
         if (output == null) return;
         // Native armor and trims must be drawn before transparent starlight is blended over them.
         // Flushing only our own type would leave the underlying material in a pending buffer.
         output.endBatch();
+        setUniforms(ticks, yaw, pitch);
+        model.renderToBuffer(pose, output.getBuffer(type), light, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+        // Iris FullyBufferedMultiBufferSource ignores endBatch(RenderType), including with packs
+        // disabled. Flush the whole source so this pass uses this entity's clock and camera.
+        output.endBatch();
+    }
+
+    private static void setUniforms(float ticks, float yaw, float pitch) {
         float wrappedTicks = ticks % PERIOD_TICKS;
         if (wrappedTicks < 0) wrappedTicks += PERIOD_TICKS;
         cosmicTime.set(wrappedTicks / 20F);
-        var camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        cosmicYaw.set((float)Math.toRadians(camera.getYRot()));
-        cosmicPitch.set((float)Math.toRadians(camera.getXRot()));
-        model.renderToBuffer(pose, output.getBuffer(type), light, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
-        // BufferSource normally batches entities. This pass must use this entity's clock and camera.
-        output.endBatch(type);
+        cosmicYaw.set(yaw);
+        cosmicPitch.set(pitch);
     }
 
     private static MultiBufferSource.BufferSource outputBuffers(MultiBufferSource caller) {
+        caller = VibraniumCosmicIrisCompat.unwrapBuffers(caller);
         var renderBuffers = Minecraft.getInstance().renderBuffers();
         if (caller instanceof MultiBufferSource.BufferSource source) return source;
         // The world's outline wrapper shares this exact parent buffer. Original armor still
@@ -110,7 +132,7 @@ public final class VibraniumCosmicShaders {
     /** Includes growth-affix protection V even when ItemStack.hasFoil() is false. */
     private static boolean shouldDeferGlint(LivingEntity entity, MultiBufferSource caller,
             HumanoidArmorLayer<?, ?, ?> armorLayer) {
-        return !VibraniumCosmicIrisCompat.activeShaderPack()
+        return !VibraniumCosmicIrisCompat.deferWorldSurface() && !VibraniumCosmicIrisCompat.shadowPass()
                 && outputBuffers(caller) != null && ArmorAuraRules.fullProtectionFive(entity)
                 && VibraniumGildingLayer.followsArmorLayer(entity, armorLayer);
     }
@@ -186,7 +208,7 @@ public final class VibraniumCosmicShaders {
     }
 
     private static RenderType createType(ResourceLocation texture) {
-        return RenderType.create("modern_ite_vibranium_cosmic", DefaultVertexFormat.NEW_ENTITY,
+        return RenderType.create("modern_ite_vibranium_cosmic", FORMAT,
                 VertexFormat.Mode.QUADS, 1536, true, true,
                 RenderType.CompositeState.builder()
                         .setShaderState(new RenderStateShard.ShaderStateShard(() -> shader))
