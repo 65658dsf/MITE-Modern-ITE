@@ -155,6 +155,11 @@ public final class MobRenderRegressionAudit {
         capturing=true;
         try {
             check(ownedWorld(mc),"Only the newly created audit world may be rendered");
+            if (Boolean.getBoolean("modern_ite.modelCompatibilityAudit")) {
+                report.addProperty("scope", "Five source species with borrowed CEM animation, native UVs, attached ghast head, uppercut and stable creeper faces");
+                report.add("model_compatibility", ModelCompatibilityAudit.capture(mc, screenshots()));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.reversedPlayerAudit")) {
                 report.addProperty("scope", "Native upside-down player predicate, pose matrices and equipped GPU renders for both skins");
                 report.add("reversed_player", ReversedPlayerClientAudit.capture(mc, screenshots()));

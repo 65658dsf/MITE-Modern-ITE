@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import java.lang.reflect.Method;
+import java.util.function.Supplier;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.ZombieModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -21,8 +22,15 @@ public final class VariantZombieModel extends ZombieModel<Zombie> {
     private static final Method EMF_ANIMATE=emfAnimateMethod();
     private static boolean emfAnimationFailed;
     private final ExtremeKind kind;
+    private final SourceZombieAnimation sourceAnimation;
 
-    public VariantZombieModel(ModelPart root,ExtremeKind kind){super(root);this.kind=kind;}
+    public VariantZombieModel(ModelPart root,ExtremeKind kind){this(root,kind,null);}
+    public VariantZombieModel(ModelPart root,ExtremeKind kind,Supplier<ModelPart> animationRoot){
+        super(root);this.kind=kind;sourceAnimation=new SourceZombieAnimation(this,root,animationRoot);
+    }
+
+    public boolean freshAnimationsApplied(){return sourceAnimation.applied();}
+    public boolean freshHeadMapped(){return sourceAnimation.headMapped();}
 
     public static LayerDefinition headlessLayer(){
         var mesh=HumanoidModel.createMesh(CubeDeformation.NONE,0);
@@ -32,10 +40,15 @@ public final class VariantZombieModel extends ZombieModel<Zombie> {
     }
 
     @Override public void setupAnim(Zombie entity,float limb,float amount,float age,float yaw,float pitch){
+        sourceAnimation.reset();
         super.setupAnim(entity,limb,amount,age,yaw,pitch);
-        // Models are shared by every entity of this species; restore this before applying its pose.
-        head.xScale=head.yScale=head.zScale=kind==ExtremeKind.FISHING_ROD_ZOMBIE?2F:1F;
-        hat.xScale=hat.yScale=hat.zScale=head.xScale;
+        sourceAnimation.apply(this,entity,limb,amount,age,yaw,pitch);
+        // The direct-CEM fishing zombie keeps its two-times head. A borrowed FA
+        // head already includes its current scale; do not flatten it back to one.
+        if(kind==ExtremeKind.FISHING_ROD_ZOMBIE||!sourceAnimation.applied()){
+            head.xScale=head.yScale=head.zScale=kind==ExtremeKind.FISHING_ROD_ZOMBIE?2F:1F;
+            hat.xScale=hat.yScale=hat.zScale=head.xScale;
+        }
         if(kind==ExtremeKind.ZOMBIE_DOOR&&entity.getMainHandItem().is(Items.IRON_DOOR)){
             boolean right=entity.getMainArm()==HumanoidArm.RIGHT;
             float side=right?1F:-1F;

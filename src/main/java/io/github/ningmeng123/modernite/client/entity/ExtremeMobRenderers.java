@@ -4,6 +4,8 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.entity.*;
+import io.github.ningmeng123.mite.client.mob.MobModelLayers;
+import io.github.ningmeng123.mite.client.mob.SourceCreeperModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.CreeperModel;
 import net.minecraft.client.model.GhastModel;
@@ -85,17 +87,17 @@ public final class ExtremeMobRenderers {
                 case ZOMBIE -> new ZombieRenderer(context){
                     {
                         if(kind==ExtremeKind.ZOMBIE_CALLER)this.model=new CallerModel(context.bakeLayer(CALLER));
-                        if(kind==ExtremeKind.ZOMBIE_FLY_AWAY)this.model=new VariantZombieModel(context.bakeLayer(STRONG_ZOMBIE),kind);
+                        if(kind==ExtremeKind.ZOMBIE_FLY_AWAY)this.model=new VariantZombieModel(context.bakeLayer(STRONG_ZOMBIE),kind,()->context.bakeLayer(ModelLayers.ZOMBIE));
                         if(kind==ExtremeKind.FISHING_ROD_ZOMBIE||kind==ExtremeKind.ZOMBIE_DOOR)this.model=new VariantZombieModel(context.bakeLayer(ModelLayers.ZOMBIE),kind);
                         if(kind==ExtremeKind.ZOMBIE_GHAST||kind==ExtremeKind.DRAGON_ZOMBIE){
-                            this.model=new VariantZombieModel(context.bakeLayer(HEADLESS_ZOMBIE),kind);
+                            this.model=new VariantZombieModel(context.bakeLayer(HEADLESS_ZOMBIE),kind,()->context.bakeLayer(ModelLayers.ZOMBIE));
                             addLayer(new SpeciesHeadLayer(this,kind,context.bakeLayer(kind==ExtremeKind.ZOMBIE_GHAST?GHAST_HEAD:DRAGON_HEAD)));
                         }
                         if(kind==ExtremeKind.ZOMBIE_DOOR){
                             layers.removeIf(layer->layer instanceof ItemInHandLayer);
                             addLayer(new DoorShieldLayer(this));
                         }
-                        if(kind==ExtremeKind.RED_GHOUL)this.model=new ZombieModel<>(context.bakeLayer(LEGACY_ZOMBIE));
+                        if(kind==ExtremeKind.RED_GHOUL)this.model=new VariantZombieModel(context.bakeLayer(LEGACY_ZOMBIE),kind,()->context.bakeLayer(ModelLayers.ZOMBIE));
                         if(kind==ExtremeKind.ZOMBIE_CHAOS||kind==ExtremeKind.ZOMBIE_INVISIBLE_LOOK_UP)this.model=new ZombieModel<Zombie>(context.bakeLayer(ModelLayers.ZOMBIE)){
                             @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,0x0DFFFFFF);}
                         };
@@ -130,7 +132,12 @@ public final class ExtremeMobRenderers {
                     if(kind==ExtremeKind.RUN_CREEPER||kind==ExtremeKind.PHASE_CREEPER||kind==ExtremeKind.CHAOS_CREEPER)
                         this.model=new VariantCreeperModel(context.bakeLayer(kind==ExtremeKind.RUN_CREEPER?RUN_CREEPER:kind==ExtremeKind.PHASE_CREEPER?PHASE_CREEPER:CHAOS_CREEPER),kind);
                     if(kind==ExtremeKind.PHASE_CREEPER)addLayer(new SourceGlowLayer<Creeper,CreeperModel<Creeper>>(this,creeper->texture("phase_creeper_glow")));
-                    if(kind==ExtremeKind.BLACK_INFERNAL_CREEPER)addLayer(new SourceGlowLayer<Creeper,CreeperModel<Creeper>>(this,creeper->texture("black_infernal_creeper_glow")));
+                    if(kind==ExtremeKind.BLACK_INFERNAL_CREEPER){
+                        this.model=new SourceCreeperModel(context.bakeLayer(MobModelLayers.SOURCE_CREEPER),()->context.bakeLayer(ModelLayers.CREEPER));
+                        layers.removeIf(layer->layer instanceof net.minecraft.client.renderer.entity.layers.CreeperPowerLayer);
+                        addLayer(new SourceCreeperPowerLayer(this,context));
+                        addLayer(new SourceGlowLayer<Creeper,CreeperModel<Creeper>>(this,creeper->texture("black_infernal_creeper_glow")));
+                    }
                     if(kind==ExtremeKind.CHAOS_CREEPER)addLayer(new ChaosArrowLayer(this));
                     if(kind==ExtremeKind.INVISIBLE_CREEPER||kind==ExtremeKind.INVISIBLE_REVERSED_CREEPER)this.model=new CreeperModel<Creeper>(context.bakeLayer(ModelLayers.CREEPER)){
                         @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,0x0DFFFFFF);}

@@ -13,7 +13,7 @@ repositories {
         content { includeGroup 'mezz.jei' }
     }
 }
-def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.10.jar'))
+def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.14.jar'))
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output
@@ -32,6 +32,14 @@ neoForge {
         client {
             client()
             gameDirectory = file('run-client')
+            if (providers.gradleProperty('modernIteModelCompatibilityAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('build/verification/model-compat-run')
+                programArguments.addAll '--width', '1280', '--height', '900'
+                systemProperty 'modern_ite.mobRenderAudit', 'true'
+                systemProperty 'modern_ite.modelCompatibilityAudit', 'true'
+                systemProperty 'modern_ite.mobRenderAuditOutput', file(providers.gradleProperty('modernIteModelCompatibilityAuditOutput')
+                        .getOrElse('build/verification/model-compatibility-client-audit.json')).absolutePath
+            }
             if (providers.gradleProperty('modernIteLaunchHeightAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('run-launch-height-client')
                 systemProperty 'modern_ite.launchHeightAudit', 'true'
@@ -135,6 +143,8 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def infernalExplosionAudit = providers.gradleProperty('modernIteInfernalExplosionAudit').getOrElse('false').toBoolean()
         def reversedPlayerAudit = providers.gradleProperty('modernIteReversedPlayerAudit').getOrElse('false').toBoolean()
         def directory = infernalExplosionAudit ? 'build/verification/infernal-explosion/client-run' : reversedPlayerAudit ? 'run-reversed-player-audit' : resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : launchHeightAudit ? 'run-launch-height-client' : 'run-client'
+        if (providers.gradleProperty('modernIteModelCompatibilityAudit').getOrElse('false').toBoolean()) directory = 'build/verification/model-compat-run'
+        directory = providers.gradleProperty('modernIteClientDirectory').getOrElse(directory)
         def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()
         def existing = config.exists() ? config.getText('UTF-8') : ''
