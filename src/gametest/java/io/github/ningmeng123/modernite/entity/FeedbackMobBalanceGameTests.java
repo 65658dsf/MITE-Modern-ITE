@@ -197,29 +197,47 @@ public final class FeedbackMobBalanceGameTests {
         }catch(Throwable failure){cleanup.run();throw failure;}
     }
 
-    @GameTest(template="gear_empty",batch="feedback_balance")
+    @GameTest(template="gear_empty",batch="infernal_entity_range",timeoutTicks=500)
     public static void blackInfernalDamageAndKnockbackStopAtFortyAndLegacyChildrenAtTwenty(GameTestHelper h) {
         boolean griefing=h.getLevel().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
-        try(var site=new SpawnBalanceGameTests.Site(h)) {
+        var site=new SpawnBalanceGameTests.Site(h);
+        var bounds=new net.minecraft.world.phys.AABB(site.origin,site.origin).inflate(44);
+        Runnable releaseChunks=InfernalExplosionGameTestSupport.holdChunks(site.level,bounds);
+        boolean[] closed={false};
+        Runnable cleanup=()->{
+            if(closed[0])return;closed[0]=true;
+            site.level.getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(griefing,site.level.getServer());
+            site.close();releaseChunks.run();
+        };
+        try {
             site.date(256,256,true);
             site.level.getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(false,site.level.getServer());
-            for(boolean child:new boolean[]{false,true}){
-                Creeper creeper=(Creeper)site.mob(ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER));
-                if(child)MobSplitting.markChild(creeper);
-                float radius=child?20F:40F;
-                Mob inside=site.mob(EntityType.COW),outside=site.mob(EntityType.COW);
-                inside.setPos(site.origin.add(radius-1,0,0));outside.setPos(site.origin.add(radius+1,0,0));
-                inside.setNoGravity(true);outside.setNoGravity(true);
-                site.level.getChunkAt(inside.blockPosition());site.level.getChunkAt(outside.blockPosition());
-                site.level.addFreshEntity(inside);site.level.addFreshEntity(outside);
+            infernalEntityRange(h,site,bounds,false,cleanup);
+        }catch(Throwable failure){cleanup.run();throw failure;}
+    }
+
+    private static void infernalEntityRange(GameTestHelper h,SpawnBalanceGameTests.Site site,net.minecraft.world.phys.AABB bounds,boolean child,Runnable cleanup) {
+        Creeper creeper=(Creeper)site.mob(ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER));
+        if(child)MobSplitting.markChild(creeper);
+        float radius=child?20F:40F;
+        Mob inside=site.mob(EntityType.COW),outside=site.mob(EntityType.COW);
+        inside.setPos(site.origin.add(radius-1,0,0));outside.setPos(site.origin.add(radius+1,0,0));
+        inside.setNoGravity(true);outside.setNoGravity(true);
+        site.level.getChunkAt(inside.blockPosition());site.level.getChunkAt(outside.blockPosition());
+        h.assertTrue(site.level.addFreshEntity(inside)&&site.level.addFreshEntity(outside),"Both real range-test targets join the loaded level");
+        InfernalExplosionGameTestSupport.whenEntityVisible(h,site.level,inside,bounds,()->
+            InfernalExplosionGameTestSupport.whenEntityVisible(h,site.level,outside,bounds,()->{
+            try {
+                inside.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);outside.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
                 float insideHealth=inside.getHealth(),outsideHealth=outside.getHealth();
                 site.level.explode(creeper,creeper.getX(),creeper.getY(),creeper.getZ(),3F,Level.ExplosionInteraction.MOB);
                 h.assertTrue(inside.getHealth()<insideHealth&&inside.getDeltaMovement().lengthSqr()>0,"Real damage and knockback reach one block inside radius"+radius);
                 h.assertTrue(outside.getHealth()==outsideHealth&&outside.getDeltaMovement().lengthSqr()==0,"Real damage and knockback cannot reach one block outside radius"+radius);
                 inside.discard();outside.discard();
-            }
-        }finally{h.getLevel().getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(griefing,h.getLevel().getServer());}
-        h.succeed();
+                if(child){cleanup.run();h.succeed();}
+                else infernalEntityRange(h,site,bounds,true,cleanup);
+            }catch(Throwable failure){cleanup.run();throw failure;}
+        },cleanup),cleanup);
     }
 
     @GameTest(template="gear_empty",batch="feedback_balance")

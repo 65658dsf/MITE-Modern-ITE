@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.world.SourceExplosionBlocks;
+import io.github.ningmeng123.mite.worldgen.TrialBlockDrops;
 import io.github.ningmeng123.modernite.ModernIte;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -11,8 +12,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -28,7 +33,7 @@ public final class InfernalExplosionDestruction {
     private static final Map<MinecraftServer, State> SERVERS = new WeakHashMap<>();
     private InfernalExplosionDestruction() {}
 
-    private record Target(BlockPos pos, BlockState state) {}
+    private record Target(BlockPos pos, BlockState state, BlockEntity inventory) {}
     private static final class Job {
         final ServerLevel level; final Explosion explosion; final List<Target> targets; int next;
         Job(ServerLevel level, Explosion explosion, List<Target> targets) { this.level = level; this.explosion = explosion; this.targets = targets; }
@@ -57,7 +62,10 @@ public final class InfernalExplosionDestruction {
         for (var pos : explosion.getToBlow()) {
             double distance = pos.distToCenterSqr(explosion.center());
             if (distance > radius * radius || !level.hasChunkAt(pos)) continue;
-            shells.get(Math.min((int)radius, (int)Math.sqrt(distance))).add(new Target(pos.immutable(), level.getBlockState(pos)));
+            BlockState state=level.getBlockState(pos);
+            var blockEntity=state.hasBlockEntity()?level.getBlockEntity(pos):null;
+            shells.get(Math.min((int)radius, (int)Math.sqrt(distance))).add(new Target(pos.immutable(), state,
+                    blockEntity instanceof Container?blockEntity:null));
         }
         List<Target> targets = new ArrayList<>(explosion.getToBlow().size());
         shells.forEach(targets::addAll);
@@ -74,17 +82,48 @@ public final class InfernalExplosionDestruction {
             for (int slice = 0; slice < 32 && job.next < job.targets.size() && processed < MAX_BLOCKS_PER_TICK; slice++) {
                 if (System.nanoTime() - started >= MAX_NANOS_PER_TICK) break;
                 Target target = job.targets.get(job.next++); processed++;
-                if (!job.level.hasChunkAt(target.pos()) || job.level.getBlockState(target.pos()) != target.state()) continue;
-                InfernalExplosionLoot.withoutBlockDrops(job.explosion, () -> {
-                    if (job.level.getBlockEntity(target.pos()) instanceof Container container) container.clearContent();
-                    SourceExplosionBlocks.destroy(job.level, target.pos(), target.state(), job.explosion);
-                });
+                if (!job.level.hasChunkAt(target.pos())) continue;
+                BlockState current=job.level.getBlockState(target.pos());
+                if (target.inventory()!=null) {
+                    // Double-chest connections and furnace lighting can change while the same inventory remains.
+                    if (!current.is(target.state().getBlock()) || job.level.getBlockEntity(target.pos())!=target.inventory()) continue;
+                } else if (current!=target.state()) continue;
+                destroy(job, target, current);
             }
             if (job.next < job.targets.size()) state.jobs.addLast(job);
         }
         state.lastTickNanos = System.nanoTime() - started;
         state.maxTickNanos = Math.max(state.maxTickNanos, state.lastTickNanos);
         state.processedBlocks += processed; state.serviceTicks++;
+    }
+
+    private static void destroy(Job job, Target target, BlockState state) {
+        var blockEntity=job.level.getBlockEntity(target.pos());
+        if (!(blockEntity instanceof Container container)) {
+            InfernalExplosionLoot.withoutBlockDrops(job.explosion,
+                    () -> SourceExplosionBlocks.destroy(job.level, target.pos(), state, job.explosion));
+            return;
+        }
+        // Only this physical block's slots: combined or remote item handlers may expose other containers.
+        boolean dropInventory=state.is(Blocks.DECORATED_POT)
+                || !TrialBlockDrops.suppresses(job.level, target.pos());
+        List<ItemStack> contents=new ArrayList<>(container.getContainerSize());
+        try {
+            for (int slot=0; slot<container.getContainerSize(); slot++) contents.add(container.removeItemNoUpdate(slot));
+            // The empty inventory prevents native removal callbacks from duplicating the saved contents.
+            InfernalExplosionLoot.withoutBlockDrops(job.explosion,
+                    () -> SourceExplosionBlocks.destroy(job.level, target.pos(), state, job.explosion));
+        } finally {
+            if (job.level.getBlockEntity(target.pos())==blockEntity) {
+                // A custom block may reject its removal callback after the public protection event.
+                for (int slot=0; slot<contents.size(); slot++) container.setItem(slot, contents.get(slot));
+                container.setChanged();
+            } else if (dropInventory) {
+                // Outside suppression and explosion decay; shulker-box contents also survive as loose items.
+                for (ItemStack stack:contents) if (!stack.isEmpty())
+                    Containers.dropItemStack(job.level, target.pos().getX(), target.pos().getY(), target.pos().getZ(), stack);
+            }
+        }
     }
 
     @SubscribeEvent public static void unload(LevelEvent.Unload event) {

@@ -37,7 +37,7 @@ public final class InfernalExplosionLootGameTests {
     private InfernalExplosionLootGameTests() {}
 
     @GameTest(template="gear_empty",batch="infernal_no_loot",timeoutTicks=1200)
-    public static void infernalCraterContainersAndDirectKillsProduceNoLootButOrdinaryExplosionsDo(GameTestHelper h) {
+    public static void infernalCraterDropsContainerContentsButNoTerrainOrMobLootAndOrdinaryExplosionsStillWork(GameTestHelper h) {
         var fixture=new Fixture(h);
         try {
             var site=fixture.site;var level=site.level;
@@ -73,7 +73,9 @@ public final class InfernalExplosionLootGameTests {
             h.assertTrue(!cornerTool.isRemoved()&&ItemStack.matches(originalTool,cornerTool.getItem())&&cornerTool.position().equals(cornerStart)&&cornerTool.getDeltaMovement().lengthSqr()==0,"A tool at the native AABB corner (40,40), outside the radius40 sphere, receives neither source wear nor motion");
             InfernalExplosionGameTestSupport.finishAfterJobs(h,level,()->{
                 h.assertTrue(level.getBlockState(stone).isAir()&&level.getBlockState(chest).isAir()&&level.getBlockState(furnace).isAir(),"Stone, filled chest and filled furnace are actually destroyed");
-                h.assertTrue(fixture.loot.size()==initialLootEntities,"No new block, container, source-furnace, fragment, mob item or XP entities are admitted; new="+fixture.loot.subList(initialLootEntities,fixture.loot.size()));
+                h.assertTrue(fixture.items().filter(item->item.getItem().is(Items.DIAMOND)).mapToInt(item->item.getItem().getCount()).sum()==46,"Both filled containers release every stored diamond exactly once");
+                h.assertTrue(fixture.loot.subList(initialLootEntities,fixture.loot.size()).stream().allMatch(entity->entity instanceof ItemEntity item&&item.getItem().is(Items.DIAMOND)),
+                        "Only the stored inventory is admitted; no container bodies, furnace material, stone, mob equipment, fragments or XP; new="+fixture.loot.subList(initialLootEntities,fixture.loot.size()));
                 h.assertTrue(fixture.emeraldCount(insideStart)==11&&!existing.isRemoved()&&existing.getItem().getCount()==7,"Existing merged inner stacks retain eleven emeralds and the unrelated outer stack retains seven");
                 h.assertTrue(fixture.innerEmeralds(insideStart).allMatch(item->item.position().distanceToSqr(insideStart)<.02&&item.getDeltaMovement().lengthSqr()==0)&&cornerTool.position().equals(cornerStart)&&ItemStack.matches(originalTool,cornerTool.getItem()),"Existing inner emeralds and outer-corner tool remain unchanged after queued destruction completes");
                 h.assertTrue(!existingXp.isRemoved()&&fixture.loot.stream().filter(entity->entity instanceof ExperienceOrb&&!entity.isRemoved()).count()==1,"No new mob or block XP; unrelated existing XP remains");
@@ -81,9 +83,10 @@ public final class InfernalExplosionLootGameTests {
 
                 var ordinaryChest=BlockPos.containing(site.origin).offset(12,0,0);
                 fixture.container(ordinaryChest,Blocks.CHEST.defaultBlockState());
+                int diamondsBeforeOrdinary=fixture.items().filter(item->item.getItem().is(Items.DIAMOND)).mapToInt(item->item.getItem().getCount()).sum();
                 level.explode(null,ordinaryChest.getX()+.5,ordinaryChest.getY()+.5,ordinaryChest.getZ()+.5,3F,Level.ExplosionInteraction.MOB);
                 h.assertTrue(level.getBlockState(ordinaryChest).isAir(),"The ordinary control really destroys its filled container");
-                h.assertTrue(fixture.items().anyMatch(item->item.getItem().is(Items.DIAMOND)),"An ordinary explosion still drops container contents");
+                h.assertTrue(fixture.items().filter(item->item.getItem().is(Items.DIAMOND)).mapToInt(item->item.getItem().getCount()).sum()==diamondsBeforeOrdinary+23,"An ordinary explosion still releases its own complete container contents");
                 Mob ordinaryVictim=fixture.victim(site.origin.add(24,0,0));
                 level.explode(null,ordinaryVictim.getX()+1,ordinaryVictim.getY()+.4,ordinaryVictim.getZ(),3F,Level.ExplosionInteraction.MOB);
                 h.assertTrue(!ordinaryVictim.isAlive(),"The ordinary control really kills its equipped victim");
