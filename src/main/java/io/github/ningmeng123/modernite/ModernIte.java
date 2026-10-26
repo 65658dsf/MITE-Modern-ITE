@@ -25,6 +25,7 @@ public final class ModernIte {
         io.github.ningmeng123.modernite.content.metal.MetalUpgradingContent.register(bus);
         ExtremeGear.register(bus);
         ExtremeMobs.register(bus);
+        io.github.ningmeng123.modernite.entity.InfernalExplosionPayload.register(bus);
         io.github.ningmeng123.modernite.entity.RabidDogContent.register(bus);
         io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments.register(bus);
         io.github.ningmeng123.modernite.economy.ExtremeEconomy.register(bus);

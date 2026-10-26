@@ -23,6 +23,8 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.common.NeoForge;
@@ -138,7 +140,7 @@ public final class FeedbackMobBalanceGameTests {
     }
 
     @GameTest(template="gear_empty",batch="feedback_balance")
-    public static void blackInfernalBlastDoublesAndNeverCreatesSplitChildren(GameTestHelper h) {
+    public static void blackInfernalBlastHasFortyBlockReachAndNeverCreatesSplitChildren(GameTestHelper h) {
         try(var site=new SpawnBalanceGameTests.Site(h)) {
             site.date(256,256,true);
             Creeper parent=(Creeper)site.mob(ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER));
@@ -147,11 +149,105 @@ public final class FeedbackMobBalanceGameTests {
             NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,ExplosionEvent.Start.class,listener);
             try {
                 Method detonate=Creeper.class.getDeclaredMethod("explodeCreeper");detonate.setAccessible(true);detonate.invoke(parent);
-                h.assertTrue(observed.get()!=null&&Math.abs(observed.get().radius()-75F)<.001F,"Real native detonation reaches the doubled radius75 replacement");
+                h.assertTrue(observed.get()!=null&&Math.abs(observed.get().radius()*2F-40F)<.001F,"Real native detonation selects entities and applies knockback within forty blocks");
             }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}
             finally{NeoForge.EVENT_BUS.unregister(listener);}
             for(int seed=0;seed<256;seed++){parent.getRandom().setSeed(seed);MobSplitting.trySplit(parent);}
             h.assertTrue(site.level.getEntitiesOfClass(Mob.class,parent.getBoundingBox().inflate(16),mob->mob.getPersistentData().hasUUID(SpawnPopulation.SUMMONER)&&parent.getUUID().equals(mob.getPersistentData().getUUID(SpawnPopulation.SUMMONER))).isEmpty(),"Neither native explosion nor repeated death callbacks create black creeper children");
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="infernal_crater",timeoutTicks=1200)
+    public static void blackInfernalCraterIsAnActualFortyBlockCircleAndPreservesBlastProofBlocks(GameTestHelper h) {
+        var terrain=new java.util.LinkedHashMap<BlockPos,net.minecraft.world.level.block.state.BlockState>();
+        boolean griefing=h.getLevel().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        boolean blockDrops=h.getLevel().getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS);
+        var site=new SpawnBalanceGameTests.Site(h);
+        Runnable releaseChunks=InfernalExplosionGameTestSupport.holdChunks(site.level,new net.minecraft.world.phys.AABB(site.origin,site.origin).inflate(44));
+        Runnable cleanup=()->{
+            terrain.forEach((pos,state)->h.getLevel().setBlock(pos,state,2));
+            h.getLevel().getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(griefing,h.getLevel().getServer());
+            h.getLevel().getGameRules().getRule(GameRules.RULE_DOBLOCKDROPS).set(blockDrops,h.getLevel().getServer());
+            site.close();
+            releaseChunks.run();
+        };
+        try {
+            site.date(256,256,true);
+            site.level.getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(true,site.level.getServer());
+            site.level.getGameRules().getRule(GameRules.RULE_DOBLOCKDROPS).set(true,site.level.getServer());
+            Creeper creeper=(Creeper)site.mob(ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER));
+            BlockPos floor=BlockPos.containing(site.origin).below();
+            var bedrock=floor.offset(12,0,0);var obsidian=floor.offset(13,0,0);
+            for(int x=-42;x<=42;x++)for(int z=-42;z<=42;z++){
+                var pos=floor.offset(x,0,z);terrain.put(pos,site.level.getBlockState(pos));
+                site.level.setBlock(pos,(pos.equals(bedrock)?Blocks.BEDROCK:pos.equals(obsidian)?Blocks.OBSIDIAN:Blocks.STONE).defaultBlockState(),2);
+            }
+            var center=creeper.position().add(0,creeper.getBbHeight()/4,0);
+            site.level.explode(creeper,creeper.getX(),creeper.getY(),creeper.getZ(),3F,Level.ExplosionInteraction.MOB);
+            h.assertTrue(InfernalExplosionDestruction.remainingJobs(site.level)>0,"Terrain destruction is queued instead of blocking the explosion tick");
+            InfernalExplosionGameTestSupport.finishAfterJobs(h,site.level,()->{
+                for(var pos:terrain.keySet()){
+                    boolean protectedBlock=pos.equals(bedrock)||pos.equals(obsidian);
+                    boolean removed=pos.distToCenterSqr(center)<=40D*40D&&!protectedBlock;
+                    h.assertTrue(site.level.getBlockState(pos).isAir()==removed,"The actual stone platform follows the spherical radius40 cross-section at "+pos.subtract(floor)+", state="+site.level.getBlockState(pos)+", loaded="+site.level.hasChunkAt(pos));
+                }
+                h.assertTrue(site.level.getBlockState(bedrock).is(Blocks.BEDROCK)&&site.level.getBlockState(obsidian).is(Blocks.OBSIDIAN),"Bedrock and obsidian survive inside the crater");
+            },cleanup);
+        }catch(Throwable failure){cleanup.run();throw failure;}
+    }
+
+    @GameTest(template="gear_empty",batch="feedback_balance")
+    public static void blackInfernalDamageAndKnockbackStopAtFortyAndLegacyChildrenAtTwenty(GameTestHelper h) {
+        boolean griefing=h.getLevel().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        try(var site=new SpawnBalanceGameTests.Site(h)) {
+            site.date(256,256,true);
+            site.level.getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(false,site.level.getServer());
+            for(boolean child:new boolean[]{false,true}){
+                Creeper creeper=(Creeper)site.mob(ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER));
+                if(child)MobSplitting.markChild(creeper);
+                float radius=child?20F:40F;
+                Mob inside=site.mob(EntityType.COW),outside=site.mob(EntityType.COW);
+                inside.setPos(site.origin.add(radius-1,0,0));outside.setPos(site.origin.add(radius+1,0,0));
+                inside.setNoGravity(true);outside.setNoGravity(true);
+                site.level.getChunkAt(inside.blockPosition());site.level.getChunkAt(outside.blockPosition());
+                site.level.addFreshEntity(inside);site.level.addFreshEntity(outside);
+                float insideHealth=inside.getHealth(),outsideHealth=outside.getHealth();
+                site.level.explode(creeper,creeper.getX(),creeper.getY(),creeper.getZ(),3F,Level.ExplosionInteraction.MOB);
+                h.assertTrue(inside.getHealth()<insideHealth&&inside.getDeltaMovement().lengthSqr()>0,"Real damage and knockback reach one block inside radius"+radius);
+                h.assertTrue(outside.getHealth()==outsideHealth&&outside.getDeltaMovement().lengthSqr()==0,"Real damage and knockback cannot reach one block outside radius"+radius);
+                inside.discard();outside.discard();
+            }
+        }finally{h.getLevel().getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(griefing,h.getLevel().getServer());}
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="feedback_balance")
+    public static void blackInfernalCraterRespectsMobGriefingAndCanceledExplosions(GameTestHelper h) {
+        var terrain=new java.util.LinkedHashMap<BlockPos,net.minecraft.world.level.block.state.BlockState>();
+        boolean griefing=h.getLevel().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        try(var site=new SpawnBalanceGameTests.Site(h)) {
+            site.date(256,256,true);
+            Creeper creeper=(Creeper)site.mob(ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER));
+            var pos=BlockPos.containing(site.origin).below();var outer=pos.offset(41,0,0);
+            for(var point:List.of(pos,outer)){terrain.put(point,site.level.getBlockState(point));site.level.setBlock(point,Blocks.STONE.defaultBlockState(),2);}
+            site.level.getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(false,site.level.getServer());
+            site.level.explode(creeper,creeper.getX(),creeper.getY(),creeper.getZ(),3F,Level.ExplosionInteraction.MOB);
+            h.assertTrue(site.level.getBlockState(pos).is(Blocks.STONE),"mobGriefing=false prevents the actual crater");
+            site.level.getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(true,site.level.getServer());
+            Consumer<ExplosionEvent.Start> cancel=event->{if(event.getExplosion().getDirectSourceEntity()==creeper)event.setCanceled(true);};
+            NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST,ExplosionEvent.Start.class,cancel);
+            try{site.level.explode(creeper,creeper.getX(),creeper.getY(),creeper.getZ(),3F,Level.ExplosionInteraction.MOB);}
+            finally{NeoForge.EVENT_BUS.unregister(cancel);}
+            h.assertTrue(site.level.getBlockState(pos).is(Blocks.STONE)&&site.level.getBlockState(outer).is(Blocks.STONE),"Canceling the explosion prevents both original and replacement terrain damage");
+            Consumer<ExplosionEvent.Detonate> protect=event->{if(event.getExplosion().getDirectSourceEntity()==creeper)event.getAffectedBlocks().remove(pos);};
+            NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST,ExplosionEvent.Detonate.class,protect);
+            try{site.level.explode(creeper,creeper.getX(),creeper.getY(),creeper.getZ(),3F,Level.ExplosionInteraction.MOB);}
+            finally{NeoForge.EVENT_BUS.unregister(protect);}
+            h.assertTrue(site.level.getBlockState(pos).is(Blocks.STONE),"A normal Detonate protection listener can remove blocks after spherical selection");
+        }finally{
+            terrain.forEach((pos,state)->h.getLevel().setBlock(pos,state,2));
+            h.getLevel().getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(griefing,h.getLevel().getServer());
         }
         h.succeed();
     }

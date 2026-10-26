@@ -62,7 +62,7 @@
 | chaos_creeper | 混乱苦力怕 | EntityChaosCreeper | 自然；64 天起 | 头顶旋转箭头、爆炸伤害附混乱 |
 | invisible_creeper | 隐形苦力怕 | EntityInvisibleCreeper | 自然；通用维度 | 隐身效果与5%可见渲染，死亡/爆炸清除隐身避免药水云残留 |
 | invisible_reversed_creeper | 隐形颠倒苦力怕 | EntityInvisibleReversedCreeper | 自然；通用维度 | 隐形，爆炸伤害附颠倒，死亡/爆炸清除隐身 |
-| black_infernal_creeper | 黑暗地狱苦力怕 | EntityBlackInfernalCreeper | 自然；33天起，主世界 | 专属生命曲线、大范围双强度爆炸，玩家击杀掉复活传送阵 |
+| black_infernal_creeper | 黑暗地狱苦力怕 | EntityBlackInfernalCreeper | 自然；33天起，主世界 | 专属生命曲线、实际半径40格球形爆坑（直径约80格）、无掉落分帧破坏、上升翻卷蘑菇云与白色冲击环，玩家击杀掉复活传送阵 |
 | flash_creeper | 闪光苦力怕 | EntityFlashCreeper | 自然；通用维度 | 爆炸可见范围施加100 tick白屏闪光，最后30 tick渐退 |
 | wither_creeper | 凋零苦力怕 | EntityWitherCreeper | 自然；通用维度 | 爆炸可见范围施加160 tick凋零 |
 | witch_lord | 女巫领主 | EntityWitchLord | 自然；至少96天，主世界/地底；挑战随从 | 370 基础生命、25 tick 投药、最多召 2 流浪女巫，并检查附近女巫数量 |

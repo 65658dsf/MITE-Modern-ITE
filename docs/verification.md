@@ -2,6 +2,38 @@
 
 开发署名：NingMeng123。
 
+## 黑暗地狱苦力怕蘑菇云消失修复（2026-10-26）
+
+优化版曾把整朵云放进原生粒子引擎的单个批次。原生资源重载清空或粒子队列容量逐出时不会调用粒子 remove，因此云仍在计时，批次却已不再被绘制；批次原先固定在世界原点，也不能正确向按位置裁剪粒子的模组表达位置。现在在客户端 AFTER_PARTICLES 世界阶段直接提交同一个排序批次，位置使用实际爆心；不依赖原生队列存续，继续使用粒子图集、深度测试与最多四朵云的预算。资源重载后为现有烟团重新绑定图集 sprite。半径 40、无掉落、约 6 秒展开与 18 秒结束保持。
+
+原生实机报告 `build/verification/infernal-explosion/visibility-regression/client-audit.json` 通过：实际苦力怕在 X=300.5 自爆，六个阶段截图确认逐渐升高、变大；第 80 tick 主动执行原生 ParticleEngine.clearParticles 后，第 120／220 tick 仍正常显示。第 120 tick 可见火云约 242×353 像素，坑内抬头截图确认近距离仍可见，低头时云在视野上方。400 tick 后清理完成，爆炸后及动画结束时均无物品、经验。对应日志 `build/infernal-visibility-client.log`。
+
+额外装载 Sodium 0.8.13、Iris 1.8.14（关闭光影）、EntityCulling 1.11.3、AsyncParticles 21.1.4.8、AcceleratedRendering 1.0.14 的同一实际爆炸审计通过，报告为 `build/verification/infernal-explosion/visibility-optimized-client/client-audit.json`，日志为 `build/infernal-visibility-optimized-client.log`。截图再次确认队列清空后正常显示；平均帧间隔基线 8.43 ms、升起阶段 8.49 ms、成熟阶段 8.47 ms，受硬件和帧限影响，不代表所有设备或开启第三方光影的性能。
+
+38 项 JUnit、最终构建和 16 项真实服务器专项测试通过，日志分别为 `build/infernal-visibility-final-build.log` 与 `build/visibility-server-final.log`。新增回归验证球形边界前置于公开 Detonate、半径外 (40,40) 角落铁镐不移动且不损坏、既有绿宝石总量保持，以及普通爆炸仍将 5 颗绿宝石转换为 5 个碎片。厚地形仍完整处理 129395 块，新增物品与经验为 0；此轮初始同步 36.65 ms、后续 79 tick，单次最大 15.38 ms，4 ms 是回调检查点间软预算，不能视作硬上限。
+
+修复成品冻结在 `build/delivery/mushroom-visibility-fix/modern-ite-0.2.13.jar`，1545132 字节，SHA-256 `C9964A2E1B4DE98075C9AFE66138F571F5F9E6B8F5143B70995C2894B99FF319`。`build/verification/infernal-explosion/visibility-package-audit.json` 核对 303 个生产类、747 个资源与编译输出逐字节一致，无测试、本体类或嵌套 JAR。配套本体仍为 mite-0.2.12.jar。
+
+## 黑暗地狱苦力怕圆形爆坑、环流蘑菇云与性能优化（2026-10-25）
+
+开发署名：NingMeng123。
+
+成年体的实际破坏范围是以爆点为中心、半径 40 格的球，地面截面为直径约 80 格的圆；旧存档小型个体为半径 20 格。伤害与击退立即结算并遵守 40／20 格边界，方块在保护模组筛选后从中心向外分帧破坏。整个服务器共享每 tick 最多 2048 个方块、约 4 ms 的软预算，多个爆坑公平轮转；不会在一个 tick 破坏 13 万方块或一次发送整坑坐标。保留基岩、黑曜石、流体、取消事件与 mobGriefing；排队期间修改过的方块、未加载的区块会跳过，关停破坏规则、卸载世界和停服会清理对应作业。
+
+此专属爆炸不产生方块、容器内容物、直接炸死生物的物品与经验；原版和其他爆炸仍正常掉落。抑制仅作用于本次爆炸的死亡或方块回调，不修改全局掉落规则，不额外扫删世界里已有物品。后续边界回归补充：专属爆炸保留既有物品，不把绿宝石、钻石转换为新碎片；公开 Detonate 事件前将实体候选限制在真实球形边界内。
+
+烟云运动设计参考 HBM 的 [EntityNukeTorex](https://github.com/HbmMods/Hbm-s-Nuclear-Tech-GIT/blob/06e9aa0a3d6aa3a1e627bc5079f98a169265eddd/src/main/java/com/hbm/entity/effect/EntityNukeTorex.java) 与 [RenderTorex](https://github.com/HbmMods/Hbm-s-Nuclear-Tech-GIT/blob/06e9aa0a3d6aa3a1e627bc5079f98a169265eddd/src/main/java/com/hbm/render/entity/effect/RenderTorex.java)，在本项目中独立实现地面供烟、上升热柱和云顶内侧上升／顶部外翻／外缘下卷的环流；原版粒子贴图配合空间热度，形成较亮热核与同时存在的暗色外围烟团。约 6 秒逐渐展开，后续继续缓慢翻卷、供烟并冷却，18 秒结束。上方凝结雾延后出现，每颗新生粒子都平滑长大和淡入。
+
+全细节每朵云最多生成 868 个烟团，较原来的 2492 个减少约 65%；远距离和减少／最少粒子设置继续降低密度，最多保留 4 朵云。整个效果复用一个排序批次，按远近正确绘制透明团块；公共升高、扩张、冷却和环流时钟每云每 tick 只计算一次，无需逐粒子网络包。2026-10-26 改为在世界粒子阶段直接绘制，详见上方消失修复。
+
+配套本体为 mite-0.2.12.jar。38 项 JUnit、构建与全部 GameTest 源码编译通过；modern_ite_feedback 与 modern_ite_infernal_benchmark 共 16 项真实服务端测试全部通过，日志为 build/infernal-optimized-server-rerun.log。逐格检查 85×85 石头平台圆形边界、19／21 格幼体边界、实体伤害与击退、基岩／黑曜石、已修改方块保护、开关破坏规则、取消爆炸及保护事件；开启正常掉落规则，用填满物品的箱子／熔炉和保证装备掉落的生物验证专属零掉落，并验证普通爆炸仍有物品和经验。
+
+厚地形实测选中并完整处理 129395 块石头，新物品和经验球均为 0。初始同步处理约 102.10 ms（选块 52.55 ms、入队 49.55 ms），后续使用 193 个服务 tick，最慢一次约 6.42 ms；4 ms 是检查点间软预算，单次原生方块回调无法中断。正常 20 TPS 约需 9.65 秒完成这块厚地表，期间继续正常 tick；GameTest 不限速墙钟约 1165 ms 不应当作正常游戏挖坑时间。此前整坑同步破坏与掉落的同规模测试约 3978 ms、1611 个掉落物，见 build/infernal-benchmark.log。
+
+隔离客户端通过真实自爆、网络包接收、六个阶段的升高／展开截图、粒子批次与帧耗时统计，以及爆炸后和动画结束时物品／经验为零的验证。报告为 build/verification/infernal-explosion/client-audit.json，截图为同目录 mushroom-cloud-{5,20,45,80,120,220}ticks.png，最终构建与实机日志为 build/infernal-optimized-final.log。400 tick 检查烟云完成清理。运行命令为 ./gradlew.bat runClient -PmodernIteInfernalExplosionAudit=true；本轮未进行第三方光影或双客户端联机验收。
+
+该轮历史成品已冻结在 build/delivery/mushroom-optimized/modern-ite-0.2.12.jar，为 1541353 字节，SHA-256 FB33ACB34D5606929A6E2C1E6E9DD0F00D03881CA8E36570053405430B2E45DE；不包含 GameTest 或客户端审计类。新版成品见上方消失修复。
+
 ## 颠倒效果同步翻转玩家模型（2026-10-25）
 
 `modern_ite:reversed` 现在接入原版玩家倒立渲染，按实体高度平移后绕 Z 轴翻转 180°，玩家皮肤、盔甲和手持物品一起倒立。保留原有镜头翻转和移动输入反向；效果解除后立即恢复正常，原版 Dinnerbone／Grumm 行为保持。可见状态同步共用 `PlayerVisualEffectSync`，对附近追踪玩家补发颠倒效果，支持开始追踪、刷新、移除和自然到期，正常倒计时不逐 tick 刷包。

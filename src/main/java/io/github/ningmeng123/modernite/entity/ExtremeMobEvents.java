@@ -3,7 +3,6 @@ package io.github.ningmeng123.modernite.entity;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns;
-import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
 import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
@@ -250,15 +249,21 @@ public final class ExtremeMobEvents {
         if(event.isCanceled())return;
         if(state.extremeKind()!=BLACK_INFERNAL_CREEPER||mob.getPersistentData().getBoolean("modern_ite:processing_blast"))return;
         event.setCanceled(true);mob.getPersistentData().putBoolean("modern_ite:processing_blast",true);
-        float scale=MobSplitting.isChild(mob)?.5F:1F;
-        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new R196ExplosionCalculator(mob,68.75F*scale),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),75F*scale,false,Level.ExplosionInteraction.MOB);}
+        float radius=InfernalExplosionCalculator.RADIUS*(MobSplitting.isChild(mob)?.5F:1F);
+        // Native entity selection and knockback use twice Explosion.radius; the crater has its own physical radius.
+        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new InfernalExplosionCalculator(mob,radius),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),radius/2F,false,Level.ExplosionInteraction.MOB);}
         finally{mob.getPersistentData().remove("modern_ite:processing_blast");}
     }
     private static boolean invisibleCreeper(ExtremeKind kind){return kind==INVISIBLE_CREEPER||kind==INVISIBLE_REVERSED_CREEPER;}
     @SubscribeEvent
     public static void creeperBlastEffects(ExplosionEvent.Detonate event){
         if(event.getLevel().isClientSide||!(event.getExplosion().getDirectSourceEntity() instanceof Mob mob)||!(mob instanceof ExtremeMob state))return;
-        ExtremeKind kind=state.extremeKind();if(kind!=FLASH_CREEPER&&kind!=WITHER_CREEPER)return;
+        ExtremeKind kind=state.extremeKind();
+        if(kind==BLACK_INFERNAL_CREEPER&&mob.getPersistentData().getBoolean("modern_ite:processing_blast")){
+            InfernalExplosionPayload.send((ServerLevel)event.getLevel(),event.getExplosion().center(),InfernalExplosionCalculator.RADIUS*(MobSplitting.isChild(mob)?.5F:1F));
+            return;
+        }
+        if(kind!=FLASH_CREEPER&&kind!=WITHER_CREEPER)return;
         var center=event.getExplosion().center();double radius=event.getExplosion().radius()*2D;
         for(Entity entity:event.getAffectedEntities())if(entity instanceof Player player&&player.isAlive()&&!player.isSpectator()&&!player.isCreative()
                 &&player.distanceToSqr(center)<=radius*radius&&Explosion.getSeenPercent(center,player)>0){
