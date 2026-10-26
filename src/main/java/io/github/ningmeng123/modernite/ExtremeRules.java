@@ -6,7 +6,6 @@ import io.github.ningmeng123.mite.rules.*;
 import io.github.ningmeng123.mite.worldgen.*;
 import io.github.ningmeng123.modernite.content.*;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
-import io.github.ningmeng123.modernite.entity.ExtremeSpawnProgression;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.SpawnPopulation;
 import io.github.ningmeng123.modernite.entity.IteReferenceSpawns;
@@ -189,11 +188,7 @@ public final class ExtremeRules implements MiteExtensions.Policy {
                     !ExtremeWorldState.graceActive(context.level())||!SpawnPopulation.hostile(entry.type())).toList();
         }
         var result=new ArrayList<>(original);ExtremeMobs.addSpawnEntries(context,pos,result);
-        long day=io.github.ningmeng123.mite.worldgen.BloodMoonInvasion.highestDay(context.level());
-        result.removeIf(entry->!ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(entry.type()).toString(),day,
-                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"),
-                io.github.ningmeng123.modernite.config.IteConfig.integer("extreme_mob_spawn_limit_day"))
-                ||ExtremeWorldState.graceActive(context.level())&&io.github.ningmeng123.modernite.entity.SpawnPopulation.hostile(entry.type()));
+        result.removeIf(entry->!SpawnPopulation.automaticAllowed(context.level(),entry.type()));
         return List.copyOf(result);
     }
     @Override public double maximumHealth(Player player,double original) { return ExtremeGear.health(player,original); }

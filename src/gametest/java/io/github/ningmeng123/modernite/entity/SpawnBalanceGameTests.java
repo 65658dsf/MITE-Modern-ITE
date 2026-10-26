@@ -101,12 +101,17 @@ public final class SpawnBalanceGameTests {
                 for(var level:site.level.getServer().getAllLevels())for(String id:STRONG) {
                     var type=BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id));
                     h.assertTrue(BuiltInRegistries.ENTITY_TYPE.containsKey(ResourceLocation.parse(id)),"The strong identity really exists: "+id);
-                    int first=id.startsWith("modern_ite:")?65:id.equals("mite:ancient_bone_lord")?192:33;
+                    int first=switch(id) {
+                        case "modern_ite:witch_lord" -> 96;
+                        case "modern_ite:undying_zombie_emperor" -> 128;
+                        case "mite:ancient_bone_lord" -> 192;
+                        default -> id.startsWith("modern_ite:")?65:33;
+                    };
                     h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=first),"Per-namespace gate at day "+day+": "+id+" in "+level.dimension().location());
                 }
                 Mob lord=site.mob(ExtremeMobs.type(ExtremeKind.WITCH_LORD));
                 EventHooks.finalizeMobSpawn(lord,site.level,site.level.getCurrentDifficultyAt(lord.blockPosition()),MobSpawnType.MOB_SUMMONED,null);
-                h.assertTrue(lord.isSpawnCancelled()==(day<65),"Skill finalization consumes the ITE floor on day "+day);
+                h.assertTrue(lord.isSpawnCancelled()==(day<96),"Skill finalization consumes both the ITE floor and the default witch-lord date on day "+day);
             }
             site.date(1,192,true);
             for(String id:STRONG)h.assertTrue(SpawnPopulation.automaticAllowed(site.level,BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(id))),"Historical unlock survives current-day rewind: "+id);
@@ -122,8 +127,13 @@ public final class SpawnBalanceGameTests {
         try(Site site=new Site(h);var settings=new IteReferenceSpawnGameTests.Settings()) {
             settings.set("extreme_mob_spawn_limit_day",65);
             var types=new ArrayList<EntityType<?>>();
-            for(var kind:ExtremeKind.values())types.add(ExtremeMobs.type(kind));
+            var dates=new java.util.HashMap<EntityType<?>,Integer>();
+            for(var kind:ExtremeKind.values()) {
+                var type=ExtremeMobs.type(kind);types.add(type);
+                dates.put(type,Math.max(65,kind.speciesFirstDay));
+            }
             types.add(RabidDogContent.RABID_DOG.get());
+            dates.put(RabidDogContent.RABID_DOG.get(),65);
             {
                 site.date(64,64,true);
                 site.level.getServer().overworld().setDayTime(1_535_999L);
@@ -135,8 +145,8 @@ public final class SpawnBalanceGameTests {
                 for(long day:new long[]{63,64,65}) {
                     site.date(day,day,true);
                     for(var level:site.level.getServer().getAllLevels())for(var type:types)
-                        h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=65),
-                                "Every ITE identity shares the complete-day floor: "+type+" day="+day);
+                        h.assertTrue(SpawnPopulation.automaticAllowed(level,type)==(day>=dates.get(type)),
+                                "Every ITE identity shares the complete-day floor and its later species default: "+type+" day="+day);
                     if(day==65)continue;
                     var pos=BlockPos.containing(site.origin);
                     var context=new MiteExtensions.SpawnContext(site.level,R196SpawnRules.Category.MONSTER,false);

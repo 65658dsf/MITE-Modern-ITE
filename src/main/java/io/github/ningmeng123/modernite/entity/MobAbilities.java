@@ -52,11 +52,10 @@ public final class MobAbilities {
     }
     /** Shared habitats for the extra Extreme species in either natural-spawn preset. */
     static boolean customNaturalAllowed(ExtremeKind k,ServerLevel l){
-        if((k!=WANDERING_WITCH&&day(l)<k.naturalFirstDay(IteConfig.integer("extreme_mob_spawn_limit_day")))||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
+        if(day(l)<IteConfig.extremeMobFirstDay("modern_ite:"+k.id(),l.dimension()==Level.OVERWORLD)
+                ||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
         boolean nether=l.dimension()==Level.NETHER,under=underground(l),over=l.dimension()==Level.OVERWORLD;
-        if(k==ANNIHILATION_SKELETON&&over&&day(l)<33)return false;
         if(!over&&!nether&&!under)return false;
-        if(k==WANDERING_WITCH&&day(l)<IteConfig.integer("GameMechanics.MobSpawning.wandering_witch_spawn_limit_day_"+(over?"overworld":"other")))return false;
         if(k==SKELETON_FLOATING)return under;
         if(k==DARK_IRON_GOLEM||k==SKELETON_KNOCKBACK||k==SKELETON_LIGHTNING)return under||nether;
         if(k==WITHER_SKELETON_ARROW)return nether;

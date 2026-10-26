@@ -4,12 +4,14 @@ import io.github.ningmeng123.mite.worldgen.BloodMoonInvasion;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.modernite.ExtremeRules;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.modernite.world.ExtremeWorldState;
 import io.github.ningmeng123.modernite.world.DeferredStructureSpawns;
 import java.util.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -45,11 +47,14 @@ public final class SpawnPopulation {
         return mob.getType()==ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE)&&mob.getPersistentData().getBoolean(PLAYER_DEATH_MIMIC);
     }
     public static boolean automaticAllowed(ServerLevel level,EntityType<?> type) {
-        return !hostile(type)||!ExtremeWorldState.graceActive(level)
-                &&(IteReferenceSpawns.enabled()?IteReferenceSpawns.automaticAllowed(level,type):
-                        ExtremeSpawnProgression.unlocked(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),BloodMoonInvasion.highestDay(level),
-                                io.github.ningmeng123.modernite.config.IteConfig.integer("ancient_bone_lord_spawn_limit_day"),
-                                io.github.ningmeng123.modernite.config.IteConfig.integer("extreme_mob_spawn_limit_day")));
+        if(!hostile(type))return true;
+        if(ExtremeWorldState.graceActive(level))return false;
+        if(IteReferenceSpawns.enabled())return IteReferenceSpawns.automaticAllowed(level,type);
+        String id=BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
+        long day=BloodMoonInvasion.highestDay(level);
+        if(id.startsWith("modern_ite:"))return day>=IteConfig.extremeMobFirstDay(id,level.dimension()==Level.OVERWORLD);
+        return ExtremeSpawnProgression.unlocked(id,day,IteConfig.integer("ancient_bone_lord_spawn_limit_day"),
+                IteConfig.integer("extreme_mob_spawn_limit_day"));
     }
     public static int localCount(ServerLevel level,AABB box) {return ledger(level).count(null,box,null,false);}
     /** Includes pending joins whose native entity section is not queryable yet. */

@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.config;
 
 import io.github.ningmeng123.modernite.content.ExtremeContent;
+import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.world.ConfigurableNetherOre;
 import io.netty.buffer.Unpooled;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public final class IteConfigGameTests {
 
     @GameTest(template="gear_empty",batch="ite_config")
     public static void settingsOnlyExposeTheAuditedImplementedKeys(GameTestHelper h) {
-        Set<String> known=Set.of(("first_day_longer_day_time in_rain_debuff_time player_enchant_defense "
+        Set<String> known=new HashSet<>(Set.of(("first_day_longer_day_time in_rain_debuff_time player_enchant_defense "
                 +"player_defense_cooldown player_defence_max_time underworld_random_teleport underworld_random_teleport_time_new "
                 +"netherrack_damage netherrack_damage_limit_day crit_enchantment_chance_boost_per_lvl crit_enchantment_damage_boost_per_lvl "
                 +"emergency_cooldown_ emergency_cooldown_reduce_every_armor emergency_health_recover_amount conqueror_damage_boost_per_lvl "
@@ -41,14 +42,17 @@ public final class IteConfigGameTests {
                 +"wandering_witch_spawn_limit_day_overworld wandering_witch_spawn_limit_day_other wandering_witch_spawn_chance_underworld "
                 +"zombie_lord_spawn_frequency zombie_pigman_lord_spawn_frequency annihilation_skeleton_spawn_frequency wandering_witch_spawn_frequency "
                 +"nether_adamantium_max_count_per_chunk nether_adamantium_max_count_per_vein zombie_pigman_attack_animails "
-                +"in_wall_damage_for_player stepped_mob_damage_factor stepped_mob_damage_progress_max stepped_mob_damage_progress_increase_day stepped_player_damage_progress stepped_player_damage_increase_per_lvl fishing_xp player_disarm_player blood_moon_max_hostile_fraction ancient_bone_lord_spawn_limit_day mob_max_spawn_count_increase_per_day underworld_debuff underworld_debuff_period1 underworld_debuff_period2 nether_debuff nether_debuff_time quartz_max_exp_level diamond_exp emerald_exp quartz_exp lapis_exp golden_apple_eat_time enchanted_golden_apple_eat_time iron_to_mithril_cook_time iron_block_count_to_mithril mithril_to_adamantium_cook_time mithril_block_count_to_adamantium all_protection_v_defence_fraction bone_lord_tweak infernal_creeper_boost villager_wool_to_emerald_shard_count villager_wool_to_emerald_shard_shard_count mob_defense mob_attack_cause_fire mob_disarm_when_defence animal_ill_to_death_time breed_xp_chicken breed_xp_sheep breed_xp_pig breed_xp_cow log_players_interact_with_portal").split(" "));
+                +"in_wall_damage_for_player stepped_mob_damage_factor stepped_mob_damage_progress_max stepped_mob_damage_progress_increase_day stepped_player_damage_progress stepped_player_damage_increase_per_lvl fishing_xp player_disarm_player blood_moon_max_hostile_fraction ancient_bone_lord_spawn_limit_day mob_max_spawn_count_increase_per_day underworld_debuff underworld_debuff_period1 underworld_debuff_period2 nether_debuff nether_debuff_time quartz_max_exp_level diamond_exp emerald_exp quartz_exp lapis_exp golden_apple_eat_time enchanted_golden_apple_eat_time iron_to_mithril_cook_time iron_block_count_to_mithril mithril_to_adamantium_cook_time mithril_block_count_to_adamantium all_protection_v_defence_fraction bone_lord_tweak infernal_creeper_boost villager_wool_to_emerald_shard_count villager_wool_to_emerald_shard_shard_count mob_defense mob_attack_cause_fire mob_disarm_when_defence animal_ill_to_death_time breed_xp_chicken breed_xp_sheep breed_xp_pig breed_xp_cow log_players_interact_with_portal").split(" ")));
+        for(var kind:ExtremeKind.values())if(kind!=ExtremeKind.MIMIC_ZOMBIE&&kind!=ExtremeKind.WANDERING_WITCH)
+            known.add(kind.id()+"_spawn_limit_day");
+        known.add("rabid_dog_spawn_limit_day");
         var actual=new HashSet<String>();
         for(var option:IteConfig.options()) {
             h.assertTrue(actual.add(option.key()),"Each public setting key is unique: "+option.key());
             h.assertTrue(option.path().getLast().equals(option.key()),"Config paths retain their old JSON leaf keys");
         }
         h.assertTrue(actual.equals(known)&&actual.equals(IteConfig.defaults().keySet()),"The schema exactly matches the audited implemented settings");
-        h.assertTrue(actual.size()==111,"All 111 selected extension settings are registered");
+        h.assertTrue(actual.size()==155,"All 155 selected extension settings are registered");
         for(String unsupported:Set.of("overworld_adamantite_ore","underworld_mantle_block_offset","copper_frequency_overworld","copper_chance_underworld"))
             h.assertTrue(!actual.contains(unsupported),"An unimplemented legacy effect is not exposed as a nonfunctional control: "+unsupported);
         h.succeed();

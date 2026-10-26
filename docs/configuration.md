@@ -8,9 +8,9 @@
 
 多人服务器在玩家登录和配置重载时同步当前值，客户端只能查看，修改需由服主在服务端进行。没有客户端向服务端写配置的网络入口。本体常用的矿物倍率与通用怪物成长从本体页面调整；矿物原始候选次数、通过概率属于本体高级TOML参数。
 
-扩展页面共111项玩法数值。刷怪采用一套可编辑规则，直接使用ITE 2.0.28默认数值，已取消参考／自定义切换与相应灰显。额度、日期、组数、概率、光照开关和新增的9项拥挤／节奏参数统一放在主模组设置 → “怪物刷新权重” → “上限与刷怪节奏”页，可直接修改并保存生效。安装ITE时自动显示ITE参数；未安装时不显示专属项并保持本体自身规则。ITE设置入口仅为同一主模组页面的快捷链接。ITE 0.2.9需要本体0.2.9或更新版本提供的新调度接口，请配套更新。具体公式、全部刷怪参数和旧文件的一次迁移见[实时刷怪设置](spawning-settings.md)。
+扩展页面共155项玩法数值，包含本次新增的44项生物独立日期。刷怪采用一套可编辑规则，直接使用ITE 2.0.28默认数值，已取消参考／自定义切换与相应灰显。额度、日期、组数、概率、光照开关和新增的9项拥挤／节奏参数统一放在主模组设置 → “怪物刷新权重” → “上限与刷怪节奏”页，可直接修改并保存生效。安装ITE时自动显示ITE参数；未安装时不显示专属项并保持本体自身规则。ITE设置入口仅为同一主模组页面的快捷链接。ITE 0.2.9需要本体0.2.9或更新版本提供的新调度接口，请配套更新。具体公式、全部刷怪参数和旧文件的一次迁移见[实时刷怪设置](spawning-settings.md)。
 
-`extreme_mob_spawn_limit_day`默认65，按历史最高日期判断，到指定日期后额外Extreme怪物和狂犬加入对应自然池，物种更晚日期继续生效。玩家死亡生成玩家僵尸的概率为5%，单独豁免此日期及开局平安期；黑暗地狱苦力怕直接炸死玩家也按5%判定，未生成或生成失败时正常落地，成功时由玩家僵尸保管真实死亡物品。玩家僵尸不会自然消失或被环境、其他生物伤害杀死，存档后继续保留，直到被玩家击杀后释放接管的物品一次。苦力怕和骷髅分裂完整保留。旧JSON仅作为键和说明的参考，不自动导入。单位tick按20 tick/秒计算；原JSON的32个主世界／地底矿物频率与概率项仍由本体高级矿物参数管理，见后文。
+`extreme_mob_spawn_limit_day`默认3。除玩家僵尸外，所有极难生物及狂犬均可单独配置出现日期；流浪女巫保留主世界／地底两项。生效日期为总限制与单项日期中的较大值，按历史最高日期判断：总限制10天、某怪物5天时第10天允许出现；该怪物改为15天时第15天才允许出现。该检查覆盖自然生成、刷怪笼、转换、骑手、召援及事件，维度和其他生成条件继续生效。玩家死亡生成玩家僵尸的概率为5%，单独豁免此日期及开局平安期；黑暗地狱苦力怕直接炸死玩家也按5%判定，未生成或生成失败时正常落地，成功时由玩家僵尸保管真实死亡物品。玩家僵尸不会自然消失或被环境、其他生物伤害杀死，存档后继续保留，直到被玩家击杀后释放接管的物品一次。苦力怕和骷髅分裂完整保留。旧JSON仅作为键和说明的参考，不自动导入。单位tick按20 tick/秒计算；原JSON的32个主世界／地底矿物频率与概率项仍由本体高级矿物参数管理，见后文。
 
 “ITE怪物自然刷新率”另设专用列表，读取`modern_ite`实体并直接编辑绝对权重：填写0～1000000整数，留空使用各候选池原始值，0移除相应候选。本体和原版怪物权重在MITE页面调整。权重只决定同池相对份额，不增加总额度，不绕过日期、维度、光照、密度及总量限制，也不会给玩家僵尸或事件Boss创建自然入口。
 
@@ -172,12 +172,12 @@
 
 | 配置键 | 设置项 | 默认值 | 生效说明 |
 | --- | --- | --- | --- |
-| `extreme_mob_spawn_limit_day` | 极难怪物开始日期 | `65` | 极难怪物开始生成日期（天），默认第65天。到达日期后额外极难怪物加入对应维度自然池，更晚的物种日期及其他生成条件继续生效。玩家死亡有5%概率生成玩家僵尸，不受此日期限制；黑暗地狱苦力怕直接炸死玩家同样有5%概率生成玩家僵尸，成功时保管真实死亡物品，未生成或失败时正常掉落。玩家僵尸保留至被玩家击杀；生成蛋、命令与已有怪物不受影响。 |
+| `extreme_mob_spawn_limit_day` | 极难怪物开始日期 | `3` | 所有极难生物及狂犬的自动生成总日期限制，与各自单独日期取较大值；按历史最高日期判断。玩家死亡的玩家僵尸豁免日期及开局平安期，生成蛋、命令与已有怪物不受影响。 |
 | `ghast_spawn_limit_day` | 主世界恶魂开始生成日期（天） | `128` | 主世界恶魂开始生成日期（天），默认第128天；仍需满足血月夜晚等物种生成条件。 |
 | `annihilation_skeleton_spawn_in_light` | 允许主世界湮灭骷髅在亮处生成 | `false` | 允许主世界湮灭骷髅在亮处自然生成。关闭使用物种原有光照检查；日期、空间与其他条件仍生效。 |
 | `wandering_witch_spawn_chance_overworld` | 主世界女巫生成通过率（%） | `33` | 主世界流浪女巫自然生成通过率（%），默认33。0停止自然生成，100跳过此概率筛选；日期与其他条件仍生效。 |
-| `wandering_witch_spawn_limit_day_overworld` | 主世界流浪女巫开始日期（天） | `65` | 主世界流浪女巫开始自然生成日期（天），默认第65天；极难怪物开始日期及其他条件仍生效。 |
-| `wandering_witch_spawn_limit_day_other` | 地底流浪女巫开始日期（天） | `65` | 地底流浪女巫开始自然生成日期（天），默认第65天；极难怪物开始日期及其他条件仍生效。 |
+| `wandering_witch_spawn_limit_day_overworld` | 主世界流浪女巫开始日期（天） | `65` | 主世界流浪女巫开始自动生成日期（天），默认第65天；与总日期限制取较大值，其他条件仍生效。 |
+| `wandering_witch_spawn_limit_day_other` | 地底流浪女巫开始日期（天） | `65` | 地底流浪女巫开始自动生成日期（天），默认第65天；与总日期限制取较大值，其他条件仍生效。 |
 | `wandering_witch_spawn_chance_underworld` | 地底女巫生成通过率（%） | `50` | 地底流浪女巫自然生成通过率（%），默认50。0停止自然生成，100跳过此概率筛选。 |
 | `zombie_lord_spawn_frequency` | 僵尸领主生成权重 | `2` | 僵尸领主生成权重。0禁用对应自然池条目；保留其他召援或事件入口。 |
 | `zombie_pigman_lord_spawn_frequency` | 僵尸猪人领主生成权重 | `1` | 僵尸猪人领主生成权重。0禁用对应自然池条目；不改变其他来源的生成。 |
@@ -203,6 +203,59 @@
 | `surface_spawn_chance_percent` | 浅层每轮刷怪通过率（%） | `17` | 每轮浅层刷怪通过率（%），默认17。调度间隔后判定，之后仍应用随机节奏、密度及物种条件；0停止浅层自然尝试。 |
 | `blood_moon_spawn_chance_multiplier` | 血月刷怪轮次概率倍率 | `1` | 血月刷怪轮次概率倍率，默认1。乘深浅层通过率，不改变每轮组数或额度；最终概率最多100%。 |
 | `other_dimension_spawn_chance_multiplier` | 其他维度刷怪轮次概率倍率 | `0.25` | 主世界以外维度的刷怪轮次概率倍率，默认0.25。乘深浅层通过率，最终概率最多100%；0停止这些维度自然尝试。 |
+
+### 极难生物独立日期
+
+以下44项新增字段同属 `[GameMechanics.MobSpawning]`，位于主模组设置 → “怪物刷新权重” → “上限与刷怪节奏”；也可在 ITE 的“编辑玩法参数”中按分类修改。所有单项范围均为1～1000000整数，保存后新的自动生成检查立即采用新值。原先固定的物种日期改为可编辑默认值，不再额外形成不可降低的日期门槛；已有TOML中的总限制和其他有效自定义值保留，新键缺失时补默认值。
+
+实际允许出现日期 = `max(extreme_mob_spawn_limit_day, 该生物单独日期)`。流浪女巫使用上表已有的主世界／地底日期，不增加重复键。玩家僵尸没有独立日期项，玩家实际死亡生成时仍保留豁免。日期设置不创建缺失的自然入口，僵尸Boss等仍从原有事件入口出现。
+
+| 配置键 | 生物 | 独立默认日期 |
+| --- | --- | --- |
+| `zombie_door_spawn_limit_day` | 僵尸盗贼 | `1` |
+| `miner_zombie_spawn_limit_day` | 矿工僵尸 | `33` |
+| `zombie_chaos_spawn_limit_day` | 混乱僵尸 | `1` |
+| `zombie_fly_away_spawn_limit_day` | 大力士僵尸 | `1` |
+| `zombie_ghast_spawn_limit_day` | 恶魂僵尸 | `33` |
+| `zombie_jump_spawn_limit_day` | 倒立僵尸 | `1` |
+| `zombie_knockback_spawn_limit_day` | 击退僵尸 | `1` |
+| `zombie_invisible_look_up_spawn_limit_day` | 仰头僵尸 | `1` |
+| `zombie_pumpkin_spawn_limit_day` | 万圣僵尸 | `1` |
+| `zombie_iron_bucket_spawn_limit_day` | 铁桶僵尸 | `1` |
+| `zombie_siege_spawn_limit_day` | 攻城尸 | `1` |
+| `dragon_zombie_spawn_limit_day` | 龙头僵尸 | `33` |
+| `random_zombie_spawn_limit_day` | 随机僵尸 | `1` |
+| `fishing_rod_zombie_spawn_limit_day` | 大头僵尸 | `1` |
+| `mirror_zombie_spawn_limit_day` | 镜像僵尸 | `33` |
+| `zombie_caller_spawn_limit_day` | 唤尸 | `1` |
+| `zombie_boss_spawn_limit_day` | 僵尸BOSS | `1` |
+| `zombie_elite_lord_spawn_limit_day` | 僵尸精英领主 | `33` |
+| `undying_zombie_emperor_spawn_limit_day` | 不朽尸皇 | `128` |
+| `exchanger_spawn_limit_day` | 转移骷髅 | `64` |
+| `mirror_skeleton_spawn_limit_day` | 镜像骷髅 | `1` |
+| `skeleton_fast_arrow_spawn_limit_day` | 速射手骷髅 | `1` |
+| `skeleton_knockback_spawn_limit_day` | 击飞骷髅 | `1` |
+| `skeleton_lightning_spawn_limit_day` | 闪电骷髅 | `96` |
+| `skeleton_floating_spawn_limit_day` | 漂浮骷髅 | `1` |
+| `skeleton_blaze_spawn_limit_day` | 烈焰骷髅 | `33` |
+| `wither_skeleton_arrow_spawn_limit_day` | 凋零骷髅射手 | `1` |
+| `skeleton_elite_lord_spawn_limit_day` | 骷髅暴君 | `33` |
+| `skeleton_zombie_spawn_limit_day` | 骷髅僵尸 | `1` |
+| `run_creeper_spawn_limit_day` | 疾跑苦力怕 | `1` |
+| `phase_creeper_spawn_limit_day` | 相位苦力怕 | `1` |
+| `chaos_creeper_spawn_limit_day` | 混乱苦力怕 | `64` |
+| `invisible_creeper_spawn_limit_day` | 隐形苦力怕 | `1` |
+| `invisible_reversed_creeper_spawn_limit_day` | 隐形颠倒苦力怕 | `1` |
+| `black_infernal_creeper_spawn_limit_day` | 黑暗地狱苦力怕 | `1` |
+| `flash_creeper_spawn_limit_day` | 闪光苦力怕 | `1` |
+| `wither_creeper_spawn_limit_day` | 凋零苦力怕 | `1` |
+| `witch_lord_spawn_limit_day` | 女巫领主 | `96` |
+| `red_ghoul_spawn_limit_day` | 红色食尸鬼 | `1` |
+| `dark_iron_golem_spawn_limit_day` | 暗黑铁傀儡 | `1` |
+| `zombie_lord_spawn_limit_day` | 僵尸领主 | `1` |
+| `zombie_pigman_lord_spawn_limit_day` | 僵尸猪人领主 | `1` |
+| `annihilation_skeleton_spawn_limit_day` | 湮灭骷髅 | `33` |
+| `rabid_dog_spawn_limit_day` | 狂犬 | `1` |
 
 ## WorldGen.Nether
 

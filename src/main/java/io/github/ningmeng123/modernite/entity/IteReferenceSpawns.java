@@ -47,14 +47,11 @@ public final class IteReferenceSpawns {
     public static boolean automaticAllowed(ServerLevel level,EntityType<?> type) {
         boolean over=level.dimension()==Level.OVERWORLD;
         int day=MobAbilities.day(level);
-        if(BuiltInRegistries.ENTITY_TYPE.getKey(type).getNamespace().equals(ModernIte.MOD_ID)
-                &&day<ExtremeSpawnProgression.firstDay(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),
-                        IteConfig.integer("extreme_mob_spawn_limit_day")))return false;
+        if(day<IteConfig.extremeMobFirstDay(BuiltInRegistries.ENTITY_TYPE.getKey(type).toString(),over))return false;
         if(type==MiteMobs.type(MobKind.BONE_LORD))return day>=33;
         if(type==MiteMobs.type(MobKind.ANCIENT_BONE_LORD))return day>=IteConfig.integer("ancient_bone_lord_spawn_limit_day");
         if(type==EntityType.GHAST)return !over||day>=IteConfig.integer("ghast_spawn_limit_day");
-        if(type==ExtremeMobs.type(WANDERING_WITCH))return day>=IteConfig.integer("wandering_witch_spawn_limit_day_"+(over?"overworld":"other"));
-        return type!=ExtremeMobs.type(ANNIHILATION_SKELETON)||!over||day>32;
+        return true;
     }
 
     public static boolean naturalAllowed(ServerLevel level,EntityType<?> type,BlockPos pos) {
@@ -167,7 +164,7 @@ public final class IteReferenceSpawns {
         if(!level.getFluidState(mob.blockPosition()).isEmpty())return false;
         if(kind==ANNIHILATION_SKELETON) {
             if(server.dimension()!=Level.OVERWORLD)return true;
-            return MobAbilities.day(server)>32&&mob.getRandom().nextInt(4)==0&&server.getNearestPlayer(mob,24)==null
+            return mob.getRandom().nextInt(4)==0&&server.getNearestPlayer(mob,24)==null
                     &&(IteConfig.bool("annihilation_skeleton_spawn_in_light")||R196SpawnQualification.mobLight(mob,level,reason==MobSpawnType.SPAWNER));
         }
         if(kind==WANDERING_WITCH&&mob.getRandom().nextInt(100)>=IteConfig.integer("wandering_witch_spawn_chance_"+(MobAbilities.underground(server)?"underworld":"overworld")))return false;

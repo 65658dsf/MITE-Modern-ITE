@@ -385,10 +385,13 @@ public final class IteConfigClientAudit {
     private static void auditSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {
         String key="mob_max_spawn_count_chunk_base";
         String dayKey="extreme_mob_spawn_limit_day";
+        String mobDayKey="dragon_zombie_spawn_limit_day";
         int original=IteConfig.integer(key);
         int originalDay=IteConfig.integer(dayKey);
+        int originalMobDay=IteConfig.integer(mobDayKey);
         int edited=original==1000000?original-1:original+1;
         int editedDay=originalDay==1000000?originalDay-1:originalDay+1;
+        int editedMobDay=originalMobDay==15?16:15;
         try {
             check(!IteConfig.defaults().containsKey("reference_spawning"),"The removed spawning preset has no schema entry");
             press(home,"modern_ite.config.spawning_rules");
@@ -401,6 +404,15 @@ public final class IteConfigClientAudit {
             check(!findButton(rules,"mite.config.save").active,"Day zero is invalid");
             dayField.setValue(Integer.toString(editedDay));
             check(findButton(rules,"mite.config.save").active,"Correcting the date restores saving");
+            showIteSpawningField(rules,mobDayKey);
+            var mobDayField=findEdit(rules,"modern_ite.config."+mobDayKey);
+            check(mobDayField.active,"The individual dragon zombie date is editable in the main spawning page");
+            mobDayField.setValue("5.5");
+            check(!findButton(rules,"mite.config.save").active,"Fractional individual dates block saving");
+            mobDayField.setValue("0");
+            check(!findButton(rules,"mite.config.save").active,"Individual dates require at least day one");
+            mobDayField.setValue(Integer.toString(editedMobDay));
+            check(findButton(rules,"mite.config.save").active,"Correcting the individual date restores saving");
             showIteSpawningField(rules,"local_hostile_limit");
             check(findEdit(rules,"modern_ite.config.local_hostile_limit").active,"Splitting and support density remains editable");
             showIteSpawningField(rules,key);
@@ -430,20 +442,28 @@ public final class IteConfigClientAudit {
             capture(mc,rules,width,height,"ite-spawning-rules-last-page",-1,-1);
             showIteSpawningField(rules,key);
             check(findEdit(rules,"modern_ite.config."+key).getValue().equals(Integer.toString(edited)),"Every page retains the edited cap");
+            showIteSpawningField(rules,mobDayKey);
+            check(findEdit(rules,"modern_ite.config."+mobDayKey).getValue().equals(Integer.toString(editedMobDay)),
+                    "Paging retains the individual species date draft");
             press(rules,"mite.config.save");
-            check(mc.screen==home&&IteConfig.integer(key)==edited&&IteConfig.integer(dayKey)==editedDay,
-                    "Saving publishes the edited cap and extreme start date together and restores the parent");
+            check(mc.screen==home&&IteConfig.integer(key)==edited&&IteConfig.integer(dayKey)==editedDay
+                            &&IteConfig.integer(mobDayKey)==editedMobDay
+                            &&IteConfig.extremeMobFirstDay("modern_ite:dragon_zombie",true)==Math.max(editedDay,editedMobDay),
+                    "Saving publishes the cap, global date and individual date together and restores the parent");
             var parsed=new TomlParser().parse(Files.readString(configFile));
             check(((Number)parsed.get(List.of("GameMechanics","MobSpawning",key))).intValue()==edited
                             &&!parsed.contains(List.of("GameMechanics","MobSpawning","reference_spawning")),
                     "The editor persists the editable cap without a preset key");
             check(((Number)parsed.get(List.of("GameMechanics","MobSpawning",dayKey))).intValue()==editedDay,
                     "The editor persists the edited extreme start date");
+            check(((Number)parsed.get(List.of("GameMechanics","MobSpawning",mobDayKey))).intValue()==editedMobDay,
+                    "The editor persists the individual species start date");
             report.addProperty("ite_spawning_all_values_editable_without_preset",true);
             report.addProperty("ite_spawning_paging_preserves_and_validates_drafts",true);
             report.addProperty("ite_extreme_start_day_first_page_validation_and_save",true);
+            report.addProperty("ite_individual_spawn_day_validation_paging_and_save",true);
         } finally {
-            IteConfig.setting(key).set(original);IteConfig.setting(dayKey).set(originalDay);
+            IteConfig.setting(key).set(original);IteConfig.setting(dayKey).set(originalDay);IteConfig.setting(mobDayKey).set(originalMobDay);
             IteConfig.SPEC.save();IteConfig.refresh();
         }
     }

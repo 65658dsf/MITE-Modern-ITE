@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.config;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ public final class IteConfig {
     }
     private static final List<Option> OPTIONS=new ArrayList<>();
     private static final Map<String,ModConfigSpec.ConfigValue<?>> SETTINGS=new LinkedHashMap<>();
+    private static final Map<String,String> MOB_SPAWN_DAYS=new HashMap<>();
     public static final ModConfigSpec SPEC;
     private static volatile Map<String,Object> local;
     private static volatile Map<String,Object> remote;
@@ -70,7 +72,18 @@ public final class IteConfig {
         add(builder, "Entities", "slime_attack_damage_multiplier", 1D, 0D, 100D, "绿色史莱姆伤害倍率。初始化时按原始伤害×倍率+加成计算；不反复叠加。");
         add(builder, "Entities", "slime_attack_damage_bonus", 4D, 0D, 10000D, "绿色史莱姆伤害加成。仅绿色史莱姆；对新初始化的生物生效。");
         add(builder, "Entities", "giant_zombie_spawn_zombie_cooldown", 1200, 1D, 100000000D, "巨型僵尸召援间隔（tick）。仍保留召援总量、存活随从和局部密度限制。");
-        add(builder, "GameMechanics.MobSpawning", "extreme_mob_spawn_limit_day", 65, 1D, 1000000D, "极难怪物开始生成日期（天），默认第3天。到达日期后额外极难怪物加入对应维度自然池，更晚的物种日期及其他生成条件继续生效。玩家死亡有5%概率生成玩家僵尸，不受此日期限制；黑暗地狱苦力怕直接炸死玩家同样有5%概率生成玩家僵尸，成功时保管真实死亡物品，未生成或失败时正常掉落。玩家僵尸保留至被玩家击杀；生成蛋、命令与已有怪物不受影响。");
+        add(builder, "GameMechanics.MobSpawning", "extreme_mob_spawn_limit_day", 3, 1D, 1000000D, "极难怪物总生成日期（天），默认第3天。每种生物的实际开始日期取总限制与单独日期的较大值，使用历史最高日期；自然生成、召援和其他自动生成均受限。玩家死亡有5%概率生成玩家僵尸，不受这些日期限制；黑暗地狱苦力怕直接炸死玩家同样适用。生成蛋、命令与已有怪物不受影响。");
+        for(var kind:ExtremeKind.values()) {
+            if(kind==ExtremeKind.MIMIC_ZOMBIE||kind==ExtremeKind.WANDERING_WITCH)continue;
+            String key=kind.id()+"_spawn_limit_day";
+            int defaultDay=kind==ExtremeKind.ANNIHILATION_SKELETON?33:Math.max(1,kind.speciesFirstDay);
+            add(builder,"GameMechanics.MobSpawning",key,defaultDay,1D,1000000D,
+                    kind.chinese+"开始自动生成日期（天）。实际日期取此值与极难怪物总日期的较大值，按历史最高日期检查；原有维度和其他生成条件仍生效，生成蛋、命令与已有怪物不受影响。");
+            MOB_SPAWN_DAYS.put("modern_ite:"+kind.id(),key);
+        }
+        add(builder,"GameMechanics.MobSpawning","rabid_dog_spawn_limit_day",1,1D,1000000D,
+                "狂犬开始自动生成日期（天）。实际日期取此值与极难怪物总日期的较大值，按历史最高日期检查；原有维度和其他生成条件仍生效，生成蛋、命令与已有怪物不受影响。");
+        MOB_SPAWN_DAYS.put("modern_ite:rabid_dog","rabid_dog_spawn_limit_day");
         add(builder, "GameMechanics.MobSpawning", "ghast_spawn_limit_day", 128, 1D, 1000000D, "主世界恶魂开始生成日期（天），默认第128天；仍需满足血月夜晚等物种生成条件。");
         add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_in_light", false, 0D, 1D, "允许主世界湮灭骷髅在亮处自然生成。关闭使用物种原有光照检查；日期、空间与其他条件仍生效。");
         add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_overworld", 33, 0D, 100D, "主世界流浪女巫自然生成通过率（%），默认33。0停止自然生成，100跳过此概率筛选；日期与其他条件仍生效。");
@@ -199,6 +212,13 @@ public final class IteConfig {
     public static boolean bool(String key) { return (Boolean)value(key); }
     public static int integer(String key) { return ((Number)value(key)).intValue(); }
     public static double number(String key) { return ((Number)value(key)).doubleValue(); }
+    /** One date gate for natural pools, scripted spawns and support admission. */
+    public static int extremeMobFirstDay(String entityId,boolean overworld) {
+        if(!entityId.startsWith("modern_ite:"))return 0;
+        String key=entityId.equals("modern_ite:wandering_witch")
+                ?"wandering_witch_spawn_limit_day_"+(overworld?"overworld":"other"):MOB_SPAWN_DAYS.get(entityId);
+        return Math.max(integer("extreme_mob_spawn_limit_day"),key==null?1:integer(key));
+    }
     @SuppressWarnings("unchecked")
     public static ModConfigSpec.ConfigValue<Object> setting(String key) {
         var setting=SETTINGS.get(shortKey(key));

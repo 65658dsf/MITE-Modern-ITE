@@ -56,49 +56,53 @@ public final class ExtremeCombatAiAuditGameTests {
 
     @GameTest(template = "gear_empty")
     public static void allFortyFiveSpeciesAcquirePlayersAndKeepUsableAttacksAcrossReload(GameTestHelper h) {
-        var pos = h.absolutePos(new BlockPos(2, 2, 2));
-        var origin = new Vec3(pos.getX() + .5D, 160D, pos.getZ() + .5D);
-        var cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "extreme-ai-audit"), false);
-        var player = new ServerPlayer(h.getLevel().getServer(), h.getLevel(), cookie.gameProfile(), cookie.clientInformation());
-        var connection = new Connection(PacketFlow.SERVERBOUND);
-        var channel = new EmbeddedChannel(connection);
-        // Register an actual survival player without a client login or optional-mod networking handshake.
-        player.connection = new ServerGamePacketListenerImpl(h.getLevel().getServer(), connection, player, cookie) {
-            @Override public void send(Packet<?> packet) {}
-            @Override public void send(Packet<?> packet, PacketSendListener listener) {}
-        };
-        player.setGameMode(GameType.SURVIVAL);
-        player.moveTo(origin.add(0D, 0D, 1.1D));
-        player.setNoGravity(true);
-        h.getLevel().addNewPlayer(player);
-        h.assertTrue(h.getLevel().players().contains(player), "The survival target enters both entity and native player lookups");
-        h.assertTrue(!player.isCreative() && !player.isSpectator(), "The real survival player remains eligible for hostile targeting");
-        var failures = new ArrayList<String>();
-        try {
-            for (var kind : ExtremeKind.values()) {
-                Mob mob = ExtremeMobs.type(kind).create(h.getLevel());
-                h.assertTrue(mob != null, "The registered mob creates: " + kind);
-                mob.moveTo(origin);
-                mob.setNoGravity(true);
-                h.assertTrue(h.getLevel().addFreshEntity(mob), "The entity executes its real join handlers: " + kind);
-                try {
-                    check(h, mob, kind, player, failures, "spawn");
-                    var saved = new CompoundTag();
-                    mob.saveWithoutId(saved);
-                    saved.remove("UUID"); // A distinct test instance, while preserving the actual combat save data.
-                    mob.discard();
-                    Mob restored = ExtremeMobs.type(kind).create(h.getLevel());
-                    h.assertTrue(restored != null, "The saved mob creates: " + kind);
-                    restored.load(saved);
-                    restored.moveTo(origin);
-                    restored.setNoGravity(true);
-                    h.assertTrue(h.getLevel().addFreshEntity(restored), "The loaded entity executes its real join handlers: " + kind);
-                    try { check(h, restored, kind, player, failures, "reload"); }
-                    finally { restored.discard(); }
-                } finally { mob.discard(); }
-            }
-        } finally { player.discard(); channel.finishAndReleaseAll(); }
-        h.assertTrue(failures.isEmpty(), "All 45 species acquire a target and can schedule an attack: " + String.join("; ", failures));
+        try (var site = new SpawnBalanceGameTests.Site(h)) {
+            // Combat behavior is audited after every default species date has unlocked.
+            site.date(224, 224, true);
+            var pos = h.absolutePos(new BlockPos(2, 2, 2));
+            var origin = new Vec3(pos.getX() + .5D, 160D, pos.getZ() + .5D);
+            var cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "extreme-ai-audit"), false);
+            var player = new ServerPlayer(h.getLevel().getServer(), h.getLevel(), cookie.gameProfile(), cookie.clientInformation());
+            var connection = new Connection(PacketFlow.SERVERBOUND);
+            var channel = new EmbeddedChannel(connection);
+            // Register an actual survival player without a client login or optional-mod networking handshake.
+            player.connection = new ServerGamePacketListenerImpl(h.getLevel().getServer(), connection, player, cookie) {
+                @Override public void send(Packet<?> packet) {}
+                @Override public void send(Packet<?> packet, PacketSendListener listener) {}
+            };
+            player.setGameMode(GameType.SURVIVAL);
+            player.moveTo(origin.add(0D, 0D, 1.1D));
+            player.setNoGravity(true);
+            h.getLevel().addNewPlayer(player);
+            h.assertTrue(h.getLevel().players().contains(player), "The survival target enters both entity and native player lookups");
+            h.assertTrue(!player.isCreative() && !player.isSpectator(), "The real survival player remains eligible for hostile targeting");
+            var failures = new ArrayList<String>();
+            try {
+                for (var kind : ExtremeKind.values()) {
+                    Mob mob = ExtremeMobs.type(kind).create(h.getLevel());
+                    h.assertTrue(mob != null, "The registered mob creates: " + kind);
+                    mob.moveTo(origin);
+                    mob.setNoGravity(true);
+                    h.assertTrue(h.getLevel().addFreshEntity(mob), "The entity executes its real join handlers: " + kind);
+                    try {
+                        check(h, mob, kind, player, failures, "spawn");
+                        var saved = new CompoundTag();
+                        mob.saveWithoutId(saved);
+                        saved.remove("UUID"); // A distinct test instance, while preserving the actual combat save data.
+                        mob.discard();
+                        Mob restored = ExtremeMobs.type(kind).create(h.getLevel());
+                        h.assertTrue(restored != null, "The saved mob creates: " + kind);
+                        restored.load(saved);
+                        restored.moveTo(origin);
+                        restored.setNoGravity(true);
+                        h.assertTrue(h.getLevel().addFreshEntity(restored), "The loaded entity executes its real join handlers: " + kind);
+                        try { check(h, restored, kind, player, failures, "reload"); }
+                        finally { restored.discard(); }
+                    } finally { mob.discard(); }
+                }
+            } finally { player.discard(); channel.finishAndReleaseAll(); }
+            h.assertTrue(failures.isEmpty(), "All 45 species acquire a target and can schedule an attack: " + String.join("; ", failures));
+        }
         h.succeed();
     }
 }
