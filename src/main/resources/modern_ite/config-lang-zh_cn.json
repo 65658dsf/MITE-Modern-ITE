@@ -236,7 +236,7 @@
   "message.modern_ite.nether_recovered": "下界疲劳已消退。",
   "message.modern_ite.underworld_penalty_second": "你在地底停留过久，感到更加疲惫。",
   "modern_ite.config.extreme_mob_spawn_limit_day": "极难怪物开始日期",
-  "modern_ite.config.extreme_mob_spawn_limit_day.tooltip": "默认第65天，范围1～1000000天。到达此日期后额外极难怪物加入对应维度自然池；更晚的物种日期、维度与其他生成条件仍生效。玩家死亡有10%概率生成玩家僵尸，不受此日期限制。生成蛋、命令和已有怪物不受影响。",
+  "modern_ite.config.extreme_mob_spawn_limit_day.tooltip": "默认第65天，范围1～1000000天。到达此日期后额外极难怪物加入对应维度自然池；更晚的物种日期、维度与其他生成条件仍生效。玩家死亡有5%概率生成玩家僵尸，不受此日期限制。黑暗地狱苦力怕直接炸死玩家同样有5%概率生成玩家僵尸，成功时保管真实死亡物品，未生成或失败时正常掉落。玩家僵尸保留至被玩家击杀。生成蛋、命令和已有怪物不受影响。",
   "modern_ite.config.spawning_rules.tooltip": "以ITE 2.0.28为默认值，直接调整刷怪额度、日期、生成组数、物种概率及分裂与召援密度。所有参数可编辑，保存后实时生效。",
   "modern_ite.config.spawning_live": "ITE 2.0.28默认值；所有参数可编辑，保存后实时生效",
   "modern_ite.config.mob_max_spawn_count_chunk_base.tooltip": "每256个有效区块的基础额度，默认50。与日期额度相加；血月仅将区块部分乘倍率。深浅层独立计数，深层使用单独倍率。",

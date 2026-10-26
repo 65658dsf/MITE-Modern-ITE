@@ -22,6 +22,24 @@ final class InfernalExplosionGameTestSupport {
     static void finishAfterJobs(GameTestHelper h, ServerLevel level, Runnable assertions, Runnable cleanup) {
         await(h, level, 1000, assertions, cleanup);
     }
+    static void whenEntityVisible(GameTestHelper h, ServerLevel level, net.minecraft.world.entity.Entity entity,
+                                  AABB bounds, Runnable action, Runnable cleanup) {
+        awaitEntity(h, level, entity, bounds, 100, action, cleanup);
+    }
+    private static void awaitEntity(GameTestHelper h, ServerLevel level, net.minecraft.world.entity.Entity entity,
+                                    AABB bounds, int remaining, Runnable action, Runnable cleanup) {
+        h.runAfterDelay(1, () -> {
+            boolean visible=level.getEntitiesOfClass(entity.getClass(), bounds).contains(entity);
+            if (!visible && remaining > 0) {
+                awaitEntity(h, level, entity, bounds, remaining - 1, action, cleanup);
+                return;
+            }
+            try {
+                h.assertTrue(visible, "The real entity is query-visible before the explosion selects its targets");
+                action.run();
+            } catch (Throwable failure) { cleanup.run(); throw failure; }
+        });
+    }
     private static void await(GameTestHelper h, ServerLevel level, int remaining, Runnable assertions, Runnable cleanup) {
         h.runAfterDelay(1, () -> {
             if (InfernalExplosionDestruction.remainingJobs(level) > 0 && remaining > 0) {

@@ -57,7 +57,7 @@ public final class InfernalExplosionLootGameTests {
             cornerTool.setNoGravity(true);cornerTool.setDeltaMovement(Vec3.ZERO);level.addFreshEntity(cornerTool);
             var insideStart=insideEmerald.position();var cornerStart=cornerTool.position();var originalTool=cornerTool.getItem().copy();
             var existingXp=new ExperienceOrb(level,site.origin.x+42,site.origin.y,site.origin.z,7);level.getChunkAt(existingXp.blockPosition());level.addFreshEntity(existingXp);
-            h.runAfterDelay(5,()->{
+            InfernalExplosionGameTestSupport.whenEntityVisible(h,level,cornerTool,fixture.bounds,()->{
             try {
             h.assertTrue(level.getEntitiesOfClass(ItemEntity.class,fixture.bounds).contains(cornerTool),"The outer-corner tool is query-visible inside the native AABB before detonation");
             Mob victim=fixture.victim(site.origin.add(-1,0,0));
@@ -95,7 +95,7 @@ public final class InfernalExplosionLootGameTests {
                 h.assertTrue(ordinaryEmerald.isRemoved()&&fixture.items().filter(item->item.getItem().is(io.github.ningmeng123.mite.registry.MiteShards.EMERALD_SHARD.get())).mapToInt(item->item.getItem().getCount()).sum()==5,"Ordinary explosions retain all five emerald-to-fragments conversions");
             },fixture::close);
             }catch(Throwable failure){fixture.close();throw failure;}
-            });
+            },fixture::close);
         }catch(Throwable failure){fixture.close();throw failure;}
     }
 

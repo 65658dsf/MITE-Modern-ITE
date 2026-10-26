@@ -16,6 +16,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -24,6 +25,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.CrossbowItem;
@@ -127,7 +129,7 @@ public final class ExtremeMobs {
         private final ExtremeKind kind;private final MobMemory memory=new MobMemory();
         final DoorGuard doorGuard=new DoorGuard();
         private float doorGuardProgress,doorGuardProgressOld;
-        public ZombieVariant(EntityType<? extends ZombieVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);}
+        public ZombieVariant(EntityType<? extends ZombieVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);if(k==ExtremeKind.MIMIC_ZOMBIE)setPersistenceRequired();}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
         @Override protected void defineSynchedData(SynchedEntityData.Builder builder){super.defineSynchedData(builder);builder.define(DATA_DOOR_GUARD,(byte)0);}
         public boolean isDoorRaised(){return DoorGuard.holdsDoor(this)&&isAlive()&&entityData.get(DATA_DOOR_GUARD)>0;}
@@ -163,12 +165,20 @@ public final class ExtremeMobs {
         @Override protected SoundEvent getAmbientSound(){return kind==ExtremeKind.ZOMBIE_CALLER?CALLER_SAY.get():super.getAmbientSound();}
         @Override protected SoundEvent getHurtSound(DamageSource source){return kind==ExtremeKind.ZOMBIE_CALLER?CALLER_HURT.get():super.getHurtSound(source);}
         @Override protected SoundEvent getDeathSound(){return kind==ExtremeKind.ZOMBIE_CALLER?CALLER_DEATH.get():super.getDeathSound();}
-        @Override protected boolean isSunBurnTick(){return kind!=null&&kind.fireproof()?false:super.isSunBurnTick();}
+        @Override protected boolean isSunBurnTick(){return kind!=null&&(kind.fireproof()||kind==ExtremeKind.MIMIC_ZOMBIE)?false:super.isSunBurnTick();}
+        @Override public boolean isInvulnerableTo(DamageSource source){
+            // A player's stored death inventory must survive hazards and other mobs until recovered.
+            // Preserve administrative /kill while allowing melee and player-owned projectiles normally.
+            return kind==ExtremeKind.MIMIC_ZOMBIE&&!(source.getEntity() instanceof Player)&&!source.is(DamageTypes.GENERIC_KILL)
+                    ||super.isInvulnerableTo(source);
+        }
+        @Override protected boolean shouldDespawnInPeaceful(){return kind!=ExtremeKind.MIMIC_ZOMBIE&&super.shouldDespawnInPeaceful();}
         @Override public boolean checkSpawnRules(LevelAccessor l,MobSpawnType reason){return MobAbilities.spawnRules(this,kind,l,reason);}
         @Override public boolean removeWhenFarAway(double d){return kind!=ExtremeKind.MIMIC_ZOMBIE&&kind!=ExtremeKind.ZOMBIE_BOSS&&super.removeWhenFarAway(d);}
         @Override public void addAdditionalSaveData(CompoundTag t){super.addAdditionalSaveData(t);memory.write(t,registryAccess());}
         @Override public void readAdditionalSaveData(CompoundTag t){
             super.readAdditionalSaveData(t);memory.read(t,registryAccess());doorGuard.reset(this);
+            if(kind==ExtremeKind.MIMIC_ZOMBIE)setPersistenceRequired();
             doorGuardProgress=doorGuardProgressOld=0;
         }
     }

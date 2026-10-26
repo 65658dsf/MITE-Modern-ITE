@@ -21,6 +21,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Difficulty;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.AreaEffectCloud;
@@ -64,7 +66,7 @@ public final class ExtremeDeathAndExplosionGameTests {
     private static void mimicRoll(ServerPlayer player,int roll){
         for(long seed=0;seed<10_000;seed++){
             player.getRandom().setSeed(seed);
-            if(player.getRandom().nextInt(10)==roll){player.getRandom().setSeed(seed);return;}
+            if(player.getRandom().nextInt(20)==roll){player.getRandom().setSeed(seed);return;}
         }
         throw new IllegalStateException("No deterministic player random seed for mimic roll "+roll);
     }
@@ -160,7 +162,7 @@ public final class ExtremeDeathAndExplosionGameTests {
                 mimicRoll(player,0);ExtremeMobEvents.drops(new LivingDropsEvent(player,site.level.damageSources().generic(),incoming,false));
                 var mimics=site.level.getEntitiesOfClass(Mob.class,player.getBoundingBox().inflate(2),
                         m->m instanceof ExtremeMob e&&e.extremeKind()==ExtremeKind.MIMIC_ZOMBIE&&name.equals(e.extremeMemory().mimicName));
-                h.assertTrue(mimics.size()==1&&incoming.isEmpty(),"A successful ten-percent death roll creates exactly one mimic on day one before day 999");
+                h.assertTrue(mimics.size()==1&&incoming.isEmpty(),"A successful five-percent death roll creates exactly one mimic on day one before day 999");
                 Mob mimic=mimics.getFirst();site.mobs.add(mimic);
                 h.assertTrue(SpawnPopulation.localCount(site.level,mimic.getBoundingBox().inflate(2))>=1,"A death substitute remains in population accounting");
                 List<ItemEntity> recovered=new ArrayList<>();PlayerMimicInventory.release(mimic,recovered);PlayerMimicInventory.release(mimic,recovered);
@@ -177,7 +179,7 @@ public final class ExtremeDeathAndExplosionGameTests {
 
     @GameTest(template="gear_empty")
     public static void unsuccessfulMimicRollLeavesTheOriginalPlayerDropsUntouched(GameTestHelper h){
-        for(int roll=1;roll<10;roll++){
+        for(int roll=1;roll<20;roll++){
             String name="DeathDrops"+UUID.randomUUID().toString().substring(0,5);
             ServerPlayer player=new ServerPlayer(h.getLevel().getServer(),h.getLevel(),new GameProfile(UUID.randomUUID(),name),ClientInformation.createDefault());
             player.setPos(h.absolutePos(new BlockPos(2,2,2)).getCenter());
@@ -261,6 +263,72 @@ public final class ExtremeDeathAndExplosionGameTests {
                 h.assertTrue(loaded.getMaxHealth()==10&&loaded.getHealth()==Math.min(health,10),"Repeated initialization and growth refresh preserve the migrated substitute's injury");
             }
         }finally{level.setDayTime(time);history.restoreProgress(highest);history.setDirty(dirty);}
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void playerMimicPersistsAfterLegacyReloadDistanceAndPeacefulChanges(GameTestHelper h){
+        Mob mimic=mob(h,ExtremeKind.MIMIC_ZOMBIE);
+        List<ItemEntity> incoming=new ArrayList<>(List.of(new ItemEntity(h.getLevel(),mimic.getX(),mimic.getY(),mimic.getZ(),new ItemStack(Items.DIAMOND,23))));
+        PlayerMimicInventory.capture(mimic,incoming);
+        CompoundTag saved=new CompoundTag();mimic.saveWithoutId(saved);saved.putBoolean("PersistenceRequired",false);
+        Mob loaded=ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE).create(h.getLevel());loaded.load(saved);
+        Difficulty previous=h.getLevel().getServer().getWorldData().getDifficulty();
+        try{
+            h.assertTrue(loaded.isPersistenceRequired()&&!loaded.removeWhenFarAway(1_000_000),"Legacy reload restores permanent persistence and rejects distance despawn");
+            loaded.setNoAi(false);
+            h.getLevel().getServer().setDifficulty(Difficulty.NORMAL,true);
+            for(int i=0;i<20;i++){loaded.setNoActionTime(100_000);loaded.checkDespawn();}
+            h.assertTrue(loaded.isAlive()&&!loaded.isRemoved(),"Repeated native despawn checks retain a far-away player mimic");
+            h.getLevel().getServer().setDifficulty(Difficulty.PEACEFUL,true);
+            loaded.checkDespawn();
+            h.assertTrue(loaded.isAlive()&&!loaded.isRemoved(),"Switching to peaceful cannot discard the stored player inventory");
+            h.assertFalse(((ExtremeMobs.ZombieVariant)loaded).isSunBurnTick(),"A player mimic cannot start burning in sunlight");
+            List<ItemEntity> recovered=new ArrayList<>();PlayerMimicInventory.release(loaded,recovered);
+            h.assertTrue(recovered.size()==1&&recovered.getFirst().getItem().is(Items.DIAMOND)&&recovered.getFirst().getItem().getCount()==23,"Every stored diamond survives save, reload and native despawn checks");
+        }finally{
+            h.getLevel().getServer().setDifficulty(previous,true);mimic.discard();loaded.discard();
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void onlyPlayersCanDamageMimicsAndMeleeOrOwnedArrowsRecoverInventoryOnce(GameTestHelper h){
+        var level=h.getLevel();Mob protectedMimic=mob(h,ExtremeKind.MIMIC_ZOMBIE);
+        var attacker=EntityType.ZOMBIE.create(level);var hostileArrow=EntityType.ARROW.create(level);hostileArrow.setOwner(attacker);
+        var hazards=List.of(level.damageSources().lava(),level.damageSources().onFire(),level.damageSources().drown(),
+                level.damageSources().fall(),level.damageSources().inWall(),level.damageSources().starve(),level.damageSources().freeze(),
+                level.damageSources().generic(),level.damageSources().lightningBolt(),level.damageSources().fellOutOfWorld(),
+                level.damageSources().mobAttack(attacker),level.damageSources().arrow(hostileArrow,attacker),
+                level.damageSources().explosion(attacker,attacker),io.github.ningmeng123.mite.entity.MobCombat.source(protectedMimic,"sunlight"));
+        try{
+            for(DamageSource hazard:hazards){
+                h.assertFalse(protectedMimic.hurt(hazard,Float.MAX_VALUE),"A player mimic rejects non-player damage: "+hazard.getMsgId());
+                h.assertTrue(protectedMimic.isAlive()&&protectedMimic.getHealth()==10,"A hazard cannot lose the stored inventory: "+hazard.getMsgId());
+            }
+            h.assertTrue(attacker.hurt(level.damageSources().lava(),1)&&attacker.getHealth()<attacker.getMaxHealth(),"Ordinary zombies retain normal environmental damage");
+            var player=h.makeMockPlayer(GameType.SURVIVAL);player.setPos(protectedMimic.position().add(1,0,0));
+            for(boolean projectile:new boolean[]{false,true}){
+                Mob mimic=mob(h,ExtremeKind.MIMIC_ZOMBIE);
+                var stack=new ItemStack(Items.DIAMOND,23);stack.set(DataComponents.CUSTOM_NAME,Component.literal("Recovered player inventory "+projectile));
+                PlayerMimicInventory.capture(mimic,new ArrayList<>(List.of(new ItemEntity(level,mimic.getX(),mimic.getY(),mimic.getZ(),stack))));
+                List<ItemEntity> released=new ArrayList<>();
+                Consumer<EntityJoinLevelEvent> record=event->{if(event.getLevel()==level&&event.getEntity() instanceof ItemEntity item&&ItemStack.isSameItemSameComponents(stack,item.getItem()))released.add(item);};
+                NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,EntityJoinLevelEvent.class,record);
+                try{
+                    var arrow=EntityType.ARROW.create(level);arrow.setOwner(player);
+                    DamageSource damage=projectile?level.damageSources().arrow(arrow,player):level.damageSources().playerAttack(player);
+                    h.assertTrue(mimic.hurt(damage,1000)&&!mimic.isAlive(),"A real player "+(projectile?"owned-arrow":"melee")+" hit can kill the inventory holder");
+                    h.assertTrue(released.stream().mapToInt(item->item.getItem().getCount()).sum()==23,"A native player kill returns the exact stored inventory once");
+                    List<ItemEntity> duplicate=new ArrayList<>();ExtremeMobEvents.drops(new LivingDropsEvent(mimic,damage,duplicate,true));
+                    h.assertTrue(duplicate.stream().noneMatch(item->ItemStack.isSameItemSameComponents(stack,item.getItem())),"A repeated death callback cannot duplicate the player inventory");
+                    arrow.discard();
+                }finally{NeoForge.EVENT_BUS.unregister(record);released.forEach(ItemEntity::discard);mimic.discard();}
+            }
+            Mob administrative=mob(h,ExtremeKind.MIMIC_ZOMBIE);
+            h.assertTrue(administrative.hurt(level.damageSources().genericKill(),Float.MAX_VALUE)&&!administrative.isAlive(),"Administrative kill remains available for explicit cleanup");
+            administrative.discard();
+        }finally{protectedMimic.discard();attacker.discard();hostileArrow.discard();}
         h.succeed();
     }
 

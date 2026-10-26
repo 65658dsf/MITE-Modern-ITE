@@ -70,7 +70,7 @@ public final class IteConfig {
         add(builder, "Entities", "slime_attack_damage_multiplier", 1D, 0D, 100D, "绿色史莱姆伤害倍率。初始化时按原始伤害×倍率+加成计算；不反复叠加。");
         add(builder, "Entities", "slime_attack_damage_bonus", 4D, 0D, 10000D, "绿色史莱姆伤害加成。仅绿色史莱姆；对新初始化的生物生效。");
         add(builder, "Entities", "giant_zombie_spawn_zombie_cooldown", 1200, 1D, 100000000D, "巨型僵尸召援间隔（tick）。仍保留召援总量、存活随从和局部密度限制。");
-        add(builder, "GameMechanics.MobSpawning", "extreme_mob_spawn_limit_day", 65, 1D, 1000000D, "极难怪物开始生成日期（天），默认第3天。到达日期后额外极难怪物加入对应维度自然池，更晚的物种日期及其他生成条件继续生效。玩家死亡有10%概率生成玩家僵尸，不受此日期限制；生成蛋、命令与已有怪物不受影响。");
+        add(builder, "GameMechanics.MobSpawning", "extreme_mob_spawn_limit_day", 65, 1D, 1000000D, "极难怪物开始生成日期（天），默认第3天。到达日期后额外极难怪物加入对应维度自然池，更晚的物种日期及其他生成条件继续生效。玩家死亡有5%概率生成玩家僵尸，不受此日期限制；黑暗地狱苦力怕直接炸死玩家同样有5%概率生成玩家僵尸，成功时保管真实死亡物品，未生成或失败时正常掉落。玩家僵尸保留至被玩家击杀；生成蛋、命令与已有怪物不受影响。");
         add(builder, "GameMechanics.MobSpawning", "ghast_spawn_limit_day", 128, 1D, 1000000D, "主世界恶魂开始生成日期（天），默认第128天；仍需满足血月夜晚等物种生成条件。");
         add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_in_light", false, 0D, 1D, "允许主世界湮灭骷髅在亮处自然生成。关闭使用物种原有光照检查；日期、空间与其他条件仍生效。");
         add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_overworld", 33, 0D, 100D, "主世界流浪女巫自然生成通过率（%），默认33。0停止自然生成，100跳过此概率筛选；日期与其他条件仍生效。");

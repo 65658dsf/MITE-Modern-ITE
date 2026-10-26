@@ -211,7 +211,7 @@ public final class ExtremeMobEvents {
         if(k==SKELETON_BLAZE&&mob.getRandom().nextFloat()<.05)drop(event,"minecraft:blaze_powder",1);
     }
     private static void playerMimic(LivingDropsEvent event,ServerPlayer player){
-        if(player.getRandom().nextInt(10)!=0)return;
+        if(player.getRandom().nextInt(20)!=0)return;
         Mob mimic=ExtremeMobs.type(MIMIC_ZOMBIE).create(player.serverLevel());if(!(mimic instanceof ExtremeMob e))return;
         SpawnPopulation.markPlayerDeathMimic(mimic);
         MobAbilities.initialize(mimic,e);mimic.moveTo(player.position());e.extremeMemory().mimicName=player.getGameProfile().getName();

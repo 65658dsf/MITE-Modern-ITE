@@ -583,7 +583,7 @@
   "modern_ite.config.hostile_spawn_attempts": "每组敌对生成尝试次数",
   "modern_ite.config.hostile_spawn_attempts.tooltip": "每组自然生成尝试次数，默认4。0停止自然尝试；保留相位蜘蛛等物种专属处理，不清除已有怪物。",
   "modern_ite.config.extreme_mob_spawn_limit_day": "极难怪物开始日期",
-  "modern_ite.config.extreme_mob_spawn_limit_day.tooltip": "默认第3天，范围1～1000000天。到达此日期后额外极难怪物加入对应维度自然池；更晚的物种日期、维度与其他生成条件仍生效。玩家死亡有10%概率生成玩家僵尸，不受此日期限制。生成蛋、命令和已有怪物不受影响。",
+  "modern_ite.config.extreme_mob_spawn_limit_day.tooltip": "默认第3天，范围1～1000000天。到达此日期后额外极难怪物加入对应维度自然池；更晚的物种日期、维度与其他生成条件仍生效。玩家死亡有5%概率生成玩家僵尸，不受此日期限制。黑暗地狱苦力怕直接炸死玩家同样有5%概率生成玩家僵尸，成功时保管真实死亡物品，未生成或失败时正常掉落。玩家僵尸保留至被玩家击杀。生成蛋、命令和已有怪物不受影响。",
   "modern_ite.config.natural_local_hostile_limit": "普通自然刷怪拥挤阈值",
   "modern_ite.config.natural_local_hostile_limit.tooltip": "默认5。超过阈值则跳过该玩家附近的候选区块；深度和要塞修正继续生效。与分裂、召援上限分开，不清除已有怪物。",
   "modern_ite.config.full_moon_natural_local_hostile_limit": "满月夜自然刷怪拥挤阈值",

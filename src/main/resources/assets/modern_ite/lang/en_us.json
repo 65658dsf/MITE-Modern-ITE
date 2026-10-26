@@ -583,7 +583,7 @@
   "modern_ite.config.hostile_spawn_attempts": "Hostile attempts per group",
   "modern_ite.config.hostile_spawn_attempts.tooltip": "Natural spawn attempts per group, default 4. 0 stops attempts. Species-specific behavior such as phase spiders is retained; existing mobs are not removed.",
   "modern_ite.config.extreme_mob_spawn_limit_day": "Extreme monster start day",
-  "modern_ite.config.extreme_mob_spawn_limit_day.tooltip": "Default day 3; range 1–1000000. Additional extreme monsters join their dimension’s natural pools from this date, subject to later species dates and other conditions. Player deaths have a 10% player-zombie chance independent of this date. Eggs, commands and existing mobs are unaffected.",
+  "modern_ite.config.extreme_mob_spawn_limit_day.tooltip": "Default day 3; range 1–1000000. Additional extreme monsters join their dimension’s natural pools from this date, subject to later species dates and other conditions. Player deaths have a 5% player-zombie chance independent of this date. The same 5% chance applies to players directly killed by a Black Infernal Creeper explosion: the zombie stores their actual death drops on success; otherwise, the items drop normally. Player zombies persist until killed by a player. Eggs, commands and existing mobs are unaffected.",
   "modern_ite.config.natural_local_hostile_limit": "Natural spawning crowd threshold",
   "modern_ite.config.natural_local_hostile_limit.tooltip": "Default 5. When nearby mobs exceed the threshold, skip that player’s eligible area. Depth and stronghold adjustments still apply. Separate from splitting/support caps; existing mobs are retained.",
   "modern_ite.config.full_moon_natural_local_hostile_limit": "Full moon natural crowd threshold",
