@@ -29,6 +29,12 @@ public final class ExtremeMobParticles {
             int clock = living.tickCount + living.getId() * 7;
             if (!(living instanceof ExtremeMob extreme)) continue;
             switch (extreme.extremeKind()) {
+                case TIME_LORD -> {
+                    if (clock % 4 == 0) {
+                        ring(living, ParticleTypes.END_ROD, .9, 1.25, -clock * .04, 4, .005);
+                        ring(living, ParticleTypes.ENCHANT, .7, .15, clock * .05, 4, .01);
+                    }
+                }
                 case UNDYING_ZOMBIE_EMPEROR -> {
                     if (clock % 3 == 0) {
                         ring(living, CRIMSON, 1.05, .12, -clock * .045, 7, .015);

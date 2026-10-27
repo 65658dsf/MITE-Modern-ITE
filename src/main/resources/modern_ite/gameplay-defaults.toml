@@ -68,6 +68,7 @@
 		flash_creeper_spawn_limit_day = 1
 		wither_creeper_spawn_limit_day = 1
 		witch_lord_spawn_limit_day = 96
+		time_lord_spawn_limit_day = 96
 		red_ghoul_spawn_limit_day = 1
 		dark_iron_golem_spawn_limit_day = 1
 		zombie_lord_spawn_limit_day = 1
@@ -81,6 +82,7 @@
 		wandering_witch_spawn_limit_day_other = 65
 		wandering_witch_spawn_chance_underworld = 50
 		zombie_lord_spawn_frequency = 2
+		time_lord_spawn_frequency = 1
 		zombie_pigman_lord_spawn_frequency = 1
 		annihilation_skeleton_spawn_frequency = 1
 		wandering_witch_spawn_frequency = 1
@@ -137,6 +139,9 @@
 	mob_spawner_extra_delay_reduction = 2
 
 [Entities]
+	time_lord_cast_interval = 240
+	time_lord_effect_duration = 80
+	time_lord_effect_range = 16.0
 	enhance_limit = 366
 	skeleton_triple_shot = true
 	compressed_skeleton = true

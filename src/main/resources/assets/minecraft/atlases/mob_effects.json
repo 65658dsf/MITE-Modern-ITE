@@ -49,6 +49,11 @@
       "type": "minecraft:single",
       "resource": "minecraft:mob_effect/weakness",
       "sprite": "modern_ite:dwarf_curse"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:item/clock_00",
+      "sprite": "modern_ite:time_dilation"
     }
   ]
 }

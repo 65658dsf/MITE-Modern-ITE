@@ -155,6 +155,27 @@ public final class MobRenderRegressionAudit {
         capturing=true;
         try {
             check(ownedWorld(mc),"Only the newly created audit world may be rendered");
+            if (Boolean.getBoolean("modern_ite.timeLordAudit")) {
+                report.addProperty("scope", "Time Lord native GPU render and real LocalPlayer fifth-rate physics, actions, inventory, mouse and continuous camera interpolation");
+                JsonObject facts = new JsonObject();report.add("time_lord", facts);
+                sample(mc, ExtremeKind.TIME_LORD, facts);
+                report.add("time_lord_skeleton_animation", TimeLordFreshAnimationsAudit.capture(mc, screenshots()));
+                Mob breeze = net.minecraft.world.entity.EntityType.BREEZE.create(mc.level);
+                check(breeze != null, "The native breeze entity must create successfully");
+                try {
+                    breeze.setNoAi(true);breeze.setPos(mc.player.position());
+                    JsonObject support = new JsonObject();report.add("breeze_support", support);
+                    texture(mc, breeze, support, "texture");
+                    try (NativeImage pixels = capture(mc, breeze)) {
+                        PixelStats stats = stats(pixels);support.add("pixels", stats.json());
+                        check(stats.body > 200, "The actual breeze GPU renderer must draw its body and wind");
+                        Path screenshot = screenshots().resolve("time_lord_breeze.png");pixels.writeToFile(screenshot);
+                        support.addProperty("screenshot", screenshot.toString());support.addProperty("native_draw_succeeded", true);
+                    }
+                } finally { breeze.discard(); }
+                report.add("time_dilation", TimeDilationClientAudit.capture(mc));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.modelCompatibilityAudit")) {
                 report.addProperty("scope", "Five source species with borrowed CEM animation, native UVs, attached ghast head, uppercut and stable creeper faces");
                 report.add("model_compatibility", ModelCompatibilityAudit.capture(mc, screenshots()));
@@ -226,7 +247,7 @@ public final class MobRenderRegressionAudit {
                 }catch(Throwable failure){fail("texture lookup "+kind.id(),failure);}
             }
             report.addProperty("entity_texture_lookup_count",identities.size());
-            check(identities.size()==45,"Expected 45 active identities after removing the ghast and duplicate pillagers");
+            check(identities.size()==46,"Expected 46 active identities including the Time Lord");
             JsonArray samples=new JsonArray();report.add("native_gpu_samples",samples);
             for(ExtremeKind kind:FOCUS) {
                 JsonObject facts=new JsonObject();samples.add(facts);facts.addProperty("entity",kind.id());
@@ -304,6 +325,24 @@ public final class MobRenderRegressionAudit {
         try {
             if(kind==ExtremeKind.ZOMBIE_DOOR)mob.setItemSlot(EquipmentSlot.MAINHAND,new ItemStack(Items.IRON_DOOR));
             if(kind==ExtremeKind.ZOMBIE_IRON_BUCKET)mob.setItemSlot(EquipmentSlot.HEAD,new ItemStack(ExtremeContent.BUCKET_HELMET.get()));
+            if(kind==ExtremeKind.TIME_LORD){
+                var kit = mc.getSingleplayerServer().submit(() -> {
+                    var level = mc.getSingleplayerServer().overworld();
+                    Mob source = ExtremeMobs.type(ExtremeKind.TIME_LORD).create(level);
+                    check(source != null, "The real server Time Lord must create its equipment");
+                    source.setPos(mc.player.getX(), mc.player.getY(), mc.player.getZ());
+                    try {
+                        net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(source, level, level.getCurrentDifficultyAt(source.blockPosition()), net.minecraft.world.entity.MobSpawnType.COMMAND, null);
+                        io.github.ningmeng123.modernite.entity.MobAbilities.initialize(source, (io.github.ningmeng123.modernite.entity.ExtremeMob) source);
+                        return java.util.Arrays.stream(EquipmentSlot.values()).map(slot -> source.getItemBySlot(slot).copy()).toList();
+                    } finally { source.discard(); }
+                }).get(15, java.util.concurrent.TimeUnit.SECONDS);
+                JsonObject equipment = new JsonObject();facts.add("actual_server_equipment", equipment);
+                for (var slot : EquipmentSlot.values()) {
+                    ItemStack stack = kit.get(slot.ordinal());mob.setItemSlot(slot, stack);
+                    equipment.addProperty(slot.getName(), net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+                }
+            }
             ResourceLocation normal=texture(mc,mob,facts,"texture");
             try(NativeImage actual=capture(mc,mob)) {
                 PixelStats stats=stats(actual);facts.add("pixels",stats.json());

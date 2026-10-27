@@ -371,5 +371,10 @@
   "modern_ite.config.mob_max_spawn_count_day_maximum": "Maximum date allowance (0: unlimited)",
   "modern_ite.config.hostile_spawn_groups": "Ordinary spawn groups per chunk",
   "modern_ite.config.blood_moon_hostile_spawn_groups": "Blood moon spawn groups per chunk",
-  "modern_ite.config.hostile_spawn_attempts": "Hostile attempts per group"
+  "modern_ite.config.hostile_spawn_attempts": "Hostile attempts per group",
+  "modern_ite.config.time_lord_spawn_limit_day": "Time Lord first spawn day",
+  "modern_ite.config.time_lord_spawn_frequency": "Time Lord spawn weight",
+  "modern_ite.config.time_lord_cast_interval": "Time Dilation interval (world ticks)",
+  "modern_ite.config.time_lord_effect_duration": "Time Dilation duration (world ticks)",
+  "modern_ite.config.time_lord_effect_range": "Time Dilation radius (blocks)"
 }

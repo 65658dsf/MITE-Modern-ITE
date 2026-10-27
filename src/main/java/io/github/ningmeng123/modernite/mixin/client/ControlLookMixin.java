@@ -13,5 +13,6 @@ public abstract class ControlLookMixin {
         var player=Minecraft.getInstance().player;
         if(io.github.ningmeng123.modernite.content.Rabies.active(player)){args.set(0,0D);args.set(1,0D);return;}
         if(player!=null&&player.hasEffect(ExtremeEffects.VALUES.get("fast_sensitivity"))){args.set(0,(double)args.get(0)*12);args.set(1,(double)args.get(1)*12);}
+        if(io.github.ningmeng123.modernite.content.TimeDilation.active(player)){args.set(0,(double)args.get(0)/io.github.ningmeng123.modernite.content.TimeDilation.TICK_DIVISOR);args.set(1,(double)args.get(1)/io.github.ningmeng123.modernite.content.TimeDilation.TICK_DIVISOR);}
     }
 }

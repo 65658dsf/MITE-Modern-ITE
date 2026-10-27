@@ -70,7 +70,7 @@ public final class SkeletonCombatAiGameTests {
                 skeleton.discard();
             }
         }
-        h.assertTrue(checked == 11, "All eleven Extreme skeleton identities cover disarming and weapon pickup");
+        h.assertTrue(checked == 12, "All twelve Extreme skeleton identities cover disarming and weapon pickup");
         h.succeed();
     }
 

@@ -61,7 +61,7 @@ public final class MobAbilities {
         if(k==DARK_IRON_GOLEM||k==SKELETON_KNOCKBACK||k==SKELETON_LIGHTNING)return under||nether;
         if(k==WITHER_SKELETON_ARROW)return nether;
         if(k==BLACK_INFERNAL_CREEPER)return over;
-        if(k==UNDYING_ZOMBIE_EMPEROR||k==WITCH_LORD||k==WANDERING_WITCH||k==MINER_ZOMBIE)return over||under;
+        if(k==UNDYING_ZOMBIE_EMPEROR||k==WITCH_LORD||k==TIME_LORD||k==WANDERING_WITCH||k==MINER_ZOMBIE)return over||under;
         if(k==ZOMBIE_PIGMAN_LORD)return nether||under||io.github.ningmeng123.mite.rules.LunarCalendar.state(l.getDayTime(),true).bloodPeriod();
         return true;
     }
@@ -106,6 +106,7 @@ public final class MobAbilities {
             case ZOMBIE_PIGMAN_LORD -> {health=50;attack=12;}
             case WANDERING_WITCH -> {health=100;speed=.3;}
             case WITCH_LORD -> {health=370;speed=.3;}
+            case TIME_LORD -> {health=180;attack=12;speed=.28;}
             case DARK_IRON_GOLEM -> {health=(45+raw/6D)*4;attack=(30+raw/20D)*2;}
             case RED_GHOUL -> {health=20;attack=5;speed=.28;}
             case ZOMBIE_KNOCKBACK -> speed=.3;
@@ -156,15 +157,19 @@ public final class MobAbilities {
         if(s.initialized){upgradeSavedCombat(mob,k);return;}s.initialized=true;
         s.phaseMaximum=s.phaseCharges=mob.getRandom().nextInt(3)+2;
         if(mob instanceof Zombie zombie)zombie.setCanBreakDoors(true);
-        boolean fixedBossGear=k==ZOMBIE_LORD||k==ZOMBIE_ELITE_LORD||k==SKELETON_ELITE_LORD||k==ZOMBIE_BOSS||k==UNDYING_ZOMBIE_EMPEROR||k==ZOMBIE_PIGMAN_LORD;
+        boolean fixedBossGear=k==ZOMBIE_LORD||k==ZOMBIE_ELITE_LORD||k==SKELETON_ELITE_LORD||k==TIME_LORD||k==ZOMBIE_BOSS||k==UNDYING_ZOMBIE_EMPEROR||k==ZOMBIE_PIGMAN_LORD;
         if(!BloodMoonEquipment.spawnEquipmentLocked(mob)){
         if(k.family==Family.SKELETON)equip(mob,EquipmentSlot.MAINHAND,"minecraft:bow");
         if(k.family==Family.PILLAGER)equip(mob,EquipmentSlot.MAINHAND,"modern_ite:crossbow","minecraft:crossbow");
         if(fixedBossGear){
+            if(k==TIME_LORD)TimeLordEquipment.initialize(mob);
+            else {
             armor(mob,"vibranium",k==UNDYING_ZOMBIE_EMPEROR);
             equip(mob,EquipmentSlot.MAINHAND,k==ZOMBIE_BOSS||k==ZOMBIE_ELITE_LORD?"mite:vibranium_war_hammer":"mite:vibranium_sword","minecraft:iron_sword");
+            }
         }
         switch(k){
+            case TIME_LORD -> {equip(mob,EquipmentSlot.OFFHAND,"minecraft:clock");s.cooldown=80;}
             case ZOMBIE_DOOR -> equip(mob,EquipmentSlot.MAINHAND,"minecraft:iron_door");
             case MINER_ZOMBIE -> {equip(mob,EquipmentSlot.MAINHAND,"mite:vibranium_pickaxe","minecraft:iron_pickaxe");enchant(mob,mob.getMainHandItem(),"minecraft:efficiency",10);}
             case ZOMBIE_IRON_BUCKET -> equip(mob,EquipmentSlot.HEAD,"modern_ite:iron_bucket_helmet","minecraft:iron_helmet");
@@ -266,6 +271,7 @@ public final class MobAbilities {
     public static void tick(Mob mob,ExtremeMob state){
         var k=state.extremeKind();var s=state.extremeMemory();initialize(mob,state);s.clock++;
         if(s.cooldown>0&&k!=ZOMBIE_BOSS)s.cooldown--;if(s.fleeingPotion>0)s.fleeingPotion--;
+        if(s.supportCooldown>0)s.supportCooldown--;
         if(!(mob.level() instanceof ServerLevel level))return;
         if(k==ZOMBIE_DOOR&&mob instanceof ExtremeMobs.ZombieVariant zombie)DoorGuard.tick(zombie);
         LivingEntity target=mob.getTarget();
@@ -284,6 +290,7 @@ public final class MobAbilities {
         if(target==null||!target.isAlive()){
             if(k==ZOMBIE_BOSS&&!s.contribution.isEmpty()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}return;
         }
+        if(k==TIME_LORD)TimeLordAbilities.tick(mob,s,target);
         if(k==EXCHANGER&&target instanceof Player player){
             if(mob.distanceToSqr(target)>1024){mob.setTarget(null);s.stage=0;return;}
             if(s.stage==0){player.displayClientMessage(Component.literal("[转移骷髅] 你已被注视，3秒后转移"),true);s.stage=1;s.cooldown=61;}

@@ -2,6 +2,76 @@
 
 开发署名：NingMeng123。
 
+## 0.2.16 正式配套构建（2026-10-27）
+
+拓展源码版本、JAR元数据、默认编译本体和最低本体依赖统一为0.2.16。最终 `build compileGametestJava runGameTestServer` 构建及38项JUnit、19项时间领主专项通过，日志 `build/verification/time-lord/release-0.2.16-build.log`。与下文召援修复的功能冻结包逐文件比较，仅版本／依赖元数据改变，生产类与其他资源完全一致，因此保留其全量384/388及同名4项旧装备基线失败记录。
+
+双JAR及安装说明位于 `build/delivery/0.2.16-time-lord/`，合包为 `MITE-Modern-and-ITE-0.2.16.zip`。包审计 `build/verification/time-lord/release-0.2.16-package-audit.json` 核对330个生产类、751个处理后资源与构建输出一致，无测试类、本体类或嵌套JAR。拓展SHA-256为 `2dd50ae23a120beb9a2b774da43ae6b8eb26ad4bdc9a7ac93615d63bd4980b2b`。
+
+配套本体直接使用已发布的0.2.16成品，源码提交 `5a8ca3670948c1f300135e93a44e5d9308b22570` 已存在于本体GitHub的main；与用户当前本体及本轮固定验证依赖逐字节一致。本轮没有重新构建或提交本体工作区中的其他资源修改。
+
+## 时间领主：手动生成后的第一天召援修复（2026-10-27）
+
+用户懒人包实际加载本体0.2.16和前述动作适配版拓展0.2.15，拓展SHA-256与交付一致。只读检查测试存档：历史最高日期为1，时间领主已有生存玩家交战技能冷却及反复重置的召援冷却，成功召援计数始终为0。原因是 `reserveSupport` 的开局保护拒绝了狂风人，并非实体ID错误；使用的正是原版 `minecraft:breeze`。按用户要求只修改召援，装备及动画文件保持不变。
+
+修复使命令／刷怪蛋时间领主的专属狂风人继承手动遭遇准入，覆盖预留、出生初始化和加入世界三个阶段，并保存来源。仍需要可见的生存／冒险玩家目标；保留局部拥挤、碰撞、每100tick一只、累计6只、取消回收和失败不计数。自然领主、自然狂风人、其他随从及世界开局保护不获得例外。
+
+固定复制用户本体0.2.16为 `build/verification/time-lord/base/mite-0.2.16.jar`，SHA-256 `086683f00d4c531e54d005b9090298b080ca40f9ab5cc75a1ad767e9c1672260`。构建及38项JUnit通过，时间领主专项 **19/19通过**，新增3项覆盖第一天命令／蛋生成的真实狂风人加入和脑目标、保存加载、自然及其他随从保护、创造玩家不触发和局部拥挤。日志 `manual-support-tests.log`。
+
+全量 **384/388通过**，失败4项均为既有早期无装备断言，与当前本体已取消的出生装备锁冲突；使用修复前HEAD隔离源码及同一用户本体，`modern_ite`命名空间基线 **320/324通过**，同名4项均失败。日志分别为 `manual-support-full.log` 与 `manual-support-base-0.2.16-baseline.log`（均位于 `build/verification/time-lord/`）。未修改这些装备规则或测试，也未重跑未改动的GPU动作路径。
+
+成品 `build/delivery/time-lord-summon-fix/modern-ite-0.2.15.jar`。与动作适配版比较，仅 `SpawnPopulation`（含内部Ledger类调试行号）、`TimeLordAbilities`、`TimeLordMinions` 的生产字节码变化，资源完全一致。包核对见 `build/verification/time-lord/manual-support-package-audit.json`。用户正在运行的游戏与存档没有被修改，替换JAR需先退出游戏再重新启动。
+
+## 时间领主：Fresh Animations 动作适配（2026-10-27）
+
+按其他骷髅的既有兼容方式新增 `TimeLordSkeletonModel`，在护甲层构造后重新烘焙标准骷髅根，显式使用本体的可选 `FreshAnimationsModelDriver`。保留材质包的完整嵌套骨骼与装备挂点，先清理前一次借用的姿态再执行当次原版／CEM 动画。
+
+只读取用户提供的 `D:/我的世界/.minecraft/versions/mite–1.21.1/resourcepacks/`，将实际启用的22份文件材质包按原顺序复制到独立测试目录，并复制 EMF 3.3.12、ETF 7.2.6；没有修改原目录、模组或 options。Fresh Animations 1.10.4 下真实客户端待机、行走、近战三个GPU样本都确认已执行CEM动画，与原版动作负对照分别相差18401、20653、24751个像素；秘银甲、秘银剑和时钟绘制正常。完整报告 `build/verification/time-lord/fresh-animations/client-audit.json`，截图位于其同级 `mob-render-audit/`。这是材质包及EMF／ETF组合验证，未加载用户整合包的全部其他模组。
+
+无 EMF／材质包的实际客户端检查也通过，三个姿态与原版骷髅负对照均为0像素差异；报告 `build/verification/time-lord/fresh-animations/fallback-client-audit.json`。两次客户端都再次通过真实 LocalPlayer 80／16更新比、输入、鼠标、背包和连续镜头检查，且只创建独立测试世界并保存退出。
+
+最终构建、38项JUnit和16项时间领主GameTest均通过，日志为 `fa-build-tests.log` 与 `fa-fallback.log`（位于 `build/verification/time-lord/`）。本次只修改客户端动画路径，未重跑全量服务端回归；此前全量382/385及3项已复现的旧装备基线失败记录保留如下。
+
+成品 `build/delivery/time-lord-fresh-animations/modern-ite-0.2.15.jar` 包含此前秘银起始装备、强化狂风人及玩家1/5时钟功能。逐文件包核对见 `build/verification/time-lord/fa-package-audit.json`；配套本体仍为下文固定的0.2.15。
+
+## 时间领主：秘银装备下限与强化狂风人召援（2026-10-27）
+
+按用户选择，以秘银剑和全套秘银甲为初始材料下限，副手保留时钟。通过定向兼容层让时间领主进入现有 `SpecialMobEquipment` 生成器，直接复用出生时的历史最高日期快照、材料权重、严格高于下限的比较，以及本体品质、附魔和磨损生成。原生领主及其他拓展怪物的装备策略保持既有行为；已生成或NBT加载的时间领主不重抽，旧存档中更强的振金装备也保留。
+
+通过原有 `MobAbilities.summonType` 支援生成流程召唤原版狂风人：100世界tick间隔、累计最多6次成功召唤，独立冷却和成功次数均持久保存。沿用开局保护、自动准入、拥挤、碰撞、归属和取消回收；狂风人攻击目标写入实际脑记忆。专属永久修饰符提高基础生命50%、攻击属性25%、移速10%，实际固定风弹命中伤害另提高25%。自然狂风人和玩家风弹不触发加成；保存加载不叠加修饰符或回满受伤生命。
+
+38项JUnit、全部16项时间领主专项通过，其中新增6项覆盖低日期秘银保底、后期真实生成艾德曼／振金、无关领主策略、日期回拨及自定义高品质装备保留、冷却与累计次数保存、真正的狂风人脑目标、各属性、6只上限、取消回收、加载不叠加和实际归属风弹伤害。专项日志 `build/verification/time-lord/minions-tests.log`；最终全量 **382/385通过**，只剩此前基线也失败的3项旧出生装备断言，无新增失败，日志 `build/verification/time-lord/minions-final.log`。
+
+实际图形客户端审计 **passed**。`client-audit.json` 记录由隔离服务器实际生成并复制到渲染样本的秘银剑、四件秘银甲和时钟；领主及原版狂风人均成功执行GPU绘制。截图为 `build/verification/time-lord/mob-render-audit/time_lord.png` 和同目录 `time_lord_breeze.png`；此前1/5玩家模拟、输入、镜头和背包的客户端检查再次通过。没有执行实际双人联机游玩。
+
+交付目录 `build/delivery/time-lord-minions/`，并更新先前两个时间领主交付链接。包边界及逐文件核对见 `build/verification/time-lord/minions-package-audit.json`。配套本体继续使用下文固定的0.2.15。
+
+## 时间领主：玩家全部操作按1/5时钟推进（2026-10-27）
+
+按用户要求，先通过实际客户端新建超平坦世界并执行 `/tick rate 5`，确认原生命令反馈为每秒5 tick，观察挥手及传送后下落，再执行 `/tick rate 20` 并正常保存退出。测试世界位于 `build/verification/time-lord/tick-rate-comparison-client/saves/New World`，过程日志为同目录上级的 `tick-rate-comparison.log`。此次保留原速1/5的明确要求，正常20 TPS世界中对应每秒4次玩家更新。
+
+玩家模拟、键盘与滚轮输入、连续右键／放置延迟、攻击／使用／换手／丢弃／容器操作包、背包点击拖动松开、鼠标转动及动作渲染均已接入玩家时钟。镜头和角色位置在五个世界tick内连续插值；服务端挖掘计时降为1/5，每次挖掘强度保留原值。没有额外施加原版缓慢或挖掘疲劳，没有降低移动速度属性，也没有重复叠加成1/25。输入保留先后顺序与修饰键；角色换体和跨维度时清理旧输入。
+
+38项JUnit通过。10项时间领主GameTest在最终全量中全部通过，覆盖80／16更新比、真实物理位移、攻击和使用时长、原生挖掘时钟、操作包延后与顺序、恢复时待执行输入、换体后的旧输入隔离，以及原有范围、遮挡、冷却、豁免和生成规则。最终全量 **376/379通过**，仅剩下文基线也失败的3项旧出生装备断言；没有新增失败。日志为 `build/verification/time-lord/fifth-final.log`。
+
+实际图形客户端审计 **passed**，报告 `build/verification/time-lord/client-audit.json`：真实 Minecraft.tick 运行80次，LocalPlayer模拟16次；热栏键保留到第5tick，右键延迟从20降至4；原生鼠标横纵转角均为正常1/5；原生Camera在五个慢时钟阶段的15个样本严格连续推进；原生背包在第5tick正确拿起3根木棍，无丢失或复制，玩家模型实际绘制通过。到期后下一tick恢复正常。测试夹具显式使用生存模式与独立UUID，避免创造背包替换和重复实体UUID影响断言。
+
+首轮自动客户端遇到本机 Java 符号链接路径的 GLFW 窗口创建错误；使用同一个JDK的真实路径 `D:/Coding/huanjing/jvms/store/jdk21/bin/java.exe` 后完成审计。专用启动覆盖写在 `build/verification/time-lord/client-java.gradle`，没有更改系统Java配置。所有自动测试只使用新建的隔离世界；未执行实际双人联机游玩。
+
+交付使用 `build/delivery/time-lord-one-fifth/modern-ite-0.2.15.jar`，同时更新原 `build/delivery/time-lord/` 链接。`fifth-package-audit.json` 和当前 `package-audit.json` 位于 `build/verification/time-lord/`，记录最终生产类、资源逐字节匹配与包边界。初版四分之一速度JAR保留在该验证目录的 `initial-quarter.jar`，不作为本次成品。
+
+## 时间领主初版历史记录（2026-10-27，已由上述1/5修订替代）
+
+新增 `modern_ite:time_lord` 和玩家专属 `modern_ite:time_dilation`。服务端和客户端玩家每四个世界 tick 推进一次实际物理、动作与攻击／物品计时，挖掘速度同步乘以四分之一，世界 TPS 保持原值。状态计时按世界时间推进；客户端计时归零即停止减速，等待原生移除包期间也不会继续减速。默认生成日96、权重1、16格可见范围、12秒间隔和4秒持续时间均已接入现有配置；玩法与命令见[时间领主](time-lord.md)。
+
+38项JUnit通过。新增7项GameTest验证真实玩家及ServerPlayer.doTick的80／20更新比、实际下落位移、攻击恢复、弓使用计时、挖掘倍率、状态刷新／提高等级／清除／自然到期、原生药水时长、非玩家及创造／旁观豁免、多人光环的视线／距离／冷却，以及生成日期、权重和维度。最终与爆炸及默认配置组合运行 **31/31通过**，日志 `build/verification/time-lord/targeted-final.log`。
+
+原生客户端实际审计通过，`build/verification/time-lord/client-audit.json` 记录真实 LocalPlayer 在80个世界tick内推进20次模拟，位移与20次普通模拟相等，攻击恢复倍率与本地到期恢复正常。状态图标、持剑持钟模型及GPU绘制通过，截图 `build/verification/time-lord/mob-render-audit/time_lord.png`。只使用自动新建的隔离世界并正常保存退出，未执行实际双人联机游玩。
+
+最终全量服务端回归 **372/376通过**，日志 `build/verification/time-lord/final.log`。其中3项 EarlyEquipmentBridgeGameTests 仍断言前35天禁用出生装备，与当前配套本体已取消该限制的规则冲突；使用本次修改前HEAD及同一固定本体的基线366/369通过，同名3项失败，日志 `build/verification/time-lord/baseline.log`。另有1项既有爆炸测试等待目标进入实体查询超时，随后上述31项隔离回归通过；未修改该爆炸规则或夹具，不将本轮标为全量通过。
+
+交付包 `build/delivery/time-lord/modern-ite-0.2.15.jar`；`build/verification/time-lord/package-audit.json` 逐字节核对310个生产类和750个资源，不含测试类、本体类及嵌套JAR。固定配套本体为0.2.15，SHA-256为 `5CF216DB249F0A7F426DF3B07082B1B64F7B64E17FDCB7404C6DA581A0613438`。
+
 ## 极难生物独立生成日期（2026-10-26）
 
 新增44项独立日期配置，配合流浪女巫已有的两项维度日期，覆盖除玩家僵尸外的45种生物。实际日期统一取总限制与单项的较大值，旧物种硬编码日期成为可编辑默认值；自然候选、刷怪笼、转换、召援和事件准入共用此检查。玩家实际死亡生成僵尸的日期与开局平安期豁免保留。湮灭骷髅的独立日期默认33，统一作用于各维度。

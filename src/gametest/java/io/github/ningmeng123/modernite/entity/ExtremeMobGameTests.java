@@ -21,7 +21,7 @@ public final class ExtremeMobGameTests {
     private ExtremeMobGameTests(){}
     private static Mob mob(GameTestHelper h,ExtremeKind k){var m=ExtremeMobs.type(k).create(h.getLevel());h.assertTrue(m!=null,"Registered mob creates: "+k);m.moveTo(h.absolutePos(new BlockPos(1,2,1)).getCenter());MobAbilities.initialize(m,(ExtremeMob)m);return m;}
     @GameTest(template="gear_empty")
-    public static void allFortyFiveIdentitiesPersistTheirActualCombatState(GameTestHelper h){
+    public static void allIdentitiesPersistTheirActualCombatState(GameTestHelper h){
         UUID player=UUID.randomUUID();int count=0;
         for(var kind:ExtremeKind.values()){
             Mob m=mob(h,kind);MobMemory memory=((ExtremeMob)m).extremeMemory();
@@ -34,7 +34,7 @@ public final class ExtremeMobGameTests {
             h.assertTrue(read.phaseCharges==1&&read.phaseMaximum==4&&read.spare.getDamageValue()==13&&read.contribution.get(player)==57.25F,"Charge, weapon and contribution survive: "+kind);
             h.assertTrue(copy.getAttribute(Attributes.MAX_HEALTH)!=null&&copy.getMaxHealth()>0,"Every real identity has attributes: "+kind);count++;
         }
-        h.assertTrue(count==45,"41 Extreme identities plus 4 production ITE prerequisites");h.succeed();
+        h.assertTrue(count==46,"42 Extreme identities plus 4 production ITE prerequisites");h.succeed();
     }
     @GameTest(template="gear_empty")
     public static void mirrorCopiesEquipmentWithoutSharingOrDroppingPlayerItems(GameTestHelper h){

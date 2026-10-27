@@ -121,12 +121,14 @@ public final class ExtremeMobRenderers {
                         kind==ExtremeKind.WITHER_SKELETON_ARROW?ModelLayers.WITHER_SKELETON_INNER_ARMOR:ModelLayers.SKELETON_INNER_ARMOR,
                         kind==ExtremeKind.WITHER_SKELETON_ARROW?ModelLayers.WITHER_SKELETON_OUTER_ARMOR:ModelLayers.SKELETON_OUTER_ARMOR){
                     {
+                        // Re-bake after the renderer's armor layers so EMF binds the skeleton CEM root.
+                        if(kind==ExtremeKind.TIME_LORD)this.model=new TimeLordSkeletonModel(context.bakeLayer(ModelLayers.SKELETON));
                         if(kind==ExtremeKind.SKELETON_ZOMBIE)this.model=new SkeletonZombieModel(context.bakeLayer(SKELETON_ZOMBIE),()->context.bakeLayer(ModelLayers.SKELETON));
                         if(kind==ExtremeKind.SKELETON_LIGHTNING)addLayer(new LightningSkeletonPowerLayer(this,context.bakeLayer(SKELETON_LIGHTNING_POWER)));
                         if(kind==ExtremeKind.ANNIHILATION_SKELETON)addLayer(new SourceGlowLayer<AbstractSkeleton,SkeletonModel<AbstractSkeleton>>(this,skeleton->texture("skeleton/annihilation_skeleton_glow")));
                     }
-                    @Override public ResourceLocation getTextureLocation(AbstractSkeleton skeleton){return kind==ExtremeKind.WITHER_SKELETON_ARROW?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/wither_skeleton.png"):source(kind)==null?super.getTextureLocation(skeleton):texture(source(kind));}
-                    @Override protected void scale(AbstractSkeleton skeleton,PoseStack pose,float partial){super.scale(skeleton,pose,partial);if(kind==ExtremeKind.WITHER_SKELETON_ARROW)pose.scale(1.2F,1.2F,1.2F);}
+                    @Override public ResourceLocation getTextureLocation(AbstractSkeleton skeleton){return kind==ExtremeKind.TIME_LORD?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/stray.png"):kind==ExtremeKind.WITHER_SKELETON_ARROW?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/wither_skeleton.png"):source(kind)==null?super.getTextureLocation(skeleton):texture(source(kind));}
+                    @Override protected void scale(AbstractSkeleton skeleton,PoseStack pose,float partial){super.scale(skeleton,pose,partial);if(kind==ExtremeKind.WITHER_SKELETON_ARROW)pose.scale(1.2F,1.2F,1.2F);if(kind==ExtremeKind.TIME_LORD)pose.scale(1.15F,1.15F,1.15F);}
                 };
                 case CREEPER -> new CreeperRenderer(context){
                     {

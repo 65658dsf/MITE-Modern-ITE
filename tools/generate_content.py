@@ -215,7 +215,7 @@ save('data/modern_ite/neoforge/biome_modifier/maple.json',{'type':'neoforge:add_
 effects=[('chaos','混乱','Chaos'),('flash','闪光','Flash'),('occlusion','遮蔽','Occlusion'),('reversed','颠倒','Reversed'),('fast_sensitivity','灵敏失控','Fast Sensitivity'),('look_up','强制仰视','Look Up'),('big_head','大头','Big Head'),('bucket_head','铁桶套头','Bucket Head')]
 for id,cn,eng in effects:zh['effect.modern_ite.'+id]=cn;en['effect.modern_ite.'+id]=eng
 # Reuse meaningful native sprites where the source's extended-potion API supplied no unique icon.
-save('assets/minecraft/atlases/mob_effects.json',{'sources':[{'type':'minecraft:single','resource':'minecraft:mob_effect/'+native,'sprite':'modern_ite:'+id} for id,native in [('chaos','nausea'),('flash','glowing'),('occlusion','blindness'),('reversed','unluck'),('fast_sensitivity','speed'),('look_up','levitation'),('big_head','health_boost'),('bucket_head','blindness'),('rabies','strength'),('dwarf_curse','weakness')]]})
+save('assets/minecraft/atlases/mob_effects.json',{'sources':[{'type':'minecraft:single','resource':('minecraft:item/clock_00' if id=='time_dilation' else 'minecraft:mob_effect/'+native),'sprite':'modern_ite:'+id} for id,native in [('chaos','nausea'),('flash','glowing'),('occlusion','blindness'),('reversed','unluck'),('fast_sensitivity','speed'),('look_up','levitation'),('big_head','health_boost'),('bucket_head','blindness'),('rabies','strength'),('dwarf_curse','weakness'),('time_dilation','slowness')]]})
 messages={
  'itemGroup.modern_ite':('MITE: Modern ITE','MITE: Modern ITE'),
  'tooltip.modern_ite.lantern.offhand':('仅放在副手时生效。','Only active while held in the offhand.'),

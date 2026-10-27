@@ -132,7 +132,7 @@ public final class ModernIteClientAudit {
         report.addProperty("gilding_humanoid_renderers",gildings);report.addProperty("gilding_player_skins",players.size());
         JsonArray entries = new JsonArray(); report.add("renderers", entries);
         Set<EntityType<?>> creatures = new HashSet<>();
-        check(ExtremeKind.values().length == 45, "Expected 45 creature identities after the three removals");
+        check(ExtremeKind.values().length == 46, "Expected 46 creature identities including the Time Lord");
         for (ExtremeKind kind : ExtremeKind.values()) {
             EntityType<?> type = ExtremeMobs.type(kind);
             creatures.add(type);

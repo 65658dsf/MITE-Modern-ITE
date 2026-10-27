@@ -41,9 +41,9 @@ public final class ExtremeMobSpawnDayGameTests {
             h.assertTrue(IteConfig.defaults().get(key).equals(expected),"The original species date becomes its editable default: "+kind);
         }
         keys.addAll(List.of("rabid_dog_spawn_limit_day","wandering_witch_spawn_limit_day_overworld","wandering_witch_spawn_limit_day_other"));
-        h.assertTrue(keys.size()==46&&!IteConfig.defaults().containsKey("mimic_zombie_spawn_limit_day")
+        h.assertTrue(keys.size()==47&&!IteConfig.defaults().containsKey("mimic_zombie_spawn_limit_day")
                 &&!IteConfig.defaults().containsKey("wandering_witch_spawn_limit_day"),
-                "All 45 non-player species are configurable, with two existing witch dimension dates and no duplicate or player-mimic field");
+                "All 46 non-player species are configurable, with two existing witch dimension dates and no duplicate or player-mimic field");
         var controls=MiteExtensions.policy().spawningControls();
         for(String key:keys) {
             var option=IteConfig.options().stream().filter(value->value.key().equals(key)).findFirst().orElseThrow();

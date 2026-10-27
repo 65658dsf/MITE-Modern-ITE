@@ -91,6 +91,10 @@ public final class IteConfig {
         add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_limit_day_other", 65, 1D, 1000000D, "地底流浪女巫开始自然生成日期（天），默认第65天；极难怪物开始日期及其他条件仍生效。");
         add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_chance_underworld", 50, 0D, 100D, "地底流浪女巫自然生成通过率（%），默认50。0停止自然生成，100跳过此概率筛选。");
         add(builder, "GameMechanics.MobSpawning", "zombie_lord_spawn_frequency", 2, 0D, 1000D, "僵尸领主生成权重。0禁用对应自然池条目；保留其他召援或事件入口。");
+        add(builder, "GameMechanics.MobSpawning", "time_lord_spawn_frequency", 1, 0D, 1000D, "时间领主自然生成权重。0禁用自然生成，仍可用命令或生成蛋召唤。");
+        add(builder, "Entities", "time_lord_cast_interval", 240, 100D, 12000D, "时间领主时间迟滞释放间隔（世界tick），默认12秒；生成后4秒可首次施法。");
+        add(builder, "Entities", "time_lord_effect_duration", 80, 1D, 1200D, "时间迟滞持续时间（世界tick），默认4秒；玩家以五分之一速度行动，世界与怪物照常运行。");
+        add(builder, "Entities", "time_lord_effect_range", 16D, 1D, 64D, "时间领主影响半径（格），仅影响范围内可见的生存／冒险玩家。");
         add(builder, "GameMechanics.MobSpawning", "zombie_pigman_lord_spawn_frequency", 1, 0D, 1000D, "僵尸猪人领主生成权重。0禁用对应自然池条目；不改变其他来源的生成。");
         add(builder, "GameMechanics.MobSpawning", "annihilation_skeleton_spawn_frequency", 1, 0D, 1000D, "湮灭骷髅生成权重。0禁用对应自然池条目。");
         add(builder, "GameMechanics.MobSpawning", "wandering_witch_spawn_frequency", 1, 0D, 1000D, "流浪女巫生成权重。0禁用对应自然池条目。");

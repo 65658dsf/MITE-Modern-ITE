@@ -371,5 +371,10 @@
   "modern_ite.config.mob_max_spawn_count_day_maximum": "日期刷怪增长上限（0 不限）",
   "modern_ite.config.hostile_spawn_groups": "普通日期每区块生成组数",
   "modern_ite.config.blood_moon_hostile_spawn_groups": "血月每区块生成组数",
-  "modern_ite.config.hostile_spawn_attempts": "每组敌对生成尝试次数"
+  "modern_ite.config.hostile_spawn_attempts": "每组敌对生成尝试次数",
+  "modern_ite.config.time_lord_spawn_limit_day": "时间领主开始生成日期（天）",
+  "modern_ite.config.time_lord_spawn_frequency": "时间领主生成权重",
+  "modern_ite.config.time_lord_cast_interval": "时间迟滞释放间隔（世界tick）",
+  "modern_ite.config.time_lord_effect_duration": "时间迟滞持续时间（世界tick）",
+  "modern_ite.config.time_lord_effect_range": "时间迟滞半径（格）"
 }

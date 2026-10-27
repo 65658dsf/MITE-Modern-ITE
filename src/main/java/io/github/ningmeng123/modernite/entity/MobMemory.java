@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 /** Counters survive unloads; summoned troops are never recreated by reading a save. @author NingMeng123 */
 public final class MobMemory {
     public boolean initialized, entourage, mirrored, exchangerTried;
-    public int clock, summons, cooldown, phaseCharges = 3, phaseMaximum = 3, stage, fleeingPotion;
+    public int clock, summons, cooldown, supportCooldown, phaseCharges = 3, phaseMaximum = 3, stage, fleeingPotion;
     public int bats;
     public boolean cursed;
     public String mimicName = "";
@@ -20,6 +20,7 @@ public final class MobMemory {
         t.putBoolean("Initialized", initialized); t.putBoolean("Entourage", entourage);
         t.putBoolean("Mirrored", mirrored); t.putBoolean("ExchangerTried", exchangerTried);
         t.putInt("Clock",clock); t.putInt("Summons",summons); t.putInt("Cooldown",cooldown);
+        t.putInt("SupportCooldown",supportCooldown);
         t.putInt("PhaseCharges",phaseCharges); t.putInt("PhaseMaximum",phaseMaximum); t.putInt("Stage",stage);
         t.putInt("Bats", bats); t.putBoolean("Cursed",cursed); t.putInt("FleeingPotion",fleeingPotion);
         t.putString("MimicName", mimicName);
@@ -32,6 +33,7 @@ public final class MobMemory {
         initialized=t.getBoolean("Initialized"); entourage=t.getBoolean("Entourage"); mirrored=t.getBoolean("Mirrored");
         exchangerTried=t.getBoolean("ExchangerTried"); clock=t.getInt("Clock"); summons=t.getInt("Summons");
         cooldown=t.getInt("Cooldown"); phaseMaximum=Math.clamp(t.getInt("PhaseMaximum"),2,4);
+        supportCooldown=Math.max(0,t.getInt("SupportCooldown"));
         phaseCharges=Math.clamp(t.getInt("PhaseCharges"),0,phaseMaximum); stage=t.getInt("Stage");
         bats=t.getInt("Bats"); cursed=t.getBoolean("Cursed"); fleeingPotion=t.getInt("FleeingPotion");
         mimicName=t.getString("MimicName"); spare=ItemStack.parseOptional(registry,t.getCompound("Spare"));

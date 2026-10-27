@@ -38,7 +38,7 @@ import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.RegisterSpawnPlacementsEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/** Forty-one Extreme identities and the four production ITE prerequisites. @author NingMeng123 */
+/** Registered Extreme identities and the four production ITE prerequisites. @author NingMeng123 */
 public final class ExtremeMobs {
     private static final DeferredRegister<EntityType<?>> TYPES=DeferredRegister.create(Registries.ENTITY_TYPE,ModernIte.MOD_ID);
     private static final DeferredRegister.Items ITEMS=DeferredRegister.createItems(ModernIte.MOD_ID);
@@ -109,7 +109,7 @@ public final class ExtremeMobs {
     }
     public static int spawnWeight(ExtremeKind kind){
         return switch(kind){
-            case ZOMBIE_LORD,ZOMBIE_PIGMAN_LORD,ANNIHILATION_SKELETON,WANDERING_WITCH -> IteConfig.integer("GameMechanics.MobSpawning."+kind.id()+"_spawn_frequency");
+            case ZOMBIE_LORD,ZOMBIE_PIGMAN_LORD,ANNIHILATION_SKELETON,WANDERING_WITCH,TIME_LORD -> IteConfig.integer("GameMechanics.MobSpawning."+kind.id()+"_spawn_frequency");
             default -> kind.weight;
         };
     }

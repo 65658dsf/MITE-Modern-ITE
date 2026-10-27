@@ -1,0 +1,7 @@
+{
+  "entity.modern_ite.time_lord": "时间领主",
+  "item.modern_ite.time_lord_spawn_egg": "时间领主刷怪蛋",
+  "effect.modern_ite.time_dilation": "时间迟滞",
+  "message.modern_ite.time_lord_warning": "时间领主正在扭曲时间……离开它的视线！",
+  "message.modern_ite.time_dilation": "时间迟滞：你的行动速度降至五分之一。"
+}

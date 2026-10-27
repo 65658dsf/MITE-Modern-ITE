@@ -689,5 +689,15 @@
   "modern_ite.config.blood_moon_spawn_chance_multiplier": "血月刷怪轮次概率倍率",
   "modern_ite.config.blood_moon_spawn_chance_multiplier.tooltip": "默认1。乘深浅层每轮通过率，最终概率最多100%；不改变每轮组数或额度。",
   "modern_ite.config.other_dimension_spawn_chance_multiplier": "其他维度刷怪轮次概率倍率",
-  "modern_ite.config.other_dimension_spawn_chance_multiplier.tooltip": "默认0.25。主世界之外的维度将深浅层通过率乘此值，最终最多100%。0停止这些维度自然尝试。"
+  "modern_ite.config.other_dimension_spawn_chance_multiplier.tooltip": "默认0.25。主世界之外的维度将深浅层通过率乘此值，最终最多100%。0停止这些维度自然尝试。",
+  "entity.modern_ite.time_lord": "时间领主",
+  "item.modern_ite.time_lord_spawn_egg": "时间领主刷怪蛋",
+  "effect.modern_ite.time_dilation": "时间迟滞",
+  "message.modern_ite.time_lord_warning": "时间领主正在扭曲时间……离开它的视线！",
+  "message.modern_ite.time_dilation": "时间迟滞：你的行动速度降至五分之一。",
+  "modern_ite.config.time_lord_spawn_limit_day": "时间领主开始生成日期（天）",
+  "modern_ite.config.time_lord_spawn_frequency": "时间领主生成权重",
+  "modern_ite.config.time_lord_cast_interval": "时间迟滞释放间隔（世界tick）",
+  "modern_ite.config.time_lord_effect_duration": "时间迟滞持续时间（世界tick）",
+  "modern_ite.config.time_lord_effect_range": "时间迟滞半径（格）"
 }

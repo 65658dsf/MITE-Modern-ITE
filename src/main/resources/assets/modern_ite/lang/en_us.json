@@ -689,5 +689,15 @@
   "modern_ite.config.blood_moon_spawn_chance_multiplier": "Blood moon spawn chance multiplier",
   "modern_ite.config.blood_moon_spawn_chance_multiplier.tooltip": "Default 1. Multiplies each band’s pass chance, capped at 100%. Does not change groups per pass or caps.",
   "modern_ite.config.other_dimension_spawn_chance_multiplier": "Other dimension spawn chance multiplier",
-  "modern_ite.config.other_dimension_spawn_chance_multiplier.tooltip": "Default 0.25. Multiplies band pass chances outside the Overworld, capped at 100%. 0 stops natural attempts in those dimensions."
+  "modern_ite.config.other_dimension_spawn_chance_multiplier.tooltip": "Default 0.25. Multiplies band pass chances outside the Overworld, capped at 100%. 0 stops natural attempts in those dimensions.",
+  "entity.modern_ite.time_lord": "Time Lord",
+  "item.modern_ite.time_lord_spawn_egg": "Time Lord Spawn Egg",
+  "effect.modern_ite.time_dilation": "Time Dilation",
+  "message.modern_ite.time_lord_warning": "The Time Lord is warping time... Break its line of sight!",
+  "message.modern_ite.time_dilation": "Time Dilation: your actions run at one fifth speed.",
+  "modern_ite.config.time_lord_spawn_limit_day": "Time Lord first spawn day",
+  "modern_ite.config.time_lord_spawn_frequency": "Time Lord spawn weight",
+  "modern_ite.config.time_lord_cast_interval": "Time Dilation interval (world ticks)",
+  "modern_ite.config.time_lord_effect_duration": "Time Dilation duration (world ticks)",
+  "modern_ite.config.time_lord_effect_range": "Time Dilation radius (blocks)"
 }

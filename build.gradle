@@ -13,7 +13,7 @@ repositories {
         content { includeGroup 'mezz.jei' }
     }
 }
-def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.15.jar'))
+def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.16.jar'))
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output
@@ -32,6 +32,13 @@ neoForge {
         client {
             client()
             gameDirectory = file('run-client')
+            if (providers.gradleProperty('modernIteTimeLordAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('build/verification/time-lord/client')
+                programArguments.addAll '--width', '1280', '--height', '900'
+                systemProperty 'modern_ite.mobRenderAudit', 'true'
+                systemProperty 'modern_ite.timeLordAudit', 'true'
+                systemProperty 'modern_ite.mobRenderAuditOutput', file('build/verification/time-lord/client-audit.json').absolutePath
+            }
             if (providers.gradleProperty('modernIteModelCompatibilityAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('build/verification/model-compat-run')
                 programArguments.addAll '--width', '1280', '--height', '900'
@@ -119,7 +126,7 @@ neoForge {
         gameTestServer {
             type = 'gameTestServer'
             gameDirectory = file(providers.gradleProperty('modernIteGameTestDirectory').getOrElse('run-gametest'))
-            systemProperty 'neoforge.enabledGameTestNamespaces', providers.gradleProperty('modernIteGameTestNamespaces').getOrElse('modern_ite,modern_ite_feedback,modern_ite_starting,modern_ite_weapon_balance,modern_ite_crafting,modern_ite_spawn_days')
+            systemProperty 'neoforge.enabledGameTestNamespaces', providers.gradleProperty('modernIteGameTestNamespaces').getOrElse('modern_ite,modern_ite_feedback,modern_ite_starting,modern_ite_weapon_balance,modern_ite_crafting,modern_ite_spawn_days,modern_ite_time_lord')
         }
     }
     mods {
@@ -144,6 +151,7 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def reversedPlayerAudit = providers.gradleProperty('modernIteReversedPlayerAudit').getOrElse('false').toBoolean()
         def directory = infernalExplosionAudit ? 'build/verification/infernal-explosion/client-run' : reversedPlayerAudit ? 'run-reversed-player-audit' : resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : launchHeightAudit ? 'run-launch-height-client' : 'run-client'
         if (providers.gradleProperty('modernIteModelCompatibilityAudit').getOrElse('false').toBoolean()) directory = 'build/verification/model-compat-run'
+        if (providers.gradleProperty('modernIteTimeLordAudit').getOrElse('false').toBoolean()) directory = 'build/verification/time-lord/client'
         directory = providers.gradleProperty('modernIteClientDirectory').getOrElse(directory)
         def config = file("${directory}/config/fml.toml")
         config.parentFile.mkdirs()

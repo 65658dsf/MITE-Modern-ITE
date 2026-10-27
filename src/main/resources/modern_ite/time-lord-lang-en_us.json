@@ -1,0 +1,7 @@
+{
+  "entity.modern_ite.time_lord": "Time Lord",
+  "item.modern_ite.time_lord_spawn_egg": "Time Lord Spawn Egg",
+  "effect.modern_ite.time_dilation": "Time Dilation",
+  "message.modern_ite.time_lord_warning": "The Time Lord is warping time... Break its line of sight!",
+  "message.modern_ite.time_dilation": "Time Dilation: your actions run at one fifth speed."
+}

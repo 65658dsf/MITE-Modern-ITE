@@ -13,8 +13,8 @@ public final class ExtremeEffects {
     private static final DeferredRegister<MobEffect> EFFECTS=DeferredRegister.create(Registries.MOB_EFFECT,ModernIte.MOD_ID);
     public static final Map<String,DeferredHolder<MobEffect,MobEffect>> VALUES=new LinkedHashMap<>();
     static {
-        String[] names={"chaos","flash","occlusion","reversed","fast_sensitivity","look_up","big_head","bucket_head","rabies","dwarf_curse"};
-        int[] colors={0x9966cc,0xffffff,0xaa6622,0x5533aa,0xff5555,0x55aaff,0x88bb44,0x747b83,0xb53427,0x785331};
+        String[] names={"chaos","flash","occlusion","reversed","fast_sensitivity","look_up","big_head","bucket_head","rabies","dwarf_curse","time_dilation"};
+        int[] colors={0x9966cc,0xffffff,0xaa6622,0x5533aa,0xff5555,0x55aaff,0x88bb44,0x747b83,0xb53427,0x785331,0x63d7ed};
         for(int i=0;i<names.length;i++){
             final int color=colors[i];final String name=names[i];
             VALUES.put(name,EFFECTS.register(name,()->{
