@@ -81,33 +81,52 @@ public final class MobAbilities {
                 &&(spawnInLight||level.getMaxLocalRawBrightness(mob.blockPosition())<=7)&&level.getBlockState(mob.blockPosition()).getFluidState().isEmpty();
     }
     private static void stat(Mob mob,Holder<net.minecraft.world.entity.ai.attributes.Attribute> key,double value){var a=mob.getAttribute(key);if(a!=null)a.setBaseValue(value);}
+    private static final String FIXED_ATTACK_REVISION="modern_ite:fixed_attack_revision";
+    /** Preserve each former date curve's day-one attack without changing its health progression. */
+    private static double fixedDateAttack(ExtremeKind kind){
+        return switch(kind){
+            case EXCHANGER,MIRROR_ZOMBIE,MIRROR_SKELETON -> (.5D-7D/27D)*40D;
+            case ZOMBIE_DOOR -> (.5D-8D/28D)*50D;
+            case MINER_ZOMBIE -> (.5D-7.875D/27.875D)*30D;
+            case ZOMBIE_BOSS -> 6D;
+            case ANNIHILATION_SKELETON -> (13D+1D/5D)*3D;
+            case DARK_IRON_GOLEM -> (30D+1D/20D)*2D;
+            default -> Double.NaN;
+        };
+    }
+    private static void normalizeSavedDateAttack(Mob mob,ExtremeKind kind){
+        var data=mob.getPersistentData();
+        if(data.getInt(FIXED_ATTACK_REVISION)>=1)return;
+        double attack=fixedDateAttack(kind);
+        if(Double.isFinite(attack))stat(mob,Attributes.ATTACK_DAMAGE,attack);
+        data.putInt(FIXED_ATTACK_REVISION,1);
+    }
     public static void attributes(Mob m,ExtremeKind k){
         if(k.boss())m.getPersistentData().putBoolean("modern_ite:boss",true);
         int raw=day(m.level()),limit=IteConfig.integer("Entities.enhance_limit"),d=Math.min(limit,raw),healthRate=Math.min(d/16,10);
         double x=d/7-7,rate=.5+x/(20+Math.abs(x));
-        // The agreed C4 model replaces inherited linear day bonuses. Only species-specific challenge curves remain.
+        // Calendar progression remains on health; innate attack stays at each species' first-day value.
         double health=15,attack=8,speed=k.family==Family.ZOMBIE?.23:k.family==Family.CREEPER?.25:.3;
         switch(k){
-            case EXCHANGER -> {health=rate*50+healthRate*5;attack=rate*40;speed=.2572;}
-            case ZOMBIE_DOOR -> {x=d/8-8;rate=.5+x/(20+Math.abs(x));health=(rate*60+healthRate*10)*2;attack=rate*50;speed=.3;}
-            case MINER_ZOMBIE -> {x=d/8D-8;rate=.5+x/(20+Math.abs(x));health=rate*60+healthRate*10;attack=rate*30;speed=.3;}
+            case EXCHANGER -> {health=rate*50+healthRate*5;speed=.2572;}
+            case ZOMBIE_DOOR -> {x=d/8-8;rate=.5+x/(20+Math.abs(x));health=(rate*60+healthRate*10)*2;speed=.3;}
+            case MINER_ZOMBIE -> {x=d/8D-8;rate=.5+x/(20+Math.abs(x));health=rate*60+healthRate*10;speed=.3;}
             case ZOMBIE_FLY_AWAY -> attack=3;
             case ZOMBIE_JUMP -> health=rate*60+healthRate*15;
             case ZOMBIE_PUMPKIN -> {health=60;attack=8;speed=.23;}
             case ZOMBIE_IRON_BUCKET -> health=60;
             case MIMIC_ZOMBIE -> {health=MIMIC_HEALTH;attack=10;}
             case ZOMBIE_CALLER -> {health=60;speed=.22;}
-            case ZOMBIE_BOSS -> {int r=Math.min(limit,raw/10);health=20+r*45;attack=6+r;speed=.3;}
+            case ZOMBIE_BOSS -> {int r=Math.min(limit,raw/10);health=20+r*45;speed=.3;}
             case ZOMBIE_ELITE_LORD,ZOMBIE_LORD -> {health=rate*60+healthRate*15;attack=12;speed=.3;}
             case UNDYING_ZOMBIE_EMPEROR -> {health=(rate*60+healthRate*15)*2;attack=12;speed=.3;}
             case SKELETON_ELITE_LORD -> {health=rate*90+healthRate*15;attack=12;}
-            case MIRROR_ZOMBIE,MIRROR_SKELETON -> attack=rate*40;
-            case ANNIHILATION_SKELETON -> {health=30;attack=(13+d/5D)*3;}
+            case ANNIHILATION_SKELETON -> health=30;
             case ZOMBIE_PIGMAN_LORD -> {health=50;attack=12;}
             case WANDERING_WITCH -> {health=100;speed=.3;}
             case WITCH_LORD -> {health=370;speed=.3;}
             case TIME_LORD -> {health=180;attack=12;speed=.28;}
-            case DARK_IRON_GOLEM -> {health=(45+raw/6D)*4;attack=(30+raw/20D)*2;}
+            case DARK_IRON_GOLEM -> health=(45+raw/6D)*4;
             case RED_GHOUL -> {health=20;attack=5;speed=.28;}
             case ZOMBIE_KNOCKBACK -> speed=.3;
             case FISHING_ROD_ZOMBIE -> speed=.27;
@@ -115,7 +134,9 @@ public final class MobAbilities {
             case BLACK_INFERNAL_CREEPER -> health=(30+raw/8D)*3+100;
             default -> {if(k.family==Family.CREEPER)health=20;}
         }
-        stat(m,Attributes.MAX_HEALTH,health);stat(m,Attributes.ATTACK_DAMAGE,attack);stat(m,Attributes.MOVEMENT_SPEED,speed);
+        double fixedAttack=fixedDateAttack(k);
+        stat(m,Attributes.MAX_HEALTH,health);stat(m,Attributes.ATTACK_DAMAGE,Double.isFinite(fixedAttack)?fixedAttack:attack);stat(m,Attributes.MOVEMENT_SPEED,speed);
+        m.getPersistentData().putInt(FIXED_ATTACK_REVISION,1);
         stat(m,Attributes.FOLLOW_RANGE,k==ZOMBIE_CALLER?35:k==RED_GHOUL?40:k==DARK_IRON_GOLEM?25:k==ANNIHILATION_SKELETON?48:64);
         if(k==ANNIHILATION_SKELETON||k==ZOMBIE_BOSS)stat(m,Attributes.KNOCKBACK_RESISTANCE,1);
         m.setHealth(m.getMaxHealth());
@@ -146,6 +167,7 @@ public final class MobAbilities {
     }
     public static void initialize(Mob mob,ExtremeMob state){
         var k=state.extremeKind();var s=state.extremeMemory();
+        normalizeSavedDateAttack(mob,k);
         if(k==MIMIC_ZOMBIE){
             // Normalize older saves without healing an injured substitute or retaining old day growth.
             var health=mob.getAttribute(Attributes.MAX_HEALTH);
@@ -208,7 +230,7 @@ public final class MobAbilities {
                 enchant(mob,armor,"minecraft:protection",5);
             }
         }
-        if(kind==DARK_IRON_GOLEM)stat(mob,Attributes.ATTACK_DAMAGE,(30+day(mob.level())/20D)*2);
+        if(kind==DARK_IRON_GOLEM)stat(mob,Attributes.ATTACK_DAMAGE,fixedDateAttack(kind));
         if(kind==ZOMBIE_LORD){mob.setNoAi(false);mob.setInvulnerable(false);configureGoals(mob,kind);}
         data.putInt("modern_ite:combat_revision",1);
     }

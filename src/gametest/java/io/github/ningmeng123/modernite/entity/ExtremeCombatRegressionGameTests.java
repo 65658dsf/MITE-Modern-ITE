@@ -289,7 +289,7 @@ public final class ExtremeCombatRegressionGameTests {
         h.assertTrue(pieces==4,"The emperor wears all four armor pieces");
         Mob bigHead=mob(h,ExtremeKind.FISHING_ROD_ZOMBIE);h.assertTrue(bigHead.getMainHandItem().isEmpty(),"Big-head zombie no longer carries a fishing rod");
         Mob golem=mob(h,ExtremeKind.DARK_IRON_GOLEM);
-        h.assertTrue(Math.abs(golem.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-(30+MobAbilities.day(h.getLevel())/20D)*2)<.001,"Dark iron golem base damage is doubled");h.succeed();
+        h.assertTrue(Math.abs(golem.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-60.1D)<.001,"Dark iron golem retains its doubled day-one attack without date growth");h.succeed();
     }
     @GameTest(template="gear_empty")
     public static void existingSaveMigrationRemovesOldRodAndRestoresProtection(GameTestHelper h){
@@ -306,7 +306,49 @@ public final class ExtremeCombatRegressionGameTests {
                 &&stack.getEnchantmentLevel(protection)==5,"Already initialized emperor wears the proper vibranium piece with ordinary Protection V in "+slot+";"+armorDiagnostics(emperor));
         }
         Mob lord=mob(h,ExtremeKind.ZOMBIE_LORD);lord.setNoAi(true);lord.setInvulnerable(true);lord.getPersistentData().remove("modern_ite:combat_revision");MobAbilities.initialize(lord,(ExtremeMob)lord);
-        h.assertTrue(!lord.isNoAi()&&!lord.isInvulnerable(),"Legacy frozen or invulnerable lord state is repaired once");h.succeed();
+        h.assertTrue(!lord.isNoAi()&&!lord.isInvulnerable(),"Legacy frozen or invulnerable lord state is repaired once");
+        long previousDay=h.getLevel().getDayTime();
+        try{
+            ExtremeKind[] kinds={ExtremeKind.EXCHANGER,ExtremeKind.ZOMBIE_DOOR,ExtremeKind.MINER_ZOMBIE,
+                    ExtremeKind.ZOMBIE_BOSS,ExtremeKind.MIRROR_ZOMBIE,ExtremeKind.MIRROR_SKELETON,
+                    ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.DARK_IRON_GOLEM};
+            double[] expected={9.62962962962963D,10.714285714285715D,6.524663677130045D,6D,
+                    9.62962962962963D,9.62962962962963D,39.6D,60.1D};
+            h.getLevel().setDayTime(9999L*24000L);
+            for(int index=0;index<kinds.length;index++){
+                Mob fresh=mob(h,kinds[index]);
+                h.assertTrue(Math.abs(fresh.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-expected[index])<.000001D,
+                        "Far-future new mobs use the species' literal day-one attack: "+kinds[index]);
+                float maximum=fresh.getMaxHealth();fresh.setHealth(maximum*.4F);float injured=fresh.getHealth();
+                var weapon=new ItemStack(Items.STICK);fresh.setItemSlot(EquipmentSlot.MAINHAND,weapon);
+                fresh.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(999D);
+                fresh.getPersistentData().remove("modern_ite:fixed_attack_revision");
+                var saved=new net.minecraft.nbt.CompoundTag();fresh.saveWithoutId(saved);
+                Mob loaded=ExtremeMobs.type(kinds[index]).create(h.getLevel());loaded.load(saved);
+                ExtremeMobEvents.join(new net.neoforged.neoforge.event.entity.EntityJoinLevelEvent(loaded,h.getLevel()));
+                h.assertTrue(Math.abs(loaded.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-expected[index])<.000001D,
+                        "An initialized native save with combat revision1 loses its legacy date attack on join: "+kinds[index]);
+                h.assertTrue(loaded.getMaxHealth()==maximum&&loaded.getHealth()==injured
+                                &&ItemStack.isSameItemSameComponents(loaded.getMainHandItem(),weapon),
+                        "Attack migration preserves health progression, injuries and saved equipment: "+kinds[index]);
+                loaded.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(expected[index]+.5D);
+                ExtremeMobEvents.tick(new net.neoforged.neoforge.event.tick.EntityTickEvent.Post(loaded));
+                h.assertTrue(Math.abs(loaded.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-expected[index]-.5D)<.000001D,
+                        "The one-time migration preserves later custom attack changes during live refresh: "+kinds[index]);
+                fresh.discard();loaded.discard();
+            }
+            Mob live=mob(h,ExtremeKind.EXCHANGER);live.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(999D);
+            live.getPersistentData().remove("modern_ite:fixed_attack_revision");
+            ExtremeMobEvents.tick(new net.neoforged.neoforge.event.tick.EntityTickEvent.Post(live));
+            h.assertTrue(Math.abs(live.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-expected[0])<.000001D,
+                    "An already loaded monster is also normalized by the production tick path");live.discard();
+            Mob unaffected=mob(h,ExtremeKind.ZOMBIE_PUMPKIN);unaffected.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(37.5D);
+            unaffected.getPersistentData().remove("modern_ite:fixed_attack_revision");
+            MobAbilities.initialize(unaffected,(ExtremeMob)unaffected);
+            h.assertTrue(unaffected.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)==37.5D,
+                    "Migration retains custom attack on species without a former date curve");unaffected.discard();
+        }finally{h.getLevel().setDayTime(previousDay);}
+        h.succeed();
     }
     @GameTest(template="gear_empty")
     public static void ordinaryWitchCallsOneToThreeHostileWolvesOnceAfterPlayerInjury(GameTestHelper h){

@@ -11,6 +11,8 @@ import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
@@ -112,6 +114,46 @@ public final class IteMobConfigGameTests {
             ExtremeNativeMobs.tick(new EntityTickEvent.Post(golem));
             h.assertTrue(golem.getAttributeBaseValue(Attributes.MAX_HEALTH)==220,"Repeated updates never stack golem health");
         }finally{golem.discard();skeleton.discard();}
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
+    public static void elitePigmanStrengthStaysAtLevelOneWhileDurationRetainsCalendarProgress(GameTestHelper h){
+        try(var site=new SpawnBalanceGameTests.Site(h);Settings settings=new Settings()){
+            settings.set("zombie_pigman_boost_chance",1D);settings.set("zombie_pigman_use_bow",false);
+            site.date(129,129,true);
+            var pig=site.mob(EntityType.ZOMBIFIED_PIGLIN);var ally=site.mob(EntityType.ZOMBIFIED_PIGLIN);
+            // A separate height keeps the real aura query away from other tests' entity fixtures.
+            pig.setPos(site.origin.add(0D,32D,0D));ally.setPos(pig.position().add(2D,0D,0D));
+            pig.setNoGravity(true);ally.setNoGravity(true);
+            for(var member:java.util.List.of(pig,ally))member.getPersistentData().putBoolean("modern_ite:pigman_rolls",true);
+            pig.getPersistentData().putBoolean("modern_ite:pigman_boosted",true);
+            ally.getPersistentData().putBoolean("modern_ite:pigman_boosted",false);
+            h.assertTrue(site.level.addFreshEntity(pig)&&site.level.addFreshEntity(ally),
+                    "The saved elite trait and its nearby ally join the actual world");
+            var neighbors=site.level.getEntitiesOfClass(net.minecraft.world.entity.monster.ZombifiedPiglin.class,
+                    pig.getBoundingBox().inflate(16,8,16));
+            h.assertTrue(neighbors.size()==2&&neighbors.contains(pig)&&neighbors.contains(ally),
+                    "Only the two owned fixtures are within the production pigman aura query");
+            for(int day:new int[]{129,5000}){
+                site.date(day,day,true);
+                h.assertTrue(MobAbilities.day(site.level)==day,"The aura reads the intended historical world day");
+                pig.removeEffect(MobEffects.DAMAGE_BOOST);ally.removeEffect(MobEffects.DAMAGE_BOOST);
+                pig.tickCount=30;ExtremeNativeMobs.tick(new EntityTickEvent.Post(pig));
+                for(var member:java.util.List.of(pig,ally)){
+                    var strength=member.getEffect(MobEffects.DAMAGE_BOOST);
+                    h.assertTrue(strength!=null&&strength.getAmplifier()==0,
+                            "The real elite aura gives Strength I at both early and far-future dates: day="+day);
+                    h.assertTrue(strength.getDuration()==day/32*10,
+                            "Aura duration keeps its independent calendar progression: day="+day);
+                }
+            }
+            ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,12000,4));
+            pig.tickCount=60;ExtremeNativeMobs.tick(new EntityTickEvent.Post(pig));
+            var stronger=ally.getEffect(MobEffects.DAMAGE_BOOST);
+            h.assertTrue(stronger!=null&&stronger.getAmplifier()==4&&stronger.getDuration()==12000,
+                    "Refreshing the weaker aura preserves a stronger legitimate Strength potion and its duration");
+        }
         h.succeed();
     }
 

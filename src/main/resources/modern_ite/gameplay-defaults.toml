@@ -9,6 +9,7 @@
 	in_wall_damage_for_player = 1.0
 	stepped_mob_damage_factor = 0.5
 	stepped_mob_damage_progress_max = 2.0
+	# Legacy compatibility only; date-based mob damage growth is disabled.
 	stepped_mob_damage_progress_increase_day = 50
 	stepped_player_damage_progress = 2.0
 	stepped_player_damage_increase_per_lvl = 0.1

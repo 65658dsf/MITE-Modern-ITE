@@ -220,7 +220,7 @@ public final class ExtremeNativeMobs {
             int day=MobAbilities.day(level);
             for(var ally:level.getEntitiesOfClass(ZombifiedPiglin.class,m.getBoundingBox().inflate(16,8,16))){
                 ally.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,40+day/32*10,pig.getRandom().nextInt(Math.max((day-96)/96,1))));
-                ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,day/32*10,pig.getRandom().nextInt(Math.max((day-128)/96,1))));
+                ally.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,day/32*10,0));
             }
         }
         if(m instanceof AbstractSkeleton skeleton&&!BloodMoonEquipment.spawnEquipmentLocked(m)&&!SourceEnchantmentCombat.disarmed(m)&&IteConfig.number("Entities.bone_lord_and_longdead_change_weapon_chance")>0&&m.tickCount%10==0&&m.getTarget()!=null&&m.getSensing().hasLineOfSight(m.getTarget())&&m.getPersistentData().getBoolean("modern_ite:switch_weapon")){

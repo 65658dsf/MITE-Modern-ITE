@@ -217,6 +217,12 @@ public final class IteConfigClientAudit {
             var count = IteConfigValuesScreen.class.getDeclaredField("matchCount");
             count.setAccessible(true);
             check(count.getInt(values) == 1, "Searching 征服者 must find exactly the implemented conqueror setting");
+            search.setValue("stepped_mob_damage_progress_increase_day");
+            check(count.getInt(values) == 0, "The retired date-damage setting is absent from the effective-values browser");
+            for(String key:List.of("stepped_mob_damage_factor","stepped_mob_damage_progress_max")){
+                search.setValue(key);check(count.getInt(values)==1,"Static mob combo settings remain visible: "+key);
+            }
+            search.setValue("征服者");
             capture(mc, values, width, height, "conqueror-search", -1, -1);
             capture(mc, values, width, height, "conqueror-tooltip", width / 2, 112);
             bounds(values);
@@ -245,6 +251,12 @@ public final class IteConfigClientAudit {
         check(mc.screen instanceof ConfigurationScreen.ConfigurationSectionScreen, "COMMON settings must be editable");
         Screen commonRoot=mc.screen;
         section(mc.screen,"GameMechanics").onPress();
+        check(widgets(mc.screen).stream().noneMatch(widget->widget.getMessage().equals(
+                        Component.translatable("modern_ite.config.stepped_mob_damage_progress_increase_day"))),
+                "The native editor hides the retired date-damage field while retaining its TOML compatibility value");
+        check(findEdit(mc.screen,"modern_ite.config.stepped_mob_damage_factor").active
+                        &&findEdit(mc.screen,"modern_ite.config.stepped_mob_damage_progress_max").active,
+                "The native editor retains both static mob combo factors");
         section(mc.screen,"MobSpawning").onPress();
         String startDayKey="extreme_mob_spawn_limit_day";
         EditBox startDay=findEdit(mc.screen,"modern_ite.config."+startDayKey);

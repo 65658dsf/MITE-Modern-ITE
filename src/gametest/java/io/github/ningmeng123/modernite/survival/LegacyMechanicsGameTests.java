@@ -57,7 +57,7 @@ public final class LegacyMechanicsGameTests {
     }
 
     @GameTest(template="gear_empty",batch="ite_config")
-    public static void monsterStepsUseAllThreeParametersAndOnlyCountSuccessfulHits(GameTestHelper h) {
+    public static void monsterStepsUseFixedFactorAndOnlyCountSuccessfulHits(GameTestHelper h) {
         var level=h.getLevel();long previousDay=level.getDayTime();
         var first=h.spawn(EntityType.ZOMBIE,new BlockPos(1,2,1));var other=h.spawn(EntityType.ZOMBIE,new BlockPos(3,2,1));
         first.setNoAi(true);other.setNoAi(true);first.setItemInHand(InteractionHand.MAIN_HAND,ItemStack.EMPTY);other.setItemInHand(InteractionHand.MAIN_HAND,ItemStack.EMPTY);
@@ -66,11 +66,12 @@ public final class LegacyMechanicsGameTests {
             config.set("stepped_mob_damage_progress_max",10D);config.set("stepped_mob_damage_progress_increase_day",100);
             DamageSource source=first.damageSources().mobAttack(first);
             float baseline=hit(target.player,source,5);float second=hit(target.player,source,5);
-            h.assertTrue(Math.abs(second-baseline-1.25F)<.001F,"World day100 and the configured base/day divisor give a1.25second-hit bonus");
-            config.set("stepped_mob_damage_progress_max",.5D);
+            h.assertTrue(Math.abs(second-baseline-.25F)<.001F,"The second successful hit uses the fixed0.25factor without a date bonus");
+            config.set("stepped_mob_damage_factor",1D);config.set("stepped_mob_damage_progress_max",.5D);
             h.assertTrue(Math.abs(hit(target.player,source,5)-baseline-1F)<.001F,"The configured coefficient cap limits the third hit to two times0.5");
-            config.set("stepped_mob_damage_progress_max",10D);config.set("stepped_mob_damage_progress_increase_day",200);
-            h.assertTrue(Math.abs(hit(target.player,source,5)-baseline-2.25F)<.001F,"Changing the growth divisor changes the next real hit");
+            config.set("stepped_mob_damage_factor",.25D);config.set("stepped_mob_damage_progress_max",10D);config.set("stepped_mob_damage_progress_increase_day",1);
+            level.setDayTime(9999L*24000L);
+            h.assertTrue(Math.abs(hit(target.player,source,5)-baseline-.75F)<.001F,"Far-future dates and the compatibility divisor cannot increase the three-hit fixed bonus");
             h.assertTrue(Math.abs(hit(untouched.player,source,5)-baseline)<.001F,"Another victim does not share the first player's accumulated hits");
             h.assertTrue(Math.abs(hit(target.player,other.damageSources().mobAttack(other),5)-baseline)<.001F,"A different attacking mob has an independent counter");
             int before=target.player.getPersistentData().getCompound("modern_ite:stepped_mobs_v1").getInt(first.getUUID().toString());

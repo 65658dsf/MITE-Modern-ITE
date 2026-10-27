@@ -51,7 +51,7 @@ public final class IteConfig {
         add(builder, "Item.Enchantment", "beheading_chance_boost_per_lvl", 0.05D, 0D, 1D, "斩首每级额外头颅掉落概率。0.05代表5%，总概率最多100%。");
         add(builder, "Block", "mob_spawner_speed_up_with_players", true, 0D, 1D, "玩家近场加速非方块刷怪笼（如刷怪笼矿车），旁观者除外。普通方块刷怪笼固定9秒间隔，不受此加速影响。");
         add(builder, "Block", "mob_spawner_extra_delay_reduction", 2, 0D, 1000000D, "非方块刷怪笼近场加速每tick额外减少的冷却（tick）。需要开启近场加速；0保留原生倒计时速度。普通方块刷怪笼固定9秒，不受此值影响。");
-        add(builder, "Entities", "enhance_limit", 366, 0D, 1000000D, "特殊生物属性成长天数上限。控制本拓展特殊生物的种类专属成长曲线；本体通用怪物成长仍由主模组设置控制。");
+        add(builder, "Entities", "enhance_limit", 366, 0D, 1000000D, "特殊生物生命成长天数上限。种类专属攻击固定为第1天数值，旧存档日期攻击会一次归一化；本体生命成长由主模组设置控制。");
         add(builder, "Entities", "skeleton_triple_shot", true, 0D, 1D, "三发骷髅。允许已抽中三发特性的骷髅发射额外两支箭。");
         add(builder, "Entities", "compressed_skeleton", true, 0D, 1D, "分裂骷髅。允许各类骷髅以3%概率获得死亡分裂特性，生成同类小型骷髅；幼体不再分裂，仍服从召援数量与密度限制。");
         add(builder, "Entities", "compressed_skeleton_crack_stand_time", 20, 1D, 100000000D, "分裂骷髅停滞时间（tick）。分裂后小型骷髅的虚弱、缓慢与抗性持续时间。");
@@ -60,7 +60,7 @@ public final class IteConfig {
         add(builder, "Entities", "bone_lord_and_longdead_change_weapon_chance", 0.25D, 0D, 1D, "古尸和骷髅领主切换武器概率。0.25代表25%；对新抽取切换特性的生物生效。");
         add(builder, "Entities", "bat_poison_attack", true, 0D, 1D, "吸血蝙蝠攻击中毒。关闭仅禁用本拓展添加的中毒效果。");
         add(builder, "Entities", "zombie_pigman_use_bow", true, 0D, 1D, "允许僵尸猪人使用弓。开启时保留当前的带弓抽取概率。");
-        add(builder, "Entities", "zombie_pigman_boost_chance", 0.025D, 0D, 1D, "精英猪人生成概率。0.025代表2.5%，对新抽取特性的猪人生效。");
+        add(builder, "Entities", "zombie_pigman_boost_chance", 0.025D, 0D, 1D, "精英猪人生成概率。0.025代表2.5%，对新抽取特性的猪人生效。力量固定I级，药效持续时间与速度继续按日期变化。");
         add(builder, "Entities", "ghast_overworld_boost", 1.25D, 0D, 100D, "主世界恶魂火球爆炸范围倍率。控制本拓展火球计算中的主世界增强系数。");
         add(builder, "Entities", "wolves_attack_players_with_meat", true, 0D, 1D, "野狼攻击手持肉的玩家。按当前有效逻辑检查手持肉，不扫描整个快捷栏。");
         add(builder, "Entities", "can_boost_iron_golem", true, 0D, 1D, "允许强化铁傀儡。关闭时暂停已有强化的额外20生命、3攻击及体型；再次开启恢复加成，不额外回血。");
@@ -102,9 +102,9 @@ public final class IteConfig {
         add(builder, "WorldGen.Nether", "nether_adamantium_max_count_per_vein", 3, 1D, 64D, "下界艾德曼矿脉尺寸。只影响新生成区块；受地形、替换目标与原生矿脉算法影响。");
         add(builder, "Entities", "zombie_pigman_attack_animails", false, 0D, 1D, "僵尸猪人攻击动物。关闭保持当前默认目标选择；开启后允许猪人选择动物为攻击目标。");
         add(builder, "GameMechanics", "in_wall_damage_for_player", 1D, 0D, 1000000D, "玩家墙内窒息伤害。每次墙内窒息结算的基础伤害；0禁用，默认保留当前1点。");
-        add(builder, "GameMechanics", "stepped_mob_damage_factor", 0.5D, 0D, 10000D, "怪物连击伤害初始系数。同一怪物此前成功伤害此玩家次数×min(系数上限,初始系数+世界日期/增长天数)。");
+        add(builder, "GameMechanics", "stepped_mob_damage_factor", 0.5D, 0D, 10000D, "怪物连击伤害固定系数。同一怪物此前成功伤害此玩家次数×min(系数上限,固定系数)，不随世界日期增加。");
         add(builder, "GameMechanics", "stepped_mob_damage_progress_max", 2D, 0D, 10000D, "怪物连击伤害系数上限。0禁用怪物连击加伤；末影龙和史莱姆族保持旧规则豁免。");
-        add(builder, "GameMechanics", "stepped_mob_damage_progress_increase_day", 50, 1D, 1000000D, "怪物连击系数每增加1所需天数。日期使用主世界当前显示日期；所有数值参与真实加伤。");
+        add(builder, "GameMechanics", "stepped_mob_damage_progress_increase_day", 50, 1D, 1000000D, "旧版怪物连击日期增长参数，仅为兼容配置保留，不再影响伤害。");
         add(builder, "GameMechanics", "stepped_player_damage_progress", 2D, 0D, 10000D, "玩家无附魔连击伤害上限。持工具近战同一怪物，额外min(上限,此前成功命中次数×玩家等级×每级加成)，与征服者加伤相加。");
         add(builder, "GameMechanics", "stepped_player_damage_increase_per_lvl", 0.1D, 0D, 10000D, "玩家连击每等级伤害系数。0禁用无附魔连击部分；不禁用征服者附魔本身。");
         add(builder, "GameMechanics", "fishing_xp", 30, 0D, 1000000D, "每次钓获经验。替换每个实际钓获物结算的原生随机经验，0不产生钓获经验。");

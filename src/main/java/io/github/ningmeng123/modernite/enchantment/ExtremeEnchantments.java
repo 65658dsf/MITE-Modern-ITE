@@ -177,9 +177,7 @@ public final class ExtremeEnchantments {
         if(event.isCanceled()||event.getEntity().level().isClientSide) return;
         if(event.getEntity() instanceof Player defender&&event.getSource().getEntity() instanceof Mob mob&&steppedMob(mob)) {
             int hits=priorMobHits(defender,mob);
-            double day=io.github.ningmeng123.modernite.ExtremeRules.currentDay((ServerLevel)defender.level());
-            double step=Math.min(IteConfig.number("stepped_mob_damage_progress_max"),IteConfig.number("stepped_mob_damage_factor")
-                    +day/Math.max(1,IteConfig.integer("stepped_mob_damage_progress_increase_day")));
+            double step=Math.min(IteConfig.number("stepped_mob_damage_progress_max"),IteConfig.number("stepped_mob_damage_factor"));
             if(hits>0&&step>0)event.setAmount(event.getAmount()+(float)(hits*step));
         }
         if(event.getSource().getDirectEntity() instanceof Mob attacker&&event.getSource().getEntity()==attacker) {

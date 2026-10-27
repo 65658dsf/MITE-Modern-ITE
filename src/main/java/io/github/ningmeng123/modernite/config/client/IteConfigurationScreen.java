@@ -3,6 +3,8 @@ package io.github.ningmeng123.modernite.config.client;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import io.github.ningmeng123.modernite.ModernIte;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -10,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.common.ModConfigSpec.ValueSpec;
 
 /** Native config behavior with a footer that fits the minimum GUI width. @author NingMeng123 */
 public final class IteConfigurationScreen {
@@ -26,6 +29,12 @@ public final class IteConfigurationScreen {
         private Section(Context parentContext, Screen parent, UnmodifiableConfig definitions,
                         String key, UnmodifiableConfig values, Component title) {
             super(parentContext, parent, definitions.valueMap(), key, values.entrySet(), title);
+        }
+
+        @Override
+        protected Element createIntegerValue(String key, ValueSpec spec, Supplier<Integer> source, Consumer<Integer> target) {
+            if (key.equals("stepped_mob_damage_progress_increase_day")) return null;
+            return super.createIntegerValue(key, spec, source, target);
         }
 
         @Override

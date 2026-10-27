@@ -50,6 +50,7 @@ public final class IteConfigValuesScreen extends Screen {
         var categories = new LinkedHashMap<String, java.util.ArrayList<IteConfig.Option>>();
         matchCount = 0;
         for (var option : IteConfig.options()) {
+            if (option.key().equals("stepped_mob_damage_progress_increase_day")) continue;
             String category = option.path().size() > 1 ? option.path().getFirst() : "general";
             if (!filter.isEmpty() && !option.key().toLowerCase(Locale.ROOT).contains(filter)
                     && !String.join(".", option.path()).toLowerCase(Locale.ROOT).contains(filter)
