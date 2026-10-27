@@ -133,10 +133,12 @@ public final class ExtremeMobs {
         public ZombieVariant(EntityType<? extends ZombieVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);if(k==ExtremeKind.MIMIC_ZOMBIE)setPersistenceRequired();}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
         @Override public boolean canHoldItem(ItemStack stack){
-            return (kind!=ExtremeKind.ZOMBIE_FLY_AWAY||getEquipmentSlotForItem(stack).getType()!=EquipmentSlot.Type.HAND)&&super.canHoldItem(stack);
+            return (kind!=ExtremeKind.ZOMBIE_FLY_AWAY||getEquipmentSlotForItem(stack).getType()!=EquipmentSlot.Type.HAND)
+                    &&(!ZombieLordAbilities.handles(kind)||ZombieLordEquipment.canAcceptPickup(this,stack))&&super.canHoldItem(stack);
         }
-        @Override public boolean canTakeItem(ItemStack stack){return (kind!=ExtremeKind.ZOMBIE_FLY_AWAY||canHoldItem(stack))&&super.canTakeItem(stack);}
+        @Override public boolean canTakeItem(ItemStack stack){return (kind!=ExtremeKind.ZOMBIE_FLY_AWAY&&!ZombieLordAbilities.handles(kind)||canHoldItem(stack))&&super.canTakeItem(stack);}
         @Override public ItemStack equipItemIfPossible(ItemStack stack){
+            if(ZombieLordAbilities.handles(kind)&&!canHoldItem(stack))return ItemStack.EMPTY;
             if(kind==ExtremeKind.ZOMBIE_FLY_AWAY){
                 EquipmentSlot slot=getEquipmentSlotForItem(stack);
                 // Vanilla falls back to holding rejected armor; refusing that fallback must not consume the pickup.

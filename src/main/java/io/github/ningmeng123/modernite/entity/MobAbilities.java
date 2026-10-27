@@ -177,7 +177,7 @@ public final class MobAbilities {
                 mob.setHealth(Math.min(mob.getHealth(),MIMIC_HEALTH));
             }
         }
-        if(s.initialized){upgradeSavedCombat(mob,k);return;}s.initialized=true;
+        if(s.initialized){ZombieLordEquipment.upgradeSaved(mob,k);upgradeSavedCombat(mob,k);return;}s.initialized=true;
         s.phaseMaximum=s.phaseCharges=mob.getRandom().nextInt(3)+2;
         if(mob instanceof Zombie zombie)zombie.setCanBreakDoors(true);
         boolean fixedBossGear=k==ZOMBIE_LORD||k==ZOMBIE_ELITE_LORD||k==SKELETON_ELITE_LORD||k==TIME_LORD||k==ZOMBIE_BOSS||k==UNDYING_ZOMBIE_EMPEROR||k==ZOMBIE_PIGMAN_LORD;
@@ -186,9 +186,10 @@ public final class MobAbilities {
         if(k.family==Family.PILLAGER)equip(mob,EquipmentSlot.MAINHAND,"modern_ite:crossbow","minecraft:crossbow");
         if(fixedBossGear){
             if(k==TIME_LORD)TimeLordEquipment.initialize(mob);
+            else if(ZombieLordAbilities.handles(k))ZombieLordEquipment.initialize(mob,k);
             else {
             armor(mob,"vibranium",k==UNDYING_ZOMBIE_EMPEROR);
-            equip(mob,EquipmentSlot.MAINHAND,k==ZOMBIE_BOSS||k==ZOMBIE_ELITE_LORD?"mite:vibranium_war_hammer":"mite:vibranium_sword","minecraft:iron_sword");
+            equip(mob,EquipmentSlot.MAINHAND,k==ZOMBIE_BOSS?"mite:vibranium_war_hammer":"mite:vibranium_sword","minecraft:iron_sword");
             }
         }
         switch(k){

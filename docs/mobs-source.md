@@ -45,7 +45,7 @@
 | mimic_zombie | 拟态僵尸（玩家僵尸） | EntityMimicZombie | 玩家实际死亡时5%概率生成；不受统一日期或开局平安期限制，未生成或生成失败时正常掉落物品；黑暗地狱苦力怕直接炸死玩家也按5%判定 | 固定10点生命（5颗心），不随天数增长；保留名字与在线皮肤，生成成功后接管真实死亡掉落全背包并保存；不会自然消失或被环境、其他生物伤害杀死，保存重载后继续保留，玩家击杀100%释放一次 |
 | zombie_caller | 唤尸 | EntityZombieCaller | 自然；通用维度；地底锁敌或玩家攻击启动 | 开始召 4 僵尸，200 tick 再召 3，400 tick 自爆并出 7–9 蠹虫 |
 | zombie_boss | 僵尸BOSS | EntityZombieBoss | 达到统一日期后，地底玩家成功破坏刷怪笼有50%挑战，并伴女巫领主 | 只接受玩家直接近战、伤害÷5、压制力量、远距雷击、挑战重置、伤害榜奖励 |
-| zombie_elite_lord | 僵尸精英领主 | EntityZombieEliteLord | 自然；33 天起；末影龙援军 | 振金装备、专属生命曲线、最多 24 次矿工/食尸鬼/尸妖/亡魂召援 |
+| zombie_elite_lord | 僵尸精英领主 | EntityZombieEliteLord | 自然；33 天起；末影龙援军 | 振金战锤与全套振金甲，保留出生随机附魔与磨损、地底随机提高锋利／保护；专属生命曲线、最多 24 次矿工/食尸鬼/尸妖/亡魂召援 |
 | undying_zombie_emperor | 不朽尸皇 | EntityUndyingZombieEmperor | 自然；至少128天，主世界/地底 | 双倍领主曲线生命、全套振金保护 V/锋利 V 棍、暗红灵魂环、一次性 2 僵尸领主+2 流浪女巫 |
 | exchanger | 转移骷髅 | EntityExchanger | 自然；64 天起；盗贼援军 | 预警约 3 秒后交换双方 XYZ；任一穿戴物固定附魔阻止；免缴械 |
 | mirror_skeleton | 镜像骷髅 | EntityMirrorSkeleton | 自然；通用维度 | 复制装备/效果/生命，复制物不掉落 |
@@ -68,7 +68,7 @@
 | witch_lord | 女巫领主 | EntityWitchLord | 自然；至少96天，主世界/地底；挑战随从 | 370 基础生命、25 tick 投药、最多召 2 流浪女巫，并检查附近女巫数量 |
 | red_ghoul | 红色食尸鬼 | EntityRedGhoul | 自然；通用维度 | 攻击玩家/牲畜，命中12倍鼠标输入灵敏度120 tick；源为非亡灵生物 |
 | dark_iron_golem | 暗黑铁傀儡 | EntityDarkIronGolem | 自然；33天起，下界/地底 | 专属生命/双倍攻击公式、最终向上速度固定15；只受镐、爆炸、溺水和雪球伤害 |
-| zombie_lord | 僵尸领主 | ITE EntityZombieLord + Extreme 对应 Mixin | 自然；33天起；尸皇随从 | 振金整装、免缴械、专属曲线生命、钻石奖励；按用户要求新增旧版精英领主的四类召援，见[zombie-lord.md](zombie-lord.md) |
+| zombie_lord | 僵尸领主 | ITE EntityZombieLord + Extreme 对应 Mixin | 自然；33天起；尸皇随从 | 按用户要求改持振金战锤，全套振金甲保留出生随机附魔与磨损、地底随机提高锋利／保护；免缴械、专属曲线生命、钻石奖励及四类召援，见[zombie-lord.md](zombie-lord.md) |
 | wandering_witch | 流浪女巫 | ITE EntityWanderingWitch + Extreme 对应 Mixin | 自然；主世界/地底默认65天，物种日期可改；尸皇/女巫领主随从 | 100 基础生命、50 tick 投药、逃跑减速、最多8蝙蝠、真实诅咒 |
 | zombie_pigman_lord | 僵尸猪人领主 | ITE EntityZombiePigmanLord + Extreme 对应 Mixin | 自然；下界独立候选，服从统一日期；普通猪人不额外转换 | 振金整装、免缴械、石英奖励；保留父类最终生效的固定生命基线 |
 | annihilation_skeleton | 湮灭骷髅 | ITE EntityAnnihilationSkeleton + Extreme 对应 Mixin | 自然；主世界33天起额外1/4，下界/地底；刷怪蛋 | 紫黑逆向传送环与烟雾、30基础生命、专属3倍攻击曲线、精金护甲、仅玩家直接近战可伤、受攻击后计时消失、免药水/击退 |
