@@ -87,6 +87,7 @@ public final class ExtremeMobRenderers {
                 case ZOMBIE -> new ZombieRenderer(context){
                     {
                         if(kind==ExtremeKind.ZOMBIE_CALLER)this.model=new CallerModel(context.bakeLayer(CALLER));
+                        if(kind==ExtremeKind.ZOMBIE_IRON_BUCKET)addLayer(new BucketZombieLayer(this));
                         if(kind==ExtremeKind.ZOMBIE_FLY_AWAY)this.model=new VariantZombieModel(context.bakeLayer(STRONG_ZOMBIE),kind,()->context.bakeLayer(ModelLayers.ZOMBIE));
                         if(kind==ExtremeKind.FISHING_ROD_ZOMBIE||kind==ExtremeKind.ZOMBIE_DOOR)this.model=new VariantZombieModel(context.bakeLayer(ModelLayers.ZOMBIE),kind);
                         if(kind==ExtremeKind.ZOMBIE_GHAST||kind==ExtremeKind.DRAGON_ZOMBIE){

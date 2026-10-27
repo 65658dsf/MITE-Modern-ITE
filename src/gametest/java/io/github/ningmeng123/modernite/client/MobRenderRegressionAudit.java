@@ -170,6 +170,11 @@ public final class MobRenderRegressionAudit {
                 report.add("bucket_head", BucketHeadClientAudit.capture(mc, screenshots()));
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.bucketZombieAudit")) {
+                report.addProperty("scope", "Bucket-zombie empty-head species appearance, animated head attachment and equipped/invisible negative controls");
+                report.add("bucket_zombie", BucketZombieClientAudit.capture(mc, screenshots()));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.defenseAudit")) {
                 report.addProperty("scope", "Native shield and door guard client ticks, bounded side turns and GPU pose direction");
                 report.add("defense_intent", DefenseIntentClientAudit.capture(mc, screenshots()));
