@@ -27,6 +27,7 @@ import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.level.Level;
@@ -131,6 +132,21 @@ public final class ExtremeMobs {
         private float doorGuardProgress,doorGuardProgressOld;
         public ZombieVariant(EntityType<? extends ZombieVariant> t,Level l,ExtremeKind k){super(t,l);kind=k;MobAbilities.attributes(this,k);if(k==ExtremeKind.MIMIC_ZOMBIE)setPersistenceRequired();}
         public ExtremeKind extremeKind(){return kind;}public MobMemory extremeMemory(){return memory;}
+        @Override public boolean canHoldItem(ItemStack stack){
+            return (kind!=ExtremeKind.ZOMBIE_FLY_AWAY||getEquipmentSlotForItem(stack).getType()!=EquipmentSlot.Type.HAND)&&super.canHoldItem(stack);
+        }
+        @Override public boolean canTakeItem(ItemStack stack){return (kind!=ExtremeKind.ZOMBIE_FLY_AWAY||canHoldItem(stack))&&super.canTakeItem(stack);}
+        @Override public ItemStack equipItemIfPossible(ItemStack stack){
+            if(kind==ExtremeKind.ZOMBIE_FLY_AWAY){
+                EquipmentSlot slot=getEquipmentSlotForItem(stack);
+                // Vanilla falls back to holding rejected armor; refusing that fallback must not consume the pickup.
+                if(slot.getType()==EquipmentSlot.Type.HAND||!canReplaceCurrentItem(stack,getItemBySlot(slot)))return ItemStack.EMPTY;
+            }
+            return super.equipItemIfPossible(stack);
+        }
+        @Override public void setItemSlot(EquipmentSlot slot,ItemStack stack){
+            super.setItemSlot(slot,kind==ExtremeKind.ZOMBIE_FLY_AWAY&&slot.getType()==EquipmentSlot.Type.HAND?ItemStack.EMPTY:stack);
+        }
         @Override protected void defineSynchedData(SynchedEntityData.Builder builder){super.defineSynchedData(builder);builder.define(DATA_DOOR_GUARD,(byte)0);}
         public boolean isDoorRaised(){return DoorGuard.holdsDoor(this)&&isAlive()&&entityData.get(DATA_DOOR_GUARD)>0;}
         public boolean isDoorBlocking(){return DoorGuard.holdsDoor(this)&&isAlive()&&entityData.get(DATA_DOOR_GUARD)==2;}
@@ -178,6 +194,8 @@ public final class ExtremeMobs {
         @Override public void addAdditionalSaveData(CompoundTag t){super.addAdditionalSaveData(t);memory.write(t,registryAccess());}
         @Override public void readAdditionalSaveData(CompoundTag t){
             super.readAdditionalSaveData(t);memory.read(t,registryAccess());doorGuard.reset(this);
+            // Mob loads HandItems directly, bypassing setItemSlot and its empty-hand policy.
+            if(kind==ExtremeKind.ZOMBIE_FLY_AWAY){setItemSlot(EquipmentSlot.MAINHAND,ItemStack.EMPTY);setItemSlot(EquipmentSlot.OFFHAND,ItemStack.EMPTY);}
             if(kind==ExtremeKind.MIMIC_ZOMBIE)setPersistenceRequired();
             doorGuardProgress=doorGuardProgressOld=0;
         }

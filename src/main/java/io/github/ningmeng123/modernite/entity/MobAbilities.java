@@ -168,6 +168,7 @@ public final class MobAbilities {
     public static void initialize(Mob mob,ExtremeMob state){
         var k=state.extremeKind();var s=state.extremeMemory();
         normalizeSavedDateAttack(mob,k);
+        ZombieLordAbilities.initialize(mob,k,s);
         if(k==MIMIC_ZOMBIE){
             // Normalize older saves without healing an injured substitute or retaining old day growth.
             var health=mob.getAttribute(Attributes.MAX_HEALTH);
@@ -293,7 +294,7 @@ public final class MobAbilities {
     public static void tick(Mob mob,ExtremeMob state){
         var k=state.extremeKind();var s=state.extremeMemory();initialize(mob,state);s.clock++;
         if(s.cooldown>0&&k!=ZOMBIE_BOSS)s.cooldown--;if(s.fleeingPotion>0)s.fleeingPotion--;
-        if(s.supportCooldown>0)s.supportCooldown--;
+        if(s.supportCooldown>0&&!ZombieLordAbilities.handles(k))s.supportCooldown--;
         if(!(mob.level() instanceof ServerLevel level))return;
         if(k==ZOMBIE_DOOR&&mob instanceof ExtremeMobs.ZombieVariant zombie)DoorGuard.tick(zombie);
         LivingEntity target=mob.getTarget();
@@ -313,6 +314,7 @@ public final class MobAbilities {
             if(k==ZOMBIE_BOSS&&!s.contribution.isEmpty()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}return;
         }
         if(k==TIME_LORD)TimeLordAbilities.tick(mob,s,target);
+        if(ZombieLordAbilities.handles(k))ZombieLordAbilities.tick(mob,s,target);
         if(k==EXCHANGER&&target instanceof Player player){
             if(mob.distanceToSqr(target)>1024){mob.setTarget(null);s.stage=0;return;}
             if(s.stage==0){player.displayClientMessage(Component.literal("[转移骷髅] 你已被注视，3秒后转移"),true);s.stage=1;s.cooldown=61;}
@@ -327,11 +329,6 @@ public final class MobAbilities {
         if(k==ZOMBIE_DOOR){
             if(!s.exchangerTried){s.exchangerTried=true;if(mob.getRandom().nextInt(10)==0)summon(mob,EXCHANGER,1);}
             if(s.cooldown==0&&s.summons<10){summonZombie(mob,1);s.summons++;s.cooldown=200;}
-        }
-        if(k==ZOMBIE_ELITE_LORD&&s.cooldown==0&&s.summons<24){
-            if(mob.getRandom().nextInt(4)==0)summon(mob,MINER_ZOMBIE,1);
-            else summonId(mob,new String[]{"mite:ghoul","mite:wight","mite:revenant"}[mob.getRandom().nextInt(3)],1);
-            s.summons++;s.cooldown=51;
         }
         if(k==SKELETON_ELITE_LORD&&s.cooldown==0&&s.summons<6){summonId(mob,"minecraft:skeleton",1);s.summons++;s.cooldown=100;}
         if(k==WITCH_LORD&&target instanceof Player&&s.summons<2&&s.cooldown==0

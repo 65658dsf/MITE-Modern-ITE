@@ -30,7 +30,7 @@
 | zombie_door | 僵尸盗贼 | EntityZombieDoor | 自然；通用维度 | 手腕锚定双段铁门、周期举门正面格挡与斧击破防、专属曲线生命/攻击、召 10 僵尸、10% 转移骷髅援军 |
 | miner_zombie | 矿工僵尸 | EntityMinerZombie | 自然；33 天起，主世界/地底 | 振金效率 X 镐、真实挖掘阶段耗时÷4.8、免缴械 |
 | zombie_chaos | 混乱僵尸 | EntityZombieChaos | 自然；通用维度 | 5% 可见度、命中混乱 200 tick |
-| zombie_fly_away | 大力士僵尸 | EntityZombieFlyAway | 自然；通用维度 | 低基础攻击、有效近战命中上升约15格，与击飞骷髅同高，快落及金心不再漏飞、水平分离0.25、铁傀儡双臂上挑动画、速度 II |
+| zombie_fly_away | 大力士僵尸 | EntityZombieFlyAway | 自然；通用维度 | 双手保持空手、允许正常生成及拾取护甲；低基础攻击、有效近战命中上升约15格，与击飞骷髅同高，快落及金心不再漏飞、水平分离0.25、铁傀儡双臂上挑动画、速度 II |
 | zombie_ghast | 恶魂僵尸 | EntityZombieGhast | 自然；33 天起 | 迷你恶魂头及触须、发射时恶魂嘶叫、64 格预测 NB 火球，下界五连发 |
 | zombie_jump | 倒立僵尸 | EntityZombieJump | 自然；通用维度 | 倒立渲染、命中颠倒 120 tick、专属生命曲线 |
 | zombie_knockback | 击退僵尸 | EntityZombieKnockback | 自然；通用维度 | 成功近战命中追加背离攻击者的水平击退3.2，纵向沿用普通受击／跳跃／下落速度、速度增益 |
@@ -68,7 +68,7 @@
 | witch_lord | 女巫领主 | EntityWitchLord | 自然；至少96天，主世界/地底；挑战随从 | 370 基础生命、25 tick 投药、最多召 2 流浪女巫，并检查附近女巫数量 |
 | red_ghoul | 红色食尸鬼 | EntityRedGhoul | 自然；通用维度 | 攻击玩家/牲畜，命中12倍鼠标输入灵敏度120 tick；源为非亡灵生物 |
 | dark_iron_golem | 暗黑铁傀儡 | EntityDarkIronGolem | 自然；33天起，下界/地底 | 专属生命/双倍攻击公式、最终向上速度固定15；只受镐、爆炸、溺水和雪球伤害 |
-| zombie_lord | 僵尸领主 | ITE EntityZombieLord + Extreme 对应 Mixin | 自然；33天起；尸皇随从 | 振金整装、免缴械、专属曲线生命、钻石奖励 |
+| zombie_lord | 僵尸领主 | ITE EntityZombieLord + Extreme 对应 Mixin | 自然；33天起；尸皇随从 | 振金整装、免缴械、专属曲线生命、钻石奖励；按用户要求新增旧版精英领主的四类召援，见[zombie-lord.md](zombie-lord.md) |
 | wandering_witch | 流浪女巫 | ITE EntityWanderingWitch + Extreme 对应 Mixin | 自然；主世界/地底默认65天，物种日期可改；尸皇/女巫领主随从 | 100 基础生命、50 tick 投药、逃跑减速、最多8蝙蝠、真实诅咒 |
 | zombie_pigman_lord | 僵尸猪人领主 | ITE EntityZombiePigmanLord + Extreme 对应 Mixin | 自然；下界独立候选，服从统一日期；普通猪人不额外转换 | 振金整装、免缴械、石英奖励；保留父类最终生效的固定生命基线 |
 | annihilation_skeleton | 湮灭骷髅 | ITE EntityAnnihilationSkeleton + Extreme 对应 Mixin | 自然；主世界33天起额外1/4，下界/地底；刷怪蛋 | 紫黑逆向传送环与烟雾、30基础生命、专属3倍攻击曲线、精金护甲、仅玩家直接近战可伤、受攻击后计时消失、免药水/击退 |

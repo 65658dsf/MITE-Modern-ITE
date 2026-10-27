@@ -36,7 +36,7 @@ public final class SpawnPopulation {
     private static boolean living(Mob mob) {return mob.isAlive()&&!mob.isRemoved()&&!mob.isSpawnCancelled();}
     public static boolean explicit(Mob mob) {
         return mob.getPersistentData().getBoolean(EXPLICIT_COMMAND)||mob.getPersistentData().getBoolean(EXPLICIT_EGG)||mob.getSpawnType()==MobSpawnType.SPAWN_EGG
-                ||TimeLordMinions.explicitSupport(mob);
+                ||TimeLordMinions.explicitSupport(mob)||ZombieLordAbilities.explicitSupport(mob);
     }
     public static boolean encounter(Mob mob) {return mob!=null&&mob.getPersistentData().getBoolean(ENCOUNTER);}
     /** A real player-death substitute can appear before automatic hostile spawning unlocks. */
@@ -102,7 +102,8 @@ public final class SpawnPopulation {
     public static boolean reserveSupport(Mob candidate,Mob owner,boolean encounter) {
         if(!(candidate.level() instanceof ServerLevel level))return false;
         if(owner!=null)candidate.getPersistentData().putUUID(SUMMONER,owner.getUUID());
-        if(!TimeLordMinions.explicitSupport(candidate)&&(ExtremeWorldState.graceActive(level)||!automaticAllowed(level,candidate.getType())))return false;
+        if(!TimeLordMinions.explicitSupport(candidate)&&!ZombieLordAbilities.explicitSupport(candidate)
+                &&(ExtremeWorldState.graceActive(level)||!automaticAllowed(level,candidate.getType())))return false;
         boolean scripted=encounter||encounter(owner);candidate.getPersistentData().putBoolean(ENCOUNTER,scripted);
         Ledger ledger=ledger(level);
         if(!scripted&&(!localRoom(level,candidate,ledger)||owner!=null&&ledger.count(candidate,null,owner.getUUID(),false)>=8))return false;
