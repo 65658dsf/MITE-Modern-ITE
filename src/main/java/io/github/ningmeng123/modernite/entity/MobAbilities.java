@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.entity.SourceRangedAttackGoal;
 import io.github.ningmeng123.mite.entity.SourceMeleeGoal;
+import io.github.ningmeng123.mite.entity.SourceMonsterTargeting;
 import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
 import io.github.ningmeng123.mite.entity.BloodMoonEquipment;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasion;
@@ -322,7 +323,14 @@ public final class MobAbilities {
                     &&target.getPersistentData().getLong("modern_ite:boss_melee_grace")<level.getGameTime()){
                 LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.setVisualOnly(true);bolt.moveTo(target.position());level.addFreshEntity(bolt);}target.hurt(mob.damageSources().magic(),10);
             }
-            if(s.summons>=60){var nearby=level.getEntitiesOfClass(Player.class,mob.getBoundingBox().inflate(16),p->p.isAlive()&&!p.isCreative()&&!p.isSpectator());if(!nearby.isEmpty())mob.setTarget(nearby.get(mob.getRandom().nextInt(nearby.size())));s.summons=0;}
+            if(s.summons>=60){
+                // A remembered opponent may stay hidden; an unfamiliar player must first be seen.
+                var nearby=level.getEntitiesOfClass(Player.class,mob.getBoundingBox().inflate(16),
+                        p->p.isAlive()&&!p.isCreative()&&!p.isSpectator()
+                                &&(p==target||SourceMonsterTargeting.canSee(mob,p,false)));
+                if(!nearby.isEmpty())mob.setTarget(nearby.get(mob.getRandom().nextInt(nearby.size())));
+                s.summons=0;
+            }
         }
     }
     private static void mirror(Mob mob,LivingEntity player,MobMemory s){
