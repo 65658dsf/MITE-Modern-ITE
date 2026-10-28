@@ -116,6 +116,7 @@ final class LanternCarryClientAudit {
             result.addProperty("rows", "left main/main hand; left main/off hand; right main/main hand; right main/off hand");
             result.add("durability_hud", hud(mc, lantern, folder));
             result.add("durability_reequip", LanternWearClientAudit.capture(mc));
+            result.add("punchy_compatibility", LanternPunchyClientAudit.capture(mc, folder));
             result.addProperty("status", "passed");
             return result;
         } finally {
