@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class InfernalExplosionTerrainMixin implements InfernalExplosionLoot.Access {
     @Shadow @Final private ExplosionDamageCalculator damageCalculator;
     @Shadow @Final private Level level;
+    @Shadow @Final private boolean fire;
 
     @Override public boolean modernIte$isInfernalExplosion() { return damageCalculator instanceof InfernalExplosionCalculator; }
 
@@ -41,14 +42,14 @@ public abstract class InfernalExplosionTerrainMixin implements InfernalExplosion
     @Inject(method = "explode", at = @At(value = "INVOKE", target = "Lnet/neoforged/neoforge/event/EventHooks;onExplosionDetonate(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/Explosion;Ljava/util/List;D)V"))
     private void modernIte$infernalCrater(CallbackInfo ci) {
         if (damageCalculator instanceof InfernalExplosionCalculator infernal && level instanceof ServerLevel server)
-            infernal.prepareTerrain(server, (Explosion)(Object)this);
+            infernal.prepareTerrain(server, (Explosion)(Object)this, fire);
     }
 
     @WrapMethod(method = "finalizeExplosion")
     private void modernIte$budgetInfernalCrater(boolean particles, Operation<Void> original) {
         if (damageCalculator instanceof InfernalExplosionCalculator infernal && level instanceof ServerLevel server) {
             var explosion = (Explosion)(Object)this;
-            InfernalExplosionDestruction.enqueue(server, explosion, infernal.radius());
+            InfernalExplosionDestruction.enqueue(server, explosion, infernal.radius(), fire);
             // The native packet must not erase the entire crater on clients before queued server work finishes.
             explosion.clearToBlow();
         }

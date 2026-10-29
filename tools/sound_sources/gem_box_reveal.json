@@ -1,0 +1,71 @@
+{
+  "author": "NingMeng123",
+  "origin": "Original procedural Foley; no external recording",
+  "generator": "tools/generate_gem_action_sounds.py",
+  "sample_rate": 44100,
+  "synthesis": {
+    "duration_seconds": 0.72,
+    "peak_target_dbfs": -11,
+    "seed": 19621030,
+    "notes_start_frequency_strength": [
+      [
+        0,
+        1318.51,
+        1
+      ],
+      [
+        0.09,
+        1975.533,
+        0.22
+      ],
+      [
+        0.17,
+        2637.02,
+        0.09
+      ]
+    ],
+    "partials_ratio_amplitude_decay": [
+      [
+        1,
+        0.42,
+        0.18
+      ],
+      [
+        2.01,
+        0.16,
+        0.11
+      ],
+      [
+        2.99,
+        0.055,
+        0.08
+      ],
+      [
+        4.2,
+        0.018,
+        0.045
+      ]
+    ],
+    "note_attack_seconds": 0.0015,
+    "contact_noise_strength": 0.012,
+    "contact_noise_decay_seconds": 0.004,
+    "attack_seconds": 0.003,
+    "release_seconds": 0.045
+  },
+  "pcm16_sha256": "a1ba6fb45ef76637fa61a72e0656c66d7c47a758dc5bb219fd1e89db18dd7f0a",
+  "encoder": {
+    "codec": "libvorbis",
+    "quality": 6,
+    "bitexact": true
+  },
+  "output": {
+    "path": "src/main/resources/assets/modern_ite/sounds/item/gem_box_reveal.ogg",
+    "bytes": 9434,
+    "sha256": "8ced066b624b4b1737680a1b2c4a0eaae9be1934bd7a22d434db76948488a190",
+    "channels": 1,
+    "samples": 31752,
+    "duration_seconds": 0.72,
+    "decoded_peak_dbfs": -10.958438,
+    "decoded_rms_dbfs": -24.592933
+  }
+}

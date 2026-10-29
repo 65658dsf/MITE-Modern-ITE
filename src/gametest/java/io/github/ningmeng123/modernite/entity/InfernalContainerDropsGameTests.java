@@ -124,11 +124,15 @@ public final class InfernalContainerDropsGameTests {
 
     @GameTest(template="gear_empty",batch="infernal_container_griefing",timeoutTicks=1200)
     public static void disabledMobGriefingKeepsStorageAndEveryInventoryStack(GameTestHelper h) {
-        var fixture=new Fixture(h);
+        // Its strict no-drops observer covers 44 blocks, beyond the tiny template's spacing.
+        // Give this zero-emission control its own region rather than sampling neighboring tests.
+        var fixture=new Fixture(h,new BlockPos(0,0,2048));
         try {
             BlockPos pos=fixture.origin.offset(4,0,0);var unused=new ArrayList<ItemStack>();
             fixture.container(h,pos,Blocks.DISPENSER.defaultBlockState(),"Undamaged dispenser",31,unused);
             var before=copyInventory((Container)fixture.level.getBlockEntity(pos));
+            h.assertTrue(fixture.items.isEmpty()&&fixture.level.getEntitiesOfClass(ItemEntity.class,fixture.bounds).isEmpty(),
+                    "The isolated control starts without setup drops or unrelated item entities");
             fixture.level.getGameRules().getRule(GameRules.RULE_MOBGRIEFING).set(false,fixture.level.getServer());
             fixture.explode();
             InfernalExplosionGameTestSupport.finishAfterJobs(h,fixture.level,()->{
@@ -226,10 +230,13 @@ public final class InfernalContainerDropsGameTests {
         final Consumer<EntityJoinLevelEvent> observe;
         final boolean oldGrief,oldDrops,oldDecay;
         boolean closed;
-        Fixture(GameTestHelper h) {
-            site=new SpawnBalanceGameTests.Site(h);site.date(256,256,true);level=site.level;origin=BlockPos.containing(site.origin);
-            bounds=new AABB(site.origin,site.origin).inflate(44);releaseChunks=InfernalExplosionGameTestSupport.holdChunks(level,bounds);
+        Fixture(GameTestHelper h) {this(h,BlockPos.ZERO);}
+        Fixture(GameTestHelper h,BlockPos offset) {
+            site=new SpawnBalanceGameTests.Site(h);site.date(256,256,true);level=site.level;origin=BlockPos.containing(site.origin).offset(offset);
+            var center=net.minecraft.world.phys.Vec3.atCenterOf(origin);
+            bounds=new AABB(center,center).inflate(44);releaseChunks=InfernalExplosionGameTestSupport.holdChunks(level,bounds);
             source=(Creeper)site.mob(ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER));
+            source.moveTo(center);
             var rules=level.getGameRules();oldGrief=rules.getBoolean(GameRules.RULE_MOBGRIEFING);oldDrops=rules.getBoolean(GameRules.RULE_DOBLOCKDROPS);oldDecay=rules.getBoolean(GameRules.RULE_MOB_EXPLOSION_DROP_DECAY);
             rules.getRule(GameRules.RULE_MOBGRIEFING).set(true,level.getServer());rules.getRule(GameRules.RULE_DOBLOCKDROPS).set(true,level.getServer());rules.getRule(GameRules.RULE_MOB_EXPLOSION_DROP_DECAY).set(true,level.getServer());
             observe=event->{if(!event.isCanceled()&&event.getLevel()==level&&event.getEntity() instanceof ItemEntity item&&bounds.contains(item.position()))items.add(item);};

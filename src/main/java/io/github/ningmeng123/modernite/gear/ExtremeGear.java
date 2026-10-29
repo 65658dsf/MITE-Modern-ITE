@@ -12,6 +12,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -44,6 +46,18 @@ public final class ExtremeGear {
     private static final DeferredRegister<BlockEntityType<?>> ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MOD_ID);
     private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MOD_ID);
     private static final DeferredRegister<RecipeSerializer<?>> SERIALIZERS = DeferredRegister.create(Registries.RECIPE_SERIALIZER, MOD_ID);
+    private static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, MOD_ID);
+    public static final DeferredHolder<SoundEvent, SoundEvent> GEM_BOX_OPEN = SOUNDS.register("item.gem_box.open",
+            () -> SoundEvent.createVariableRangeEvent(id("item.gem_box.open")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> GEM_BOX_RUMMAGE = SOUNDS.register("item.gem_box.rummage",
+            () -> SoundEvent.createVariableRangeEvent(id("item.gem_box.rummage")));
+    public static final DeferredHolder<SoundEvent, SoundEvent> GEM_BOX_REVEAL = SOUNDS.register("item.gem_box.reveal",
+            () -> SoundEvent.createVariableRangeEvent(id("item.gem_box.reveal")));
+    // Visual progress is synchronized with held equipment, but never saved as a pending reward.
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Long>> GEM_BOX_OPEN_STARTED =
+            COMPONENTS.registerComponentType("gem_box_open_started", builder -> builder.networkSynchronized(ByteBufCodecs.VAR_LONG));
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> GEM_BOX_REVEALED_GEM =
+            COMPONENTS.registerComponentType("gem_box_revealed_gem", builder -> builder.networkSynchronized(ByteBufCodecs.VAR_INT));
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<GemSockets>> SOCKETS =
             COMPONENTS.registerComponentType("gem_sockets_v1", builder -> builder.persistent(GemSockets.CODEC)
                     .networkSynchronized(ByteBufCodecs.fromCodec(GemSockets.CODEC)));
@@ -70,17 +84,7 @@ public final class ExtremeGear {
                 }
             }));
     }
-    public static final DeferredItem<Item> GEM_BOX = ITEMS.registerItem("gem_box", p -> new Item(p) {
-        @Override public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-            ItemStack held = player.getItemInHand(hand);
-            if (!level.isClientSide) {
-                if (!player.isCreative()) held.shrink(1);
-                ItemStack reward = gem(GemType.values()[player.getRandom().nextInt(GemType.values().length)], 1);
-                if (!player.getInventory().add(reward)) player.drop(reward, false);
-            }
-            return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
-        }
-    });
+    public static final DeferredItem<GemBoxItem> GEM_BOX = ITEMS.registerItem("gem_box", GemBoxItem::new);
     public static final DeferredItem<Item> PROTECTION_TOME = ITEMS.registerSimpleItem("protection_tome", new Item.Properties().stacksTo(1).fireResistant());
     public static final DeferredBlock<GearStationBlock> GEM_SETTING = station("gem_setting", -1);
     public static final DeferredBlock<GrinderBlock> GRINDER = BLOCKS.register("grinder", () -> new GrinderBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).strength(2, 10)));
@@ -109,7 +113,7 @@ public final class ExtremeGear {
     }
     public static void register(IEventBus bus) {
         ITEMS.register(bus); BLOCKS.register(bus); COMPONENTS.register(bus); ENTITIES.register(bus);
-        MENUS.register(bus); SERIALIZERS.register(bus);
+        MENUS.register(bus); SERIALIZERS.register(bus); SOUNDS.register(bus);
         NeoForge.EVENT_BUS.register(GearEvents.class);
     }
     public static List<ItemStack> creativeItems() {
@@ -122,10 +126,11 @@ public final class ExtremeGear {
     public static ResourceLocation id(String path) { return ResourceLocation.fromNamespaceAndPath(MOD_ID, path); }
     public static GemSockets sockets(ItemStack stack) { return stack.getOrDefault(SOCKETS.get(), GemSockets.EMPTY); }
     public static int rank(ItemStack stack, GemType type) { return stack.isEmpty() ? 0 : sockets(stack).level(type); }
+    public static int activeRank(ItemStack stack, GemType type) { return acceptsGem(stack, type) ? rank(stack, type) : 0; }
     public static int worn(Player player, GemType type) {
         int sum = 0;
         for (EquipmentSlot slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET))
-            sum += rank(player.getItemBySlot(slot), type);
+            sum += activeRank(player.getItemBySlot(slot), type);
         return sum;
     }
     public static ItemStack gem(GemType type, int rank) { return new ItemStack(GEMS.get(type.ordinal() * 6 + rank - 1).get()); }
@@ -134,6 +139,22 @@ public final class ExtremeGear {
         return !stack.isEmpty() && (EquipmentDurability.toolProfile(stack) != null
                 || stack.getItem() instanceof ArmorItem && !(stack.getItem() instanceof AnimalArmorItem)
                 && GearProgression.material(stack) != null);
+    }
+    public static boolean acceptsGem(ItemStack equipment, ItemStack gem) {
+        return gem.getItem() instanceof EnhanceGemItem item && acceptsGem(equipment, item.type);
+    }
+    /** Source effect families become real insertion limits; old misplaced gems remain removable. */
+    public static boolean acceptsGem(ItemStack stack, GemType type) {
+        if (!socketable(stack)) return false;
+        boolean armor = stack.getItem() instanceof ArmorItem;
+        EquipmentSlot slot = armor ? ((ArmorItem) stack.getItem()).getEquipmentSlot() : null;
+        return switch (type) {
+            case DAMAGE, EFFICIENCY -> !armor;
+            case HEALTH, PROTECTION, RECOVER, NUTRITION -> armor;
+            case SPEED -> slot == EquipmentSlot.FEET;
+            case FIREPROOF, EXPLOSION_PROOF -> slot == EquipmentSlot.CHEST || slot == EquipmentSlot.LEGS;
+            case DURABILITY -> true;
+        };
     }
     public static int grade(ItemStack stack) { return stack.getOrDefault(FORGE_GRADE.get(), 0); }
     public static double health(Player player, double original) {

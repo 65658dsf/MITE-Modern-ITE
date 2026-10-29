@@ -54,7 +54,7 @@ public final class GearStationEntity extends RandomizableContainerBlockEntity {
         if (isGemStation() && slot > 0) {
             ItemStack gear = items.get(0);
             if (gear.isEmpty()) return;
-            if (!stack.isEmpty() && !(stack.getItem() instanceof EnhanceGemItem)) return;
+            if (!stack.isEmpty() && !ExtremeGear.acceptsGem(gear, stack)) return;
             int code = stack.isEmpty() ? 0 : ((EnhanceGemItem)stack.getItem()).code();
             gear.set(ExtremeGear.SOCKETS.get(), ExtremeGear.sockets(gear).with(slot - 1, code));
         } else {
@@ -81,7 +81,7 @@ public final class GearStationEntity extends RandomizableContainerBlockEntity {
     }
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
         if (running()) return false;
-        if (isGemStation()) return slot == 0 ? ExtremeGear.socketable(stack) : !getItem(0).isEmpty() && stack.getItem() instanceof EnhanceGemItem;
+        if (isGemStation()) return slot == 0 ? ExtremeGear.socketable(stack) : slot > 0 && slot < 9 && ExtremeGear.acceptsGem(getItem(0), stack);
         if (slot == 8) return false;
         if (slot == 5) return ExtremeGear.socketable(stack) && GearMath.maximumGrade(GearProgression.material(stack)) > 0;
         if (slot == 6) return R196EnchantmentCatalog.family(stack) == ToolFamily.AXE;

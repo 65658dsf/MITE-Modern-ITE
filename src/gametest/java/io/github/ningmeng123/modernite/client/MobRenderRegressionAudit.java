@@ -209,6 +209,12 @@ public final class MobRenderRegressionAudit {
                 report.addProperty("render_target_height", forging.get("render_height").getAsInt());
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.gemBoxAudit")) {
+                report.addProperty("scope", "Solid 3D gem chest, both native skin hands, lifting and walking, complete third-person player rendering");
+                report.add("gem_box", GemBoxCarryClientAudit.capture(mc,
+                        new ItemStack(io.github.ningmeng123.modernite.gear.ExtremeGear.GEM_BOX.get()), screenshots()));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.lanternAudit")) {
                 report.addProperty("scope", "Three retained lantern models, native GPU item displays and instant local lightmap switching");
                 report.add("lanterns", LanternClientAudit.capture(mc));

@@ -35,6 +35,42 @@ public final class ZombieLordGameTests {
     private ZombieLordGameTests() {}
 
     @GameTest(template = "gear_empty", batch = "zombie_lord_support")
+    public static void lordSupportStaysBehindEveryFacingAndNeverFallsBackInFront(GameTestHelper h) {
+        try (var fixture = new Fixture(h)) {
+            fixture.site.date(128,128,true);
+            var player=fixture.site.player(8);
+            for(var kind:LORDS) {
+                Mob lord=fixture.lord(kind,MobSpawnType.SPAWN_EGG);lord.setTarget(player);
+                for(float yaw:new float[]{0,45,90,180,270}) {
+                    lord.setYRot(yaw);
+                    var forward=net.minecraft.world.phys.Vec3.directionFromRotation(0,yaw);
+                    for(int attempt=0;attempt<8;attempt++) {
+                        memory(lord).summons=0;readyTick(lord);
+                        var troops=fixture.support(lord);
+                        h.assertTrue(troops.size()==1,"An open rear admits one real troop: "+kind+"/"+yaw);
+                        var offset=troops.getFirst().position().subtract(lord.position());
+                        h.assertTrue(offset.dot(forward)<=-1.49,"The troop is strictly behind the lord, regardless of player position or facing");
+                        fixture.removeSupport(lord);
+                    }
+                }
+                lord.setYRot(0);
+                var origin=lord.blockPosition();
+                for(var pos:net.minecraft.core.BlockPos.betweenClosed(origin.offset(-5,0,-5),origin.offset(5,3,-1)))
+                    fixture.site.level.setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.BARRIER.defaultBlockState());
+                try {
+                    memory(lord).summons=0;readyTick(lord);
+                    h.assertTrue(fixture.support(lord).isEmpty()&&memory(lord).summons==0,
+                            "A fully blocked rear does not fall back to the player's side or spend the quota");
+                } finally {
+                    for(var pos:net.minecraft.core.BlockPos.betweenClosed(origin.offset(-5,0,-5),origin.offset(5,3,-1)))
+                        fixture.site.level.removeBlock(pos,false);
+                }
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty", batch = "zombie_lord_support")
     public static void bothLordsSummonRealLegacyTroopsEveryFiftyOneCombatTicks(GameTestHelper h) {
         try (var fixture = new Fixture(h)) {
             fixture.site.date(128, 128, true);

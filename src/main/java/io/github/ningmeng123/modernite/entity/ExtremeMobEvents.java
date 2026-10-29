@@ -251,7 +251,7 @@ public final class ExtremeMobEvents {
         event.setCanceled(true);mob.getPersistentData().putBoolean("modern_ite:processing_blast",true);
         float radius=InfernalExplosionCalculator.RADIUS*(MobSplitting.isChild(mob)?.5F:1F);
         // Native entity selection and knockback use twice Explosion.radius; the crater has its own physical radius.
-        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new InfernalExplosionCalculator(mob,radius),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),radius/2F,false,Level.ExplosionInteraction.MOB);}
+        try{mob.level().explode(mob,Explosion.getDefaultDamageSource(mob.level(),mob),new InfernalExplosionCalculator(mob,radius),mob.getX(),mob.getY()+mob.getBbHeight()/4,mob.getZ(),radius/2F,true,Level.ExplosionInteraction.MOB);}
         finally{mob.getPersistentData().remove("modern_ite:processing_blast");}
     }
     private static boolean invisibleCreeper(ExtremeKind kind){return kind==INVISIBLE_CREEPER||kind==INVISIBLE_REVERSED_CREEPER;}

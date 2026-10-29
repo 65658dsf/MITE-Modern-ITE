@@ -164,22 +164,23 @@ public final class ClubSmithingGameTests {
     }
 
     @GameTest(template = "gear_empty")
-    public static void timedSmithingPickupAndShiftClickConsumeOneTemplateAndFourIngots(GameTestHelper h) {
+    public static void timedSmithingPickupAndShiftClickConsumeOneTemplateAndExactLegalMaterialStacks(GameTestHelper h) {
         try (SmithingSession session = new SmithingSession(h)) {
             for (Route route : ROUTES) {
                 session.clear();
+                int required = route.to().equals("ancient_metal") ? 2 : 4;
                 ItemStack source = personalClub(h, route.from()), before = source.copy();
                 ItemStack templates = template(); templates.setCount(3);
                 session.menu.getSlot(0).set(templates);
                 session.menu.getSlot(1).set(source);
-                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 3));
-                h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "Three ingots cannot preview a full-cost club upgrade");
-                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 8));
+                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), required - 1));
+                h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "A payment below the target material cost cannot preview an upgrade");
+                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 4));
                 h.assertTrue(session.menu.stillValid(session.player) && session.menu.getSlot(3).getItem().is(club(route.to())),
-                        "The physical smithing menu previews each of the six routes only with a full four-ingot payment");
+                        "Every route previews with a legal four-ingot stack and retains its full material cost");
                 assertPersonalComponents(h, before, session.menu.getSlot(3).getItem());
                 h.assertTrue(ItemStack.matches(source, before) && session.menu.getSlot(0).getItem().getCount() == 3
-                        && session.menu.getSlot(2).getItem().getCount() == 8, "Preview consumes or modifies no input");
+                        && session.menu.getSlot(2).getItem().getCount() == 4, "Preview consumes or modifies no input");
                 int period = TimedSmithingController.period(session.player, session.menu);
                 h.assertTrue(period >= 25, "Material upgrades require a real production period");
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
@@ -189,20 +190,21 @@ public final class ClubSmithingGameTests {
                 h.assertTrue(TimedSmithingController.progress(session.player) == period - 1
                         && session.menu.getCarried().isEmpty() && session.player.getInventory().isEmpty()
                         && ItemStack.matches(session.menu.getSlot(1).getItem(), before)
-                        && session.menu.getSlot(0).getItem().getCount() == 3 && session.menu.getSlot(2).getItem().getCount() == 8,
+                        && session.menu.getSlot(0).getItem().getCount() == 3 && session.menu.getSlot(2).getItem().getCount() == 4,
                         "No output or payment commits before the final production tick");
                 TimedSmithingController.tick(session.player);
                 ItemStack taken = session.menu.getCarried().copy();
                 h.assertTrue(taken.is(club(route.to())) && taken.getCount() == 1 && session.menu.getSlot(1).getItem().isEmpty()
-                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 4,
-                        "Completed pickup consumes one source club, one template and exactly four matching ingots");
+                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 4 - required,
+                        "Completed pickup consumes one source, one template and exactly the target material cost");
                 assertPersonalComponents(h, before, taken); assertProportionalWear(h, before, taken);
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
                 h.assertTrue(ItemStack.matches(session.menu.getCarried(), taken) && session.menu.getSlot(3).getItem().isEmpty()
-                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 4,
+                        && session.menu.getSlot(0).getItem().getCount() == 2 && session.menu.getSlot(2).getItem().getCount() == 4 - required,
                         "A second pickup cannot retrieve the previous preview or consume another payment");
                 session.menu.setCarried(ItemStack.EMPTY);
                 h.assertTrue(session.player.getInventory().add(taken.copy()), "The first result enters the player inventory exactly once");
+                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 4));
                 session.menu.getSlot(1).set(before.copy());
                 ItemStack moved = session.menu.quickMoveStack(session.player, 3);
                 h.assertTrue(moved.isEmpty() && TimedSmithingController.isActive(session.player)
@@ -211,8 +213,8 @@ public final class ClubSmithingGameTests {
                 for (int tick = 0; tick < period; tick++) TimedSmithingController.tick(session.player);
                 h.assertTrue(session.player.getInventory().countItem(club(route.to())) == 2
                         && session.menu.getSlot(1).getItem().isEmpty() && session.menu.getSlot(0).getItem().getCount() == 1
-                        && session.menu.getSlot(2).getItem().isEmpty(),
-                        "Completed shift-click consumes one new source, one template and four more ingots for one additional item");
+                        && session.menu.getSlot(2).getItem().getCount() == 4 - required,
+                        "Completed shift-click consumes the full material cost from a fresh legal stack for exactly one item");
                 for (ItemStack delivered : session.player.getInventory().items) if (delivered.is(club(route.to()))) {
                     assertPersonalComponents(h, before, delivered); assertProportionalWear(h, before, delivered);
                 }
@@ -230,12 +232,13 @@ public final class ClubSmithingGameTests {
         try (SmithingSession session = new SmithingSession(h)) {
             for (Route route : ROUTES) {
                 session.clear();
+                int required = route.to().equals("ancient_metal") ? 2 : 4;
                 ItemStack source = personalClub(h, route.from()), before = source.copy();
                 session.menu.getSlot(1).set(source);
-                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), 3));
+                session.menu.getSlot(2).set(new ItemStack(ingot(route.to()), required - 1));
                 h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "The native menu cannot omit the shared upgrade template");
                 session.menu.getSlot(0).set(template());
-                h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "The template cannot bypass an insufficient three-ingot payment");
+                h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(), "The template cannot bypass a payment below the required material amount");
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
                 h.assertTrue(session.menu.quickMoveStack(session.player, 3).isEmpty() && !TimedSmithingController.isActive(session.player),
                         "Neither take path can begin an underfunded upgrade");

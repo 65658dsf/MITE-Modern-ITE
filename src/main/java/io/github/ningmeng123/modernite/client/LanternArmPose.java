@@ -17,6 +17,7 @@ public final class LanternArmPose {
     private LanternArmPose() {}
 
     public static void apply(HumanoidModel<?> model, LivingEntity entity, float walk, float amount, float age) {
+        if (GemBoxArmPose.active(entity)) return;
         if (!(entity instanceof Player player) || player.isSpectator()) return;
         for (HumanoidArm arm : HumanoidArm.values()) {
             if (!canCarry(entity, arm)) continue;

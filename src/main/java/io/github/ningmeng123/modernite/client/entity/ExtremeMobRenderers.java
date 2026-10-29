@@ -5,6 +5,7 @@ import com.mojang.math.Axis;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.entity.*;
 import io.github.ningmeng123.mite.client.mob.MobModelLayers;
+import io.github.ningmeng123.mite.client.mob.InvisibleMonsterVisuals;
 import io.github.ningmeng123.mite.client.mob.SourceCreeperModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.CreeperModel;
@@ -100,7 +101,7 @@ public final class ExtremeMobRenderers {
                         }
                         if(kind==ExtremeKind.RED_GHOUL)this.model=new VariantZombieModel(context.bakeLayer(LEGACY_ZOMBIE),kind,()->context.bakeLayer(ModelLayers.ZOMBIE));
                         if(kind==ExtremeKind.ZOMBIE_CHAOS||kind==ExtremeKind.ZOMBIE_INVISIBLE_LOOK_UP)this.model=new ZombieModel<Zombie>(context.bakeLayer(ModelLayers.ZOMBIE)){
-                            @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,0x0DFFFFFF);}
+                            @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,color&0x00FFFFFF|InvisibleMonsterVisuals.COLOR&0xFF000000);}
                         };
                     }
                     @Override public ResourceLocation getTextureLocation(Zombie zombie){
@@ -143,7 +144,7 @@ public final class ExtremeMobRenderers {
                     }
                     if(kind==ExtremeKind.CHAOS_CREEPER)addLayer(new ChaosArrowLayer(this));
                     if(kind==ExtremeKind.INVISIBLE_CREEPER||kind==ExtremeKind.INVISIBLE_REVERSED_CREEPER)this.model=new CreeperModel<Creeper>(context.bakeLayer(ModelLayers.CREEPER)){
-                        @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,0x0DFFFFFF);}
+                        @Override public void renderToBuffer(PoseStack p,VertexConsumer v,int light,int overlay,int color){super.renderToBuffer(p,v,light,overlay,color&0x00FFFFFF|InvisibleMonsterVisuals.COLOR&0xFF000000);}
                     };}
                     @Override public ResourceLocation getTextureLocation(Creeper creeper){return kind==ExtremeKind.PHASE_CREEPER?ResourceLocation.withDefaultNamespace("textures/block/black_concrete.png"):texture(source(kind));}
                     @Override protected RenderType getRenderType(Creeper creeper,boolean visible,boolean translucent,boolean outline){

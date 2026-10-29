@@ -93,8 +93,8 @@
   "tooltip.modern_ite.gem_recover": "Worn armor: +%s%% natural regeneration",
   "tooltip.modern_ite.gem_durable": "Equipment: %s%% chance to avoid each durability cost",
   "tooltip.modern_ite.gem_speed": "Boots: +%s%% base movement speed",
-  "tooltip.modern_ite.gem_fireproof": "Chestplate: %s%% less fire damage",
-  "tooltip.modern_ite.gem_explosionproof": "Leggings: %s%% less explosion damage",
+  "tooltip.modern_ite.gem_fireproof": "Chestplate or leggings: %s%% less fire damage",
+  "tooltip.modern_ite.gem_explosionproof": "Chestplate or leggings: %s%% less explosion damage",
   "tooltip.modern_ite.gem_nutrition": "Worn armor: +%s nutrition capacity, at most 20",
   "tooltip.modern_ite.gem_highest": "Highest rank of each type per item applies. Remove at a gem table.",
   "tooltip.modern_ite.enhance_stone": "Used at a forging table; hover Forge for the required materials.",
@@ -117,5 +117,13 @@
   "forge.modern_ite.status_1": "Forging; inventory locked",
   "forge.modern_ite.status_2": "Success! Collect the output.",
   "forge.modern_ite.status_3": "Failed; grade retained",
-  "forge.modern_ite.status_4": "Check costs, tier and grade"
+  "forge.modern_ite.status_4": "Check costs, tier and grade",
+  "tooltip.modern_ite.gem_target_tools": "Fits tools or weapons only",
+  "tooltip.modern_ite.gem_target_armor": "Fits armor only",
+  "tooltip.modern_ite.gem_target_boots": "Fits boots only",
+  "tooltip.modern_ite.gem_target_chest_legs": "Fits chestplates or leggings only",
+  "tooltip.modern_ite.gem_target_equipment": "Fits tools, weapons or armor",
+  "subtitles.modern_ite.gem_box.open": "Gem box opens",
+  "subtitles.modern_ite.gem_box.rummage": "Rummaging in gem box",
+  "subtitles.modern_ite.gem_box.reveal": "Gem chimes"
 }

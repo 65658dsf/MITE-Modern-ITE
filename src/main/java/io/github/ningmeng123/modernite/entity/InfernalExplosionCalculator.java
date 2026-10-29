@@ -38,7 +38,7 @@ public final class InfernalExplosionCalculator extends EntityBasedExplosionDamag
     }
 
     /** Called before the public Detonate event so protection mods may still remove any selected blocks. */
-    public void prepareTerrain(ServerLevel level, Explosion explosion) {
+    public void prepareTerrain(ServerLevel level, Explosion explosion, boolean fire) {
         explosion.getToBlow().clear();
         if (!explosion.interactsWithBlocks()) return;
         var center = explosion.center();
@@ -71,8 +71,19 @@ public final class InfernalExplosionCalculator extends EntityBasedExplosionDamag
                             cursor.set(x, y, z);
                             if (cursor.distToCenterSqr(center) > radiusSquared) continue;
                             var state = chunk.getBlockState(cursor);
+                            if (state.isAir()) {
+                                // Air over surviving terrain is also an affected location in the old blast.
+                                // Expose it before Detonate so protection mods can exclude ignition too.
+                                if (fire && cursor.getY() > level.getMinBuildHeight()) {
+                                    var below = cursor.below();
+                                    if (chunk.getBlockState(below).isSolidRender(level, below)
+                                            && shouldBlockExplode(explosion, level, cursor, state, radius))
+                                        explosion.getToBlow().add(cursor.immutable());
+                                }
+                                continue;
+                            }
                             var fluid = state.getFluidState();
-                            if (state.isAir() || !fluid.isEmpty() || state.getDestroySpeed(level, cursor) < 0F) continue;
+                            if (!fluid.isEmpty() || state.getDestroySpeed(level, cursor) < 0F) continue;
                             // Evaluate position-dependent mod hooks for every block; no resistance or hardness cache.
                             float resistance = getBlockExplosionResistance(explosion, level, cursor, state, fluid).orElse(0F);
                             if (resistance >= 1200F || !shouldBlockExplode(explosion, level, cursor, state, radius)) continue;

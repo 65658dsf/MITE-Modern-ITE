@@ -31,6 +31,12 @@ def named(id, chinese, english, block=False):
     zh[key], en[key] = chinese, english
 
 def model(id, tex=None):
+    if id == 'gem_box':
+        for name in ['gem_box', 'gem_box_body', 'gem_box_lid']:
+            path = RES / f'assets/modern_ite/models/item/{name}.json'
+            if not path.is_file() or not json.loads(path.read_text(encoding='utf-8')).get('elements'):
+                raise FileNotFoundError('Missing 3D gem box model. Run `node tools/generate_gem_assets.mjs` first.')
+        return
     save(f'assets/modern_ite/models/item/{id}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'modern_ite:item/{tex or id}'}})
 
 def ingredient(id):
@@ -65,8 +71,9 @@ for rank in range(2, 7):
     gem_texture(id)
     named(id, f'朴素{shapes[rank-1]}宝石', f'Plain Gem {rank}'); model(id)
 
-for id, source, chinese, english in [('gem_box', 'enhance_gem_box_phase', '三角宝石箱', 'Triangular Gem Box'),
-        ('protection_tome', 'protection_tome', '防护宝典', 'Protection Tome')]:
+gem_texture('gem_box')
+named('gem_box', '三角宝石箱', 'Triangular Gem Box'); model('gem_box')
+for id, source, chinese, english in [('protection_tome', 'protection_tome', '防护宝典', 'Protection Tome')]:
     texture(EX, f'assets/extreme/textures/items/{source}.png', f'item/{id}'); named(id, chinese, english); model(id)
 
 for material, chinese in [('iron','铁'),('mithril','秘银'),('adamantium','艾德曼'),('universal','万能')]:
@@ -116,6 +123,9 @@ for old, new in [('iron','mithril'),('mithril','adamantium'),('adamantium','vibr
     shaped(f'{new}_forging_table', ['III',' T '], {'I':f'mite:{new}_ingot','T':f'modern_ite:{old}_forging_table'})
 
 messages = {
+ 'subtitles.modern_ite.gem_box.open': ('宝石箱开启', 'Gem box opens'),
+ 'subtitles.modern_ite.gem_box.rummage': ('翻找箱内物品', 'Rummaging in gem box'),
+ 'subtitles.modern_ite.gem_box.reveal': ('宝石轻响', 'Gem chimes'),
  'tooltip.modern_ite.gem_damage': ('主手工具或武器：攻击伤害 +%s', 'Main-hand tool or weapon: +%s attack damage'),
  'tooltip.modern_ite.gem_health': ('穿着护甲：生命 +%s（受历史日上限约束）', 'Worn armor: +%s health, within the historical-day cap'),
  'tooltip.modern_ite.gem_protection': ('穿着护甲：护甲值 +%s', 'Worn armor: +%s armor'),
@@ -123,10 +133,15 @@ messages = {
  'tooltip.modern_ite.gem_effect': ('有效工具：基础挖掘速度 +%s', 'Effective tool: +%s mining speed'),
  'tooltip.modern_ite.gem_durable': ('装备：%s%% 概率免除此点耐久消耗', 'Equipment: %s%% chance to avoid each durability cost'),
  'tooltip.modern_ite.gem_speed': ('鞋子：基础移动速度 +%s%%', 'Boots: +%s%% base movement speed'),
- 'tooltip.modern_ite.gem_fireproof': ('胸甲：火焰伤害减少 %s%%', 'Chestplate: %s%% less fire damage'),
- 'tooltip.modern_ite.gem_explosionproof': ('护腿：爆炸伤害减少 %s%%', 'Leggings: %s%% less explosion damage'),
+ 'tooltip.modern_ite.gem_fireproof': ('胸甲或护腿：火焰伤害减少 %s%%', 'Chestplate or leggings: %s%% less fire damage'),
+ 'tooltip.modern_ite.gem_explosionproof': ('胸甲或护腿：爆炸伤害减少 %s%%', 'Chestplate or leggings: %s%% less explosion damage'),
  'tooltip.modern_ite.gem_nutrition': ('穿着护甲：营养容量 +%s（最多 20）', 'Worn armor: +%s nutrition capacity, at most 20'),
  'tooltip.modern_ite.gem_highest': ('同件装备相同类型仅最高阶生效，可在镶嵌台取出', 'Highest rank of each type per item applies. Remove at a gem table.'),
+ 'tooltip.modern_ite.gem_target_tools': ('仅可镶嵌于工具或武器', 'Fits tools or weapons only'),
+ 'tooltip.modern_ite.gem_target_armor': ('仅可镶嵌于护甲', 'Fits armor only'),
+ 'tooltip.modern_ite.gem_target_boots': ('仅可镶嵌于靴子', 'Fits boots only'),
+ 'tooltip.modern_ite.gem_target_chest_legs': ('仅可镶嵌于胸甲或护腿', 'Fits chestplates or leggings only'),
+ 'tooltip.modern_ite.gem_target_equipment': ('可镶嵌于工具、武器或护甲', 'Fits tools, weapons or armor'),
  'tooltip.modern_ite.enhance_stone': ('用于独立强化锻造台，查看强化按钮可见本次需求', 'Used at a forging table; hover Forge for the required materials.'),
  'tooltip.modern_ite.universal_stone': ('可替代任意强化石，基础失败率 50％', 'Replaces any enhancement stone; base failure chance 50 percent.'),
  'tooltip.modern_ite.forge_grade': ('独立锻造等级：%s（增强 %s%%）', 'Forging grade: %s (%s%% enhancement)'),
@@ -150,5 +165,14 @@ messages = {
 }
 for key,(chinese,english) in messages.items(): zh[key], en[key] = chinese, english
 save('modern_ite/gear-lang-zh_cn.json', zh); save('modern_ite/gear-lang-en_us.json', en)
+save('modern_ite/gear-sounds.json', {
+    'item.gem_box.open': {'subtitle': 'subtitles.modern_ite.gem_box.open', 'sounds': ['modern_ite:item/gem_box_open']},
+    'item.gem_box.rummage': {'subtitle': 'subtitles.modern_ite.gem_box.rummage', 'sounds': ['modern_ite:item/gem_box_rummage']},
+    'item.gem_box.reveal': {'subtitle': 'subtitles.modern_ite.gem_box.reveal', 'sounds': ['modern_ite:item/gem_box_reveal']}
+})
+sounds = {}
+for fragment in sorted((RES / 'modern_ite').glob('*-sounds.json')):
+    sounds.update(json.loads(fragment.read_text(encoding='utf-8')))
+save('assets/modern_ite/sounds.json', sounds)
 EX.close(); ITE.close()
 print(f'Generated gear resources: 60 gems, 5 shards, 4 stones, 6 stations; {len(zh)} translations per locale.')

@@ -32,6 +32,14 @@ neoForge {
         client {
             client()
             gameDirectory = file('run-client')
+            if (providers.gradleProperty('modernIteGemBoxAudit').getOrElse('false').toBoolean()) {
+                gameDirectory = file('build/verification/gem-box-client-run')
+                programArguments.addAll '--width', '1280', '--height', '900'
+                systemProperty 'modern_ite.mobRenderAudit', 'true'
+                systemProperty 'modern_ite.gemBoxAudit', 'true'
+                systemProperty 'modern_ite.mobRenderAuditOutput', file(providers.gradleProperty('modernIteGemBoxAuditOutput')
+                        .getOrElse('build/verification/gem-box-client/audit.json')).absolutePath
+            }
             if (providers.gradleProperty('modernIteTimeLordAudit').getOrElse('false').toBoolean()) {
                 gameDirectory = file('build/verification/time-lord/client')
                 programArguments.addAll '--width', '1280', '--height', '900'
@@ -150,6 +158,7 @@ def prepareDevClientWindow = tasks.register('prepareDevClientWindow') {
         def infernalExplosionAudit = providers.gradleProperty('modernIteInfernalExplosionAudit').getOrElse('false').toBoolean()
         def reversedPlayerAudit = providers.gradleProperty('modernIteReversedPlayerAudit').getOrElse('false').toBoolean()
         def directory = infernalExplosionAudit ? 'build/verification/infernal-explosion/client-run' : reversedPlayerAudit ? 'run-reversed-player-audit' : resurrectionAudit ? 'run-resurrection-audit' : metalAudit ? 'run-metal-audit' : configAudit ? 'run-config-audit' : defenseAudit ? 'run-defense-audit' : forgingAudit ? 'run-forging-audit' : jeiAudit ? 'run-jei-audit' : lanternAudit ? 'run-lantern-audit' : audit ? 'run-mob-render-audit' : runeAudit ? 'run-rune-audit' : launchHeightAudit ? 'run-launch-height-client' : 'run-client'
+        if (providers.gradleProperty('modernIteGemBoxAudit').getOrElse('false').toBoolean()) directory = 'build/verification/gem-box-client-run'
         if (providers.gradleProperty('modernIteModelCompatibilityAudit').getOrElse('false').toBoolean()) directory = 'build/verification/model-compat-run'
         if (providers.gradleProperty('modernIteTimeLordAudit').getOrElse('false').toBoolean()) directory = 'build/verification/time-lord/client'
         directory = providers.gradleProperty('modernIteClientDirectory').getOrElse(directory)

@@ -1,0 +1,20 @@
+{
+  "item.gem_box.open": {
+    "subtitle": "subtitles.modern_ite.gem_box.open",
+    "sounds": [
+      "modern_ite:item/gem_box_open"
+    ]
+  },
+  "item.gem_box.rummage": {
+    "subtitle": "subtitles.modern_ite.gem_box.rummage",
+    "sounds": [
+      "modern_ite:item/gem_box_rummage"
+    ]
+  },
+  "item.gem_box.reveal": {
+    "subtitle": "subtitles.modern_ite.gem_box.reveal",
+    "sounds": [
+      "modern_ite:item/gem_box_reveal"
+    ]
+  }
+}

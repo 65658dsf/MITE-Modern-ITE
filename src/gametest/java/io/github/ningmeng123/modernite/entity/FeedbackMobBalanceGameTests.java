@@ -224,6 +224,8 @@ public final class FeedbackMobBalanceGameTests {
         inside.setPos(site.origin.add(radius-1,0,0));outside.setPos(site.origin.add(radius+1,0,0));
         inside.setNoGravity(true);outside.setNoGravity(true);
         site.level.getChunkAt(inside.blockPosition());site.level.getChunkAt(outside.blockPosition());
+        InfernalExplosionGameTestSupport.whenPositionsEntityTicking(h,site.level,
+            List.of(inside.blockPosition(),outside.blockPosition()),()->{
         h.assertTrue(site.level.addFreshEntity(inside)&&site.level.addFreshEntity(outside),"Both real range-test targets join the loaded level");
         InfernalExplosionGameTestSupport.whenEntityVisible(h,site.level,inside,bounds,()->
             InfernalExplosionGameTestSupport.whenEntityVisible(h,site.level,outside,bounds,()->{
@@ -238,6 +240,7 @@ public final class FeedbackMobBalanceGameTests {
                 else infernalEntityRange(h,site,bounds,true,cleanup);
             }catch(Throwable failure){cleanup.run();throw failure;}
         },cleanup),cleanup);
+        },cleanup);
     }
 
     @GameTest(template="gear_empty",batch="feedback_balance")

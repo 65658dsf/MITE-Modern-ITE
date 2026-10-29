@@ -28,7 +28,7 @@ public final class GearEvents {
         ItemStack stack = event.getItemStack();
         if (!ExtremeGear.socketable(stack)) return;
         double factor = GearMath.enhanceFactor(ExtremeGear.grade(stack));
-        double attack = ExtremeGear.rank(stack, GemType.DAMAGE);
+        double attack = ExtremeGear.activeRank(stack, GemType.DAMAGE);
         if (GearProgression.canKill(stack)) {
             double base = 1;
             for (var entry : List.copyOf(event.getModifiers())) if (entry.attribute().equals(Attributes.ATTACK_DAMAGE)
@@ -41,20 +41,20 @@ public final class GearEvents {
             double base = 0;
             for (var entry : List.copyOf(event.getModifiers())) if (entry.attribute().equals(Attributes.ARMOR)
                     && entry.modifier().operation() == AttributeModifier.Operation.ADD_VALUE) base += entry.modifier().amount();
-            double protection = ExtremeGear.rank(stack, GemType.PROTECTION) * .25
+            double protection = ExtremeGear.activeRank(stack, GemType.PROTECTION) * .25
                     + (factor * base * .68 + ExtremeGear.grade(stack) / 3D) * .75;
             if (protection > 0) event.addModifier(Attributes.ARMOR, new AttributeModifier(ExtremeGear.id("socket_armor_" + armor.getEquipmentSlot().getName()), protection,
                     AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.bySlot(armor.getEquipmentSlot()));
-            if (armor.getEquipmentSlot() == EquipmentSlot.FEET && ExtremeGear.rank(stack, GemType.SPEED) > 0)
+            if (armor.getEquipmentSlot() == EquipmentSlot.FEET && ExtremeGear.activeRank(stack, GemType.SPEED) > 0)
                 event.addModifier(Attributes.MOVEMENT_SPEED, new AttributeModifier(ExtremeGear.id("socket_speed"),
-                        ExtremeGear.rank(stack, GemType.SPEED) * .05, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.FEET);
+                        ExtremeGear.activeRank(stack, GemType.SPEED) * .05, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.FEET);
         }
     }
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public static void mining(PlayerEvent.BreakSpeed event) {
         ItemStack stack = event.getEntity().getMainHandItem();
         if (!ExtremeGear.socketable(stack) || event.getNewSpeed() <= 0) return;
-        int rank = ExtremeGear.rank(stack, GemType.EFFICIENCY);
+        int rank = ExtremeGear.activeRank(stack, GemType.EFFICIENCY);
         float speed = event.getNewSpeed();
         if (rank > 0 && stack.getDestroySpeed(event.getState()) > 1F) speed += rank * rank + 1;
         if (!GearProgression.canKill(stack) && !event.getEntity().isInWaterRainOrBubble()) speed *= 1 + GearMath.enhanceFactor(ExtremeGear.grade(stack));
@@ -63,9 +63,14 @@ public final class GearEvents {
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void incoming(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof Player player) || event.isCanceled()) return;
-        int rank = event.getSource().is(DamageTypeTags.IS_FIRE) ? ExtremeGear.rank(player.getItemBySlot(EquipmentSlot.CHEST), GemType.FIREPROOF)
-                : event.getSource().is(DamageTypeTags.IS_EXPLOSION) ? ExtremeGear.rank(player.getItemBySlot(EquipmentSlot.LEGS), GemType.EXPLOSION_PROOF) : 0;
-        if (rank > 0 && !event.getSource().is(DamageTypeTags.BYPASSES_ENCHANTMENTS)) event.setAmount(event.getAmount() * (1F - rank * .125F));
+        GemType type = event.getSource().is(DamageTypeTags.IS_FIRE) ? GemType.FIREPROOF
+                : event.getSource().is(DamageTypeTags.IS_EXPLOSION) ? GemType.EXPLOSION_PROOF : null;
+        if (type == null || event.getSource().is(DamageTypeTags.BYPASSES_ENCHANTMENTS)) return;
+        // Each eligible chest/leg piece applies its own reduction without allowing negative damage.
+        float amount = event.getAmount();
+        for (EquipmentSlot slot : List.of(EquipmentSlot.CHEST, EquipmentSlot.LEGS))
+            amount *= 1F - ExtremeGear.activeRank(player.getItemBySlot(slot), type) * .125F;
+        event.setAmount(amount);
     }
     @SubscribeEvent
     public static void tooltip(ItemTooltipEvent event) {

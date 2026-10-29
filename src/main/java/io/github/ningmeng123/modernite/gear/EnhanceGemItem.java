@@ -26,5 +26,13 @@ public final class EnhanceGemItem extends Item {
                 String.format(java.util.Locale.ROOT, "%.3f", value).replaceAll("0+$", "").replaceAll("\\.$", ""))
                 .withStyle(ChatFormatting.AQUA));
         tooltip.add(Component.translatable("tooltip.modern_ite.gem_highest").withStyle(ChatFormatting.GRAY));
+        String target = switch (type) {
+            case DAMAGE, EFFICIENCY -> "tools";
+            case HEALTH, PROTECTION, RECOVER, NUTRITION -> "armor";
+            case SPEED -> "boots";
+            case FIREPROOF, EXPLOSION_PROOF -> "chest_legs";
+            case DURABILITY -> "equipment";
+        };
+        tooltip.add(Component.translatable("tooltip.modern_ite.gem_target_" + target).withStyle(ChatFormatting.GRAY));
     }
 }

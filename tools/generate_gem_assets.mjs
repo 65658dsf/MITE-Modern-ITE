@@ -3,6 +3,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { gemBoxModel } from './gem_box_model.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const source = JSON.parse(await readFile(new URL('./gem_textures/classic_b.json', import.meta.url), 'utf8'));
@@ -64,4 +65,24 @@ for (const [kind, palette] of Object.entries(source.palettes)) {
   }
 }
 if (count !== 65) throw new Error(`Expected 65 gem textures, received ${count}.`);
+const box = JSON.parse(await readFile(new URL('./gem_textures/gem_box.json', import.meta.url), 'utf8'));
+const boxPixels = Buffer.from(box.rgba_base64, 'base64');
+if (box.width !== 32 || box.height !== 32 || boxPixels.length !== 32 * 32 * 4) throw new Error('Invalid gem box source.');
+const boxScanlines = Buffer.alloc(32 * (32 * 4 + 1));
+for (let y = 0; y < 32; y++) boxPixels.copy(boxScanlines, y * 129 + 1, y * 128, (y + 1) * 128);
+const boxHeader = Buffer.alloc(13);
+boxHeader.writeUInt32BE(32, 0); boxHeader.writeUInt32BE(32, 4);
+boxHeader[8] = 8; boxHeader[9] = 6;
+await writeFile(path.join(output, 'gem_box.png'), Buffer.concat([
+  Buffer.from('89504e470d0a1a0a', 'hex'), chunk('IHDR', boxHeader),
+  chunk('tEXt', Buffer.from('Author\0NingMeng123')),
+  chunk('tEXt', Buffer.from('Description\0Gem box; 32x32 pixel art; generated with image_gen')),
+  chunk('IDAT', deflateSync(boxScanlines, { level: 9 })), chunk('IEND', Buffer.alloc(0)),
+]));
 console.log(`Packaged ${count} classic B gem textures (16x16 RGBA). Author: NingMeng123.`);
+console.log('Packaged the redesigned gem box (32x32 RGBA). Author: NingMeng123.');
+const modelDirectory = path.join(root, 'src/main/resources/assets/modern_ite/models/item');
+await mkdir(modelDirectory, { recursive: true });
+for (const [filename, part] of [['gem_box', 'closed'], ['gem_box_body', 'body'], ['gem_box_lid', 'lid']])
+  await writeFile(path.join(modelDirectory, `${filename}.json`), JSON.stringify(gemBoxModel(part), null, 2) + '\n');
+console.log('Packaged the native 3D gem box, hollow body and hinged lid models. Author: NingMeng123.');

@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public abstract class GearWearMixin {
     @ModifyVariable(method = "hurt", at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private static int modernite$socketWear(int amount, ItemStack stack, int ignored, LivingEntity owner, EquipmentSlot slot) {
-        int rank = ExtremeGear.rank(stack, GemType.DURABILITY);
+        int rank = ExtremeGear.activeRank(stack, GemType.DURABILITY);
         if (rank == 0 || amount <= 0 || owner.level().isClientSide) return amount;
         int remaining = 0;
         for (int i = 0; i < amount; i++) if (owner.getRandom().nextFloat() >= rank * .05F) remaining++;

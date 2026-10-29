@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.neoforged.neoforge.gametest.GameTestHolder;
+import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /** Native equipment changes must preserve one usable source combat scheduler. @author NingMeng123 */
@@ -30,6 +32,10 @@ public final class SkeletonCombatAiGameTests {
         skeleton.moveTo(h.absolutePos(new BlockPos(1, 2, 1)).getCenter());
         skeleton.setNoAi(true);
         skeleton.setNoGravity(true);
+        // This suite exercises weapon reassessment, independently of each species' unlock date.
+        EventHooks.finalizeMobSpawn(skeleton,h.getLevel(),h.getLevel().getCurrentDifficultyAt(skeleton.blockPosition()),MobSpawnType.SPAWN_EGG,null);
+        h.assertTrue(!skeleton.isSpawnCancelled()&&skeleton.getSpawnType()==MobSpawnType.SPAWN_EGG,
+                "The test skeleton has a real explicit spawn origin before joining: "+kind);
         h.assertTrue(h.getLevel().addFreshEntity(skeleton), "The skeleton passes the real source and addon join handlers: " + kind);
         h.assertTrue(skeleton.extremeMemory().initialized, "The addon join handler initializes the fresh combat state: " + kind);
         return skeleton;

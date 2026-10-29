@@ -233,8 +233,10 @@ for k,(cn,eng) in messages.items():zh[k]=cn;en[k]=eng
 save('modern_ite/content-lang-zh_cn.json',zh);save('modern_ite/content-lang-en_us.json',en)
 glm=RES/'modern_ite/economy-global-loot-modifiers.json'
 if glm.exists():save('data/neoforge/loot_modifiers/global_loot_modifiers.json',json.loads(glm.read_text(encoding='utf-8')))
-sounds=RES/'modern_ite/mobs-sounds.json'
-if sounds.exists():save('assets/modern_ite/sounds.json',json.loads(sounds.read_text(encoding='utf-8')))
+sounds={}
+for fragment in sorted((RES/'modern_ite').glob('*-sounds.json')):
+    sounds.update(json.loads(fragment.read_text(encoding='utf-8')))
+if sounds:save('assets/modern_ite/sounds.json',sounds)
 for locale in ['zh_cn','en_us']:
     merged={}
     for fragment in sorted((RES/'modern_ite').glob('*-lang-'+locale+'.json')):merged.update(json.loads(fragment.read_text(encoding='utf-8')))

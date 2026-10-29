@@ -170,8 +170,8 @@
   "tooltip.modern_ite.gem_recover": "穿着护甲：自然恢复量 +%s%%",
   "tooltip.modern_ite.gem_durable": "装备：%s%% 概率免除此点耐久消耗",
   "tooltip.modern_ite.gem_speed": "鞋子：基础移动速度 +%s%%",
-  "tooltip.modern_ite.gem_fireproof": "胸甲：火焰伤害减少 %s%%",
-  "tooltip.modern_ite.gem_explosionproof": "护腿：爆炸伤害减少 %s%%",
+  "tooltip.modern_ite.gem_fireproof": "胸甲或护腿：火焰伤害减少 %s%%",
+  "tooltip.modern_ite.gem_explosionproof": "胸甲或护腿：爆炸伤害减少 %s%%",
   "tooltip.modern_ite.gem_nutrition": "穿着护甲：营养容量 +%s（最多 20）",
   "tooltip.modern_ite.gem_highest": "同件装备相同类型仅最高阶生效，可在镶嵌台取出",
   "tooltip.modern_ite.enhance_stone": "用于独立强化锻造台，查看强化按钮可见本次需求",
@@ -699,5 +699,13 @@
   "modern_ite.config.time_lord_spawn_frequency": "时间领主生成权重",
   "modern_ite.config.time_lord_cast_interval": "时间迟滞释放间隔（世界tick）",
   "modern_ite.config.time_lord_effect_duration": "时间迟滞持续时间（世界tick）",
-  "modern_ite.config.time_lord_effect_range": "时间迟滞半径（格）"
+  "modern_ite.config.time_lord_effect_range": "时间迟滞半径（格）",
+  "tooltip.modern_ite.gem_target_tools": "仅可镶嵌于工具或武器",
+  "tooltip.modern_ite.gem_target_armor": "仅可镶嵌于护甲",
+  "tooltip.modern_ite.gem_target_boots": "仅可镶嵌于靴子",
+  "tooltip.modern_ite.gem_target_chest_legs": "仅可镶嵌于胸甲或护腿",
+  "tooltip.modern_ite.gem_target_equipment": "可镶嵌于工具、武器或护甲",
+  "subtitles.modern_ite.gem_box.open": "宝石箱开启",
+  "subtitles.modern_ite.gem_box.rummage": "翻找箱内物品",
+  "subtitles.modern_ite.gem_box.reveal": "宝石轻响"
 }

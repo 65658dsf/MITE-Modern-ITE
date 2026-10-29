@@ -26,6 +26,26 @@ final class InfernalExplosionGameTestSupport {
                                   AABB bounds, Runnable action, Runnable cleanup) {
         awaitEntity(h, level, entity, bounds, 100, action, cleanup);
     }
+    static void whenPositionsEntityTicking(GameTestHelper h, ServerLevel level, java.util.List<net.minecraft.core.BlockPos> positions,
+                                          Runnable action, Runnable cleanup) {
+        awaitPositions(h, level, positions, 100, action, cleanup);
+    }
+    private static void awaitPositions(GameTestHelper h, ServerLevel level, java.util.List<net.minecraft.core.BlockPos> positions,
+                                       int remaining, Runnable action, Runnable cleanup) {
+        h.runAfterDelay(1, () -> {
+            // A synchronous FULL chunk is not sufficient: entity sections are indexed only after
+            // the forced ticket has promoted the chunk's real entity-ticking status.
+            boolean ready=positions.stream().allMatch(level::isPositionEntityTicking);
+            if (!ready && remaining > 0) {
+                awaitPositions(h, level, positions, remaining - 1, action, cleanup);
+                return;
+            }
+            try {
+                h.assertTrue(ready, "Both real target positions are entity-ticking before entity admission");
+                action.run();
+            } catch (Throwable failure) { cleanup.run(); throw failure; }
+        });
+    }
     private static void awaitEntity(GameTestHelper h, ServerLevel level, net.minecraft.world.entity.Entity entity,
                                     AABB bounds, int remaining, Runnable action, Runnable cleanup) {
         h.runAfterDelay(1, () -> {

@@ -90,6 +90,7 @@ public final class ExtremeEconomy {
     }
     public static void ensure(Villager villager, MerchantOffers offers) {
         if (villager.level().isClientSide || villager.isBaby()) return;
+        normalizeSavedPayments(offers);
         ResourceLocation key = BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession());
         if (key == null || !key.getNamespace().equals("minecraft")) return;
         String profession = SMITHS.contains(key.getPath()) ? "smith" : key.getPath();
@@ -130,10 +131,41 @@ public final class ExtremeEconomy {
     }
     public static MerchantOffer exchange(Item payment, int count, ItemStack result) {
         int cap = new ItemStack(payment).getMaxStackSize();
-        if (count < 1 || count > cap * 2 || result.getCount() > result.getMaxStackSize())
+        if (count < 1 || result.getCount() > result.getMaxStackSize())
             throw new IllegalArgumentException("Trade exceeds the real material stack limit");
+        if (count > cap * 2) {
+            // The native merchant has two payment slots. Reversible 9:1 metal blocks keep the
+            // source's complete ingot price payable after the four-ingot carrying limit.
+            ResourceLocation id = BuiltInRegistries.ITEM.getKey(payment);
+            Item block = id.getPath().endsWith("_ingot") ? BuiltInRegistries.ITEM.get(
+                    ResourceLocation.fromNamespaceAndPath(id.getNamespace(), id.getPath().replace("_ingot", "_block"))) : Items.AIR;
+            int blocks = count / 9, remainder = count % 9;
+            if (block == Items.AIR || blocks < 1 || blocks > new ItemStack(block).getMaxStackSize() || remainder > cap)
+                throw new IllegalArgumentException("Trade cannot express its full material price in two legal stacks");
+            return new MerchantOffer(new ItemCost(block, blocks), remainder == 0 ? Optional.empty()
+                    : Optional.of(new ItemCost(payment, remainder)), result, 7, 1, 0F);
+        }
         int first = Math.min(cap, count), second = count - first;
         return new MerchantOffer(new ItemCost(payment, first), second == 0 ? Optional.empty() : Optional.of(new ItemCost(payment, second)), result, 7, 1, 0F);
+    }
+    private static void normalizeSavedPayments(MerchantOffers offers) {
+        for (int index = 0; index < offers.size(); index++) {
+            MerchantOffer previous = offers.get(index);
+            ItemStack first = previous.getBaseCostA(), second = previous.getCostB();
+            if (first.getCount() <= first.getMaxStackSize() && (second.isEmpty() || second.getCount() <= second.getMaxStackSize())) continue;
+            if (!second.isEmpty() && !ItemStack.isSameItemSameComponents(first, second)) continue;
+            // Specials are transient while a customer is trading. Migrate after vanilla clears
+            // them, instead of reinterpreting an ingot adjustment as whole storage blocks.
+            if (previous.getSpecialPriceDiff() != 0 || previous.getPriceMultiplier() != 0F || previous.getMaxUses() != 7 || previous.getXp() != 1) continue;
+            int count = first.getCount() + second.getCount();
+            boolean sourceRow = ROWS.stream().anyMatch(row -> first.is(item(row.input())) && previous.getResult().is(item(row.output()))
+                    && count >= row.minimum() && count <= row.maximum()
+                    && previous.getResult().getCount() >= row.outputMinimum() && previous.getResult().getCount() <= row.outputMaximum());
+            if (!sourceRow) continue;
+            MerchantOffer payment = exchange(first.getItem(), count, previous.getResult().copy());
+            offers.set(index, new MerchantOffer(payment.getItemCostA(), payment.getItemCostB(), previous.getResult().copy(),
+                    previous.getUses(), previous.getMaxUses(), previous.getXp(), previous.getPriceMultiplier(), previous.getDemand()));
+        }
     }
     private static Item item(String id) {
         Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));

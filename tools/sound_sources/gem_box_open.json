@@ -1,0 +1,44 @@
+{
+  "adaptation_author": "NingMeng123",
+  "source": {
+    "filename": "开宝箱音效 21_爱给网_aigei_com.mp3",
+    "sha256": "722db78b2e053b33821adf4b935d4aefc982a4f78bc94dde29fab6beae81497b",
+    "origin": "User-provided source audio",
+    "codec": "mp3",
+    "channels": 2,
+    "sample_rate": 44100,
+    "duration_seconds": 3.03,
+    "decoded_peak_dbfs": -0.83921
+  },
+  "output": {
+    "path": "src/main/resources/assets/modern_ite/sounds/item/gem_box_open.ogg",
+    "sha256": "1a6cbd674e93f0f9b8ac8e93e9b5f213677e189c266aaf7acc34886288713ad5",
+    "bytes": 50619,
+    "codec": "vorbis",
+    "channels": 1,
+    "sample_rate": 44100,
+    "duration_seconds": 3.03,
+    "decoded_samples": 133623,
+    "decoded_peak_dbfs": -1.773728,
+    "decoded_rms_dbfs": -26.113289,
+    "nan_samples": 0,
+    "infinite_samples": 0
+  },
+  "conversion": {
+    "encoder": "libvorbis",
+    "quality": 7,
+    "filter": "pan=mono|c0=0.5*c0+0.5*c1",
+    "metadata_removed": true,
+    "cropping": false,
+    "tempo_changed": false,
+    "pitch_changed": false,
+    "normalization": false,
+    "notes": "Unity-gain stereo average avoids the gain of the automatic stereo-to-mono mix; full source duration and tail retained."
+  },
+  "runtime": {
+    "event": "modern_ite:item.gem_box.open",
+    "volume": 1,
+    "pitch": 1,
+    "subtitle": "subtitles.modern_ite.gem_box.open"
+  }
+}

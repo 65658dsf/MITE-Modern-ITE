@@ -531,7 +531,19 @@ public final class MobAbilities {
         for(int i=0;i<count;i++){
             Entity e=type.create(level);if(!(e instanceof Mob mob))continue;boolean valid=false;
             prepare.accept(mob);
-            for(int attempt=0;attempt<12;attempt++){BlockPos p=owner.blockPosition().offset(owner.getRandom().nextInt(7)-3,0,owner.getRandom().nextInt(7)-3);mob.moveTo(p.getX()+.5,p.getY(),p.getZ()+.5,owner.getYRot(),0);if(level.noCollision(mob)){valid=true;break;}}
+            boolean behind=owner instanceof ExtremeMob extreme&&ZombieLordAbilities.handles(extreme.extremeKind());
+            for(int attempt=0;attempt<(behind?24:12);attempt++){
+                if(behind){
+                    // Sample only the rear half-plane. A blocked rear never falls back beside the player.
+                    Vec3 forward=Vec3.directionFromRotation(0,owner.getYRot());
+                    double back=1.5+owner.getRandom().nextDouble()*2,side=owner.getRandom().nextDouble()*5-2.5;
+                    mob.moveTo(owner.getX()-forward.x*back+forward.z*side,owner.getY(),owner.getZ()-forward.z*back-forward.x*side,owner.getYRot(),0);
+                }else{
+                    BlockPos p=owner.blockPosition().offset(owner.getRandom().nextInt(7)-3,0,owner.getRandom().nextInt(7)-3);
+                    mob.moveTo(p.getX()+.5,p.getY(),p.getZ()+.5,owner.getYRot(),0);
+                }
+                if(level.noCollision(mob)){valid=true;break;}
+            }
             if(!valid||!SpawnPopulation.reserveSupport(mob,owner,encounter)){mob.discard();continue;}
             Set<UUID> existing=summonBaseline(level,owner);Set<Entity> owned=new LinkedHashSet<>();owned.add(mob);
             try{
