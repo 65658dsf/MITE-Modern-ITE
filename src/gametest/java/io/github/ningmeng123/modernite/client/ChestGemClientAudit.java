@@ -54,7 +54,7 @@ public final class ChestGemClientAudit {
         Files.createDirectories(folder);
         JsonObject report = new JsonObject();
         report.addProperty("author", "NingMeng123");
-        report.addProperty("scope", "Native combined armor/weapon chest medals, stable random 5x5 selection and animated light");
+        report.addProperty("scope", "Native glassy embossed hexagrams, visible moving rainbow gradients, fixed type rims and independent flashes");
         JsonArray samples = new JsonArray(); report.add("samples", samples);
         int index = 0;
         try (NativeImage preview = new NativeImage(WIDTH * 4, HEIGHT * 2, false)) {
@@ -196,6 +196,9 @@ public final class ChestGemClientAudit {
         report.add("compact_count_layouts", countLayouts(mc, folder));
         report.add("type_star_colors", typeColors(mc, folder));
         report.add("translucent_glow_effects", translucentGlow(mc, folder));
+        report.add("independent_hexagram_flashes", independentHexagramFlashes(mc, folder));
+        report.add("embossed_hexagram_relief", embossedHexagramRelief(mc, folder));
+        report.add("glass_color_gradient", glassColorGradient(mc, folder));
         report.add("combined_equipment_medals", combinedEquipmentMedals(mc, folder));
         report.add("vibranium_protection_v", cosmicArmor(mc, folder));
         report.addProperty("status", "passed_actual_gpu_rendering");
@@ -281,7 +284,7 @@ public final class ChestGemClientAudit {
                     NativeImage actual = frame(mc, player, .18F, observed);
                     rendered.add(actual);
                     check(observed.starVertices == expectedVertices(chest),
-                            "Each gem category renders exactly one five-point star: " + type.id);
+                            "Each gem category renders exactly one six-pointed glass star: " + type.id);
                     TYPE_RIM_COLORS.put(type, observed.baseColors.get(0));
                     check(difference(empty, actual) > 20, "The single " + type.id + " star reaches the real GPU image");
                     for (int earlier = 0; earlier < rendered.size() - 1; earlier++)
@@ -336,8 +339,8 @@ public final class ChestGemClientAudit {
                 facts.addProperty("maximum_alpha", observed.maxAlpha);
                 facts.addProperty("translucent_vertices", observed.translucentVertices);
                 facts.addProperty("emissive_glow_vertices", observed.glowVertices);
-                check(observed.sparkleVertices == 8 * 32 && observed.sparkleAlphas.stream().anyMatch(alpha -> alpha > 0),
-                        "Each star emits its small tip-glint mesh, with visible highlights where the light band passes");
+                check(observed.sparkleVertices == 8 * ChestGemLayer.FLASH_VERTICES,
+                        "Each star emits its independent flash rays and bright core, even when the current instant is quiet");
                 facts.addProperty("sparkle_vertices", observed.sparkleVertices);
                 facts.addProperty("peak_sparkle_alpha", observed.sparkleAlphas.stream().mapToInt(Integer::intValue).max().orElse(0));
                 peak.writeToFile(folder.resolve("chest-stars-glow-tick-120.png"));
@@ -359,10 +362,7 @@ public final class ChestGemClientAudit {
                         Path png = folder.resolve("chest-stars-glow-phases.png"); preview.writeToFile(png);
                         facts.addProperty("pulse_preview", png.toString());
                         facts.addProperty("pulse_changed_pixels", changed);
-                        check(!observed.sparkleAlphas.equals(midpointVertices.sparkleAlphas)
-                                        || !observed.sparkleAlphas.equals(troughVertices.sparkleAlphas),
-                                "Actual per-star tip highlights change as the diagonal light band moves across the medal");
-                        facts.addProperty("moving_tip_glints_verified_from_emitted_alpha", true);
+                        facts.addProperty("breathing_and_transparency_regression", true);
                     }
                 }
             }
@@ -384,6 +384,9 @@ public final class ChestGemClientAudit {
 
             // Use one star and two real armor textures to prove that the rendered body of the
             // star transmits the surface below it, rather than checking only a transparent halo.
+            // Measure the ordinary translucent face outside a brief intentionally bright flash.
+            long seed = player.getUUID().getMostSignificantBits() ^ player.getUUID().getLeastSignificantBits();
+            while (ChestGemLayer.flashStrength(player.tickCount + 1F, 0, seed) > 0F) player.tickCount++;
             chest.remove(ExtremeGear.SOCKETS.get());
             try (NativeImage diamondEmpty = frame(mc, player, .18F, new ObservedBuffers(mc))) {
                 chest.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, code(GemType.HEALTH, 1)));
@@ -427,6 +430,362 @@ public final class ChestGemClientAudit {
             facts.addProperty("status", "passed_actual_gpu_rendering");
             return facts;
         } finally { player.discard(); }
+    }
+
+    private static JsonObject independentHexagramFlashes(Minecraft mc, Path folder) throws Exception {
+        PlayerSkin skin = new PlayerSkin(mc.player.getSkin().texture(), null, null, null, PlayerSkin.Model.WIDE, false);
+        UUID identity = UUID.fromString("7c458b8b-d8ab-4eac-b83f-0b43b2414a77");
+        long seed = identity.getMostSignificantBits() ^ identity.getLeastSignificantBits();
+        RemotePlayer player = new RemotePlayer(mc.level, new GameProfile(identity, "NingMeng123")) {
+            @Override public PlayerSkin getSkin() { return skin; }
+        };
+        JsonObject facts = new JsonObject();
+        try {
+            stage(mc, player);
+            List<List<Integer>> starts = new java.util.ArrayList<>();
+            for (int index = 0; index < 25; index++) starts.add(new java.util.ArrayList<>());
+            boolean[] wasLit = new boolean[25];
+            float isolatedPeak = -1;
+            int differentIdentitySamples = 0;
+            for (int sample = 0; sample <= 4800; sample++) {
+                float ticks = sample * .25F;
+                for (int index = 0; index < 25; index++) {
+                    float strength = ChestGemLayer.flashStrength(ticks, index, seed);
+                    check(strength >= 0 && strength <= 1, "Every flash envelope remains finite and within its alpha range");
+                    boolean lit = strength > 0;
+                    // A flash already in progress at t=0 has an unknown negative start time.
+                    if (sample > 0 && lit && !wasLit[index]) starts.get(index).add(sample);
+                    wasLit[index] = lit;
+                    if (strength != ChestGemLayer.flashStrength(ticks, index, seed ^ 0x5196AB9321L))
+                        differentIdentitySamples++;
+                }
+                if (isolatedPeak < 0 && ticks > 20 && ChestGemLayer.flashStrength(ticks, 0, seed) > .99F) {
+                    boolean alone = true;
+                    for (int index = 1; index < 8; index++) alone &= ChestGemLayer.flashStrength(ticks, index, seed) == 0;
+                    if (alone) isolatedPeak = ticks;
+                }
+            }
+            check(isolatedPeak > 0, "A reproducible instant exists where one star peaks while its seven neighbors remain quiet");
+            check(new java.util.HashSet<>(starts).size() == 25,
+                    "All 25 stars have different start sequences rather than a shared row or global flash phase");
+            int minimumInterval = Integer.MAX_VALUE, maximumInterval = 0;
+            for (List<Integer> sequence : starts) {
+                check(sequence.size() >= 8, "Every individual star flashes repeatedly during the one-minute observation");
+                java.util.Set<Integer> intervals = new java.util.HashSet<>();
+                for (int index = 1; index < sequence.size(); index++) {
+                    int interval = sequence.get(index) - sequence.get(index - 1);
+                    intervals.add(interval);
+                    minimumInterval = Math.min(minimumInterval, interval);
+                    maximumInterval = Math.max(maximumInterval, interval);
+                    check(interval >= 200 && interval <= 560,
+                            "Individual flash starts remain 2.5 to 7 seconds apart without clipped time-window edges");
+                }
+                check(intervals.size() > 1, "Each star uses changing intervals instead of a fixed-rate blink");
+            }
+            check(differentIdentitySamples > 100, "Different entity identities retain independent flash schedules");
+            ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
+            chest.set(ExtremeGear.SOCKETS.get(), fullSockets()); player.setItemSlot(EquipmentSlot.CHEST, chest);
+            ObservedBuffers group = new ObservedBuffers(mc);
+            try (NativeImage independent = frameAt(mc, player, isolatedPeak, group)) {
+                check(group.starVertices == 8 * ChestGemLayer.STAR_VERTICES,
+                        "All eight six-pointed stars retain their complete geometry during an isolated flash");
+                check(group.sparkleAlphas.get(0) > 150,
+                        "The selected native star emits a clearly bright flash core at its own peak");
+                for (int index = 1; index < 8; index++) check(group.sparkleAlphas.get(index) == 0,
+                        "Every neighboring star's actual flash vertices stay transparent during another star's flash");
+                facts.add("actual_hexagram_geometry", hexagramShape(group));
+                independent.writeToFile(folder.resolve("hexagram-independent-eight-one-flashing.png"));
+            }
+            chest.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, code(GemType.HEALTH, 1)));
+            ObservedBuffers quietVertices = new ObservedBuffers(mc), peakVertices = new ObservedBuffers(mc), releasedVertices = new ObservedBuffers(mc);
+            try (NativeImage quiet = frameAt(mc, player, isolatedPeak - 12F, quietVertices);
+                    NativeImage peak = frameAt(mc, player, isolatedPeak, peakVertices);
+                    NativeImage released = frameAt(mc, player, isolatedPeak + 12F, releasedVertices);
+                    NativeImage comparison = new NativeImage(WIDTH * 3, HEIGHT, false)) {
+                check(quietVertices.sparkleAlphas.get(0) == 0 && releasedVertices.sparkleAlphas.get(0) == 0,
+                        "The native flash rays and core are completely transparent before and after the short flash");
+                check(peakVertices.sparkleVertices == ChestGemLayer.FLASH_VERTICES
+                                && peakVertices.sparkleAlphas.get(0) > 150,
+                        "The native single-star peak includes its rays and bright core rather than only the breathing halo");
+                int changed = differenceWithin(quiet, peak, peakVertices);
+                check(changed > 10, "The short isolated flash visibly changes the actual GPU star image");
+                StarBounds center = peakVertices.baseStars.get(0);
+                int brightCore = 0, cx = Math.round(center.centerX()), cy = Math.round(center.centerY());
+                for (int y = cy - 3; y <= cy + 3; y++) for (int x = cx - 3; x <= cx + 3; x++) {
+                    int before = quiet.getPixelRGBA(x, y), during = peak.getPixelRGBA(x, y);
+                    if (delta(before, during) > 40 && minimumChannel(during) > minimumChannel(before) + 15) brightCore++;
+                }
+                check(brightCore > 0, "Actual pixels show a pale bright center, not only a stronger colored outline");
+                copy(quiet, comparison, 0, 0); copy(peak, comparison, 0, 1); copy(released, comparison, 0, 2);
+                quiet.writeToFile(folder.resolve("hexagram-single-quiet.png"));
+                peak.writeToFile(folder.resolve("hexagram-single-flash.png"));
+                released.writeToFile(folder.resolve("hexagram-single-released.png"));
+                Path png = folder.resolve("hexagram-flash-comparison.png"); comparison.writeToFile(png);
+                facts.addProperty("flash_comparison", png.toString()); facts.addProperty("flash_changed_pixels", changed);
+                facts.addProperty("bright_center_pixels", brightCore);
+                facts.addProperty("peak_flash_alpha", peakVertices.sparkleAlphas.get(0));
+                facts.addProperty("flash_alpha_before", quietVertices.sparkleAlphas.get(0));
+                facts.addProperty("flash_alpha_after", releasedVertices.sparkleAlphas.get(0));
+            }
+            int previousAlpha = -1;
+            JsonArray partialTickAlphas = new JsonArray();
+            for (float offset : new float[]{-.75F, -.5F, -.25F}) {
+                ObservedBuffers partial = new ObservedBuffers(mc);
+                try (NativeImage ignored = frameAt(mc, player, isolatedPeak + offset, partial)) {
+                    int alpha = partial.sparkleAlphas.get(0);
+                    check(alpha > previousAlpha && alpha > 0,
+                            "Actual flash vertices brighten smoothly across fractional ticks without snapping to integer ticks");
+                    previousAlpha = alpha; partialTickAlphas.add(alpha);
+                }
+            }
+            facts.add("rising_fractional_tick_alphas", partialTickAlphas);
+            facts.addProperty("isolated_peak_ticks", isolatedPeak);
+            facts.addProperty("independently_timed_stars", 25);
+            facts.addProperty("observed_ticks", 1200);
+            facts.addProperty("minimum_start_interval_ticks", minimumInterval / 4F);
+            facts.addProperty("maximum_start_interval_ticks", maximumInterval / 4F);
+            facts.addProperty("all_stars_have_irregular_independent_intervals", true);
+            facts.addProperty("identity_changes_schedule", true);
+            facts.addProperty("native_neighbors_quiet_during_one_flash", true);
+            facts.addProperty("native_flash_alpha_zero_outside_event", true);
+            facts.addProperty("fractional_tick_interpolation", true);
+            facts.addProperty("status", "passed_actual_gpu_rendering");
+            return facts;
+        } finally { player.discard(); }
+    }
+
+    private static int minimumChannel(int pixel) {
+        return Math.min(pixel & 255, Math.min(pixel >>> 8 & 255, pixel >>> 16 & 255));
+    }
+
+    private static JsonObject embossedHexagramRelief(Minecraft mc, Path folder) throws Exception {
+        PlayerSkin skin = new PlayerSkin(mc.player.getSkin().texture(), null, null, null, PlayerSkin.Model.WIDE, false);
+        UUID identity = UUID.fromString("c43cce3b-460c-420b-8885-4ad6c40a0517");
+        RemotePlayer player = new RemotePlayer(mc.level, new GameProfile(identity, "NingMeng123")) {
+            @Override public PlayerSkin getSkin() { return skin; }
+        };
+        JsonObject facts = new JsonObject();
+        try {
+            stage(mc, player);
+            long seed = identity.getMostSignificantBits() ^ identity.getLeastSignificantBits();
+            while (ChestGemLayer.flashStrength(player.tickCount + 1F, 0, seed) > 0F) player.tickCount++;
+            ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
+            player.setItemSlot(EquipmentSlot.CHEST, chest);
+            try (NativeImage empty = frame(mc, player, .18F, new ObservedBuffers(mc))) {
+                chest.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, code(GemType.PROTECTION, 1)));
+                ObservedBuffers observed = new ObservedBuffers(mc);
+                try (NativeImage front = frame(mc, player, .18F, observed)) {
+                    check(observed.baseStars.size() == 1, "One source gem produces one complete embossed star");
+                    facts.add("actual_relief_geometry", reliefGeometry(observed));
+                    facts.add("actual_hexagram_geometry", hexagramShape(observed));
+                    int edgePixels = 0;
+                    java.util.Set<Integer> seen = new java.util.HashSet<>();
+                    StarBounds star = observed.baseStars.get(0);
+                    for (int edge = 0; edge < 12; edge++) {
+                        float[] a = star.outline.get(edge), b = star.outline.get((edge + 1) % 12);
+                        int cx = Math.round((a[0] + b[0]) * .5F), cy = Math.round((a[1] + b[1]) * .5F);
+                        for (int y = cy - 1; y <= cy + 1; y++) for (int x = cx - 1; x <= cx + 1; x++) {
+                            if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT || !seen.add(y * WIDTH + x)) continue;
+                            if (delta(empty.getPixelRGBA(x, y), front.getPixelRGBA(x, y)) > 12) edgePixels++;
+                        }
+                    }
+                    check(edgePixels > 8, "The actual GPU image contains visible contour pixels around the six-pointed rim");
+                    facts.addProperty("changed_pixels_near_contour", edgePixels);
+                    front.writeToFile(folder.resolve("hexagram-relief-front.png"));
+                    ObservedBuffers side = new ObservedBuffers(mc);
+                    try (NativeImage oblique = frame(mc, player, .9F, side);
+                            NativeImage gallery = new NativeImage(WIDTH * 3, HEIGHT, false)) {
+                        reliefGeometry(side);
+                        check(side.starVertices == observed.starVertices,
+                                "Turning the body retains the real side walls, bevel and front facets");
+                        check(difference(front, oblique) > 100, "The native angled view exposes the attached shallow relief");
+                        copy(empty, gallery, 0, 0); copy(front, gallery, 0, 1); copy(oblique, gallery, 0, 2);
+                        oblique.writeToFile(folder.resolve("hexagram-relief-oblique.png"));
+                        Path preview = folder.resolve("hexagram-relief-comparison.png"); gallery.writeToFile(preview);
+                        facts.addProperty("preview", preview.toString());
+                    }
+                }
+            }
+            facts.addProperty("real_side_walls_and_bevel", true);
+            facts.addProperty("separate_lit_face_normals", true);
+            facts.addProperty("outline_visible_in_native_pixels", true);
+            facts.addProperty("status", "passed_actual_gpu_rendering");
+            return facts;
+        } finally { player.discard(); }
+    }
+
+    /** Inspect the native transformed mesh, not the production depth constants. */
+    private static JsonObject reliefGeometry(ObservedBuffers observed) {
+        check(!observed.baseStars.isEmpty(), "Relief checks observe an actual complete star mesh");
+        float sideThickness = 0, bevelDepth = 0, peakDepth = 0;
+        int distinctNormals = 0, bevelRange = 0;
+        for (StarBounds star : observed.baseStars) {
+            check(star.vertices.size() == 192, "The emitted relief contains side, outline, bevel and face surfaces");
+            MeshVertex back = star.vertices.get(0), front = star.vertices.get(3);
+            float ax = front.x - back.x, ay = front.y - back.y, az = front.z - back.z;
+            float thickness = (float)Math.sqrt(ax * ax + ay * ay + az * az);
+            check(thickness > .15F && thickness < 2F, "The actual side wall has a visible but shallow nonzero thickness");
+            ax /= thickness; ay /= thickness; az /= thickness;
+            float bevel = depth(star.vertices.get(98), star, ax, ay, az);
+            float peak = depth(star.vertices.get(144), star, ax, ay, az);
+            check(bevel > thickness + .05F && peak > bevel + .05F,
+                    "The actual bevel slopes forward and its face center rises above the inset edge");
+            check(peak < 3F, "The relief remains shallow rather than becoming a large projecting badge");
+            java.util.Set<String> normals = new java.util.HashSet<>();
+            int darkest = Integer.MAX_VALUE, brightest = 0;
+            for (int index = 0; index < star.vertices.size(); index++) {
+                MeshVertex v = star.vertices.get(index);
+                float length = (float)Math.sqrt(v.nx * v.nx + v.ny * v.ny + v.nz * v.nz);
+                check(Math.abs(length - 1F) < .02F, "Every actual side/bevel/facet vertex has a unit lighting normal");
+                normals.add(Math.round(v.nx * 100F) + ":" + Math.round(v.ny * 100F) + ":" + Math.round(v.nz * 100F));
+                float forward = v.nx * ax + v.ny * ay + v.nz * az;
+                if (index < 48) check(Math.abs(forward) < .02F, "Real wall normals face sideways rather than imitating a flat face");
+                if (index >= 96 && index < 144) {
+                    check(forward > .1F && forward < .99F, "Real bevel normals lean between the side and front surfaces");
+                    int value = (v.color >> 16 & 255) + (v.color >> 8 & 255) + (v.color & 255);
+                    darkest = Math.min(darkest, value); brightest = Math.max(brightest, value);
+                }
+                if (index >= 144) check(forward > .8F, "The inset glass facets face forward with their own sloped normals");
+            }
+            check(normals.size() >= 12, "The real relief uses multiple face directions instead of one flat normal");
+            check(brightest - darkest > 10, "The narrow bevel contains distinct light and dark edge colors");
+            sideThickness = thickness; bevelDepth = bevel; peakDepth = peak;
+            distinctNormals = normals.size(); bevelRange = brightest - darkest;
+        }
+        JsonObject facts = new JsonObject();
+        facts.addProperty("side_thickness_render_units", sideThickness);
+        facts.addProperty("bevel_depth_render_units", bevelDepth);
+        facts.addProperty("raised_center_depth_render_units", peakDepth);
+        facts.addProperty("distinct_unit_normal_directions", distinctNormals);
+        facts.addProperty("bevel_light_dark_rgb_sum_range", bevelRange);
+        facts.addProperty("verified_from_emitted_geometry", true);
+        return facts;
+    }
+
+    private static float depth(MeshVertex v, StarBounds star, float ax, float ay, float az) {
+        return (v.x - star.originX) * ax + (v.y - star.originY) * ay + (v.z - star.originZ) * az;
+    }
+
+    private static JsonObject glassColorGradient(Minecraft mc, Path folder) throws Exception {
+        JsonObject facts = new JsonObject();
+        int greatestStep = 0;
+        int smallestChannelRange = 255;
+        for (GemType type : GemType.values()) {
+            java.util.Set<Integer> palette = new java.util.HashSet<>();
+            boolean differentPhase = false;
+            int previous = ChestGemLayer.animatedColor(type, 0F, 0);
+            int[] minimum = {255, 255, 255}, maximum = {0, 0, 0};
+            for (int step = 1; step <= 960; step++) {
+                float ticks = step * .25F;
+                int current = ChestGemLayer.animatedColor(type, ticks, 0);
+                palette.add(current);
+                for (int shift : new int[]{0, 8, 16}) {
+                    greatestStep = Math.max(greatestStep, Math.abs((current >> shift & 255) - (previous >> shift & 255)));
+                    minimum[shift / 8] = Math.min(minimum[shift / 8], current >> shift & 255);
+                    maximum[shift / 8] = Math.max(maximum[shift / 8], current >> shift & 255);
+                }
+                differentPhase |= current != ChestGemLayer.animatedColor(type, ticks, 1);
+                previous = current;
+            }
+            for (int channel = 0; channel < 3; channel++) {
+                int range = maximum[channel] - minimum[channel];
+                check(range > 150, "Every face channel visibly traverses the rainbow rather than a small warm/cool tint");
+                smallestChannelRange = Math.min(smallestChannelRange, range);
+            }
+            check(palette.size() > 100 && differentPhase,
+                    "Each glass face continuously changes through a large palette, with different phases for neighboring stars");
+            check(delta(ChestGemLayer.glassColor(type, 60F, 0, -ChestGemLayer.STAR_SIZE * .3F, 0F),
+                            ChestGemLayer.glassColor(type, 60F, 0, ChestGemLayer.STAR_SIZE * .3F, 0F)) > 100,
+                    "One star face has a spatial color transition at the same instant instead of a uniform flat tint");
+        }
+        check(greatestStep <= 3, "Quarter-tick rainbow steps remain smooth rather than abruptly switching colors");
+        PlayerSkin skin = new PlayerSkin(mc.player.getSkin().texture(), null, null, null, PlayerSkin.Model.WIDE, false);
+        UUID identity = UUID.fromString("b93ecfe2-97d3-40fd-8d05-97130c55bb78");
+        RemotePlayer player = new RemotePlayer(mc.level, new GameProfile(identity, "NingMeng123")) {
+            @Override public PlayerSkin getSkin() { return skin; }
+        };
+        List<NativeImage> frames = new java.util.ArrayList<>();
+        try {
+            stage(mc, player);
+            long seed = identity.getMostSignificantBits() ^ identity.getLeastSignificantBits();
+            java.util.Map<Integer, Integer> times = new java.util.LinkedHashMap<>();
+            for (int ticks = 60; ticks <= 1440 && times.size() < 3; ticks += 60)
+                if (ChestGemLayer.flashStrength(ticks, 0, seed) == 0F)
+                    times.putIfAbsent(ChestGemLayer.animatedColor(GemType.PROTECTION, ticks, 0), ticks);
+            check(times.size() == 3, "Three quiet gradient phases exist at the same breathing-light phase");
+            ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
+            chest.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, code(GemType.PROTECTION, 1)));
+            player.setItemSlot(EquipmentSlot.CHEST, chest);
+            ObservedBuffers first = null;
+            java.util.Set<Integer> emittedColors = new java.util.HashSet<>();
+            int fewestSpatialColors = Integer.MAX_VALUE;
+            int minimumFaceAlpha = 255, maximumFaceAlpha = 0;
+            JsonArray ticksUsed = new JsonArray();
+            for (int ticks : times.values()) {
+                ObservedBuffers observed = new ObservedBuffers(mc);
+                NativeImage actual = frameAt(mc, player, ticks, observed); frames.add(actual);
+                if (first == null) first = observed;
+                check(observed.sparkleAlphas.get(0) == 0, "The glass-gradient control excludes the separate white flash");
+                check(observed.baseColors.equals(first.baseColors),
+                        "The native gem-type rim remains exactly the same color while its glass face moves through the rainbow");
+                StarBounds actualStar = observed.baseStars.get(0), firstStar = first.baseStars.get(0);
+                for (int vertex = 0; vertex < 144; vertex++)
+                    check(actualStar.vertices.get(vertex).color == firstStar.vertices.get(vertex).color,
+                            "All actual side, outline and bevel vertex colors remain fixed for type identification");
+                emittedColors.add(actualStar.vertices.get(144).color); ticksUsed.add(ticks);
+                java.util.Set<Integer> spatialColors = new java.util.HashSet<>();
+                for (int vertex = 144; vertex < 192; vertex++) {
+                    MeshVertex face = actualStar.vertices.get(vertex);
+                    spatialColors.add(face.color);
+                    int alpha = face.alpha;
+                    minimumFaceAlpha = Math.min(minimumFaceAlpha, alpha); maximumFaceAlpha = Math.max(maximumFaceAlpha, alpha);
+                }
+                check(spatialColors.size() >= 4, "The emitted native face has several simultaneous gradient colors");
+                fewestSpatialColors = Math.min(fewestSpatialColors, spatialColors.size());
+                actual.writeToFile(folder.resolve("glass-gradient-tick-" + ticks + ".png"));
+            }
+            check(emittedColors.size() == 3, "Actual native face-center vertices have three distinct rainbow colors");
+            check(minimumFaceAlpha >= 90 && maximumFaceAlpha <= 135,
+                    "The colored glass face remains translucent while giving the rainbow enough visible contrast");
+            int changed = 0, highContrastPixels = 0, greatestNativeChannelDifference = 0;
+            for (int index = 1; index < frames.size(); index++) {
+                changed = Math.max(changed, differenceWithin(frames.get(0), frames.get(index), first));
+                int contrast = 0;
+                for (int y = Math.max(0, (int)Math.floor(first.minY)); y <= Math.min(HEIGHT - 1, (int)Math.ceil(first.maxY)); y++)
+                    for (int x = Math.max(0, (int)Math.floor(first.minX)); x <= Math.min(WIDTH - 1, (int)Math.ceil(first.maxX)); x++) {
+                        int before = frames.get(0).getPixelRGBA(x, y), after = frames.get(index).getPixelRGBA(x, y);
+                        int channelDifference = 0;
+                        for (int shift : new int[]{0, 8, 16})
+                            channelDifference = Math.max(channelDifference,
+                                    Math.abs((before >>> shift & 255) - (after >>> shift & 255)));
+                        greatestNativeChannelDifference = Math.max(greatestNativeChannelDifference, channelDifference);
+                        if (channelDifference > 40) contrast++;
+                    }
+                highContrastPixels = Math.max(highContrastPixels, contrast);
+            }
+            check(changed > 30 && highContrastPixels >= 15,
+                    "At least fifteen actual star pixels change by more than forty channel levels without flash or breathing changes");
+            try (NativeImage gallery = new NativeImage(WIDTH * 3, HEIGHT, false)) {
+                for (int index = 0; index < frames.size(); index++) copy(frames.get(index), gallery, 0, index);
+                Path preview = folder.resolve("glass-gradient-comparison.png"); gallery.writeToFile(preview);
+                facts.addProperty("preview", preview.toString());
+            }
+            facts.add("quiet_gradient_ticks", ticksUsed);
+            facts.addProperty("native_gradient_changed_pixels", changed);
+            facts.addProperty("high_contrast_gradient_pixels", highContrastPixels);
+            facts.addProperty("greatest_native_channel_difference", greatestNativeChannelDifference);
+            facts.addProperty("minimum_channel_range_over_full_cycle", smallestChannelRange);
+            facts.addProperty("minimum_simultaneous_face_vertex_colors", fewestSpatialColors);
+            facts.addProperty("minimum_face_alpha", minimumFaceAlpha); facts.addProperty("maximum_face_alpha", maximumFaceAlpha);
+            facts.addProperty("greatest_channel_step_per_quarter_tick", greatestStep);
+            facts.addProperty("all_ten_types_gently_change_color", true);
+            facts.addProperty("neighboring_stars_have_different_color_phases", true);
+            facts.addProperty("native_gradient_without_flash_or_breathing_changes", true);
+            facts.addProperty("spatial_rainbow_gradient_visible_at_one_instant", true);
+            facts.addProperty("gem_type_rim_colors_stay_fixed", true);
+            facts.addProperty("status", "passed_actual_gpu_rendering");
+            return facts;
+        } finally { frames.forEach(NativeImage::close); player.discard(); }
     }
 
     private static JsonObject combinedEquipmentMedals(Minecraft mc, Path folder) throws Exception {
@@ -487,18 +846,27 @@ public final class ChestGemClientAudit {
                     Path png = folder.resolve("combined-medals-full-equipment-25.png"); decorated.writeToFile(png);
                     facts.addProperty("screenshot", png.toString()); facts.addProperty("full_set_vertices", full.starVertices);
                     Path animation = folder.resolve("medal-animation"); Files.createDirectories(animation);
-                    for (int frame = 0; frame < 20; frame++) {
+                    Path detailAnimation = folder.resolve("detail-animation"); Files.createDirectories(detailAnimation);
+                    for (int frame = 0; frame < 60; frame++) {
                         player.tickCount = 100 + frame * 4;
                         ObservedBuffers animated = new ObservedBuffers(mc);
                         try (NativeImage image = frame(mc, player, .18F, animated)) {
-                            check(animated.starVertices == full.starVertices && animated.baseColors.equals(full.baseColors),
+                            check(animated.starVertices == full.starVertices,
                                     "Every animation frame retains the same 25 chest stars and equipment sources");
+                            assertSelectedColors(animated, all);
                             image.writeToFile(animation.resolve(String.format("frame-%03d.png", frame)));
+                        }
+                        try (NativeImage detail = frameDetail(mc, player, .18F)) {
+                            detail.writeToFile(detailAnimation.resolve(String.format("frame-%03d.png", frame)));
+                            if (frame == 5) detail.writeToFile(folder.resolve("glass-stars-detail.png"));
                         }
                     }
                     player.tickCount = 120;
                     facts.addProperty("animation_frame_folder", animation.toString());
-                    facts.addProperty("animation_frames", 20); facts.addProperty("animation_tick_step", 4);
+                    facts.addProperty("animation_frames", 60); facts.addProperty("animation_tick_step", 4);
+                    facts.addProperty("detail_animation_frame_folder", detailAnimation.toString());
+                    facts.addProperty("detail_preview", folder.resolve("glass-stars-detail.png").toString());
+                    facts.addProperty("detail_native_render_zoom", 3);
                     player.setShiftKeyDown(true); player.setPose(Pose.CROUCHING);
                     ObservedBuffers crouch = new ObservedBuffers(mc);
                     try (NativeImage crouched = frame(mc, player, .18F, crouch)) {
@@ -556,8 +924,9 @@ public final class ChestGemClientAudit {
                 player.tickCount = 135;
                 ObservedBuffers laterVertices = new ObservedBuffers(mc);
                 try (NativeImage later = frame(mc, player, .18F, laterVertices)) {
-                    check(laterVertices.starVertices == random.starVertices && laterVertices.baseColors.equals(random.baseColors),
-                            "Animation time changes light while preserving the exact random star type sequence");
+                    check(laterVertices.starVertices == random.starVertices,
+                            "Animation time changes glass color and light while preserving the random star selection");
+                    assertSelectedColors(laterVertices, selected);
                     for (int index = 0; index < 25; index++) {
                         check(Math.abs(laterVertices.baseStars.get(index).centerX() - random.baseStars.get(index).centerX()) < .01F
                                         && Math.abs(laterVertices.baseStars.get(index).centerY() - random.baseStars.get(index).centerY()) < .01F,
@@ -638,9 +1007,24 @@ public final class ChestGemClientAudit {
 
     private static void assertSelectedColors(ObservedBuffers observed, List<ChestGemLayer.SocketGem> selected) {
         check(observed.baseColors.size() == selected.size(), "Each selected socket has exactly one observed base-star color");
-        for (int index = 0; index < selected.size(); index++)
-            check(observed.baseColors.get(index).equals(TYPE_RIM_COLORS.get(selected.get(index).type())),
-                    "The actual emitted star color matches its selected source socket at display position " + index);
+        for (int index = 0; index < selected.size(); index++) {
+            int actual = observed.baseColors.get(index);
+            GemType nearest = null; int nearestDistance = Integer.MAX_VALUE;
+            for (var entry : TYPE_RIM_COLORS.entrySet()) {
+                int distance = colorDistance(actual, entry.getValue());
+                if (distance < nearestDistance) { nearest = entry.getKey(); nearestDistance = distance; }
+            }
+            check(nearest == selected.get(index).type(),
+                    "Gentle animated color remains identifiable as the selected source gem at display position " + index
+                            + ", expected=" + selected.get(index).type() + ", nearest GPU calibration=" + nearest);
+        }
+    }
+
+    private static int colorDistance(int a, int b) {
+        int r = (a >> 16 & 255) - (b >> 16 & 255);
+        int g = (a >> 8 & 255) - (b >> 8 & 255);
+        int blue = (a & 255) - (b & 255);
+        return r * r + g * g + blue * blue;
     }
 
     private static void chestRegion(ObservedBuffers observed) {
@@ -651,6 +1035,7 @@ public final class ChestGemClientAudit {
     /** Verify the rendered star geometry, independent of the production coordinate helper. */
     private static JsonObject medalRows(ObservedBuffers observed, int count) {
         check(observed.baseStars.size() == count, "Each actual base-star mesh is observed separately");
+        hexagramShape(observed);
         int rows = (count + 4) / 5;
         check(rows <= 5, "At most five actual medal rows are emitted");
         float referenceCenter = 0, previousY = 0, spacing = 0, gap = 0;
@@ -684,6 +1069,36 @@ public final class ChestGemClientAudit {
         JsonObject facts = new JsonObject();
         facts.add("stars_in_each_row", rowCounts); facts.addProperty("row_count", rows);
         facts.addProperty("row_gap_pixels", gap); facts.addProperty("column_spacing_pixels", Math.abs(spacing));
+        facts.addProperty("verified_from_emitted_geometry", true);
+        return facts;
+    }
+
+    /** Inspect the emitted contour rather than trusting a shape name or vertex-count constant. */
+    private static JsonObject hexagramShape(ObservedBuffers observed) {
+        for (StarBounds star : observed.baseStars) {
+            check(star.outline.size() == 12, "The actual outer mesh has twelve alternating contour corners");
+            float minimum = Float.POSITIVE_INFINITY, maximum = 0;
+            float[] radii = new float[12];
+            int tips = 0;
+            for (int index = 0; index < 12; index++) {
+                float[] p = star.outline.get(index);
+                float x = p[0] - star.originX, y = p[1] - star.originY, z = p[2] - star.originZ;
+                radii[index] = (float)Math.sqrt(x * x + y * y + z * z);
+                minimum = Math.min(minimum, radii[index]); maximum = Math.max(maximum, radii[index]);
+            }
+            for (int index = 0; index < 12; index++) {
+                if (radii[index] > radii[(index + 11) % 12] && radii[index] > radii[(index + 1) % 12]) tips++;
+                float expected = index % 2 == 0 ? maximum : minimum;
+                check(Math.abs(radii[index] - expected) < .03F,
+                        "The six tips and six inset corners have equal alternating radii in the real mesh");
+            }
+            check(tips == 6, "The actual contour has six distinct long tips, not five");
+            check(Math.abs(minimum / maximum - 1F / (float)Math.sqrt(3D)) < .005F,
+                    "The actual inset-to-tip ratio forms the two overlapping equilateral triangles of a hexagram");
+        }
+        JsonObject facts = new JsonObject();
+        facts.addProperty("observed_stars", observed.baseStars.size());
+        facts.addProperty("outline_corners_per_star", 12); facts.addProperty("long_tips_per_star", 6);
         facts.addProperty("verified_from_emitted_geometry", true);
         return facts;
     }
@@ -776,6 +1191,26 @@ public final class ChestGemClientAudit {
     }
 
     private static NativeImage frame(Minecraft mc, LivingEntity entity, float yaw, ObservedBuffers observed, int light) {
+        return frame(mc, entity, yaw, observed, light, 1F);
+    }
+
+    private static NativeImage frameAt(Minecraft mc, LivingEntity entity, float ticks, ObservedBuffers observed) {
+        entity.tickCount = (int)Math.floor(ticks);
+        return frame(mc, entity, .18F, observed, LightTexture.FULL_BRIGHT, ticks - entity.tickCount);
+    }
+
+    /** A closer native camera for presentation; actual star size and normal-frame checks stay unchanged. */
+    private static NativeImage frameDetail(Minecraft mc, LivingEntity entity, float yaw) {
+        return frame(mc, entity, yaw, null, LightTexture.FULL_BRIGHT, 1F, 3F);
+    }
+
+    private static NativeImage frame(Minecraft mc, LivingEntity entity, float yaw, ObservedBuffers observed,
+                                     int light, float partialTick) {
+        return frame(mc, entity, yaw, observed, light, partialTick, 1F);
+    }
+
+    private static NativeImage frame(Minecraft mc, LivingEntity entity, float yaw, ObservedBuffers observed,
+                                     int light, float partialTick, float zoom) {
         TextureTarget target = new TextureTarget(WIDTH, HEIGHT, true, Minecraft.ON_OSX);
         Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix()); VertexSorting sorting = RenderSystem.getVertexSorting();
         var view = RenderSystem.getModelViewStack(); view.pushMatrix();
@@ -784,10 +1219,12 @@ public final class ChestGemClientAudit {
             target.setClearColor(16F / 255, 24F / 255, 32F / 255, 1); target.clear(Minecraft.ON_OSX); target.bindWrite(true);
             RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, WIDTH, HEIGHT, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
             view.identity(); RenderSystem.applyModelViewMatrix(); RenderSystem.setShaderColor(1, 1, 1, 1);
-            PoseStack pose = new PoseStack(); pose.translate(WIDTH / 2F, HEIGHT - 28F, 50); pose.scale(240, 240, -240);
+            PoseStack pose = new PoseStack();
+            pose.translate(WIDTH / 2F, zoom == 1F ? HEIGHT - 28F : HEIGHT * .5F * (1F + zoom), 50);
+            pose.scale(240F * zoom, 240F * zoom, -240F * zoom);
             pose.mulPose(new Quaternionf().rotationZ((float)Math.PI).rotateY((float)Math.PI + yaw));
             Lighting.setupForEntityInInventory(); dispatcher.setRenderShadow(false);
-            RenderSystem.runAsFancy(() -> dispatcher.render(entity, 0, 0, 0, 0, 1, pose,
+            RenderSystem.runAsFancy(() -> dispatcher.render(entity, 0, 0, 0, 0, partialTick, pose,
                     observed == null ? mc.renderBuffers().bufferSource() : observed, light));
             mc.renderBuffers().bufferSource().endBatch();
             return Screenshot.takeScreenshot(target);
@@ -801,12 +1238,22 @@ public final class ChestGemClientAudit {
     private static final class StarBounds {
         float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY;
         float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY;
+        float originX, originY, originZ;
+        final List<float[]> outline = new java.util.ArrayList<>();
+        final List<MeshVertex> vertices = new java.util.ArrayList<>();
         void include(float x, float y) {
             minX = Math.min(minX, x); maxX = Math.max(maxX, x);
             minY = Math.min(minY, y); maxY = Math.max(maxY, y);
         }
         float centerX() { return (minX + maxX) * .5F; }
         float centerY() { return (minY + maxY) * .5F; }
+    }
+
+    private static final class MeshVertex {
+        final float x, y, z;
+        float nx, ny, nz;
+        int color, alpha;
+        MeshVertex(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
     }
 
     private static final class ObservedBuffers implements MultiBufferSource {
@@ -826,18 +1273,31 @@ public final class ChestGemClientAudit {
             return new VertexConsumer() {
                 boolean firstBaseVertex, sparkleVertex;
                 int glowStar;
+                MeshVertex baseVertex;
                 @Override public VertexConsumer addVertex(float x, float y, float z) {
                     starVertices++; if (glow) glowVertices++;
-                    firstBaseVertex = false; sparkleVertex = false;
+                    firstBaseVertex = false; sparkleVertex = false; baseVertex = null;
                     if (!glow) {
-                        firstBaseVertex = baseVertices % (ChestGemLayer.STAR_VERTICES - ChestGemLayer.GLOW_VERTICES) == 0;
-                        int group = baseVertices++ / (ChestGemLayer.STAR_VERTICES - ChestGemLayer.GLOW_VERTICES);
+                        int position = baseVertices % ChestGemLayer.BASE_VERTICES;
+                        firstBaseVertex = position == 0;
+                        int group = baseVertices++ / ChestGemLayer.BASE_VERTICES;
                         if (baseStars.size() <= group) baseStars.add(new StarBounds());
-                        baseStars.get(group).include(x, y);
+                        StarBounds star = baseStars.get(group); star.include(x, y);
+                        baseVertex = new MeshVertex(x, y, z); star.vertices.add(baseVertex);
+                        if (position < 48 && position % 4 == 0) {
+                            star.outline.add(new float[]{x, y, z});
+                            if (star.outline.size() == 12) {
+                                for (float[] point : star.outline) {
+                                    star.originX += point[0] / 12F;
+                                    star.originY += point[1] / 12F;
+                                    star.originZ += point[2] / 12F;
+                                }
+                            }
+                        }
                     } else {
                         glowStar = (glowVertices - 1) / ChestGemLayer.GLOW_VERTICES;
                         if (sparkleAlphas.size() <= glowStar) sparkleAlphas.add(0);
-                        sparkleVertex = (glowVertices - 1) % ChestGemLayer.GLOW_VERTICES >= 80;
+                        sparkleVertex = (glowVertices - 1) % ChestGemLayer.GLOW_VERTICES >= ChestGemLayer.HALO_VERTICES;
                         if (sparkleVertex) sparkleVertices++;
                     }
                     minX = Math.min(minX, x); maxX = Math.max(maxX, x);
@@ -848,6 +1308,7 @@ public final class ChestGemClientAudit {
                     minAlpha = Math.min(minAlpha, a); maxAlpha = Math.max(maxAlpha, a);
                     if (a > 0 && a < 255) translucentVertices++;
                     if (firstBaseVertex) baseColors.add(r << 16 | g << 8 | b);
+                    if (baseVertex != null) { baseVertex.color = r << 16 | g << 8 | b; baseVertex.alpha = a; }
                     if (sparkleVertex) sparkleAlphas.set(glowStar, Math.max(a, sparkleAlphas.get(glowStar)));
                     nativeBuffer.setColor(r, g, b, a); return this;
                 }
@@ -858,7 +1319,10 @@ public final class ChestGemClientAudit {
                             && v == (LightTexture.FULL_BRIGHT >>> 16 & 65535)) fullBrightGlowVertices++;
                     nativeBuffer.setUv2(u, v); return this;
                 }
-                @Override public VertexConsumer setNormal(float x, float y, float z) { nativeBuffer.setNormal(x, y, z); return this; }
+                @Override public VertexConsumer setNormal(float x, float y, float z) {
+                    if (baseVertex != null) { baseVertex.nx = x; baseVertex.ny = y; baseVertex.nz = z; }
+                    nativeBuffer.setNormal(x, y, z); return this;
+                }
             };
         }
     }
