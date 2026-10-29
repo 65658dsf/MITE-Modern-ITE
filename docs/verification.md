@@ -1,5 +1,43 @@
 # 自动验证与游戏内验收
 
+## 全装备宝石集中胸口、随机25颗与动态流光（2026-10-29）
+
+开发署名：NingMeng123。当前按用户最新要求，将四件护甲与当前主手武器／工具的实际镶嵌宝石集中显示在胸前，每排五颗、最多五排；头、腿、脚和武器本体不绘制星饰。每颗缩至0.07，半透明类型色保留，并增加斜向流光与尖角闪烁，原三秒呼吸光继续保留。超过25颗时无放回随机抽取25个实际孔位，同一角色及相同镶嵌内容保持选择稳定，无分页或按时间重新抽取。当前规格以本节及 [胸前宝石勋章](chest-gem-display.md) 为准，下文为历史记录。
+
+构建、38项JUnit及全部GameTest源码编译通过。原生 `build/verification/chest-gems-20261029/client-combined-medals/client-audit.json` 与装载Sodium 0.8.13／EMF 3.3.12／ETF 7.2.6／Iris 1.8.14（关闭光影）／Cloth Config／Punchy的 `client-combined-medals-compat/client-audit.json` 均为 `passed`，失败列表为空，日志为同名 `.log`。逐件装备各五颗的实机对照确认五种来源均改变胸前像素，胸前几何边界外变化为0；主手铁剑切铁镐或空手立即同步，错槽甲、手持甲、副手及不支持镶嵌的物品不贡献星饰。完整25颗实际发射4800顶点，五行各五颗，行距21.09像素、列距19.37像素。40候选控制在实际GPU中只发射所抽25颗且类型颜色逐颗对应；512个稳定种子均无放回并覆盖全部40个候选，跨tick位置和选取类型序列不变。
+
+光效实机检查记录八星896个全亮发光顶点，其中256个为新增尖角闪光顶点；闪光alpha随流光位置变化。不同tick星饰区域有417个变化像素，暗光对照变化952像素，单星中心九个像素仍透出底甲差异。普通／纤细玩家、1～8颗与稀疏孔、同类型不同阶级、下蹲／转身、隐身可见甲、无胸甲的胸口显示、盔甲架及振金保护Ⅴ星光均通过。20帧真实GPU图像封装为4秒、5fps的 `build/delivery/combined-gem-medals/combined-medals.gif`；满格截图和40选25截图同目录保存。
+
+首轮新增显示筛选错误地沿用了新镶嵌的材料准入，挡住了已有护甲的真实组件，失败证据保存为 `client-combined-medals-initial.log` 与 `.json`。已恢复护甲读取既存组件的显示兼容行为，武器／工具继续遵守实际镶嵌白名单；新武器夹具使用正常支持镶嵌的铁剑与铁镐，随后完整复跑通过。
+
+成品 `build/delivery/combined-gem-medals/modern-ite-0.2.18.jar` 为1729464字节，SHA-256 `6087a48880e4b917ce3d2e6336c60e21ba100fab738397cb2b0cc2c3a1d86d27`。同目录 `package-audit.json` 确认354个生产类、757份资源与隔离编译输出逐字节一致，无测试类或嵌套JAR；较上一版仅 `ChestGemLayer` 类族改变。显示调整未改玩法，沿用既有36项服务端结果，未重复运行服务端。本轮未修改版本设置或本体。
+
+## 仅胸甲显示两排勋章式星饰（2026-10-29）
+
+开发署名：NingMeng123。按最新要求，头盔、护腿与靴子取消星饰显示，仅胸甲保留；其他部位原有镶嵌数据和属性不变。胸前每排四颗，最多两排，按实际非空孔顺序先填上排、再填下排，未满四颗的行水平居中。小尺寸、类型色、半透明、柔光及三秒轻微呼吸继续保留。当前规格见 [胸甲星形勋章](chest-gem-display.md)。
+
+构建、38项JUnit及全部GameTest源码编译通过。`build/verification/chest-gems-20261029/client-chest-medals/client-audit.json` 为 `passed`，失败列表为空；日志 `client-chest-medals.log`。真实GPU从实际发射网格核对每排四颗，两排间距26.72像素、列间距22.83像素；1～8颗布局均通过，半透明、暗光柔光、呼吸、类型颜色、宽细玩家、下蹲／转身、盔甲架及振金星光回归保留。穿戴四件且各自八孔全满时，仍只发射胸甲八星的1280顶点；修改其他三件的宝石不改变任何胸口星饰像素，取出胸甲宝石后全身不再绘制星饰。主预览为 `client-chest-medals/mob-render-audit/chest-medals-full-equipment.png`。
+
+成品 `build/delivery/chest-medal-stars/modern-ite-0.2.18.jar` 为1727588字节，SHA-256 `db0cd67f33450e9aaff85f5dd85104132a9d7bc7b36f9b71a4788907fdab2f20`。同目录 `package-audit.json` 确认354个生产类、757份资源与隔离编译输出逐字节一致，无测试类或嵌套JAR，旧全套绘制目标类已移除。本轮为显示范围与布局调整，沿用既有36项服务端结果，未重复运行服务端或兼容客户端。
+
+## 全套盔甲半透明星饰与柔光（2026-10-29）
+
+开发署名：NingMeng123。头盔、胸甲、护腿与靴子均独立读取本件真实八孔组件，并核对实际装备槽。头盔星饰贴额头金属带、随头转动；胸甲保留居中小徽饰；护腿和靴子分别位于大腿／靴子前侧，按可见索引交替分到左右腿，每颗只绘制一次。头、身体和腿分别使用对应原生模型部件及幼体缩放／偏移。星面不透明度约47%～54%，轮廓外有低强度、渐隐的自发光晕，按约三秒周期轻微呼吸；类型色与阶级数据规则不变。当前规格见 [盔甲宝石显示](chest-gem-display.md)。
+
+构建、38项JUnit和全部GameTest源码编译通过。`build/verification/chest-gems-20261029/client-armor-stars/client-audit.json` 与装载Sodium／EMF／ETF／Iris（关闭光影）／Cloth Config／Punchy的 `client-armor-stars-compat/client-audit.json` 均为 `passed`，失败列表为空；日志分别为 `client-armor-stars.log`、`client-armor-stars-compat.log`。实际GPU验证四件各1颗共4星、各8颗共32星（5120顶点），逐件移除只改变本件投影区域，装备槽错误不绘制，以及转头、走步、侧视和下蹲；保留十色、同类不同阶级同外观、宽细玩家、隐身、盔甲架、稀疏孔、振金保护Ⅴ星光回归。
+
+半透明及光效使用实际顶点和画面验证：顶点alpha为0～138、单胸甲八星有640个发光顶点且在暗光时仍使用全亮光照；120／135／150 tick之间，仅实际星饰区域有422个变化像素。单星中心9个像素在钻石／铁胸甲对照中仍传递底甲颜色变化，验证真实透底。截图包含 `mob-render-audit/armor-stars-full-set-eight-each.png`、`armor-stars-pieces-and-poses.png`、`chest-stars-glow-phases.png` 和 `chest-stars-transparency-armor-comparison.png`。
+
+成品 `build/delivery/armor-gem-stars-glow/modern-ite-0.2.18.jar` 为1730949字节，SHA-256 `a1a49c777aaab992e08453ac2fce3e3239ebc0c897c3b337c245ce32bfa915ac`。同目录 `package-audit.json` 确认355个生产类、757份资源匹配隔离编译输出，无测试类或嵌套JAR；较上一版彩色星星包仅 `ChestGemLayer` 及嵌套／编译器生成类改变。本轮未改玩法，沿用既有36项服务端专项结果。
+
+## 胸甲改用按类型着色的小五角星（2026-10-29）
+
+开发署名：NingMeng123。按最新外观要求，将胸前物品图案统一替换为小五角星，每孔一星；按宝石类型固定为暖银、红、紫、蓝、青绿、冷钢、金、浅蓝、黄绿、橙十种颜色，同类不同阶级保持相同轮廓和颜色。保留上一版缩小后的自适应居中徽饰布局及原镶嵌数据。星形使用原生实体缓冲区绘制，细暗边与轻微高光跟随正常光照，复用原版白纹理，不修改物品图标或新增纹理文件。当前显示规格见 [胸甲宝石显示](chest-gem-display.md)。
+
+构建、38项JUnit及全部GameTest源码编译通过。原生客户端 `build/verification/chest-gems-20261029/client-colored-stars/client-audit.json` 和装载Sodium／EMF／ETF／Iris（关闭光影）／Cloth Config／Punchy的 `client-colored-stars-compat/client-audit.json` 均为 `passed`，失败列表为空；日志分别为 `client-colored-stars.log`、`client-colored-stars-compat.log`。真实GPU覆盖十类型单星两两颜色差异、每类型1／6阶精确像素一致、1～8颗与稀疏孔布局，以及普通／纤细玩家、空甲、取出复原、下蹲／转身、隐身可见甲、盔甲架、振金保护Ⅴ星光。每星80顶点，八星640顶点；星光胸甲中有1033个像素变化，取出后精确恢复。截图含 `mob-render-audit/star-colors.png` 与 `chest-gems-vibranium-protection-v-eight.png`。
+
+成品 `build/delivery/chest-gems-colored-stars/modern-ite-0.2.18.jar` 为1724949字节，SHA-256 `5edf02695760fb54e0051244b4803b0b11e3d0ceb223687a77228f8cfcd6628a`。同目录 `package-audit.json` 确认353个生产类、757份资源与隔离编译输出逐字节一致，无测试类或嵌套JAR；较上一版只改变 `ChestGemLayer` 及其嵌套／编译器生成类。未修改玩法，沿用既有36项服务端专项结果。
+
 ## 胸甲宝石缩小与自适应居中布局（2026-10-29）
 
 开发署名：NingMeng123。按后续外观反馈，将宝石线性大小从0.15缩至0.09，即初版的60%；取消四列两排网格，按实际占用数量在胸口中央排列成小型徽饰。一颗居中、两颗竖向、三颗三角、四颗菱形，更多时采用中心加外圈或小环，八颗为小八边菱形环；空孔不占布局位置，类型、等级与镶嵌顺序保留。当前外观以本节及 [显示规格](chest-gem-display.md) 为准。
