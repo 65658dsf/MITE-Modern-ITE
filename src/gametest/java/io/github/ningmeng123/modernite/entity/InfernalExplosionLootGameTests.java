@@ -74,8 +74,8 @@ public final class InfernalExplosionLootGameTests {
             InfernalExplosionGameTestSupport.finishAfterJobs(h,level,()->{
                 h.assertTrue(level.getBlockState(stone).isAir()&&level.getBlockState(chest).isAir()&&level.getBlockState(furnace).isAir(),"Stone, filled chest and filled furnace are actually destroyed");
                 h.assertTrue(fixture.items().filter(item->item.getItem().is(Items.DIAMOND)).mapToInt(item->item.getItem().getCount()).sum()==46,"Both filled containers release every stored diamond exactly once");
-                h.assertTrue(fixture.loot.subList(initialLootEntities,fixture.loot.size()).stream().allMatch(entity->entity instanceof ItemEntity item&&item.getItem().is(Items.DIAMOND)),
-                        "Only the stored inventory is admitted; no container bodies, furnace material, stone, mob equipment, fragments or XP; new="+fixture.loot.subList(initialLootEntities,fixture.loot.size()));
+                h.assertTrue(fixture.loot.subList(initialLootEntities,fixture.loot.size()).stream().allMatch(entity->entity instanceof ItemEntity item&&fixture.admittedItems.get(item).is(Items.DIAMOND)),
+                        "Only the stored inventory is admitted; no container bodies, furnace material, stone, mob equipment, fragments or XP; new="+fixture.loot.subList(initialLootEntities,fixture.loot.size()).stream().map(entity->entity instanceof ItemEntity item?fixture.admittedItems.get(item):entity).toList());
                 h.assertTrue(fixture.emeraldCount(insideStart)==11&&!existing.isRemoved()&&existing.getItem().getCount()==7,"Existing merged inner stacks retain eleven emeralds and the unrelated outer stack retains seven");
                 h.assertTrue(fixture.innerEmeralds(insideStart).allMatch(item->item.position().distanceToSqr(insideStart)<.02&&item.getDeltaMovement().lengthSqr()==0)&&cornerTool.position().equals(cornerStart)&&ItemStack.matches(originalTool,cornerTool.getItem()),"Existing inner emeralds and outer-corner tool remain unchanged after queued destruction completes");
                 h.assertTrue(!existingXp.isRemoved()&&fixture.loot.stream().filter(entity->entity instanceof ExperienceOrb&&!entity.isRemoved()).count()==1,"No new mob or block XP; unrelated existing XP remains");
@@ -137,13 +137,19 @@ public final class InfernalExplosionLootGameTests {
         final AABB bounds;
         final Runnable releaseChunks;
         final java.util.List<Entity> loot=new java.util.ArrayList<>();
+        final java.util.Map<ItemEntity,ItemStack> admittedItems=new java.util.IdentityHashMap<>();
         final Consumer<EntityJoinLevelEvent> observeLoot;
         final LinkedHashMap<BlockPos,BlockState> terrain=new LinkedHashMap<>();
         final boolean griefing,tileDrops,mobLoot,decay;
         boolean closed;
         Fixture(GameTestHelper h){
             site=new SpawnBalanceGameTests.Site(h);site.date(256,256,true);bounds=new AABB(site.origin,site.origin).inflate(44);releaseChunks=InfernalExplosionGameTestSupport.holdChunks(site.level,bounds);player=h.makeMockPlayer(GameType.SURVIVAL);
-            observeLoot=event->{if(!event.isCanceled()&&event.getLevel()==site.level&&bounds.contains(event.getEntity().position())&&(event.getEntity() instanceof ItemEntity||event.getEntity() instanceof ExperienceOrb))loot.add(event.getEntity());};
+            observeLoot=event->{
+                if(event.isCanceled()||event.getLevel()!=site.level||!bounds.contains(event.getEntity().position())||!(event.getEntity() instanceof ItemEntity||event.getEntity() instanceof ExperienceOrb))return;
+                loot.add(event.getEntity());
+                // Native merging can empty and discard an admitted item before queued destruction finishes.
+                if(event.getEntity() instanceof ItemEntity item)admittedItems.put(item,item.getItem().copy());
+            };
             NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST,EntityJoinLevelEvent.class,observeLoot);
             var rules=site.level.getGameRules();griefing=rules.getBoolean(GameRules.RULE_MOBGRIEFING);tileDrops=rules.getBoolean(GameRules.RULE_DOBLOCKDROPS);mobLoot=rules.getBoolean(GameRules.RULE_DOMOBLOOT);decay=rules.getBoolean(GameRules.RULE_MOB_EXPLOSION_DROP_DECAY);
             rules.getRule(GameRules.RULE_MOBGRIEFING).set(true,site.level.getServer());rules.getRule(GameRules.RULE_DOBLOCKDROPS).set(true,site.level.getServer());rules.getRule(GameRules.RULE_DOMOBLOOT).set(true,site.level.getServer());rules.getRule(GameRules.RULE_MOB_EXPLOSION_DROP_DECAY).set(false,site.level.getServer());
