@@ -53,6 +53,10 @@ final class TimeLordFreshAnimationsAudit {
                     actual.writeToFile(directory.resolve("time-lord-fa-" + name + ".png"));
                     facts.addProperty("fresh_animations_applied", model.freshAnimationsApplied());
                     require(model.freshAnimationsApplied() == expected, "The actual rendered Time Lord must follow the installed skeleton animation: " + name);
+                    ItemStack clock = lord.getOffhandItem();lord.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+                    try (NativeImage withoutClock = MobRenderRegressionAudit.capture(mc, lord, false, .35F)) {
+                        facts.add("chest_clock_pixels", clockPixels(actual, withoutClock));
+                    } finally { lord.setItemSlot(EquipmentSlot.OFFHAND, clock); }
                     var nativeControl = new SkeletonModel<AbstractSkeleton>(SkeletonModel.createBodyLayer().bakeRoot());
                     modelField.set(renderer, nativeControl);
                     try (NativeImage nativeImage = MobRenderRegressionAudit.capture(mc, lord, false, .35F)) {
@@ -69,6 +73,10 @@ final class TimeLordFreshAnimationsAudit {
             try (NativeImage equipped = MobRenderRegressionAudit.capture(mc, lord, false, .35F)) {
                 equipped.writeToFile(directory.resolve("time-lord-fa-equipped.png"));
                 require(model.freshAnimationsApplied() == expected, "Armor and held equipment must retain the same skeleton animation path");
+                ItemStack clock = lord.getOffhandItem();lord.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+                try (NativeImage withoutClock = MobRenderRegressionAudit.capture(mc, lord, false, .35F)) {
+                    report.add("armored_chest_clock_pixels", clockPixels(equipped, withoutClock));
+                } finally { lord.setItemSlot(EquipmentSlot.OFFHAND, clock); }
             }
             report.addProperty("equipped_draw_succeeded", true);
             report.addProperty("status", "passed");
@@ -81,6 +89,19 @@ final class TimeLordFreshAnimationsAudit {
         for (int y = 0; y < first.getHeight(); y++) for (int x = 0; x < first.getWidth(); x++)
             if (first.getPixelRGBA(x, y) != second.getPixelRGBA(x, y)) different++;
         return different;
+    }
+
+    private static JsonObject clockPixels(NativeImage clock, NativeImage withoutClock) {
+        int count = 0, minX = clock.getWidth(), minY = clock.getHeight(), maxX = -1, maxY = -1;
+        for (int y = 0; y < clock.getHeight(); y++) for (int x = 0; x < clock.getWidth(); x++) {
+            if (clock.getPixelRGBA(x, y) == withoutClock.getPixelRGBA(x, y)) continue;
+            count++;minX = Math.min(minX, x);minY = Math.min(minY, y);maxX = Math.max(maxX, x);maxY = Math.max(maxY, y);
+        }
+        require(count > 40, "The actual clock and cord must remain visible in front of the animated chest and armor");
+        require(maxX - minX < 85 && maxY - minY < 85, "Clock pixels stay in a compact chest ornament instead of extending to the hand");
+        JsonObject facts = new JsonObject();facts.addProperty("changed_pixels", count);
+        facts.addProperty("min_x", minX);facts.addProperty("max_x", maxX);facts.addProperty("min_y", minY);facts.addProperty("max_y", maxY);
+        return facts;
     }
 
     private static void require(boolean value, String message) { if (!value) throw new IllegalStateException(message); }

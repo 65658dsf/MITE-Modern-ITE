@@ -123,7 +123,11 @@ public final class ExtremeMobRenderers {
                         kind==ExtremeKind.WITHER_SKELETON_ARROW?ModelLayers.WITHER_SKELETON_OUTER_ARMOR:ModelLayers.SKELETON_OUTER_ARMOR){
                     {
                         // Re-bake after the renderer's armor layers so EMF binds the skeleton CEM root.
-                        if(kind==ExtremeKind.TIME_LORD)this.model=new TimeLordSkeletonModel(context.bakeLayer(ModelLayers.SKELETON));
+                        if(kind==ExtremeKind.TIME_LORD){
+                            this.model=new TimeLordSkeletonModel(context.bakeLayer(ModelLayers.SKELETON));
+                            layers.removeIf(layer->layer instanceof ItemInHandLayer);
+                            addLayer(new TimeLordClockLayer(this,context.getItemInHandRenderer()));
+                        }
                         if(kind==ExtremeKind.SKELETON_ZOMBIE)this.model=new SkeletonZombieModel(context.bakeLayer(SKELETON_ZOMBIE),()->context.bakeLayer(ModelLayers.SKELETON));
                         if(kind==ExtremeKind.SKELETON_LIGHTNING)addLayer(new LightningSkeletonPowerLayer(this,context.bakeLayer(SKELETON_LIGHTNING_POWER)));
                         if(kind==ExtremeKind.ANNIHILATION_SKELETON)addLayer(new SourceGlowLayer<AbstractSkeleton,SkeletonModel<AbstractSkeleton>>(this,skeleton->texture("skeleton/annihilation_skeleton_glow")));
