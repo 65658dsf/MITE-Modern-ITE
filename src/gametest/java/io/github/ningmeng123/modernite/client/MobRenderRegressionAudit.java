@@ -155,6 +155,11 @@ public final class MobRenderRegressionAudit {
         capturing=true;
         try {
             check(ownedWorld(mc),"Only the newly created audit world may be rendered");
+            if (Boolean.getBoolean("modern_ite.chestGemAudit")) {
+                report.addProperty("scope", "Socketed chest gem native player and armor-stand GPU rendering");
+                report.add("chest_gems", ChestGemClientAudit.capture(mc, screenshots()));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.timeLordAudit")) {
                 report.addProperty("scope", "Time Lord native GPU render and real LocalPlayer fifth-rate physics, actions, inventory, mouse and continuous camera interpolation");
                 JsonObject facts = new JsonObject();report.add("time_lord", facts);
