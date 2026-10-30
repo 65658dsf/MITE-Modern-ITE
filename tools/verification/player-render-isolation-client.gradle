@@ -1,0 +1,12 @@
+// Disposable client audit configuration. Author: NingMeng123.
+gradle.projectsEvaluated {
+    def auditProject = gradle.rootProject
+    auditProject.extensions.getByName('neoForge').runs.named('client') {
+        systemProperty 'modern_ite.mobRenderAudit', 'true'
+        systemProperty 'modern_ite.playerRenderIsolationAudit', 'true'
+        systemProperty 'modern_ite.mobRenderAuditOutput', auditProject.file(
+                auditProject.providers.gradleProperty('modernItePlayerIsolationOutput')
+                        .getOrElse('build/verification/player-render-isolation/audit.json')).absolutePath
+        programArguments.addAll '--width', '1280', '--height', '900'
+    }
+}

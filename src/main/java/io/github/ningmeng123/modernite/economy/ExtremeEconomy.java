@@ -135,7 +135,7 @@ public final class ExtremeEconomy {
             throw new IllegalArgumentException("Trade exceeds the real material stack limit");
         if (count > cap * 2) {
             // The native merchant has two payment slots. Reversible 9:1 metal blocks keep the
-            // source's complete ingot price payable after the four-ingot carrying limit.
+            // source's complete ingot price payable when it exceeds both real stack caps.
             ResourceLocation id = BuiltInRegistries.ITEM.getKey(payment);
             Item block = id.getPath().endsWith("_ingot") ? BuiltInRegistries.ITEM.get(
                     ResourceLocation.fromNamespaceAndPath(id.getNamespace(), id.getPath().replace("_ingot", "_block"))) : Items.AIR;

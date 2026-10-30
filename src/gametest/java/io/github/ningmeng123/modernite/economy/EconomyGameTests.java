@@ -81,14 +81,19 @@ public final class EconomyGameTests {
         h.succeed();
     }
     @GameTest(template = "gear_empty")
-    public static void fourIngotLimitKeepsEveryMetalPricePayableThroughRealNativeMerchantTransactions(GameTestHelper h) {
+    public static void eightIngotLimitKeepsEveryMetalPricePayableThroughRealNativeMerchantTransactions(GameTestHelper h) {
         try (MerchantSession session = new MerchantSession(h)) {
             for (String metal : List.of("minecraft:copper", "mite:silver", "minecraft:gold", "minecraft:iron", "mite:ancient_metal")) {
                 Item ingot = BuiltInRegistries.ITEM.get(ResourceLocation.parse(metal + "_ingot"));
+                h.assertValueEqual(new ItemStack(ingot).getMaxStackSize(), 8, "Metal ingots retain eight items per real stack");
                 for (int count = 3; count <= 12; count++) {
                     MerchantOffer offer = ExtremeEconomy.exchange(ingot, count, new ItemStack(Items.EMERALD));
                     h.assertValueEqual(ingotValue(offer.getBaseCostA(), ingot) + ingotValue(offer.getCostB(), ingot), count,
                             "Every payment quotes the same full ingot value");
+                    h.assertTrue(offer.getBaseCostA().is(ingot) && offer.getBaseCostA().getCount() == Math.min(8, count)
+                                    && (count <= 8 ? offer.getCostB().isEmpty()
+                                    : offer.getCostB().is(ingot) && offer.getCostB().getCount() == count - 8),
+                            "Source prices up to twelve ingots use the restored eight-ingot payment slots directly");
                     var offers = new MerchantOffers(); offers.add(offer); session.villager.setOffers(offers);
                     session.player.getInventory().clearContent(); session.menu.setCarried(ItemStack.EMPTY);
                     session.menu.getSlot(0).set(ItemStack.EMPTY); session.menu.getSlot(1).set(ItemStack.EMPTY);
@@ -115,21 +120,31 @@ public final class EconomyGameTests {
         var villager = new Villager(EntityType.VILLAGER, h.getLevel());
         villager.setVillagerData(villager.getVillagerData().setProfession(VillagerProfession.NONE));
         var offers = new MerchantOffers();
-        offers.add(new MerchantOffer(new ItemCost(Items.GOLD_INGOT, 8), Optional.of(new ItemCost(Items.GOLD_INGOT, 3)),
+        offers.add(new MerchantOffer(new ItemCost(Items.GOLD_INGOT, 9), Optional.of(new ItemCost(Items.GOLD_INGOT, 2)),
                 new ItemStack(Items.EMERALD), 3, 7, 1, 0F, 4));
+        var storedBlockPayment = new MerchantOffer(new ItemCost(Items.GOLD_BLOCK, 1), Optional.of(new ItemCost(Items.GOLD_INGOT, 2)),
+                new ItemStack(Items.EMERALD), 2, 7, 1, 0F, 3);
+        offers.add(storedBlockPayment);
         villager.setOffers(offers);
         MerchantOffer migrated = villager.getOffers().getFirst();
-        h.assertTrue(migrated.getBaseCostA().is(Items.GOLD_BLOCK) && migrated.getBaseCostA().getCount() == 1
-                        && migrated.getCostB().is(Items.GOLD_INGOT) && migrated.getCostB().getCount() == 2,
-                "An old eight-plus-three price becomes one block plus two ingots, still eleven total");
+        h.assertTrue(migrated.getBaseCostA().is(Items.GOLD_INGOT) && migrated.getBaseCostA().getCount() == 8
+                        && migrated.getCostB().is(Items.GOLD_INGOT) && migrated.getCostB().getCount() == 3,
+                "An oversized nine-plus-two price becomes eight-plus-three ingots, still eleven total");
         h.assertTrue(migrated.getUses() == 3 && migrated.getMaxUses() == 7 && migrated.getDemand() == 4,
                 "Payment migration preserves the original stock uses and demand");
+        h.assertTrue(villager.getOffers().get(1) == storedBlockPayment,
+                "An already legal saved block-plus-ingots price is retained rather than revalued or rerolled");
         var tag = new CompoundTag(); villager.saveWithoutId(tag);
         var restored = new Villager(EntityType.VILLAGER, h.getLevel()); restored.load(tag);
-        h.assertTrue(restored.getOffers().size() == 1 && restored.getOffers().getFirst().getUses() == 3
+        h.assertTrue(restored.getOffers().size() == 2 && restored.getOffers().getFirst().getUses() == 3
                         && ingotValue(restored.getOffers().getFirst().getBaseCostA(), Items.GOLD_INGOT)
                         + ingotValue(restored.getOffers().getFirst().getCostB(), Items.GOLD_INGOT) == 11,
                 "The payable price and original stock survive save/load without duplicate offers");
+        MerchantOffer restoredBlockPayment = restored.getOffers().get(1);
+        h.assertTrue(restoredBlockPayment.getBaseCostA().is(Items.GOLD_BLOCK) && restoredBlockPayment.getBaseCostA().getCount() == 1
+                        && restoredBlockPayment.getCostB().is(Items.GOLD_INGOT) && restoredBlockPayment.getCostB().getCount() == 2
+                        && restoredBlockPayment.getUses() == 2 && restoredBlockPayment.getDemand() == 3,
+                "Previously migrated block payments retain the full value, original denomination and stock after save/load");
         villager.discard(); restored.discard(); h.succeed();
     }
     private static int ingotValue(ItemStack stack, Item input) {

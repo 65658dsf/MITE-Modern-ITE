@@ -71,6 +71,7 @@ final class GemBoxCarryClientAudit {
         JsonArray samples = new JsonArray(); result.add("samples", samples);
         int quads = geometry(mc, box, result);
         sound(mc, result);
+        result.add("shared_player_armor_isolation", GemBoxModelIsolationAudit.capture(mc, box, folder));
         result.add("draw_time_arm_pose", GemBoxDrawPoseAudit.capture(mc, box, folder));
         try (NativeImage sheet = new NativeImage(WIDTH * 4, HEIGHT * 4, false)) {
             player.attackAnim = player.oAttackAnim = 0;

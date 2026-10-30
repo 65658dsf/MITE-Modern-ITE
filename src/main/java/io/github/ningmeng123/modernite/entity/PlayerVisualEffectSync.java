@@ -17,7 +17,8 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 @EventBusSubscriber(modid = ModernIte.MOD_ID)
 public final class PlayerVisualEffectSync {
     private static final Map<String, Map<ServerPlayer, Snapshot>> PREVIOUS = Map.of(
-            "bucket_head", new WeakHashMap<>(), "reversed", new WeakHashMap<>());
+            "bucket_head", new WeakHashMap<>(), "reversed", new WeakHashMap<>(),
+            "big_head", new WeakHashMap<>());
 
     private PlayerVisualEffectSync() {}
 

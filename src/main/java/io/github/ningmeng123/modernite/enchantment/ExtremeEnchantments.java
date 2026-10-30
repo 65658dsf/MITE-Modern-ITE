@@ -132,6 +132,9 @@ public final class ExtremeEnchantments {
         if(value==null) result.remove(EMERGENCY_COOLDOWN.get()); else result.set(EMERGENCY_COOLDOWN.get(),value);
     }
     public static boolean guard(ItemStack stack) {
+        var tool = EquipmentDurability.toolProfile(stack);
+        if (tool != null && (tool.family() == io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.ToolFamily.CLUB
+                || tool.family() == io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.ToolFamily.CUDGEL)) return false;
         return level(stack,"defenced")>0 || !IteConfig.bool("player_enchant_defense") && applicable("defenced",stack,false);
     }
     public static int guardDuration() { return IteConfig.integer("player_defence_max_time"); }

@@ -42,6 +42,11 @@ public final class BucketHeadSyncGameTests {
         verifyInitialTracking(h, "reversed");
     }
 
+    @GameTest(template = "gear_empty")
+    public static void startingNativeTrackingReceivesAnAlreadyBigHeadPlayer(GameTestHelper h) {
+        verifyInitialTracking(h, "big_head");
+    }
+
     private static void verifyInitialTracking(GameTestHelper h, String effectId) {
         try (var session = new Session(h, effectId)) {
             session.target.player.addEffect(new MobEffectInstance(ExtremeEffects.VALUES.get(effectId), 200, 0));
@@ -62,6 +67,11 @@ public final class BucketHeadSyncGameTests {
     @GameTest(template = "gear_empty")
     public static void observersReceiveReversedChangesWithoutCountdownPacketSpam(GameTestHelper h) {
         verifyEffectLifecycle(h, "reversed");
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void observersReceiveBigHeadChangesWithoutCountdownPacketSpam(GameTestHelper h) {
+        verifyEffectLifecycle(h, "big_head");
     }
 
     private static void verifyEffectLifecycle(GameTestHelper h, String effectId) {

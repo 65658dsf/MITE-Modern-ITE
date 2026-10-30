@@ -94,4 +94,14 @@ public final class GemBoxArmPose {
                 : GemBoxThirdPersonRendering.palm(model, HumanoidArm.RIGHT)
                         .add(GemBoxThirdPersonRendering.palm(model, HumanoidArm.LEFT)).mul(.5F);
     }
+
+    static Vector3f savedSupportAnchor(HumanoidModel<?> model) {
+        Vector3f anchor = SUPPORT_ANCHORS.get(model);
+        return anchor == null ? null : new Vector3f(anchor);
+    }
+
+    static void restoreSupportAnchor(HumanoidModel<?> model, Vector3f anchor) {
+        if (anchor == null) SUPPORT_ANCHORS.remove(model);
+        else SUPPORT_ANCHORS.put(model, new Vector3f(anchor));
+    }
 }

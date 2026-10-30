@@ -145,6 +145,29 @@ public final class EnchantmentGameTests {
    h.assertTrue(!ExtremeEnchantments.guard(new ItemStack(Items.IRON_SWORD))&&!ExtremeEnchantments.guard(new ItemStack(Items.APPLE)),"Other materials and food do not become guarding tools");
   }finally{IteConfig.setting("player_enchant_defense").set(previous);IteConfig.refresh();}h.succeed();
  }
+ @GameTest(template="gear_empty",batch="ite_config") public static void everyMetalClubCannotStartRightClickGuardEvenWithOldDefenseEnchantment(GameTestHelper h) {
+  boolean previous=IteConfig.bool("player_enchant_defense");
+  try(Session session=new Session(h)) {
+   for(boolean requireEnchantment:new boolean[]{true,false}) {
+    IteConfig.setting("player_enchant_defense").set(requireEnchantment);IteConfig.refresh();
+    for(String material:List.of("copper","silver","gold","iron","ancient_metal","mithril","adamantium","vibranium")) {
+     var item=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("modern_ite:club_"+material));
+     h.assertTrue(item!=Items.AIR,"The real metal club is registered: "+material);
+     for(boolean oldEnchanted:new boolean[]{false,true}) {
+      var stack=new ItemStack(item);if(oldEnchanted)stack.enchant(enchant(h,"defenced"),1);
+      stack=ItemStack.parse(h.getLevel().registryAccess(),stack.save(h.getLevel().registryAccess())).orElseThrow();
+      session.player.stopUsingItem();session.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,stack);
+      h.assertFalse(ExtremeEnchantments.guard(stack),"A club cannot regain guarding from an old enchantment or configuration: "+material);
+      h.assertTrue(stack.getUseAnimation()!=net.minecraft.world.item.UseAnim.BLOCK,"A club has no right-click block pose");
+      var result=stack.getItem().use(h.getLevel(),session.player,net.minecraft.world.InteractionHand.MAIN_HAND);
+      h.assertFalse(result.getResult().consumesAction()||session.player.isUsingItem(),"Real item use leaves attacks available and never starts a club block");
+      h.assertTrue(Math.abs(io.github.ningmeng123.mite.combat.SourcePlayerReach.baseMeleeReach(stack,3D)-3D)<.00001D,
+              "Every actual ITE club shares the sword's complete three-block baseline");
+     }
+    }
+   }
+  }finally{IteConfig.setting("player_enchant_defense").set(previous);IteConfig.refresh();}h.succeed();
+ }
  private static final class Session implements AutoCloseable {
   final ServerPlayer player;final EmbeddedChannel channel;
   Session(GameTestHelper h) {

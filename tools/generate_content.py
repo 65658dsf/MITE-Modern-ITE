@@ -142,6 +142,7 @@ metals=['copper','silver','gold','iron','ancient_metal','mithril','adamantium','
 lantern_models(['mithril','adamantium','vibranium'],['秘银','艾德曼','振金'])
 for metal,cn in zip(metals,metal_cn):
     id='club_'+metal;named(id,cn+'棒',metal.replace('_',' ').title()+' Club');model(id,parent='minecraft:item/handheld');tex(EX,f'assets/extreme/textures/items/club/{metal}_club.png','item/'+id)
+    save(f'data/modern_ite/weapon_attributes/{id}.json', {'parent':'bettercombat:sword'})
 for suffix,source in [('', 'standby'),('_pulling_0','pulling_0'),('_pulling_1','pulling_1'),('_pulling_2','pulling_2'),('_arrow','arrow')]:
     tex(EX,'assets/extreme/textures/items/crossbow/crossbow_'+source+'.png','item/crossbow'+suffix)
     model('crossbow'+suffix,parent='minecraft:item/crossbow')

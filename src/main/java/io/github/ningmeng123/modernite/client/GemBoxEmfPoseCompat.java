@@ -10,10 +10,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.HumanoidArm;
 
 /** Restore only the carrying arms after optional EMF animation hooks. @author NingMeng123 */
 public final class GemBoxEmfPoseCompat {
@@ -37,14 +39,64 @@ public final class GemBoxEmfPoseCompat {
         captureTree(player.leftArm, seen, parts);
         captureTree(player.rightSleeve, seen, parts);
         captureTree(player.leftSleeve, seen, parts);
+        remember(root, model, entity, parts, false, List.of());
+    }
+
+    /** Armor has its own EMF root and receives the same late animation callbacks as the skin. */
+    public static void captureArmor(HumanoidModel<?> model, LivingEntity entity) {
+        Object root = root(model);
+        if (root == null || !GemBoxArmPose.active(entity)) return;
+        // Keep the armor pack's child-part inflation and detail animation independent.
+        remember(root, model, entity, List.of(new PartPose(model.rightArm), new PartPose(model.leftArm)), false, List.of());
+    }
+
+    /** ISMAH prepares one armor arm immediately before its EMF root animates and draws. */
+    public static void captureFirstPersonArmor(HumanoidModel<?> model, HumanoidArm arm) {
+        LivingEntity entity = Minecraft.getInstance().player;
+        if (entity == null || !GemBoxArmPose.active(entity) || !GemBoxRenderState.borrowed(model)) return;
+        Object root = root(model);
+        if (root == null) return;
+        Set<ModelPart> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        List<PartVisibility> visibility = new ArrayList<>();
+        for (ModelPart part : List.of(model.head, model.hat, model.body, model.rightArm, model.leftArm, model.rightLeg, model.leftLeg))
+            part.getAllParts().filter(seen::add).forEach(child -> visibility.add(new PartVisibility(child)));
+        remember(root, model, entity,
+                List.of(new PartPose(arm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm)), true, visibility);
+    }
+
+    private static void remember(Object root, HumanoidModel<?> model, LivingEntity entity,
+            List<PartPose> parts, boolean firstPerson, List<PartVisibility> visibility) {
         POSES.put(root, new CarryPose(new WeakReference<>(model), new WeakReference<>(entity),
-                entity.getUUID(), List.copyOf(parts)));
+                entity.getUUID(), List.copyOf(parts), firstPerson, List.copyOf(visibility)));
     }
 
     /** Clear before each native first-person hand render, which reuses the player model. */
     public static void clear(HumanoidModel<?> model) {
         Object root = root(model);
         if (root != null) POSES.remove(root);
+    }
+
+    /** Preserve an outer carrying pass when first-person or another player's nested draw reuses its root. */
+    public static PoseScope preserve(HumanoidModel<?> model) {
+        Object root = root(model);
+        return new PoseScope(root, root == null ? null : POSES.get(root));
+    }
+
+    public static final class PoseScope implements AutoCloseable {
+        private final Object root;
+        private final CarryPose previous;
+        private boolean closed;
+        private PoseScope(Object root, CarryPose previous) { this.root = root; this.previous = previous; }
+        @Override public void close() {
+            if (closed || root == null) return;
+            closed = true;
+            POSES.remove(root);
+            if (previous == null) return;
+            HumanoidModel<?> model = previous.model.get();
+            LivingEntity entity = previous.entity.get();
+            if (model != null && entity != null && GemBoxArmPose.active(entity) && root(model) == root)
+                POSES.put(root, previous);
+        }
     }
 
     /** Called at EMFModelPartRoot.animate TAIL, after every EMF onAnimationEnd callback. */
@@ -59,11 +111,12 @@ public final class GemBoxEmfPoseCompat {
         }
         try {
             Object state = EMF.state.invoke(null);
-            if (state == null || Boolean.TRUE.equals(EMF.firstPersonHand.invoke(state))) return;
+            if (state == null || Boolean.TRUE.equals(EMF.firstPersonHand.invoke(state)) != saved.firstPerson) return;
             Object current = EMF.entity.invoke(state);
             // One skin renderer/root may render several players consecutively.
             if (current != entity || !entity.getUUID().equals(saved.uuid) || root(model) != root) return;
             for (PartPose part : saved.parts) part.restore();
+            for (PartVisibility part : saved.visibility) part.restore();
         } catch (ReflectiveOperationException | LinkageError ignored) {
             POSES.remove(root);
         }
@@ -83,7 +136,15 @@ public final class GemBoxEmfPoseCompat {
     }
 
     private record CarryPose(WeakReference<HumanoidModel<?>> model, WeakReference<LivingEntity> entity,
-            UUID uuid, List<PartPose> parts) {}
+            UUID uuid, List<PartPose> parts, boolean firstPerson, List<PartVisibility> visibility) {}
+
+    private record PartVisibility(WeakReference<ModelPart> part, boolean visible, boolean skipDraw) {
+        private PartVisibility(ModelPart part) { this(new WeakReference<>(part), part.visible, part.skipDraw); }
+        private void restore() {
+            ModelPart target = part.get();
+            if (target != null) { target.visible = visible; target.skipDraw = skipDraw; }
+        }
+    }
 
     private record PartPose(WeakReference<ModelPart> part, float x, float y, float z,
             float xRot, float yRot, float zRot, float xScale, float yScale, float zScale) {

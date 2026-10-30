@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
@@ -168,6 +169,13 @@ public final class ResourceContentGameTests {
         h.assertTrue(nether.getGenerationSettings().features().stream().flatMap(set->set.stream())
                 .anyMatch(holder->holder.unwrapKey().map(key->key.location().equals(ExtremeContent.id("nether_adamantium_ore"))).orElse(false)),"Nether adamantium ore really enters nether biome generation");
         h.assertTrue(stack("modern_ite:maple_log").is(ItemTags.LOGS)&&stack("modern_ite:maple_planks").is(ItemTags.PLANKS),"Maple enters existing wood crafting tags");
+        ItemStack mapleLeaves=stack("modern_ite:maple_leaves");
+        h.assertValueEqual(mapleLeaves.getItem().components().get(DataComponents.MAX_STACK_SIZE),8,"The real maple-leaf item receives the shared eight-leaf registry default");
+        h.assertValueEqual(mapleLeaves.getMaxStackSize(),8,"Actual maple-leaf inventory operations use the eight-item cap");
+        mapleLeaves.setCount(8);
+        ItemStack loadedLeaves=ItemStack.parse(h.getLevel().registryAccess(),mapleLeaves.save(h.getLevel().registryAccess())).orElseThrow();
+        h.assertTrue(loadedLeaves.is(mapleLeaves.getItem())&&loadedLeaves.getCount()==8,"Saving and loading preserves the complete maple-leaf stack");
+        h.assertValueEqual(loadedLeaves.getMaxStackSize(),8,"Saved maple leaves retain the same shared eight-item cap");
         var leaves=ExtremeContent.MAPLE_LEAVES.get().defaultBlockState();BlockPos pos=h.absolutePos(new BlockPos(1,1,1));int saplings=0;
         for(int i=0;i<400;i++)for(ItemStack drop:Block.getDrops(leaves,h.getLevel(),pos,null))if(drop.is(ExtremeContent.MAPLE_SAPLING.get().asItem()))saplings+=drop.getCount();
         h.assertTrue(saplings>0,"Actual natural maple-leaf loot can renew the tree from saplings");

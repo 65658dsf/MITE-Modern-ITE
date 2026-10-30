@@ -29,6 +29,7 @@ import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.WalkAnimationState;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -168,6 +169,10 @@ final class GemBoxDrawPoseAudit {
 
     /** Preserve the native ETF/EMF render-context lifecycle; never mount a synthetic mod state. */
     static void renderThroughDispatcher(Minecraft mc, PoseStack pose, MultiBufferSource buffers) {
+        renderThroughDispatcher(mc, mc.player, pose, buffers);
+    }
+
+    static void renderThroughDispatcher(Minecraft mc, Entity entity, PoseStack pose, MultiBufferSource buffers) {
         var dispatcher = mc.getEntityRenderDispatcher();
         boolean shadows;
         try {
@@ -179,7 +184,7 @@ final class GemBoxDrawPoseAudit {
         boolean hitboxes = dispatcher.shouldRenderHitBoxes();
         dispatcher.setRenderShadow(false); dispatcher.setRenderHitBoxes(false);
         try {
-            dispatcher.render(mc.player, 0, 0, 0, 0, 1, pose, buffers, LightTexture.FULL_BRIGHT);
+            dispatcher.render(entity, 0, 0, 0, 0, 1, pose, buffers, LightTexture.FULL_BRIGHT);
         } finally {
             dispatcher.setRenderShadow(shadows); dispatcher.setRenderHitBoxes(hitboxes);
         }

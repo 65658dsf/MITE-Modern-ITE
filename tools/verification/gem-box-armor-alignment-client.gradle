@@ -1,0 +1,10 @@
+// Actual ISMAH and Traben armor vertex regression. Author: NingMeng123.
+gradle.projectsEvaluated {
+    def auditProject = gradle.rootProject
+    auditProject.extensions.getByName('neoForge').runs.named('client') {
+        systemProperty 'modern_ite.mobRenderAudit', 'true'
+        systemProperty 'modern_ite.gemBoxArmorAlignmentAudit', 'true'
+        systemProperty 'modern_ite.mobRenderAuditOutput', auditProject.file('build/verification/gem-box-armored-hand-actual/audit.json').absolutePath
+        programArguments.addAll '--width', '1280', '--height', '900'
+    }
+}

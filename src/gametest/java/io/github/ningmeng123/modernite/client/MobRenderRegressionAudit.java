@@ -214,6 +214,22 @@ public final class MobRenderRegressionAudit {
                 report.addProperty("render_target_height", forging.get("render_height").getAsInt());
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.playerRenderIsolationAudit")) {
+                report.addProperty("scope", "Shared gem-box player/armor state, nested render failure and tracked-player big-head packets");
+                try (GemBoxMovementAudit.State movement = new GemBoxMovementAudit.State(mc)) {
+                    movement.stage(GemBoxMovementAudit.Mode.IDLE, 0);
+                    report.add("shared_player_armor_isolation", GemBoxModelIsolationAudit.capture(mc,
+                            new ItemStack(io.github.ningmeng123.modernite.gear.ExtremeGear.GEM_BOX.get()), screenshots()));
+                }
+                verifyPlayerHead(mc);
+                return;
+            }
+            if (Boolean.getBoolean("modern_ite.gemBoxArmorAlignmentAudit")) {
+                report.addProperty("scope", "Live carrying skin/armor alignment with actual ISMAH first-person and Traben 3D armor callbacks");
+                report.add("carrier_armor_alignment", GemBoxArmorAlignmentAudit.capture(mc,
+                        new ItemStack(io.github.ningmeng123.modernite.gear.ExtremeGear.GEM_BOX.get()), screenshots()));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.gemBoxAudit")) {
                 report.addProperty("scope", "Solid 3D gem chest, both native skin hands, lifting and walking, complete third-person player rendering");
                 report.add("gem_box", GemBoxCarryClientAudit.capture(mc,

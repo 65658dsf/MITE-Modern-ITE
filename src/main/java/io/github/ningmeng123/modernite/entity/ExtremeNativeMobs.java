@@ -278,12 +278,6 @@ public final class ExtremeNativeMobs {
             if(attacker instanceof Player player&&d.getRandom().nextFloat()<IteConfig.number("Entities.ender_dragon_attack_wither_chance"))player.addEffect(new MobEffectInstance(MobEffects.WITHER,200));
         }
         if(attacker instanceof IronGolem golem&&golem.getType()==EntityType.IRON_GOLEM&&src.getDirectEntity()==attacker)event.setAmount(25+(golemBoosted(golem)?3:0));
-        if(victim instanceof Player player&&player.isUsingItem()&&!ExtremeEnchantments.guard(player.getUseItem())
-                &&BuiltInRegistries.ITEM.getKey(player.getUseItem().getItem()).toString().startsWith("modern_ite:club_")
-                &&!src.is(DamageTypeTags.BYPASSES_SHIELD)&&src.getSourcePosition()!=null){
-            Vec3 direction=src.getSourcePosition().subtract(player.position()).multiply(1,0,1).normalize();
-            if(player.getViewVector(1).multiply(1,0,1).dot(direction)>0){event.setAmount(event.getAmount()*.5F);player.playSound(SoundEvents.SHIELD_BLOCK,.7F,1.2F);EquipmentDurability.hurt(player.getUseItem(),1,player,player.getUsedItemHand()==net.minecraft.world.InteractionHand.MAIN_HAND?EquipmentSlot.MAINHAND:EquipmentSlot.OFFHAND);}
-        }
         if(victim instanceof Bat&&victim.getPersistentData().hasUUID("modern_ite:summoner")&&src.is(DamageTypeTags.WITCH_RESISTANT_TO))event.setCanceled(true);
     }
     @SubscribeEvent public static void damaged(LivingDamageEvent.Post event){

@@ -117,33 +117,35 @@ public final class GemBoxCarryRendering {
         var player = mc.player;
         PlayerRenderer renderer = (PlayerRenderer) mc.getEntityRenderDispatcher().getRenderer(player);
         var model = renderer.getModel();
-        GemBoxEmfPoseCompat.clear(model);
-        // Match PlayerRenderer.renderHand's setup before resolving the actual slim/normal palm.
-        model.attackTime = 0;
-        model.crouching = false;
-        model.swimAmount = 0;
-        model.setupAnim(player, 0, 0, 0, 0, 0);
-        var part = arm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm;
-        part.xRot = 0;
-        int side = arm == HumanoidArm.RIGHT ? 1 : -1;
-        PoseStack orientation = new PoseStack();
-        orientation.mulPose(Axis.ZP.rotationDegrees(side * 25F - searching * 60F));
-        orientation.mulPose(Axis.XP.rotationDegrees(130F - searching * 95F - extraction * 20F));
-        orientation.scale(1, -1, -1);
-        PoseStack palm = new PoseStack();
-        palm.mulPose(orientation.last().pose());
-        model.translateToHand(arm, palm);
-        Vector3f grip = palm.last().pose().transformPosition(-side / 16F, 9F / 16F, 0, new Vector3f());
-        PoseStack pose = event.getPoseStack();
-        pose.pushPose();
-        try {
-            pose.translate(target.x - grip.x, target.y - grip.y, target.z - grip.z);
-            pose.mulPose(orientation.last().pose());
-            if (arm == HumanoidArm.RIGHT)
-                renderer.renderRightHand(pose, event.getMultiBufferSource(), event.getPackedLight(), player);
-            else renderer.renderLeftHand(pose, event.getMultiBufferSource(), event.getPackedLight(), player);
-        } finally {
-            pose.popPose();
+        try (GemBoxRenderState saved = ((GemBoxRenderState.Owner)renderer).modernite$captureGemBoxRenderState()) {
+            GemBoxEmfPoseCompat.clear(model);
+            // Match PlayerRenderer.renderHand's setup before resolving the actual slim/normal palm.
+            model.attackTime = 0;
+            model.crouching = false;
+            model.swimAmount = 0;
+            model.setupAnim(player, 0, 0, 0, 0, 0);
+            var part = arm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm;
+            part.xRot = 0;
+            int side = arm == HumanoidArm.RIGHT ? 1 : -1;
+            PoseStack orientation = new PoseStack();
+            orientation.mulPose(Axis.ZP.rotationDegrees(side * 25F - searching * 60F));
+            orientation.mulPose(Axis.XP.rotationDegrees(130F - searching * 95F - extraction * 20F));
+            orientation.scale(1, -1, -1);
+            PoseStack palm = new PoseStack();
+            palm.mulPose(orientation.last().pose());
+            model.translateToHand(arm, palm);
+            Vector3f grip = palm.last().pose().transformPosition(-side / 16F, 9F / 16F, 0, new Vector3f());
+            PoseStack pose = event.getPoseStack();
+            pose.pushPose();
+            try {
+                pose.translate(target.x - grip.x, target.y - grip.y, target.z - grip.z);
+                pose.mulPose(orientation.last().pose());
+                if (arm == HumanoidArm.RIGHT)
+                    renderer.renderRightHand(pose, event.getMultiBufferSource(), event.getPackedLight(), player);
+                else renderer.renderLeftHand(pose, event.getMultiBufferSource(), event.getPackedLight(), player);
+            } finally {
+                pose.popPose();
+            }
         }
     }
 }
