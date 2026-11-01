@@ -13,7 +13,7 @@ repositories {
         content { includeGroup 'mezz.jei' }
     }
 }
-def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.2.16.jar'))
+def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.3.0.jar'))
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output
