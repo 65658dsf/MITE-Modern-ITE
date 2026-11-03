@@ -27,7 +27,7 @@ public final class IteConfigGameTests {
 
     @GameTest(template="gear_empty",batch="ite_config")
     public static void settingsOnlyExposeTheAuditedImplementedKeys(GameTestHelper h) {
-        Set<String> known=new HashSet<>(Set.of(("first_day_longer_day_time in_rain_debuff_time player_enchant_defense "
+        Set<String> known=new HashSet<>(Set.of(("first_day_longer_day_time longer_day_time_end_day in_rain_debuff_time player_enchant_defense "
                 +"player_defense_cooldown player_defence_max_time underworld_random_teleport underworld_random_teleport_time_new "
                 +"netherrack_damage netherrack_damage_limit_day crit_enchantment_chance_boost_per_lvl crit_enchantment_damage_boost_per_lvl "
                 +"emergency_cooldown_ emergency_cooldown_reduce_every_armor emergency_health_recover_amount conqueror_damage_boost_per_lvl "
@@ -53,9 +53,23 @@ public final class IteConfigGameTests {
             h.assertTrue(option.path().getLast().equals(option.key()),"Config paths retain their old JSON leaf keys");
         }
         h.assertTrue(actual.equals(known)&&actual.equals(IteConfig.defaults().keySet()),"The schema exactly matches the audited implemented settings");
-        h.assertTrue(actual.size()==160,"All 160 selected extension settings are registered");
+        h.assertTrue(actual.size()==161,"All 161 selected extension settings are registered");
         for(String unsupported:Set.of("overworld_adamantite_ore","underworld_mantle_block_offset","copper_frequency_overworld","copper_chance_underworld"))
             h.assertTrue(!actual.contains(unsupported),"An unimplemented legacy effect is not exposed as a nonfunctional control: "+unsupported);
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
+    public static void daylightEndDayKeepsTypedBoundsAndTheExistingDefault(GameTestHelper h) {
+        String key="longer_day_time_end_day";
+        h.assertTrue(IteConfig.defaults().get(key).equals(32)&&IteConfig.setting(key).getDefault().equals(32),
+                "Existing worlds without the new field preserve the day-32 cutoff");
+        for(Object invalid:new Object[]{0,-1,1_000_001,12.5D,Double.NaN,"64",false})
+            h.assertTrue(IteConfig.validated(Map.of(key,invalid)).get(key).equals(32),
+                    "Invalid cutoff values use the safe integer default: "+invalid);
+        for(int day:new int[]{1,2,32,64,1_000_000})
+            h.assertTrue(IteConfig.validated(Map.of(key,day)).get(key).equals(day),
+                    "Valid cutoff dates remain editable and synchronize as integers: "+day);
         h.succeed();
     }
 
@@ -96,13 +110,15 @@ public final class IteConfigGameTests {
         try {
             var source=new HashMap<>(IteConfig.localSnapshot());source.put("in_rain_debuff_time",17);
             source.put("conqueror_damage_boost_per_lvl",2.125D);source.put("netherrack_damage",false);
+            source.put("longer_day_time_end_day",64);
             var payload=new IteConfigSync(source);source.put("in_rain_debuff_time",99);
             h.assertTrue(payload.values().get("in_rain_debuff_time").equals(17)&&immutable(payload.values()),"Payload construction detaches and freezes the sender's map");
             IteConfigSync.CODEC.encode(buffer,payload);var decoded=IteConfigSync.CODEC.decode(buffer);
             h.assertTrue(decoded.values().get("in_rain_debuff_time") instanceof Integer,"JSON numeric decoding restores integer settings to their schema type");
             IteConfig.receiveServerSnapshot(decoded.values());
             h.assertTrue(IteConfig.integer("in_rain_debuff_time")==17&&IteConfig.number("conqueror_damage_boost_per_lvl")==2.125D
-                    &&!IteConfig.bool("netherrack_damage"),"The received server values become the effective integer, double and false settings");
+                    &&!IteConfig.bool("netherrack_damage")&&IteConfig.integer("longer_day_time_end_day")==64,
+                    "The received server values become the effective integer, double and false settings, including the daylight cutoff");
             h.assertTrue(immutable(IteConfig.effectiveSnapshot()),"The effective server map is immutable as well");
             IteConfig.clearServerSnapshot();
             h.assertTrue(IteConfig.effectiveSnapshot()==IteConfig.localSnapshot(),"The same clear operation used by client disconnect restores the local snapshot");

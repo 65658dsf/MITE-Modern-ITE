@@ -33,7 +33,8 @@ public final class IteConfig {
     private static volatile Map<String,Object> remote;
     static {
         var builder=new ModConfigSpec.Builder();
-        add(builder, "GameMechanics", "first_day_longer_day_time", true, 0D, 1D, "前期双倍白天。历史最高日期达到第32天前，白天日历以半速推进；夜晚、AI和生产速度不变。");
+        add(builder, "GameMechanics", "first_day_longer_day_time", true, 0D, 1D, "前期双倍白天。历史最高日期达到双倍白天结束日期前，白天日历以半速推进；夜晚、AI和生产速度不变。");
+        add(builder, "GameMechanics", "longer_day_time_end_day", 32, 1D, 1000000D, "双倍白天结束日期（天）。历史最高日期达到此日期当天起恢复正常白天，默认32（第1～31天双倍白天）；设为1则始终使用正常白天。需要开启前期双倍白天，保存后生效。");
         add(builder, "GameMechanics", "in_rain_debuff_time", 3600, 1D, 100000000D, "淋雨虚弱阈值（tick）。累计淋雨达到此时间后施加虚弱；在遮蔽处计数逐tick减少。");
         add(builder, "GameMechanics", "player_enchant_defense", true, 0D, 1D, "武器格挡需要附魔。关闭后，原本支持格挡附魔的振金工具可直接格挡；不改变武器适用范围。");
         add(builder, "GameMechanics", "player_defense_cooldown", 160, 0D, 100000000D, "武器格挡冷却（tick）。结束武器格挡后施加的物品冷却。");

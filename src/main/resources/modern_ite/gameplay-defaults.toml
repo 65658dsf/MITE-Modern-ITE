@@ -2,6 +2,7 @@
 # Explicit gameplay adjustments take precedence. Author: NingMeng123
 [GameMechanics]
 	first_day_longer_day_time = true
+	longer_day_time_end_day = 32
 	in_rain_debuff_time = 3600
 	player_enchant_defense = true
 	player_defense_cooldown = 160

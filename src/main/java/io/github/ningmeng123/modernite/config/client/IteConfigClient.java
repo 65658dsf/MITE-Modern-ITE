@@ -27,6 +27,7 @@ public final class IteConfigClient {
     public static void register(ModContainer mod) {
         container = mod;
         mod.registerExtensionPoint(IConfigScreenFactory.class, IteSettingsScreen::new);
+        io.github.ningmeng123.mite.client.config.ConfigSearchIndex.registerProvider(ModernIte.MOD_ID, IteConfigSearch::entries);
     }
 
     public static boolean editable() {

@@ -23,7 +23,6 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 public final class ExtremeWorldState {
     private static final String DATA_NAME = "modern_ite_world_state";
     private static final long GRACE_END_TIME = 37_000L;
-    private static final long FIRST_BLOOD_DAY = 32L;
     private static final Map<MinecraftServer, Snapshot> SNAPSHOTS =
             Collections.synchronizedMap(new WeakHashMap<>());
     private static final Snapshot INITIAL = new Snapshot(false);
@@ -79,7 +78,8 @@ public final class ExtremeWorldState {
     }
 
     static float dayTimePerTick(long dayTime, long highestDay) {
-        return io.github.ningmeng123.modernite.config.IteConfig.bool("first_day_longer_day_time") && highestDay < FIRST_BLOOD_DAY
+        return io.github.ningmeng123.modernite.config.IteConfig.bool("first_day_longer_day_time")
+                && highestDay < io.github.ningmeng123.modernite.config.IteConfig.integer("longer_day_time_end_day")
                 && LunarCalendar.daytime((int) Math.floorMod(dayTime, 24_000L)) ? .5F : -1F;
     }
 

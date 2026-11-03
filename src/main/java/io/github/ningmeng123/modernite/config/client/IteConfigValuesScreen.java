@@ -21,8 +21,14 @@ public final class IteConfigValuesScreen extends Screen {
     private int matchCount;
 
     public IteConfigValuesScreen(Screen parent) {
+        this(parent, "");
+    }
+
+    /** Start the authoritative values browser at the setting selected by the global search. */
+    public IteConfigValuesScreen(Screen parent, String query) {
         super(Component.translatable("modern_ite.config.values"));
         this.parent = parent;
+        this.query = query == null ? "" : query;
     }
 
     @Override

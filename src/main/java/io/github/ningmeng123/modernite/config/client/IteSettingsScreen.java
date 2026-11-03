@@ -69,7 +69,7 @@ public final class IteSettingsScreen extends Screen {
     @Override
     public void onClose() { minecraft.setScreen(parent); }
 
-    private static List<Integer> nativeSpawnWeights(EntityType<?> type) {
+    static List<Integer> nativeSpawnWeights(EntityType<?> type) {
         if(type==io.github.ningmeng123.modernite.entity.RabidDogContent.RABID_DOG.get())return List.of(5);
         for(var kind:ExtremeKind.values())if(ExtremeMobs.type(kind)==type)return List.of(ExtremeMobs.spawnWeight(kind));
         return List.of();

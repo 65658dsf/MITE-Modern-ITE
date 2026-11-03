@@ -84,6 +84,47 @@ public final class ExtremeWorldStateGameTests {
     }
 
     @GameTest(template="gear_empty",batch="spawn_balance")
+    public static void configuredDaylightCutoffRefreshesTheNativeClockImmediately(GameTestHelper h) {
+        var level=h.getLevel().getServer().overworld();var history=BloodMoonInvasionData.get(level);
+        var before=io.github.ningmeng123.modernite.config.IteConfig.localSnapshot();
+        long time=level.getDayTime(),highest=history.highestDay();boolean dirty=history.isDirty();
+        boolean grace=ExtremeWorldState.graceEnded(level);
+        float rate=level.getDayTimePerTick();
+        try {
+            io.github.ningmeng123.modernite.config.IteConfig.setting("first_day_longer_day_time").set(true);
+            io.github.ningmeng123.modernite.config.IteConfig.setting("longer_day_time_end_day").set(64);
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            level.setDayTime(62*24_000L+6000);history.restoreProgress(63);
+            ExtremeWorldState.beforeLevelTick(new LevelTickEvent.Pre(()->true,level));
+            h.assertTrue(level.getDayTimePerTick()==.5F,"A later configured cutoff extends double daylight beyond day 32");
+            level.setDayTime(63*24_000L);history.restoreProgress(64);
+            ExtremeWorldState.beforeLevelTick(new LevelTickEvent.Pre(()->true,level));
+            h.assertTrue(level.getDayTimePerTick()==-1F,"The cutoff day itself restores the normal native clock");
+            level.setDayTime(6000);history.restoreProgress(64);
+            ExtremeWorldState.beforeLevelTick(new LevelTickEvent.Pre(()->true,level));
+            h.assertTrue(level.getDayTimePerTick()==-1F,"Rewinding current time cannot bypass the historical cutoff");
+            io.github.ningmeng123.modernite.config.IteConfig.setting("longer_day_time_end_day").set(65);
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            ExtremeWorldState.beforeLevelTick(new LevelTickEvent.Pre(()->true,level));
+            h.assertTrue(level.getDayTimePerTick()==.5F,"Saving a later cutoff affects the running world on the next level tick");
+            h.assertTrue(ExtremeWorldState.dayTimePerTick(18_000,64)==-1F,"A later cutoff still leaves nighttime at native speed");
+            io.github.ningmeng123.modernite.config.IteConfig.setting("first_day_longer_day_time").set(false);
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            h.assertTrue(ExtremeWorldState.dayTimePerTick(6000,1)==-1F,"The original toggle continues to disable double daylight");
+            io.github.ningmeng123.modernite.config.IteConfig.setting("first_day_longer_day_time").set(true);
+            io.github.ningmeng123.modernite.config.IteConfig.setting("longer_day_time_end_day").set(1);
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            h.assertTrue(ExtremeWorldState.dayTimePerTick(6000,1)==-1F,"Cutoff day one never starts double daylight");
+        } finally {
+            before.forEach((key,value)->io.github.ningmeng123.modernite.config.IteConfig.setting(key).set(value));
+            io.github.ningmeng123.modernite.config.IteConfig.refresh();
+            level.setDayTime(time);history.restoreProgress(highest);history.setDirty(dirty);
+            ExtremeWorldState.restoreGraceEnded(level,grace);level.setDayTimePerTick(rate);
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="spawn_balance")
     public static void levelTickUpdatesTheNativeRateWithoutEnablingStoppedTime(GameTestHelper h) {
         var level=h.getLevel().getServer().overworld();var history=BloodMoonInvasionData.get(level);
         long time=level.getDayTime(),highest=history.highestDay();boolean dirty=history.isDirty();
