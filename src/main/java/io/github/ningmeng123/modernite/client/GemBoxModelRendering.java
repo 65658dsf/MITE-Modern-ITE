@@ -3,6 +3,7 @@ package io.github.ningmeng123.modernite.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.content.wither.WitherTreasureItem;
 import io.github.ningmeng123.modernite.gear.GemBoxItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -25,6 +26,10 @@ public final class GemBoxModelRendering {
             ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "item/gem_box_body"));
     public static final ModelResourceLocation LID_MODEL = ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "item/gem_box_lid"));
+    public static final ModelResourceLocation WITHER_BODY_MODEL = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "item/wither_treasure_body"));
+    public static final ModelResourceLocation WITHER_LID_MODEL = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "item/wither_treasure_lid"));
     private static final float HINGE_Y = 8.1F / 16F - .5F;
     private static final float HINGE_Z = 13F / 16F - .5F;
 
@@ -34,6 +39,16 @@ public final class GemBoxModelRendering {
     public static void registerModels(ModelEvent.RegisterAdditional event) {
         event.register(BODY_MODEL);
         event.register(LID_MODEL);
+        event.register(WITHER_BODY_MODEL);
+        event.register(WITHER_LID_MODEL);
+    }
+
+    public static ModelResourceLocation bodyModel(ItemStack stack) {
+        return stack.getItem() instanceof WitherTreasureItem ? WITHER_BODY_MODEL : BODY_MODEL;
+    }
+
+    public static ModelResourceLocation lidModel(ItemStack stack) {
+        return stack.getItem() instanceof WitherTreasureItem ? WITHER_LID_MODEL : LID_MODEL;
     }
 
     /** The lid is fully open before the reaching/searching/withdrawal phases start. */
@@ -47,8 +62,8 @@ public final class GemBoxModelRendering {
         Minecraft mc = Minecraft.getInstance();
         float partialTick = mc.getTimer().getGameTimeDeltaPartialTick(true);
         float progress = GemBoxItem.openingProgress(stack, entity.level(), partialTick);
-        var body = mc.getModelManager().getModel(BODY_MODEL);
-        var lid = mc.getModelManager().getModel(LID_MODEL);
+        var body = mc.getModelManager().getModel(bodyModel(stack));
+        var lid = mc.getModelManager().getModel(lidModel(stack));
         if (progress <= 0F || body == mc.getModelManager().getMissingModel() || lid == mc.getModelManager().getMissingModel()) {
             mc.getItemRenderer().renderStatic(entity, stack, ItemDisplayContext.NONE, false, pose, buffers,
                     entity.level(), light, OverlayTexture.NO_OVERLAY, entity.getId());

@@ -23,6 +23,7 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AnimalArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraft.world.level.Level;
@@ -58,6 +59,8 @@ public final class ExtremeGear {
             COMPONENTS.registerComponentType("gem_box_open_started", builder -> builder.networkSynchronized(ByteBufCodecs.VAR_LONG));
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> GEM_BOX_REVEALED_GEM =
             COMPONENTS.registerComponentType("gem_box_revealed_gem", builder -> builder.networkSynchronized(ByteBufCodecs.VAR_INT));
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ItemContainerContents>> GEM_BOX_REVEALED_REWARD =
+            COMPONENTS.registerComponentType("gem_box_revealed_reward", builder -> builder.networkSynchronized(ItemContainerContents.STREAM_CODEC));
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<GemSockets>> SOCKETS =
             COMPONENTS.registerComponentType("gem_sockets_v1", builder -> builder.persistent(GemSockets.CODEC)
                     .networkSynchronized(ByteBufCodecs.fromCodec(GemSockets.CODEC)));

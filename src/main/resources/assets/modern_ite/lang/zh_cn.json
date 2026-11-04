@@ -709,5 +709,11 @@
   "tooltip.modern_ite.gem_target_equipment": "可镶嵌于工具、武器或护甲",
   "subtitles.modern_ite.gem_box.open": "宝石箱开启",
   "subtitles.modern_ite.gem_box.rummage": "翻找箱内物品",
-  "subtitles.modern_ite.gem_box.reveal": "宝石轻响"
+  "subtitles.modern_ite.gem_box.reveal": "宝石轻响",
+  "item.modern_ite.wither_treasure": "凋零宝藏",
+  "tooltip.modern_ite.wither_treasure_open": "右键开启，完成开箱后消耗一个并获得随机奖励",
+  "tooltip.modern_ite.wither_treasure_gems": "3级宝石 30% · 4级 20% · 5级 10% · 6级 5%",
+  "tooltip.modern_ite.wither_treasure_other": "10–20颗钻石 20% · 随机满级附魔书 15%",
+  "tooltip.modern_ite.wither_treasure_source": "仅强化凋零掉落，每只固定5个",
+  "message.modern_ite.wither_treasure_no_enchantments": "没有可用的附魔，宝藏未消耗。"
 }

@@ -3,7 +3,6 @@ package io.github.ningmeng123.modernite.mixin.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.ningmeng123.modernite.client.GemBoxArmPose;
 import io.github.ningmeng123.modernite.client.GemBoxThirdPersonRendering;
-import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
@@ -24,7 +23,7 @@ public abstract class GemBoxHeldItemMixin {
     private void modernite$twoHandedGemBox(LivingEntity entity, ItemStack stack, ItemDisplayContext context,
             HumanoidArm arm, PoseStack pose, MultiBufferSource buffers, int light, CallbackInfo ci) {
         if (GemBoxArmPose.hiddenForMovement(entity)) {
-            if (stack.is(ExtremeGear.GEM_BOX.get())) ci.cancel();
+            if (GemBoxArmPose.isBox(stack)) ci.cancel();
             return;
         }
         if (!GemBoxArmPose.active(entity)) return;

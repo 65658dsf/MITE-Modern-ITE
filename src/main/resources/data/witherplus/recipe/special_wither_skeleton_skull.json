@@ -1,0 +1,10 @@
+{
+  "neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "witherplus"}],
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["MMM", "MSM", "MMM"],
+  "key": {
+    "M": {"item": "minecraft:magma_block"},
+    "S": {"item": "minecraft:wither_skeleton_skull"}
+  },
+  "result": {"id": "witherplus:special_wither_skeleton_skull", "count": 1}
+}

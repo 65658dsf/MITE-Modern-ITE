@@ -149,7 +149,8 @@ public final class ResourceContentGameTests {
                 if(!ingredient.isEmpty())h.assertTrue(ingredient.getItems().length>0,"Loaded source recipe has a resolved item/tag ingredient: "+holder.id());
         }
         Set<String> worldOrRuntime=Set.of("fancy_red_ore","nether_adamantium_ore","maple_log","maple_leaves","maple_sapling",
-                "voucher_fishing","voucher_planting","voucher_villager","crossbow","iron_bucket_helmet");
+                "voucher_fishing","voucher_planting","voucher_villager","crossbow","iron_bucket_helmet","wither_treasure");
+        // WitherEncounterGameTests audits the treasure's enhanced-only death-event acquisition route.
         // Preserve existing saves without granting this hidden item a survival acquisition route.
         Set<String> hiddenCompatibilityItems=Set.of("dynamic_core_mithril");
         for(var entry:BuiltInRegistries.ITEM.entrySet()) {

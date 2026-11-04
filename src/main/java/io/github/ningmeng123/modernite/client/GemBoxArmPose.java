@@ -22,10 +22,16 @@ public final class GemBoxArmPose {
 
     private GemBoxArmPose() {}
 
-    /** Main hand wins when both slots contain a box; this never changes either actual slot. */
+    public static boolean isBox(net.minecraft.world.item.ItemStack stack) {
+        return stack.getItem() instanceof GemBoxItem;
+    }
+
+    /** Prefer the opening chest, otherwise the main hand; neither actual slot is changed. */
     public static InteractionHand carryingHand(LivingEntity entity) {
-        if (entity.getMainHandItem().is(ExtremeGear.GEM_BOX.get())) return InteractionHand.MAIN_HAND;
-        if (entity.getOffhandItem().is(ExtremeGear.GEM_BOX.get())) return InteractionHand.OFF_HAND;
+        if (isBox(entity.getMainHandItem()) && entity.getMainHandItem().has(ExtremeGear.GEM_BOX_OPEN_STARTED.get())) return InteractionHand.MAIN_HAND;
+        if (isBox(entity.getOffhandItem()) && entity.getOffhandItem().has(ExtremeGear.GEM_BOX_OPEN_STARTED.get())) return InteractionHand.OFF_HAND;
+        if (isBox(entity.getMainHandItem())) return InteractionHand.MAIN_HAND;
+        if (isBox(entity.getOffhandItem())) return InteractionHand.OFF_HAND;
         return null;
     }
 

@@ -230,6 +230,11 @@ public final class MobRenderRegressionAudit {
                         new ItemStack(io.github.ningmeng123.modernite.gear.ExtremeGear.GEM_BOX.get()), screenshots()));
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.witherTreasureAudit")) {
+                report.addProperty("scope", "Wither treasure 3D chest, opening lid and native first/third-person reward animation");
+                report.add("wither_treasure", WitherTreasureClientAudit.capture(mc, screenshots()));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.gemBoxAudit")) {
                 report.addProperty("scope", "Solid 3D gem chest, both native skin hands, lifting and walking, complete third-person player rendering");
                 report.add("gem_box", GemBoxCarryClientAudit.capture(mc,

@@ -60,6 +60,7 @@ public final class ExtremeMobGameTests {
     @GameTest(template="gear_empty")
     public static void sourceBossesExceedTheOrdinaryAttributeCeiling(GameTestHelper h){
         var dragon=EntityType.ENDER_DRAGON.create(h.getLevel());var wither=EntityType.WITHER.create(h.getLevel());
+        io.github.ningmeng123.modernite.content.wither.WitherEncounters.markSummon(wither,true);
         ExtremeNativeMobs.initialize(dragon);ExtremeNativeMobs.initialize(wither);
         h.assertTrue(dragon.getMaxHealth()==7500&&wither.getAttributeBaseValue(Attributes.MAX_HEALTH)==1300,"Configured boss health is not clamped to 1024");
         h.assertTrue(wither.getPersistentData().getBoolean("modern_ite:boss"),"Base calendar policy can retain high boss health");

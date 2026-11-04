@@ -3,7 +3,6 @@ package io.github.ningmeng123.modernite.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.github.ningmeng123.modernite.ModernIte;
-import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import io.github.ningmeng123.modernite.gear.GemBoxItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
@@ -30,7 +29,7 @@ public final class GemBoxCarryRendering {
         var player = mc.player;
         if (player == null) return;
         if (GemBoxArmPose.hiddenForMovement(player)) {
-            if (event.getItemStack().is(ExtremeGear.GEM_BOX.get())) event.setCanceled(true);
+            if (GemBoxArmPose.isBox(event.getItemStack())) event.setCanceled(true);
             return;
         }
         if (!GemBoxArmPose.active(player)) return;

@@ -5,6 +5,7 @@ import io.github.ningmeng123.mite.enchantment.SourceEnchantmentCombat;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.content.wither.WitherEncounters;
 import io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -42,6 +43,8 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class ExtremeNativeMobs {
     private static final String PROFILE="modern_ite:source_profile";
+    public static final double WITHER_MAX_HEALTH=1300;
+    public static final double DRAGON_MAX_HEALTH=7500;
     private ExtremeNativeMobs(){}
     private static String id(Entity e){return BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).toString();}
     private static void stat(Mob m,Holder<Attribute> key,double value){var a=m.getAttribute(key);if(a!=null)a.setBaseValue(value);}
@@ -104,10 +107,10 @@ public final class ExtremeNativeMobs {
         }
     }
     public static void initialize(Mob m){
+        if(m instanceof WitherBoss wither){initializeWither(wither);return;}
         CompoundTag t=m.getPersistentData();if(t.getBoolean(PROFILE))return;t.putBoolean(PROFILE,true);
         float ratio=m.getHealth()/Math.max(1,m.getMaxHealth());String key=id(m);
-        if(m instanceof EnderDragon){t.putBoolean("modern_ite:boss",true);stat(m,Attributes.MAX_HEALTH,7500);}
-        else if(m instanceof WitherBoss wither){t.putBoolean("modern_ite:boss",true);stat(m,Attributes.MAX_HEALTH,1300);if(wither.getInvulnerableTicks()>0)wither.setInvulnerableTicks(600);}
+        if(m instanceof EnderDragon){t.putBoolean("modern_ite:boss",true);stat(m,Attributes.MAX_HEALTH,DRAGON_MAX_HEALTH);}
         else if(key.equals("minecraft:zombie")||key.equals("minecraft:zombie_villager"))body(m,15,8,.23,64);
         else if(key.equals("minecraft:zombified_piglin"))body(m,40,12,.25,64);
         else if(key.equals("minecraft:skeleton"))body(m,15,8,.3,64);
@@ -132,6 +135,27 @@ public final class ExtremeNativeMobs {
         if(m instanceof MagmaCube)stat(m,Attributes.MAX_HEALTH,m.getAttributeBaseValue(Attributes.MAX_HEALTH)+30);
         IteMobSettingsRules.rememberBoneLordProfile(m);
         m.setHealth(Math.min(m.getMaxHealth(),m.getMaxHealth()*ratio));
+    }
+    private static void initializeWither(WitherBoss wither){
+        var data=wither.getPersistentData();boolean enhanced=WitherEncounters.isEnhanced(wither);
+        // Both variants use the legacy Extreme health; only special summons gain its combat behavior.
+        bossHealth(wither,WITHER_MAX_HEALTH);
+        if(!data.getBoolean("modern_ite:wither_profile_v2")&&wither.getInvulnerableTicks()>0)
+            wither.setInvulnerableTicks(enhanced?600:Math.min(220,wither.getInvulnerableTicks()));
+        data.putBoolean(PROFILE,true);data.putBoolean("modern_ite:wither_profile_v2",true);
+    }
+    private static void bossHealth(Mob boss,double maximum){
+        float ratio=boss.getHealth()/Math.max(1,boss.getMaxHealth());
+        boss.getPersistentData().putBoolean("modern_ite:boss",true);
+        stat(boss,Attributes.MAX_HEALTH,maximum);
+        boss.setHealth(Math.min(boss.getMaxHealth(),boss.getMaxHealth()*ratio));
+    }
+    @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void bossJoined(EntityJoinLevelEvent event){
+        if(event.isCanceled()||event.getLevel().isClientSide)return;
+        // WitherPlus and EnderDragonPlus set their own defaults at NORMAL priority, including reloads.
+        if(event.getEntity() instanceof WitherBoss wither)initializeWither(wither);
+        else if(event.getEntity() instanceof EnderDragon dragon)bossHealth(dragon,DRAGON_MAX_HEALTH);
     }
     private static void syncSkeletonMelee(AbstractSkeleton skeleton){
         var data=skeleton.getPersistentData();
@@ -202,7 +226,7 @@ public final class ExtremeNativeMobs {
         if(m.tickCount%10==0){if(m instanceof AbstractSkeleton skeleton&&!(m instanceof ExtremeMob))syncSkeletonMelee(skeleton);syncGolemBoost(m);}
         if(m instanceof Zombie zombie&&m.getPersistentData().getBoolean("modern_ite:siege_rider")&&!zombie.isBaby())zombie.setBaby(true);
         if(m instanceof Witch&&!(m instanceof ExtremeMob))MobAbilities.witchSupportTick(m);
-        if(m instanceof WitherBoss wither){
+        if(m instanceof WitherBoss wither&&WitherEncounters.isEnhanced(wither)){
             var t=m.getPersistentData();int invul=wither.getInvulnerableTicks();
             if(invul>0){t.putBoolean("modern_ite:wither_charging",true);if(m.tickCount%10==0)wither.heal(10);}
             else{
@@ -330,7 +354,7 @@ public final class ExtremeNativeMobs {
         if(event.getEntity() instanceof IronGolem g&&g.getType()==EntityType.IRON_GOLEM&&golemBoosted(g))event.setNewSize(EntityDimensions.scalable(1.9F,3.5F));
     }
     @SubscribeEvent public static void witherBlast(ExplosionEvent.Start event){
-        if(!(event.getExplosion().getDirectSourceEntity() instanceof WitherBoss wither)||wither.getPersistentData().getBoolean("modern_ite:wither_blast"))return;
+        if(!(event.getExplosion().getDirectSourceEntity() instanceof WitherBoss wither)||!WitherEncounters.isEnhanced(wither)||wither.getPersistentData().getBoolean("modern_ite:wither_blast"))return;
         event.setCanceled(true);wither.getPersistentData().putBoolean("modern_ite:wither_blast",true);
         try{wither.level().explode(wither,Explosion.getDefaultDamageSource(wither.level(),wither),new R196ExplosionCalculator(wither,event.getExplosion().radius()*2),wither.getX(),wither.getY()+wither.getEyeHeight(),wither.getZ(),event.getExplosion().radius(),false,Level.ExplosionInteraction.MOB);}
         finally{wither.getPersistentData().remove("modern_ite:wither_blast");}

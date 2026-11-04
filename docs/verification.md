@@ -1,5 +1,31 @@
 # 自动验证与游戏内验收
 
+## 凋零宝藏立体模型与开箱动画补全（2026-11-04）
+
+开发署名：NingMeng123。凋零宝藏由初版平面图标和即时开奖改为原生 3D 黑石骨饰宝箱：124 个有体积的立方体，箱体 74 个、盖子 50 个，真实空腔与后铰链。复用宝石箱的双手开盖、翻找和取奖动画；第 36 tick 同步并展示实际奖励，第 56 tick 扣一个宝藏并发放，概率不变。奖励预览使用原版不可变 `ItemContainerContents` 网络组件；满背包发奖使用本体的 `insertWithoutDiscard`，真实创造模式也不会吞掉奖励。
+
+40 项 JUnit 与 WitherPlus 0.1.1、EnderDragonPlus 0.2 环境下的 351 项 GameTest 全通过（`build/verification/wither-treasure/server2.log`）。覆盖原宝石箱回归、宝藏完整数量和附魔的显奖／结算一致、显奖前后中断、跨箱与双手互斥、死亡／丢弃／登出／维度／克隆、真实创造模式和满背包。
+
+独立客户端 `modernIteWitherTreasureAudit=true` 实际 OpenGL 绘制检查通过，报告 `build/verification/wither-treasure/client-audit.json` 的状态为 `passed`、失败列表为空。验证背包立体显示、第一／第三人称、左右惯用手与主副手、三种奖励各八阶段；原生模型有 744 个四边形，开盖角从 0 到 100 度，并有实际像素变化。保存了 56 帧连续动画和截图，已肉眼检查。预览 `build/verification/wither-treasure/wither-treasure-opening.gif` 由实际 GPU 帧以 20 FPS 编码，未使用示意模型代替游戏渲染。
+
+在用户确认退出游戏后备份并安装新版 ITE，版本保持 0.3.0，SHA-256 为 `6db3594f0350b69c0ee110042be3f0dd6210684e65992541ad347f92a88c29f5`；旧 ITE 备份在版本目录 `.codex-backups/wither-treasure-3d-2026-11-04/modern-ite-0.3.0.before-6291b47d0a48.jar`。安装本体仍与上轮通过客户端验证的配套本体逐字节一致。未操作用户存档。
+
+## 客户端本体配套修复（2026-11-04 23:00）
+
+开发署名：NingMeng123。用户报告 `crash-2026-11-04_22.58.04-fml.txt`：`IteConfigClient.register:30` 缺少 `ConfigSearchIndex`。此前仅安装新 ITE，用户目录中的同名 0.3.0 本体仍是旧构建；旧包还缺少 `ConfigSearchIndex$Entry`、`SingleConfigValueScreen` 及 `MonsterSpawnSettingsScreen.setSearchQuery(String)`。只绕过第一处调用不能解决后续设置页面缺口。
+
+已备份并安装本地配套本体 `mite-0.3.0.jar`，保持版本号不变。旧包 SHA-256 为 `413a19ed5e0e0be3a3549e896e98ff943605a8227beb564154b25dda06e85b7e`，备份在整合包版本目录 `.codex-backups/client-api-pair-2026-11-04/mite-0.3.0.before-413a19ed5e0e.jar`；新包 SHA-256 为 `02f03afe86c9db494be9b9923cd3bf6515d1f64dba15e7652c2ba4f90a6b9550`。本体与 ITE 的安装文件均已逐字节核对本地构建。
+
+使用配套本体、ITE、WitherPlus 0.1.1、EnderDragonPlus 0.2，在 `build/verification/client-api-pair/run` 独立启动客户端，并运行设置界面检查；结果 `passed`、失败列表为空，生成 28 张界面截图。日志为 `build/verification/client-api-pair/client.log`，报告为 `build/verification/config/client-audit.json`。只检查独立测试客户端，不进入用户存档。用户需关闭原错误界面并重启游戏加载新的本体。
+
+## 凋零宝藏、特殊头召唤与极难 Boss 生命（2026-11-04）
+
+开发署名：NingMeng123。普通与强化凋零均为 1300 生命，末影龙为 7500，取值已核对旧版极难的生命注入。强化凋零固定额外掉五个宝藏；普通头仅召唤普通技能的凋零，实际阵列含 WitherPlus 特殊头才启用强化技能和宝藏。奖励概率及实现说明见 [凋零宝藏](wither-treasure.md)。
+
+`build` 的 40 项 JUnit 通过；无 Plus 环境 `modern_ite,modern_ite_wither,modern_ite_boss` 的 344 项服务端 GameTest 全通过，日志 `build/verification/wither-native/run2.log`；WitherPlus 0.1.1 + EnderDragonPlus 0.2 环境的 15 项专项全通过，日志 `build/verification/wither-plus/run4.log`。真实物品摆头验证普通／特殊／邻近无关特殊头；实际死亡事件验证五个宝藏、下界之星保留、环境与玩家击杀及抢夺 0/10。还覆盖六档概率、实际宝石等级／钻石范围、单附魔满级书、禁用和上限配置、满背包、最后一个宝藏、创造消耗、冷却、原生存档标记和受伤比例保持。
+
+562 个主资源 JSON 校验通过。图标经内置 image_gen 处理透明背景、缩为 128×128，已检查 alpha 和图片，记录在 [图标来源](wither-treasure-art.md)。已备份替换用户整合包的 ITE JAR，构建与安装文件 SHA-256 一致；发布包不包含依赖或 GameTests。本轮验证范围为服务端和资源检查，未启动整合包客户端。
+
 ## 肉眼可见的流动彩色玻璃渐变（2026-10-29）
 
 开发署名：NingMeng123。上版18%暖冷色漂移过轻，改为玻璃正面完整、连续的彩色色相循环，约12秒一轮；同一颗星的不同局部位置也使用不同颜色，形成会流动的面内渐变。正面饱和度84%、明度100%，中心高光只混白6%，alpha108～124，既有颜色变化又能透底。侧壁、细轮廓与斜边固定保留宝石类型色；六芒星浅浮雕、独立不定时闪光、5×5布局及稳定随机25颗继续保留。当前规格见 [玻璃六芒星显示](chest-gem-display.md)。

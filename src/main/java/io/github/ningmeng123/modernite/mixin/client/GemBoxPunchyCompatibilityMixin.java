@@ -1,7 +1,6 @@
 package io.github.ningmeng123.modernite.mixin.client;
 
 import io.github.ningmeng123.modernite.client.GemBoxArmPose;
-import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +18,7 @@ public abstract class GemBoxPunchyCompatibilityMixin {
     private static void modernite$gemBoxOwnsBothHands(ItemStack stack, CallbackInfoReturnable<Boolean> callback) {
         var player = Minecraft.getInstance().player;
         if (player != null && (GemBoxArmPose.active(player)
-                || (GemBoxArmPose.hiddenForMovement(player) && stack != null && stack.is(ExtremeGear.GEM_BOX.get())))) {
+                || (GemBoxArmPose.hiddenForMovement(player) && stack != null && GemBoxArmPose.isBox(stack)))) {
             callback.setReturnValue(true);
         }
     }

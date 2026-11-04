@@ -1,4 +1,5 @@
 package io.github.ningmeng123.modernite.mixin.entity;
+import io.github.ningmeng123.modernite.content.wither.WitherEncounters;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.*;
@@ -6,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.*;
 @Mixin(WitherBoss.class)
 public class WitherCombatMixin {
     @ModifyConstant(method="makeInvulnerable",constant=@Constant(intValue=220))
-    private int modernIte$charge(int original){return 600;}
+    private int modernIte$charge(int original){return WitherEncounters.isEnhanced((WitherBoss)(Object)this)?600:original;}
     @ModifyConstant(method="customServerAiStep",constant=@Constant(floatValue=220F))
-    private float modernIte$chargeProgress(float original){return 600F;}
+    private float modernIte$chargeProgress(float original){return WitherEncounters.isEnhanced((WitherBoss)(Object)this)?600F:original;}
 }

@@ -709,5 +709,11 @@
   "tooltip.modern_ite.gem_target_equipment": "Fits tools, weapons or armor",
   "subtitles.modern_ite.gem_box.open": "Gem box opens",
   "subtitles.modern_ite.gem_box.rummage": "Rummaging in gem box",
-  "subtitles.modern_ite.gem_box.reveal": "Gem chimes"
+  "subtitles.modern_ite.gem_box.reveal": "Gem chimes",
+  "item.modern_ite.wither_treasure": "Wither Treasure",
+  "tooltip.modern_ite.wither_treasure_open": "Right-click to open; consumes one and awards the revealed loot when finished",
+  "tooltip.modern_ite.wither_treasure_gems": "Rank 3 gem 30% · Rank 4 20% · Rank 5 10% · Rank 6 5%",
+  "tooltip.modern_ite.wither_treasure_other": "10–20 diamonds 20% · Random max-level enchanted book 15%",
+  "tooltip.modern_ite.wither_treasure_source": "Enhanced Withers only: exactly 5 per defeat",
+  "message.modern_ite.wither_treasure_no_enchantments": "No enchantments are available. Your treasure was not consumed."
 }
