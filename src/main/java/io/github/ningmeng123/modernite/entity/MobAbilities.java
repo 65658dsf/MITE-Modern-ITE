@@ -312,7 +312,9 @@ public final class MobAbilities {
         if(k==ANNIHILATION_SKELETON&&s.stage>0&&++s.summons>=IteConfig.integer("Entities.annihilation_skeleton_despawn_time")){mob.spawnAnim();mob.discard();return;}
         if(IteReferenceSpawns.enabled()&&k==WANDERING_WITCH)referenceWanderingTick(mob,s);
         if(target==null||!target.isAlive()){
-            if(k==ZOMBIE_BOSS&&!s.contribution.isEmpty()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}return;
+            // Target goals can clear or reacquire an opponent between two ordinary AI ticks.
+            // Losing that pointer must respect the same ten-second grace as leaving melee range.
+            if(k==ZOMBIE_BOSS)bossDisengaged(mob,s);return;
         }
         if(k==TIME_LORD)TimeLordAbilities.tick(mob,s,target);
         if(ZombieLordAbilities.handles(k))ZombieLordAbilities.tick(mob,s,target);
@@ -345,7 +347,7 @@ public final class MobAbilities {
         if(k==SKELETON_ZOMBIE&&!BloodMoonEquipment.spawnEquipmentLocked(mob)&&!s.spare.isEmpty()&&s.clock%10==0){boolean bow=mob.getMainHandItem().getItem() instanceof BowItem;if(bow&&mob.distanceToSqr(target)<25||!bow&&mob.distanceToSqr(target)>36){var held=mob.getMainHandItem();mob.setItemSlot(EquipmentSlot.MAINHAND,s.spare);s.spare=held;configureGoals(mob,k);}}
         if(k.family==Family.WITCH&&(!IteReferenceSpawns.enabled()||k!=WANDERING_WITCH))witchTick(mob,target,s);
         if(k==ZOMBIE_BOSS&&target instanceof Player&&mob.distanceToSqr(target)>2.4*2.4){
-            if(s.cooldown>0)s.cooldown--;else if(mob.getHealth()<mob.getMaxHealth()){mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");s.contribution.clear();}
+            bossDisengaged(mob,s);
             if(++s.summons%20==0&&Math.abs(target.getX()-mob.getX())<=5&&Math.abs(target.getZ()-mob.getZ())<=5
                     &&target.getPersistentData().getLong("modern_ite:boss_melee_grace")<level.getGameTime()){
                 LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.setVisualOnly(true);bolt.moveTo(target.position());level.addFreshEntity(bolt);}target.hurt(mob.damageSources().magic(),10);
@@ -358,6 +360,12 @@ public final class MobAbilities {
                 if(!nearby.isEmpty())mob.setTarget(nearby.get(mob.getRandom().nextInt(nearby.size())));
                 s.summons=0;
             }
+        }
+    }
+    private static void bossDisengaged(Mob mob,MobMemory memory){
+        if(memory.cooldown>0){memory.cooldown--;return;}
+        if(!memory.contribution.isEmpty()||mob.getHealth()<mob.getMaxHealth()){
+            mob.setHealth(mob.getMaxHealth());announce(mob,"僵尸BOSS挑战失败");memory.contribution.clear();
         }
     }
     private static void mirror(Mob mob,LivingEntity player,MobMemory s){

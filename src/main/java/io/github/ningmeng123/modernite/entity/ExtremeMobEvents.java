@@ -112,7 +112,7 @@ public final class ExtremeMobEvents {
         if(k==PHASE_CREEPER&&MobAbilities.evade(mob,s,damage)){event.setCanceled(true);return;}
         if(k==ZOMBIE_BOSS){
             if(!(damage.getEntity() instanceof Player player)||damage.getDirectEntity()!=player||damage.is(DamageTypeTags.IS_PROJECTILE)||damage.is(DamageTypeTags.IS_EXPLOSION)){event.setCanceled(true);return;}
-            event.setAmount(event.getAmount()/5F);player.removeEffect(MobEffects.DAMAGE_BOOST);s.cooldown=200;
+            event.setAmount(event.getAmount()/5F);player.removeEffect(MobEffects.DAMAGE_BOOST);
             player.getPersistentData().putLong("modern_ite:boss_strength_suppression",player.level().getGameTime()+200);
         }
         if(k==ANNIHILATION_SKELETON&&(!(damage.getEntity() instanceof Player player)||damage.getDirectEntity()!=player
@@ -137,8 +137,14 @@ public final class ExtremeMobEvents {
             if(e.extremeKind()==ZOMBIE_BOSS)event.getEntity().getPersistentData().putLong("modern_ite:boss_melee_grace",attacker.level().getGameTime()+30);
             if(e.extremeKind()==SKELETON_LIGHTNING&&event.getSource().getDirectEntity() instanceof AbstractArrow&&attacker.level() instanceof ServerLevel level){LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.setVisualOnly(true);bolt.moveTo(event.getEntity().position());level.addFreshEntity(bolt);}}
         }
-        if(event.getEntity() instanceof ExtremeMob state&&state.extremeKind()==ZOMBIE_BOSS&&event.getSource().getEntity() instanceof Player player)
+        if(event.getEntity() instanceof Mob boss&&boss instanceof ExtremeMob state&&state.extremeKind()==ZOMBIE_BOSS
+                &&event.getSource().getEntity() instanceof Player player&&event.getSource().getDirectEntity()==player
+                &&event.getNewDamage()>0F&&Float.isFinite(event.getNewDamage())){
             state.extremeMemory().contribution.merge(player.getUUID(),event.getNewDamage(),Float::sum);
+            state.extremeMemory().cooldown=200;
+            // A successful first hit starts the encounter even before native target selection runs.
+            if(boss.getTarget()==null||!boss.getTarget().isAlive())boss.setTarget(player);
+        }
     }
     private static Mob attacker(DamageSource source){
         if(source.getEntity() instanceof Mob mob)return mob;
@@ -218,7 +224,9 @@ public final class ExtremeMobEvents {
         mimic.setCustomName(Component.literal(e.extremeMemory().mimicName));mimic.setCustomNameVisible(true);mimic.setPersistenceRequired();mimic.setCanPickUpLoot(false);
         PlayerMimicInventory.capture(mimic,event.getDrops());
         // Failed or canceled joins must leave the original player drops available.
-        if(player.serverLevel().addFreshEntity(mimic))event.getDrops().clear();
+        if(player.serverLevel().addFreshEntity(mimic)){
+            event.getDrops().clear();PlayerMimicInventory.notifyOwner(mimic,player);
+        }
     }
     private static void drop(LivingDropsEvent event,String id,int count){if(count<=0)return;var stack=MobAbilities.item(id);if(stack.isEmpty())return;stack.setCount(count);var m=event.getEntity();event.getDrops().add(new net.minecraft.world.entity.item.ItemEntity(m.level(),m.getX(),m.getY(),m.getZ(),stack));}
     @SubscribeEvent(priority=EventPriority.LOWEST)

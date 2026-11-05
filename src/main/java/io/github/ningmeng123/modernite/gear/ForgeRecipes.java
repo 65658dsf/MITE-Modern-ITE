@@ -67,4 +67,12 @@ public final class ForgeRecipes {
             case 7, 8 -> Quality.MASTERWORK; case 9 -> Quality.LEGENDARY; default -> null;
         };
     }
+
+    /** Forging earns its quality with materials, so maintaining that reward needs no manufacturing XP. */
+    public static boolean earnedRepairQuality(ItemStack stack) {
+        int maximum = GearMath.maximumGrade(GearProgression.material(stack));
+        int grade = Math.min(ExtremeGear.grade(stack), maximum);
+        Quality earned = reward(grade - 1);
+        return earned != null && EquipmentDurability.quality(stack).ordinal() <= earned.ordinal();
+    }
 }

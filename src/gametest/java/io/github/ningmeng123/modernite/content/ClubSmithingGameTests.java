@@ -54,11 +54,12 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
 /** Real native smithing transactions preserve club identity while advancing exactly one material. @author NingMeng123 */
-@GameTestHolder("modern_ite")
+@GameTestHolder("modern_ite_club_smithing")
 @PrefixGameTestTemplate(false)
 public final class ClubSmithingGameTests {
     private record Route(String from, String to, String recipe) {}
     private static final List<Route> ROUTES = List.of(
+            new Route("copper", "iron", "equipment_upgrade/club_copper_to_iron"),
             new Route("silver", "iron", "equipment_upgrade/club_silver_to_iron"),
             new Route("gold", "iron", "equipment_upgrade/club_gold_to_iron"),
             new Route("iron", "ancient_metal", "club_ancient_metal"),
@@ -69,7 +70,7 @@ public final class ClubSmithingGameTests {
     private ClubSmithingGameTests() {}
 
     @GameTest(template = "gear_empty")
-    public static void exactlySixClubRoutesLoadAsNativeSmithingWithoutHighTierCraftingBypasses(GameTestHelper h) {
+    public static void exactlySevenClubRoutesLoadAsNativeSmithingWithoutHighTierCraftingBypasses(GameTestHelper h) {
         Set<ResourceLocation> expected = new HashSet<>();
         for (Route route : ROUTES) {
             expected.add(id("modern_ite:" + route.recipe()));
@@ -89,7 +90,7 @@ public final class ClubSmithingGameTests {
         var actual = h.getLevel().getRecipeManager().getAllRecipesFor(RecipeType.SMITHING).stream()
                 .filter(holder -> isClub(holder.value().getResultItem(h.getLevel().registryAccess())))
                 .map(holder -> holder.id()).collect(java.util.stream.Collectors.toSet());
-        h.assertTrue(actual.equals(expected), "The loaded club family has exactly six smithing routes; copper upgrades only at a workbench");
+        h.assertTrue(actual.equals(expected), "The loaded club family has exactly seven smithing routes, including copper-to-iron");
         for (String material : MATERIALS) {
             boolean directlyCrafted = h.getLevel().getRecipeManager().getAllRecipesFor(RecipeType.CRAFTING).stream()
                     .anyMatch(holder -> holder.value().getResultItem(h.getLevel().registryAccess()).is(club(material)));
@@ -127,7 +128,7 @@ public final class ClubSmithingGameTests {
     }
 
     @GameTest(template = "gear_empty")
-    public static void allSixUpgradesPreserveEveryPersonalComponentAndConvertWearToTargetDefaults(GameTestHelper h) {
+    public static void allSevenUpgradesPreserveEveryPersonalComponentAndConvertWearToTargetDefaults(GameTestHelper h) {
         for (Route route : ROUTES) {
             ItemStack source = personalClub(h, route.from());
             ItemStack before = source.copy();
@@ -223,6 +224,49 @@ public final class ClubSmithingGameTests {
                         "An empty source slot cannot be shift-clicked into a duplicate output");
                 h.assertTrue(session.player.totalExperience == 0, "Smithing inherited quality does not charge a second manufacturing XP cost");
             }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void copperClubSmithingCountsOnlyIronIngotsAndCommitsItsInventoryReserveAtTheFinalTick(GameTestHelper h) {
+        try (SmithingSession session = new SmithingSession(h)) {
+            ItemStack source = personalClub(h, "copper"), before = source.copy();
+            session.menu.getSlot(0).set(template());
+            session.menu.getSlot(1).set(source);
+            session.player.getInventory().setItem(0, new ItemStack(Items.IRON_NUGGET, 4));
+            session.menu.getSlot(2).set(new ItemStack(Items.IRON_INGOT, 3));
+            h.assertTrue(session.menu.getSlot(3).getItem().isEmpty(),
+                    "The old three-ingot/four-nugget payment cannot fund copper-club smithing");
+            session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
+            h.assertTrue(!TimedSmithingController.isActive(session.player) && session.menu.getCarried().isEmpty(),
+                    "An insufficient copper upgrade cannot start manufacturing or yield an instant output");
+            session.player.getInventory().setItem(1, new ItemStack(Items.IRON_INGOT));
+            session.menu.getSlot(2).set(new ItemStack(Items.IRON_INGOT, 3));
+            h.assertTrue(session.menu.getSlot(3).getItem().is(club("iron")),
+                    "Three input ingots plus one matching inventory reserve fund the four-ingot native upgrade");
+            int period = TimedSmithingController.period(session.player, session.menu);
+            h.assertTrue(period >= 25, "The copper upgrade uses the real timed smithing production period");
+            session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
+            for (int tick = 1; tick < period; tick++) TimedSmithingController.tick(session.player);
+            h.assertTrue(TimedSmithingController.progress(session.player) == period - 1 && session.menu.getCarried().isEmpty()
+                    && ItemStack.matches(session.menu.getSlot(1).getItem(), before)
+                    && session.menu.getSlot(0).getItem().getCount() == 1 && session.menu.getSlot(2).getItem().getCount() == 3
+                    && session.player.getInventory().countItem(Items.IRON_INGOT) == 1
+                    && session.player.getInventory().countItem(Items.IRON_NUGGET) == 4,
+                    "Before completion the source, template, slot payment and reserved inventory ingot remain untouched");
+            TimedSmithingController.tick(session.player);
+            ItemStack result = session.menu.getCarried().copy();
+            h.assertTrue(result.is(club("iron")) && result.getCount() == 1 && session.menu.getSlot(0).getItem().isEmpty()
+                    && session.menu.getSlot(1).getItem().isEmpty() && session.menu.getSlot(2).getItem().isEmpty()
+                    && session.player.getInventory().countItem(Items.IRON_INGOT) == 0
+                    && session.player.getInventory().countItem(Items.IRON_NUGGET) == 4,
+                    "Completion consumes one copper club, one template and exactly four ingots while retaining unrelated nuggets");
+            assertPersonalComponents(h, before, result); assertProportionalWear(h, before, result);
+            session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
+            TimedSmithingController.tick(session.player);
+            h.assertTrue(ItemStack.matches(session.menu.getCarried(), result) && session.menu.getSlot(3).getItem().isEmpty(),
+                    "The copper transaction cannot deliver its previous preview twice");
         }
         h.succeed();
     }

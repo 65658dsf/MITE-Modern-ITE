@@ -41,18 +41,20 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.neoforged.neoforge.network.registration.NetworkRegistry;
 
-@GameTestHolder("modern_ite_feedback")
+/** Copper-club smithing and unchanged copper-armor workbench upgrades. @author NingMeng123 */
+@GameTestHolder("modern_ite_club_smithing")
 @PrefixGameTestTemplate(false)
 public final class CopperArmorUpgradeGameTests {
     private CopperArmorUpgradeGameTests() {}
 
     @GameTest(template = "gear_empty")
-    public static void copperClubUpgradeUsesTheFullIronRecipeAndOneTimedWorkbenchTransaction(GameTestHelper helper) {
+    public static void copperClubUpgradeUsesSmithingAndRejectsTheFormerWorkbenchPattern(GameTestHelper helper) {
         try (Session session = new Session(helper)) {
             var recipeId = ResourceLocation.parse("modern_ite:equipment_upgrade/club_copper_to_iron");
             var holder = helper.getLevel().getRecipeManager().byKey(recipeId).orElseThrow();
-            helper.assertTrue(holder.value() instanceof VibraniumUpgradeRecipe, "The copper club route is a shaped upgrade, not smithing");
-            var recipe = (VibraniumUpgradeRecipe)holder.value();
+            helper.assertTrue(holder.value() instanceof net.minecraft.world.item.crafting.SmithingTransformRecipe,
+                    "The copper club now uses the same native smithing-transform format as the other club upgrades");
+            var recipe = (net.minecraft.world.item.crafting.SmithingTransformRecipe)holder.value();
             var source = new ItemStack(ExtremeContent.ITEM_ENTRIES.get("club_copper").get());
             EquipmentDurability.setQuality(source, Quality.FINE);
             source.set(DataComponents.CUSTOM_NAME, Component.literal("NingMeng123 copper club"));
@@ -62,23 +64,37 @@ public final class CopperArmorUpgradeGameTests {
             source.set(ExtremeGear.GRINDINGS.get(), 3);
             source.set(ExtremeGear.SOCKETS.get(), new GemSockets(List.of(1, 12, 18, 24, 30, 36, 42, 60)));
             source.setDamageValue(source.getMaxDamage() / 3);
-            String[] shape = {"#*#", "#*#", "C* "};
-            int ingots = 0, nuggets = 0;
+            var before = source.copy();
+            String[] oldShape = {"#*#", "#*#", "C* "};
             for (int row = 0; row < 3; row++) for (int column = 0; column < 3; column++) {
-                char token = shape[row].charAt(column);
-                if (token == '*') ingots++;
-                if (token == '#') nuggets++;
-                session.grid.setItem(row * 3 + column, switch (token) {
+                session.grid.setItem(row * 3 + column, switch (oldShape[row].charAt(column)) {
                     case '*' -> new ItemStack(Items.IRON_INGOT);
                     case '#' -> new ItemStack(Items.IRON_NUGGET);
                     case 'C' -> source.copy();
                     default -> ItemStack.EMPTY;
                 });
             }
-            helper.assertTrue(ingots == 3 && nuggets == 4, "The workbench pays the full three iron ingots and four nuggets plus the copper club");
-            helper.assertTrue(recipe.matches(session.grid.asCraftInput(), helper.getLevel()), "The real workbench accepts the exact full-cost pattern");
-            var expected = recipe.assemble(session.grid.asCraftInput(), helper.getLevel().registryAccess());
+            helper.assertTrue(helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING,
+                    session.grid.asCraftInput(), helper.getLevel()).isEmpty() && session.menu.getSlot(0).getItem().isEmpty(),
+                    "The former three-ingot/four-nugget copper-club pattern no longer matches or previews at a workbench");
+            var smithingInput = new SmithingRecipeInput(new ItemStack(io.github.ningmeng123.mite.registry.MiteUpgradeTemplates.UPGRADE_TEMPLATE.get()),
+                    source, new ItemStack(Items.IRON_INGOT, 4));
+            var selected = helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.SMITHING, smithingInput, helper.getLevel()).orElseThrow();
+            helper.assertValueEqual(selected.id(), recipeId, "The native smithing manager uniquely selects the copper-to-iron club upgrade");
+            var expected = recipe.assemble(smithingInput, helper.getLevel().registryAccess());
             helper.assertTrue(expected.is(ExtremeContent.ITEM_ENTRIES.get("club_iron").get()), "The recipe produces the corresponding iron club");
+            helper.assertValueEqual(io.github.ningmeng123.mite.crafting.MaterialUpgradeRequirements.ingots(expected), 4,
+                    "The copper club uses the same full four-ingot iron payment as the silver and golden clubs");
+            var smithingPages = io.github.ningmeng123.mite.integration.jei.SmithingJeiRecipes.index(helper.getLevel())
+                    .recipes().stream().filter(page -> page.source().id().equals(recipeId)).toList();
+            helper.assertValueEqual(smithingPages.size(), 1, "JEI indexes exactly one copper-club material-upgrade page");
+            var page = smithingPages.getFirst();
+            helper.assertTrue(page.additions().size() == 1 && page.additions().getFirst().is(Items.IRON_INGOT)
+                    && page.additions().getFirst().getCount() == 4 && page.baseTicks() >= 25,
+                    "The JEI material-upgrade page displays four iron ingots and the complete smithing duration");
+            helper.assertTrue(io.github.ningmeng123.mite.integration.jei.WorkbenchJeiRecipes.index(helper.getLevel())
+                    .originals().stream().noneMatch(old -> old.id().equals(recipeId)),
+                    "The old copper-club workbench page is absent from the actual JEI index");
             helper.assertValueEqual(expected.get(DataComponents.CUSTOM_NAME), source.get(DataComponents.CUSTOM_NAME), "The personal name survives");
             helper.assertValueEqual(expected.get(DataComponents.REPAIR_COST), source.get(DataComponents.REPAIR_COST), "Repair history survives");
             helper.assertValueEqual(GearProgression.state(expected), GearProgression.state(source), "Growth identity, historical level and stored experience survive unchanged");
@@ -88,23 +104,7 @@ public final class CopperArmorUpgradeGameTests {
             helper.assertValueEqual(EquipmentDurability.quality(expected), Quality.FINE, "Equipment quality survives");
             helper.assertTrue(Math.abs((double)source.getDamageValue() / source.getMaxDamage()
                     - (double)expected.getDamageValue() / expected.getMaxDamage()) <= 1D / expected.getMaxDamage(), "Wear retains its previous proportion");
-            var smithingInput = new SmithingRecipeInput(new ItemStack(io.github.ningmeng123.mite.registry.MiteUpgradeTemplates.UPGRADE_TEMPLATE.get()),
-                    source.copy(), new ItemStack(Items.IRON_INGOT, 4));
-            helper.assertTrue(helper.getLevel().getRecipeManager().getRecipeFor(RecipeType.SMITHING, smithingInput, helper.getLevel()).isEmpty(),
-                    "Even a full smithing payment cannot bypass the copper club workbench recipe");
-            int period = TimedCraftingController.period(session.player, session.menu);
-            helper.assertTrue(period >= 25, "The copper club upgrade has a real manufacturing duration");
-            session.menu.clicked(0, 0, ClickType.PICKUP, session.player);
-            for (int tick = 1; tick < period; tick++) TimedCraftingController.tick(session.player);
-            helper.assertTrue(session.player.getInventory().isEmpty(), "No result appears before the final production tick");
-            helper.assertValueEqual(TimedCraftingController.progress(session.player), period - 1, "Production advances without completing early");
-            TimedCraftingController.tick(session.player);
-            helper.assertTrue(session.grid.isEmpty(), "A completed transaction consumes the copper club and all seven metal ingredients");
-            helper.assertValueEqual(session.player.getInventory().countItem(expected.getItem()), 1, "The upgrade delivers exactly one iron club");
-            var actual = session.player.getInventory().items.stream().filter(stack -> stack.is(expected.getItem())).findFirst().orElseThrow();
-            helper.assertTrue(ItemStack.isSameItemSameComponents(expected, actual), "Timed delivery preserves every preview component");
-            TimedCraftingController.tick(session.player);
-            helper.assertValueEqual(session.player.getInventory().countItem(expected.getItem()), 1, "The completed transaction cannot duplicate its output");
+            helper.assertTrue(ItemStack.matches(source, before), "A smithing preview never consumes or mutates the original copper club");
         }
         helper.succeed();
     }

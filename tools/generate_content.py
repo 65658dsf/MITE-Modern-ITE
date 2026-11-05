@@ -188,7 +188,7 @@ for mat in ['copper','silver','gold']:
     shaped('club_'+mat,['#*#','#*#',' * '],{'#':('minecraft:' if mat=='gold' else 'mite:')+mat+'_nugget','*':('mite:' if mat=='silver' else 'minecraft:')+mat+'_ingot'})
     smithing('equipment_upgrade/club_'+mat+'_to_iron','modern_ite:club_'+mat,'minecraft:iron_ingot','modern_ite:club_iron')
 for mat,prev in [('ancient_metal','iron'),('mithril','ancient_metal'),('adamantium','mithril'),('vibranium','adamantium')]:
-    # Match the base mod's native one-template, one-equipment, one-target-ingot route.
+    # Native template recipe; the shared server controller charges the full target-metal cost.
     smithing('club_'+mat,'modern_ite:club_'+prev,'mite:'+mat+'_ingot')
 shaped('blaze_coal_powder',[' B ','BCB',' B '],{'B':'minecraft:blaze_powder','C':'minecraft:coal'})
 shapeless('diamond_from_chunks',['modern_ite:diamond_chunk']*4,'minecraft:diamond')

@@ -64,7 +64,6 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.inventory.FurnaceMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.SmithingTransformRecipe;
 import net.minecraft.world.level.GameRules;
@@ -165,15 +164,15 @@ public final class ForgeJeiClientAudit {
         private IRecipeCategory<SmithingJeiRecipe> smithingCategory;
         private SmithingJeiRecipe clubSmithingTarget;
         private JsonObject clubSmithingFacts;
-        private IRecipeCategory<WorkbenchJeiRecipe> copperClubCategory;
-        private WorkbenchJeiRecipe copperClubTarget;
+        private SmithingJeiRecipe copperClubTarget;
         private JsonObject copperClubFacts;
         private record ClubRoute(String from,String to) {
             ResourceLocation base(){return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"club_"+from);}
             ResourceLocation addition(){return ResourceLocation.fromNamespaceAndPath(to.equals("iron")?"minecraft":"mite",to+"_ingot");}
             ResourceLocation result(){return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"club_"+to);}
+            int ingots(){return to.equals("ancient_metal")?2:4;}
         }
-        private static final List<ClubRoute> CLUB_ROUTES=List.of(new ClubRoute("silver","iron"),
+        private static final List<ClubRoute> CLUB_ROUTES=List.of(new ClubRoute("copper","iron"),new ClubRoute("silver","iron"),
                 new ClubRoute("gold","iron"),new ClubRoute("iron","ancient_metal"),new ClubRoute("ancient_metal","mithril"),
                 new ClubRoute("mithril","adamantium"),new ClubRoute("adamantium","vibranium"));
         @SuppressWarnings("unchecked") Steps(Minecraft mc,Object actualRuntime) {
@@ -224,22 +223,22 @@ public final class ForgeJeiClientAudit {
             check(smithingCategory!=null,"The full-cost timed material-upgrade JEI category exists");
             var loaded=mc.level.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.SMITHING).stream()
                     .filter(holder->isClub(holder.value().getResultItem(mc.level.registryAccess()))).toList();
-            check(loaded.size()==6,"The actual synchronized RecipeManager loads exactly six addon club smithing routes");
+            check(loaded.size()==7,"The actual synchronized RecipeManager loads exactly seven addon club smithing routes");
             check(loaded.stream().allMatch(holder->holder.value() instanceof SmithingTransformRecipe),
-                    "The six template-based upgrades retain native SmithingTransformRecipe holders");
+                    "The seven template-based upgrades retain native SmithingTransformRecipe holders");
             var indexed=manager.createRecipeLookup(smithingType).includeHidden().get()
                     .filter(page->isClub(page.output())).toList();
             Set<ResourceLocation> loadedIds=new HashSet<>(),indexedIds=new HashSet<>();
             for(var holder:loaded)check(loadedIds.add(holder.id()),"Loaded club smithing recipe IDs are unique");
             for(var page:indexed)check(indexedIds.add(page.source().id()),"Full-cost JEI indexes each club smithing holder once");
-            check(indexed.size()==6&&indexedIds.equals(loadedIds),"The timed full-cost category contains exactly the six real addon routes");
+            check(indexed.size()==7&&indexedIds.equals(loadedIds),"The timed full-cost category contains exactly the seven real addon routes");
             Set<ResourceLocation> sourceIds=new HashSet<>();
             for(var page:SmithingJeiRecipes.index(mc.level).recipes())if(isClub(page.output()))sourceIds.add(page.source().id());
-            check(sourceIds.equals(loadedIds),"The public material-upgrade index covers the same six source recipes");
+            check(sourceIds.equals(loadedIds),"The public material-upgrade index covers the same seven source recipes");
             long visibleNative=manager.createRecipeLookup(RecipeTypes.SMITHING).get()
                     .filter(holder->isClub(holder.value().getResultItem(mc.level.registryAccess()))).count();
             check(visibleNative==0,"Obsolete one-ingot club pages are hidden from native smithing lookup");
-            JsonArray routes=new JsonArray();clubSmithingFacts.add("six_routes",routes);
+            JsonArray routes=new JsonArray();clubSmithingFacts.add("seven_routes",routes);
             Set<ResourceLocation> matchedIds=new HashSet<>();int layouts=0;
             for(ClubRoute route:CLUB_ROUTES) {
                 var input=clubSmithingInput(route);
@@ -249,10 +248,10 @@ public final class ForgeJeiClientAudit {
                 check(matchedIds.add(holder.id()),"Each expected club route matches its own native recipe holder");
                 ItemStack output=holder.value().assemble(input,mc.level.registryAccess());
                 check(output.is(requiredStack(route.result()).getItem())&&output.getCount()==1,
-                        "The source template, base club and full four-ingot payment produce the next-material club");
+                        "The source template, base club and full target-material payment produce the next-material club");
                 var page=indexed.stream().filter(actual->actual.source().id().equals(holder.id())).findFirst().orElseThrow();
-                check(page.additions().stream().allMatch(stack->stack.getCount()==4)&&page.baseTicks()>=25,
-                        "Every club page displays four full target ingots and a nonzero manufacturing duration");
+                check(!page.additions().isEmpty()&&page.additions().stream().allMatch(stack->stack.getCount()==route.ingots())&&page.baseTicks()>=25,
+                        "Every club page displays its exact target-ingot cost and a nonzero manufacturing duration");
                 var layout=manager.createRecipeLayoutDrawable(smithingCategory,page,
                         runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup()).orElseThrow();
                 check(layout.getRecipe()==page&&layout.getRecipeCategory()==smithingCategory,
@@ -264,12 +263,12 @@ public final class ForgeJeiClientAudit {
                 JsonObject facts=new JsonObject();facts.addProperty("from",route.from());facts.addProperty("to",route.to());
                 facts.addProperty("recipe",holder.id().toString());facts.addProperty("template","mite:equipment_upgrade_smithing_template");
                 facts.addProperty("base",route.base().toString());facts.addProperty("addition",route.addition().toString());
-                facts.addProperty("addition_count",4);facts.addProperty("base_ticks",page.baseTicks());
+                facts.addProperty("addition_count",route.ingots());facts.addProperty("base_ticks",page.baseTicks());
                 facts.addProperty("output",route.result().toString());facts.addProperty("full_cost_layout_verified",true);
                 facts.addProperty("output_material_matches_assembly",true);routes.add(facts);
                 if(route.from().equals("adamantium")&&route.to().equals("vibranium"))clubSmithingTarget=page;
             }
-            check(matchedIds.equals(loadedIds)&&clubSmithingTarget!=null,"The six exact routes cover the complete loaded club smithing catalog");
+            check(matchedIds.equals(loadedIds)&&clubSmithingTarget!=null,"The seven exact routes cover the complete loaded club smithing catalog");
             var catalysts=manager.createRecipeCatalystLookup(smithingType).includeHidden().getItemStack().toList();
             check(catalysts.size()==1&&catalysts.getFirst().is(Items.SMITHING_TABLE),
                     "The timed material-upgrade category exposes its ordinary smithing-table catalyst");
@@ -287,14 +286,14 @@ public final class ForgeJeiClientAudit {
             check(obsoleteLoaded==0&&obsoleteNative==0&&obsoleteWorkbenches==0,
                     "The four former advanced-club crafting upgrades are absent from loaded recipes and every native/workbench JEI view");
             clubSmithingFacts.addProperty("type",smithingType.getUid().toString());clubSmithingFacts.addProperty("recipes",loaded.size());
-            clubSmithingFacts.addProperty("six_routes_verified",true);clubSmithingFacts.addProperty("full_cost_recipe_lookup_verified",true);
+            clubSmithingFacts.addProperty("seven_routes_verified",true);clubSmithingFacts.addProperty("full_cost_recipe_lookup_verified",true);
             clubSmithingFacts.addProperty("output_lookup_verified",true);clubSmithingFacts.addProperty("full_cost_layouts_validated",layouts);
             clubSmithingFacts.addProperty("native_one_ingot_pages_hidden",true);
             clubSmithingFacts.add("public_catalysts",json(itemIds(catalysts)));
             clubSmithingFacts.addProperty("legacy_advanced_crafting_recipes",obsoleteLoaded);
             clubSmithingFacts.addProperty("legacy_advanced_native_crafting_rows",obsoleteNative);
             clubSmithingFacts.addProperty("legacy_advanced_workbench_rows",obsoleteWorkbenches);
-            validateCopperClubWorkbenchRuntime(mc);
+            validateCopperClubSmithingRuntime(mc);
         }
         private static boolean isClub(ItemStack stack) {
             var id=BuiltInRegistries.ITEM.getKey(stack.getItem());return id.getNamespace().equals(ModernIte.MOD_ID)&&id.getPath().startsWith("club_");
@@ -310,7 +309,7 @@ public final class ForgeJeiClientAudit {
         }
         private static SmithingRecipeInput clubSmithingInput(ClubRoute route) {
             return new SmithingRecipeInput(requiredStack(ResourceLocation.parse("mite:equipment_upgrade_smithing_template")),
-                    requiredStack(route.base()),requiredStack(route.addition()).copyWithCount(4));
+                    requiredStack(route.base()),requiredStack(route.addition()).copyWithCount(route.ingots()));
         }
         private static void validateClubSmithingSlots(IRecipeLayoutDrawable<?> layout,ClubRoute route,SmithingJeiRecipe page) {
             var slots=layout.getRecipeSlotsView();var inputs=slots.getSlotViews(RecipeIngredientRole.INPUT);
@@ -318,7 +317,7 @@ public final class ForgeJeiClientAudit {
             check(inputs.size()==3&&outputs.size()==1,"The timed smithing layout has exactly template, base, addition and output slots");
             Set<IRecipeSlotView> located=new HashSet<>();
             for(ItemStack ingredient:List.of(requiredStack(ResourceLocation.parse("mite:equipment_upgrade_smithing_template")),
-                    requiredStack(route.base()),requiredStack(route.addition()).copyWithCount(4))) {
+                    requiredStack(route.base()),requiredStack(route.addition()).copyWithCount(route.ingots()))) {
                 var matches=inputs.stream().filter(slot->contains(slot,ingredient)).toList();
                 check(matches.size()==1&&located.add(matches.getFirst())&&matches.getFirst().getItemStacks().count()==1,
                         "Each exact ingredient and its full required count is independently locatable in the input slot");
@@ -329,62 +328,42 @@ public final class ForgeJeiClientAudit {
                     "The output slot exactly matches the full-cost page's destination material and components");
         }
         @SuppressWarnings("unchecked")
-        private void validateCopperClubWorkbenchRuntime(Minecraft mc) {
+        private void validateCopperClubSmithingRuntime(Minecraft mc) {
             var recipeId=ResourceLocation.parse("modern_ite:equipment_upgrade/club_copper_to_iron");
-            var sourcePages=WorkbenchJeiRecipes.groupedIndex(mc.level).recipes().stream()
-                    .filter(page->page.source().id().equals(recipeId)).toList();
-            check(sourcePages.size()==1,"The public workbench index contains one copper-club upgrade page");
+            check(WorkbenchJeiRecipes.groupedIndex(mc.level).recipes().stream().noneMatch(page->page.source().id().equals(recipeId)),
+                    "The public workbench index no longer exposes the copper-club upgrade");
             var manager=runtime.getRecipeManager();
-            int found=0;
             for(var candidate:manager.createRecipeCategoryLookup().includeHidden().get().toList()) {
                 if(candidate.getRecipeType().getRecipeClass()!=WorkbenchJeiRecipe.class)continue;
                 var workbenchType=(RecipeType<WorkbenchJeiRecipe>)candidate.getRecipeType();
-                for(var page:manager.createRecipeLookup(workbenchType).includeHidden().get().toList()) {
-                    if(!page.source().id().equals(recipeId))continue;
-                    copperClubCategory=(IRecipeCategory<WorkbenchJeiRecipe>)candidate;
-                    copperClubTarget=page;found++;
-                }
+                check(manager.createRecipeLookup(workbenchType).includeHidden().get().noneMatch(page->page.source().id().equals(recipeId)),
+                        "No actual workbench category retains a visible or hidden copper-club upgrade page");
             }
-            check(found==1&&copperClubTarget!=null,"Actual JEI indexes the copper-club workbench upgrade exactly once");
-            var page=copperClubTarget;
-            check(page.width()==3&&page.height()==3&&page.rule()!=null&&page.baselineTicks()>=25,
-                    "The copper-club page shows a timed three-by-three workbench recipe");
-            var materials=page.inputs().stream().flatMap(List::stream).toList();
-            check(materials.stream().filter(stack->stack.is(Items.IRON_INGOT)).mapToInt(ItemStack::getCount).sum()==3
-                    &&materials.stream().filter(stack->stack.is(Items.IRON_NUGGET)).mapToInt(ItemStack::getCount).sum()==4
-                    &&materials.stream().filter(stack->stack.is(requiredStack(ResourceLocation.parse("modern_ite:club_copper")).getItem()))
-                            .mapToInt(ItemStack::getCount).sum()==1,
-                    "The workbench page displays the complete three iron ingots, four nuggets and one copper club");
-            check(materials.stream().noneMatch(stack->stack.is(requiredStack(ResourceLocation.parse("mite:equipment_upgrade_smithing_template")).getItem())),
-                    "The copper-club workbench upgrade does not require a template");
-            var input=CraftingInput.of(page.width(),page.height(),page.inputs().stream()
-                    .map(slot->slot.isEmpty()?ItemStack.EMPTY:slot.getFirst().copy()).toList());
-            check(page.source().value().matches(input,mc.level)
-                    &&page.source().value().assemble(input,mc.level.registryAccess()).is(requiredStack(ResourceLocation.parse("modern_ite:club_iron")).getItem()),
-                    "The displayed workbench grid matches and assembles its real iron-club source recipe");
-            var layout=manager.createRecipeLayoutDrawable(copperClubCategory,page,
+            check(mc.level.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING).stream()
+                    .noneMatch(holder->holder.id().equals(recipeId)),"The old shaped copper-club recipe is absent from synchronized crafting recipes");
+            check(manager.createRecipeLookup(RecipeTypes.CRAFTING).includeHidden().get().noneMatch(holder->holder.id().equals(recipeId)),
+                    "Native crafting lookup cannot retain the old copper-club workbench page");
+            var pages=manager.createRecipeLookup(smithingType).includeHidden().get().filter(page->page.source().id().equals(recipeId)).toList();
+            check(pages.size()==1,"Actual JEI indexes the copper-club material upgrade exactly once in timed smithing");
+            copperClubTarget=pages.getFirst();var page=copperClubTarget;var route=new ClubRoute("copper","iron");
+            check(page.source().value() instanceof SmithingTransformRecipe&&page.baseTicks()>=25
+                    &&page.additions().stream().allMatch(stack->stack.is(Items.IRON_INGOT)&&stack.getCount()==4),
+                    "The copper-club page uses native smithing, four full iron ingots and the real manufacturing duration");
+            check(page.source().value().matches(clubSmithingInput(route),mc.level),
+                    "The displayed template, copper club and four iron ingots match the actual synchronized source recipe");
+            var layout=manager.createRecipeLayoutDrawable(smithingCategory,page,
                     runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup()).orElseThrow();
-            validateCopperClubWorkbenchSlots(layout,page);
+            validateClubSmithingSlots(layout,route,page);
             var focus=runtime.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.OUTPUT,VanillaTypes.ITEM_STACK,page.output());
-            check(manager.createRecipeLookup(copperClubCategory.getRecipeType()).limitFocus(List.of(focus)).get()
-                    .anyMatch(actual->actual.source().id().equals(recipeId)),"Output R lookup locates the copper-club workbench upgrade");
-            copperClubFacts=new JsonObject();report.add("copper_club_workbench",copperClubFacts);
+            check(manager.createRecipeLookup(smithingType).limitFocus(List.of(focus)).get().anyMatch(actual->actual.source().id().equals(recipeId)),
+                    "Output R lookup locates the copper-club smithing upgrade");
+            copperClubFacts=new JsonObject();report.add("copper_club_smithing",copperClubFacts);
             copperClubFacts.addProperty("status","runtime_verified");copperClubFacts.addProperty("recipe",recipeId.toString());
-            copperClubFacts.addProperty("type",copperClubCategory.getRecipeType().getUid().toString());
-            copperClubFacts.addProperty("iron_ingots",3);copperClubFacts.addProperty("iron_nuggets",4);
-            copperClubFacts.addProperty("copper_clubs",1);copperClubFacts.addProperty("templates",0);
-            copperClubFacts.addProperty("baseline_ticks",page.baselineTicks());copperClubFacts.addProperty("native_layout_verified",true);
-        }
-        private static void validateCopperClubWorkbenchSlots(IRecipeLayoutDrawable<?> layout,WorkbenchJeiRecipe page) {
-            var slots=layout.getRecipeSlotsView();
-            var ingredients=slots.getSlotViews(RecipeIngredientRole.INPUT).stream().flatMap(slot->slot.getItemStacks()).toList();
-            check(ingredients.stream().filter(stack->stack.is(Items.IRON_INGOT)).mapToInt(ItemStack::getCount).sum()==3
-                    &&ingredients.stream().filter(stack->stack.is(Items.IRON_NUGGET)).mapToInt(ItemStack::getCount).sum()==4
-                    &&ingredients.stream().filter(stack->stack.is(requiredStack(ResourceLocation.parse("modern_ite:club_copper")).getItem()))
-                            .mapToInt(ItemStack::getCount).sum()==1,
-                    "The actual workbench layout exposes all eight full-cost ingredient slots");
-            var outputs=slots.getSlotViews(RecipeIngredientRole.OUTPUT);
-            check(outputs.size()==1&&contains(outputs.getFirst(),page.output()),"The actual workbench output matches the indexed iron club");
+            copperClubFacts.addProperty("type",smithingType.getUid().toString());
+            copperClubFacts.addProperty("iron_ingots",4);copperClubFacts.addProperty("iron_nuggets",0);
+            copperClubFacts.addProperty("copper_clubs",1);copperClubFacts.addProperty("templates",1);
+            copperClubFacts.addProperty("baseline_ticks",page.baseTicks());copperClubFacts.addProperty("native_layout_verified",true);
+            copperClubFacts.addProperty("obsolete_workbench_pages_absent",true);
         }
         @SuppressWarnings("unchecked")
         private void validateFurnaceRuntime() {
@@ -561,20 +540,20 @@ public final class ForgeJeiClientAudit {
                 clubSmithingFacts.addProperty("gui_scale",mc.options.guiScale().get());
                 clubSmithingFacts.addProperty("screenshot",screenshots().resolve("club-smithing-upgrade.png").toString());
                 clubSmithingFacts.addProperty("status","passed");
-                runtime.getRecipesGui().showRecipes(copperClubCategory,List.of(copperClubTarget),List.of());arm(mc,12);return;
+                runtime.getRecipesGui().showRecipes(smithingCategory,List.of(copperClubTarget),List.of());arm(mc,12);return;
             }
             if(phase==12) {
-                Object logic=logic();check(logic.getClass().getMethod("getSelectedRecipeCategory").invoke(logic)==copperClubCategory,
-                        "The copper-club screenshot uses a timed workbench category, not material-template smithing");
-                var layouts=visibleUpgradeLayouts(copperClubCategory,WorkbenchJeiRecipe.class);
+                Object logic=logic();check(logic.getClass().getMethod("getSelectedRecipeCategory").invoke(logic)==smithingCategory,
+                        "The copper-club screenshot selects the timed material-upgrade smithing category");
+                var layouts=visibleUpgradeLayouts(smithingCategory,SmithingJeiRecipe.class);
                 check(layouts.size()==1&&layouts.getFirst().getRecipe()==copperClubTarget,
-                        "The rendered workbench page is exactly the copper-club upgrade");
-                validateCopperClubWorkbenchSlots(layouts.getFirst(),copperClubTarget);
-                var sidebar=assertSidebar(mc,Set.copyOf(WorkbenchJeiRecipes.categoryWorkstations(copperClubTarget.workstationId())));
-                screenshot(mc,"copper-club-workbench-upgrade.png");
-                copperClubFacts.addProperty("full_cost_workbench_page_rendered",true);
+                        "The rendered smithing page is exactly the copper-to-iron club upgrade");
+                validateClubSmithingSlots(layouts.getFirst(),new ClubRoute("copper","iron"),copperClubTarget);
+                var sidebar=assertSidebar(mc,Set.of("minecraft:smithing_table"));
+                screenshot(mc,"copper-club-smithing-upgrade.png");
+                copperClubFacts.addProperty("full_cost_smithing_page_rendered",true);
                 copperClubFacts.add("native_visible_sidebar",json(sidebar));copperClubFacts.addProperty("native_sidebar_slots",sidebar.size());
-                copperClubFacts.addProperty("screenshot",screenshots().resolve("copper-club-workbench-upgrade.png").toString());
+                copperClubFacts.addProperty("screenshot",screenshots().resolve("copper-club-smithing-upgrade.png").toString());
                 copperClubFacts.addProperty("status","passed");finish(mc);return;
             }
             throw new IllegalStateException("Unknown native JEI audit phase: "+phase);
@@ -700,7 +679,7 @@ public final class ForgeJeiClientAudit {
     private static JsonArray json(Set<String> ids){JsonArray array=new JsonArray();ids.stream().sorted().forEach(array::add);return array;}
     private static Object field(Object object,String name)throws ReflectiveOperationException {Field field=object.getClass().getDeclaredField(name);field.setAccessible(true);return field.get(object);}
     private static void screenshot(Minecraft mc,String filename)throws Exception {Path path=screenshots().resolve(filename);Files.createDirectories(path.getParent());try(NativeImage image=Screenshot.takeScreenshot(mc.getMainRenderTarget())){image.writeToFile(path);}}
-    private static JsonObject initial(){JsonObject report=new JsonObject();report.addProperty("author","NingMeng123");report.addProperty("timestamp",Instant.now().toString());report.addProperty("scope","real optional JEI runtime; one shared forging tab; complete gear-grade-stone matrix; per-recipe table uses; registered click area; native single/mixed/focused/paginated sidebars; vibranium furnace batches; six full-cost timed club smithing upgrades, one copper-club workbench upgrade and rendered screenshots");report.addProperty("jei_loaded",ModList.get().isLoaded("jei"));report.addProperty("existing_world_loaded",false);report.addProperty("multiplayer_connected",false);report.add("failures",new JsonArray());return report;}
+    private static JsonObject initial(){JsonObject report=new JsonObject();report.addProperty("author","NingMeng123");report.addProperty("timestamp",Instant.now().toString());report.addProperty("scope","real optional JEI runtime; one shared forging tab; complete gear-grade-stone matrix; per-recipe table uses; registered click area; native single/mixed/focused/paginated sidebars; vibranium furnace batches; seven full-cost timed club smithing upgrades including copper-to-iron, absence of the old copper-club workbench page and rendered screenshots");report.addProperty("jei_loaded",ModList.get().isLoaded("jei"));report.addProperty("existing_world_loaded",false);report.addProperty("multiplayer_connected",false);report.add("failures",new JsonArray());return report;}
     private static boolean owned(Minecraft mc){return started&&worldName!=null&&mc.getSingleplayerServer()!=null&&worldName.equals(mc.getSingleplayerServer().getWorldData().getLevelName());}
     private static void check(boolean condition,String message){if(!condition)throw new IllegalStateException(message);}
     private static void fail(String label,Throwable failure){if(report==null)report=initial();report.getAsJsonArray("failures").add(label+": "+failure);LogUtils.getLogger().error("MODERN_ITE_FORGE_JEI_AUDIT {}",label,failure);}

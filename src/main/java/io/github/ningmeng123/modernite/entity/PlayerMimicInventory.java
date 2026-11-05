@@ -3,6 +3,8 @@ package io.github.ningmeng123.modernite.entity;
 import java.util.Collection;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -23,6 +25,14 @@ final class PlayerMimicInventory {
         }
         mimic.getPersistentData().put(CONTENTS,contents);
         for(EquipmentSlot slot:EquipmentSlot.values())mimic.setDropChance(slot,0);
+    }
+
+    /** Announce only a completed transfer, keeping its recovery location in the player's chat. */
+    static void notifyOwner(Mob mimic,ServerPlayer player){
+        if(player.connection==null||mimic.getPersistentData().getList(CONTENTS,Tag.TAG_COMPOUND).isEmpty())return;
+        var pos=mimic.blockPosition();
+        player.sendSystemMessage(Component.translatable("message.modern_ite.player_mimic_inventory",
+                pos.getX(),pos.getY(),pos.getZ()));
     }
 
     static void release(Mob mimic,Collection<ItemEntity> drops){

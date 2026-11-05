@@ -715,5 +715,6 @@
   "tooltip.modern_ite.wither_treasure_gems": "Rank 3 gem 30% · Rank 4 20% · Rank 5 10% · Rank 6 5%",
   "tooltip.modern_ite.wither_treasure_other": "10–20 diamonds 20% · Random max-level enchanted book 15%",
   "tooltip.modern_ite.wither_treasure_source": "Enhanced Withers only: exactly 5 per defeat",
-  "message.modern_ite.wither_treasure_no_enchantments": "No enchantments are available. Your treasure was not consumed."
+  "message.modern_ite.wither_treasure_no_enchantments": "No enchantments are available. Your treasure was not consumed.",
+  "message.modern_ite.player_mimic_inventory": "A player zombie is holding your death drops. Defeat it to recover them. It spawned at %s, %s, %s in the dimension where you died."
 }

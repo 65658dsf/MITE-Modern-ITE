@@ -715,5 +715,6 @@
   "tooltip.modern_ite.wither_treasure_gems": "3级宝石 30% · 4级 20% · 5级 10% · 6级 5%",
   "tooltip.modern_ite.wither_treasure_other": "10–20颗钻石 20% · 随机满级附魔书 15%",
   "tooltip.modern_ite.wither_treasure_source": "仅强化凋零掉落，每只固定5个",
-  "message.modern_ite.wither_treasure_no_enchantments": "没有可用的附魔，宝藏未消耗。"
+  "message.modern_ite.wither_treasure_no_enchantments": "没有可用的附魔，宝藏未消耗。",
+  "message.modern_ite.player_mimic_inventory": "你的死亡掉落物由玩家僵尸保管，击败它即可取回。它生成在死亡所在维度的 %s，%s，%s。"
 }
