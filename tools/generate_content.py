@@ -84,8 +84,8 @@ def shaped(id, pattern, keys, result=None, count=1):
 
 def smithing(id, base, addition, result=None):
     recipe(id,{'type':'minecraft:smithing_transform','template':ingredient('mite:equipment_upgrade_smithing_template'),'base':ingredient(base),'addition':ingredient(addition),'result':{'id':result or 'modern_ite:'+id}})
-def shapeless(id, items, result=None, count=1):
-    recipe(id,{'type':'minecraft:crafting_shapeless','category':'misc','ingredients':[ingredient(i) for i in items],'result':{'id':result or 'modern_ite:'+id,'count':count}})
+def shapeless(id, items, result=None, count=1, recipe_type='minecraft:crafting_shapeless'):
+    recipe(id,{'type':recipe_type,'category':'misc','ingredients':[ingredient(i) for i in items],'result':{'id':result or 'modern_ite:'+id,'count':count}})
 def smelt(id, source, result, xp=.1):recipe(id,{'type':'minecraft:smelting','category':'misc','ingredient':ingredient(source),'result':{'id':result},'experience':xp,'cookingtime':200})
 for family,pattern in {
     'helmet':['III','ICI'],
@@ -179,10 +179,11 @@ shapeless('nether_ender_eye',['mite:mithril_ingot','minecraft:ender_pearl'])
 for binding in ['minecraft:string','mite:sinew']:
  for coal in ['minecraft:coal','minecraft:charcoal']:shapeless('stack_torch_'+binding.split(':')[1]+'_'+coal.split(':')[1],[{'tag':'minecraft:logs'},binding,coal,coal],'modern_ite:stack_torch')
 shapeless('unpack_torches_1',['modern_ite:stack_torch'],'minecraft:torch',16)
-# Modern MITE torches stack to 16; larger recipe results are rejected by its codec.
+# Extreme LH's two-to-four-bundle recipes retain their full yield. The base batch
+# serializer permits oversized previews and manufacturing splits output into legal stacks.
 for n in range(2,5):
-    stale=RES/f'data/modern_ite/recipe/unpack_torches_{n}.json'
-    if stale.exists():stale.unlink()
+    shapeless(f'unpack_torches_{n}',['modern_ite:stack_torch']*n,'minecraft:torch',16*n,
+              recipe_type='mite:stacking_shapeless')
 shaped('club_iron',['#*#','#*#',' * '],{'#':'minecraft:iron_nugget','*':'minecraft:iron_ingot'})
 for mat in ['copper','silver','gold']:
     shaped('club_'+mat,['#*#','#*#',' * '],{'#':('minecraft:' if mat=='gold' else 'mite:')+mat+'_nugget','*':('mite:' if mat=='silver' else 'minecraft:')+mat+'_ingot'})

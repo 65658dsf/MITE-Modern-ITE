@@ -15,7 +15,13 @@ Extreme `EXItemsRegistryInit.registerRecipes` 的合成输入是原木、丝线�
 | 原木＋丝线/筋＋两份煤/木炭 → 1 捆 | 195 | 138 tick，6.9 秒 | 114 tick，5.7 秒 |
 | 1 捆 → 16 火把 | 1.0E-9 | 25 tick，1.25 秒 | 25 tick，1.25 秒 |
 
-时间按 20 TPS 换算。等级、信标和笨拙诅咒继续由已有服务端制造逻辑处理。难度是整批输入的操作成本，不按结果数量再除以 16。一次拆一捆、产出 16 个火把的现代堆叠适配保留。
+时间按 20 TPS 换算。等级、信标和笨拙诅咒继续由已有服务端制造逻辑处理。难度是整批输入的操作成本，不按结果数量再除以 16。
+
+2026-11-07 更新：恢复旧版的多捆批量分解。Extreme `EXItemsRegistryInit.registerRecipes` 第 136–139 行分别注册 4、3、2、1 捆的无序配方，对应产出 64、48、32、16 个火把。现在背包 2×2 合成栏与工作台都可任意摆放 1～4 格火把捆，每批从各格消耗 1 捆。多捆配方采用本体 `mite:stacking_shapeless`，允许完整批量预览，制造完成后按每组最多 16 个放入背包。普通火把堆叠上限仍为 16；Shift 可逐批连续分解。
+
+2、3、4 捆的整批组件难度按旧版 `float` 逐项相加，均沿用最低 25 tick（1.25 秒）的制造周期，不按捆数重复等待。配方生成器与统一制造计时表同步维护这些配方。
+
+本次验证：完整构建及 40 项 JUnit、`modern_ite_crafting` 命名空间的 12 项服务端 GameTest 全部通过。新增测试覆盖 2×2 所有两格、三格、四格摆法、工作台跨格摆放、普通与 Shift 连续制造、每格消耗、网络配方同步和红石自动合成器的 64 个火把分堆入箱。运行命令为 `.\gradlew.bat runGameTestServer '-PmodernIteGameTestNamespaces=modern_ite_crafting' '-PmodernIteGameTestDirectory=build/verification/torch-batch-20261107/run' --console=plain`，日志为 `build/verification/torch-batch-20261107.log`。
 
 工作台周期按原式执行 `float` 除法后截断；`138 / 1.2F` 的实际浮点值略小于 115，所以是 114 tick。
 

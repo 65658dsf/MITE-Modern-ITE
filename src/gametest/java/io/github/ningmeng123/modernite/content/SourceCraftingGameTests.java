@@ -6,13 +6,16 @@ import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.crafting.CraftingQuality;
 import io.github.ningmeng123.mite.crafting.MaterialUpgradeRequirements;
+import io.github.ningmeng123.mite.crafting.StackBatchShapelessRecipe;
 import io.github.ningmeng123.mite.crafting.TimedCraftingController;
 import io.github.ningmeng123.mite.crafting.TimedCraftingRecipes;
 import io.github.ningmeng123.mite.crafting.TimedCraftingRules;
 import io.github.ningmeng123.mite.registry.MiteItems;
 import io.github.ningmeng123.mite.registry.MiteWorkbenches;
+import io.github.ningmeng123.mite.registry.StackingRecipeSerializers;
 import io.github.ningmeng123.mite.survival.PlayerExperience;
 import io.netty.channel.embedded.EmbeddedChannel;
+import io.netty.buffer.Unpooled;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +29,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -111,6 +115,82 @@ public final class SourceCraftingGameTests {
     }
 
     @GameTest(template = "gear_empty")
+    public static void multipleTorchBundlesUnpackInEveryInventoryArrangementAndAcrossTheWorkbench(GameTestHelper h) {
+        for (boolean workbench : new boolean[]{false, true}) {
+            try (Session session = new Session(h, workbench)) {
+                int[] positions = workbench ? new int[]{0, 2, 6, 8} : new int[]{0, 1, 2, 3};
+                for (int mask = 1; mask < 16; mask++) {
+                    int bundles = Integer.bitCount(mask);
+                    if (bundles < 2) continue;
+                    session.unpackSlots(positions, mask, 2);
+                    h.assertValueEqual(session.period(), 25, "Every multi-bundle batch retains the source minimum manufacturing period");
+                    session.menu.clicked(0, 0, ClickType.PICKUP, session.player);
+                    session.finishBatch(0, Items.TORCH, bundles * 16);
+                    for (int index = 0; index < positions.length; index++) {
+                        if ((mask & (1 << index)) != 0) h.assertValueEqual(session.grid.getItem(positions[index]).getCount(), 1,
+                                "One completed batch consumes one bundle from each occupied slot");
+                    }
+                    session.assertLegalTorchStacks();
+                    session.tick(50);
+                    h.assertValueEqual(session.outputs(Items.TORCH), bundles * 16, "An ordinary click does not unpack the remaining batch");
+                }
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void shiftUnpacksRepeatedMultiBundleBatchesWithoutBypassingTheClockOrStackLimit(GameTestHelper h) {
+        for (boolean workbench : new boolean[]{false, true}) {
+            try (Session session = new Session(h, workbench)) {
+                int[] positions = workbench ? new int[]{0, 8, 4, 2} : new int[]{0, 3, 1, 2};
+                for (int bundles = 2; bundles <= 4; bundles++) {
+                    int mask = (1 << bundles) - 1;
+                    session.unpackSlots(positions, mask, 3);
+                    var inputs = TimedCraftingController.snapshot(session.grid);
+                    for (int hotbar = 0; hotbar < 9; hotbar++) session.menu.clicked(0, hotbar, ClickType.SWAP, session.player);
+                    session.menu.clicked(0, 40, ClickType.SWAP, session.player);
+                    h.assertTrue(TimedCraftingController.matches(inputs, session.grid) && session.outputs(Items.TORCH) == 0,
+                            "Number keys and offhand swapping cannot extract an unpaid multi-bundle preview");
+                    session.menu.clicked(0, 0, ClickType.QUICK_MOVE, session.player);
+                    for (int batch = 0; batch < 3; batch++) {
+                        session.finishBatch(batch, Items.TORCH, bundles * 16);
+                        for (int index = 0; index < bundles; index++) h.assertValueEqual(session.grid.getItem(positions[index]).getCount(), 2 - batch,
+                                "Each continuous batch consumes exactly one bundle per occupied slot");
+                        session.assertLegalTorchStacks();
+                    }
+                    h.assertTrue(session.grid.isEmpty(), "Shift unpacking stops when all occupied bundle stacks are exhausted");
+                    session.tick(50);
+                    h.assertValueEqual(session.outputs(Items.TORCH), bundles * 16 * 3, "Continuous unpacking cannot duplicate an exhausted batch");
+                }
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void multiBundleRecipeSynchronizationPreservesTheCompleteResultAndSixteenTorchStackLimit(GameTestHelper h) {
+        for (int bundles = 2; bundles <= 4; bundles++) {
+            var id = ResourceLocation.parse("modern_ite:unpack_torches_" + bundles);
+            var loaded = h.getLevel().getRecipeManager().byKey(id).orElseThrow().value();
+            h.assertTrue(loaded instanceof StackBatchShapelessRecipe, "Oversized unpacking results use the base mod's registered batch serializer");
+            var recipe = (StackBatchShapelessRecipe)loaded;
+            var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), h.getLevel().registryAccess());
+            try {
+                StackingRecipeSerializers.SHAPELESS.get().streamCodec().encode(buffer, recipe);
+                var received = StackingRecipeSerializers.SHAPELESS.get().streamCodec().decode(buffer);
+                ItemStack output = received.getResultItem(h.getLevel().registryAccess());
+                h.assertTrue(output.is(Items.TORCH) && output.getCount() == bundles * 16,
+                        "Recipe synchronization retains the complete thirty-two, forty-eight or sixty-four torch batch");
+                h.assertValueEqual(output.getMaxStackSize(), 16, "A batch result does not change the normal torch stack limit");
+                h.assertValueEqual(received.getIngredients().size(), bundles, "Recipe synchronization preserves every occupied input slot");
+                h.assertValueEqual(buffer.readableBytes(), 0, "Recipe synchronization consumes the complete payload");
+            } finally { buffer.release(); }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
     public static void cancellingOrChangingTorchInputsDiscardsProgressWithoutConsumingMaterials(GameTestHelper h) {
         try (Session session = new Session(h, false)) {
             session.unpack(2);
@@ -157,6 +237,35 @@ public final class SourceCraftingGameTests {
         h.runAfterDelay(70, () -> {
             h.assertTrue(count(output, Items.TORCH) == 16 && crafter.getItem(0).getCount() == 1,
                     "One pulse cannot queue a second automatic unpack");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template = "gear_empty", timeoutTicks = 200)
+    public static void redstoneUnpacksFourBundlesAsOnePaidBatchWithoutOverstackingTheChest(GameTestHelper h) {
+        BlockPos position = new BlockPos(1, 1, 1);
+        h.setBlock(position, Blocks.CRAFTER.defaultBlockState().setValue(BlockStateProperties.ORIENTATION, FrontAndTop.EAST_UP));
+        h.setBlock(position.east(), Blocks.CHEST);
+        CrafterBlockEntity crafter = (CrafterBlockEntity)h.getLevel().getBlockEntity(h.absolutePos(position));
+        Container output = (Container)h.getLevel().getBlockEntity(h.absolutePos(position.east()));
+        int[] slots = {0, 2, 6, 8};
+        for (int slot : slots) crafter.setItem(slot, new ItemStack(ExtremeContent.TORCH_BUNDLE.get(), 2));
+        var holder = CrafterBlock.getPotentialResults(h.getLevel(), crafter.asCraftInput()).orElseThrow();
+        h.assertValueEqual(holder.id(), ResourceLocation.parse("modern_ite:unpack_torches_4"), "Automation matches the real four-bundle recipe");
+        h.pulseRedstone(position.west(), 5);
+        h.runAfterDelay(25, () -> {
+            h.assertTrue(output.isEmpty(), "A redstone request cannot dispense a multi-bundle result before manufacturing finishes");
+            for (int slot : slots) h.assertValueEqual(crafter.getItem(slot).getCount(), 2, "Every input remains intact before the final manufacturing tick");
+        });
+        h.runAfterDelay(35, () -> {
+            h.assertValueEqual(count(output, Items.TORCH), 64, "One paid four-bundle batch emits all sixty-four torches");
+            for (int slot : slots) h.assertValueEqual(crafter.getItem(slot).getCount(), 1, "One redstone batch consumes one bundle from every occupied slot");
+            for (int slot = 0; slot < output.getContainerSize(); slot++) h.assertTrue(output.getItem(slot).getCount() <= 16,
+                    "The chest receives normal legal torch stacks");
+        });
+        h.runAfterDelay(70, () -> {
+            h.assertValueEqual(count(output, Items.TORCH), 64, "One redstone pulse cannot queue a second multi-bundle batch");
+            for (int slot : slots) h.assertValueEqual(crafter.getItem(slot).getCount(), 1, "The unrequested second batch remains untouched");
             h.succeed();
         });
     }
@@ -371,6 +480,31 @@ public final class SourceCraftingGameTests {
             menu.slotsChanged(grid);
             helper.assertTrue(menu.getSlot(0).getItem().is(Items.TORCH) && menu.getSlot(0).getItem().getCount() == 16,
                     "The loaded unpacking recipe previews exactly sixteen torches");
+        }
+
+        private void unpackSlots(int[] positions, int mask, int batches) {
+            clear();
+            for (int index = 0; index < positions.length; index++) {
+                if ((mask & (1 << index)) != 0) grid.setItem(positions[index], new ItemStack(ExtremeContent.TORCH_BUNDLE.get(), batches));
+            }
+            menu.slotsChanged(grid);
+            int bundles = Integer.bitCount(mask);
+            helper.assertTrue(menu.getSlot(0).getItem().is(Items.TORCH) && menu.getSlot(0).getItem().getCount() == bundles * 16,
+                    "The real result slot previews the complete multi-bundle batch");
+            var holder = player.level().getRecipeManager().getRecipeFor(RecipeType.CRAFTING, grid.asCraftInput(), player.level()).orElseThrow();
+            helper.assertValueEqual(holder.id(), ResourceLocation.parse("modern_ite:unpack_torches_" + bundles),
+                    "Shapeless matching selects the recipe for the number of occupied slots");
+        }
+
+        private void assertLegalTorchStacks() {
+            for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+                ItemStack stack = player.getInventory().getItem(slot);
+                if (stack.is(Items.TORCH)) helper.assertTrue(stack.getMaxStackSize() == 16 && stack.getCount() <= 16,
+                        "The complete output is split into normal sixteen-torch inventory stacks");
+            }
+            ItemStack carried = menu.getCarried();
+            if (carried.is(Items.TORCH)) helper.assertTrue(carried.getMaxStackSize() == 16 && carried.getCount() <= 16,
+                    "The cursor never receives an over-limit torch stack");
         }
 
         private int period() { return TimedCraftingController.period(player, menu); }

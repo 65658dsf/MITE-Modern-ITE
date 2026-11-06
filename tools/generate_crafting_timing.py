@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / "src/main/resources"
 BASE = ROOT.parent / "miteto1.21.1neoforge"
 LEDGER = RES / "modern_ite/timed-crafting.json"
-STATIC_TYPES = {"minecraft:crafting_shaped", "minecraft:crafting_shapeless"}
+STATIC_TYPES = {"minecraft:crafting_shaped", "minecraft:crafting_shapeless",
+                "mite:stacking_shaped", "mite:stacking_shapeless"}
 
 
 def f32(value: float) -> float:
@@ -138,6 +139,8 @@ def generate() -> dict:
             evidence += "; modern material-lantern adaptation uses the existing modern recipe; preserve its existing absence of a workbench-material gate"
         if name.startswith("gem_") and name[-1:].isdigit():
             evidence += "; R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+        if name.startswith("unpack_torches_"):
+            evidence += "; Extreme EXItemsRegistryInit.registerRecipes: one to four bundles yield sixteen torches each; oversized batches use the base stacking serializer without changing the torch stack limit"
         if name == "metal_upgrading_furnace":
             evidence += "; modern-only furnace adaptation uses eight obsidian and the regular furnace component"
         if name.startswith("maple_"):
@@ -153,7 +156,7 @@ def generate() -> dict:
         recipes["modern_ite:" + name] = {"difficulty": difficulty, "required_bench": required_bench,
             "source_order": source_order, "evidence": evidence}
 
-    assert len(recipes) == 154, f"Review added/removed static recipes: {len(recipes)}"
+    assert len(recipes) == 157, f"Review added/removed static recipes: {len(recipes)}"
     assert recipes["modern_ite:stack_torch_string_coal"]["difficulty"] == 195.0
     assert recipes["modern_ite:unpack_torches_1"]["difficulty"] == f32(1e-9)
 
@@ -166,8 +169,8 @@ def generate() -> dict:
         "difficulty": lantern_difficulty, "required_bench": None, "source_order": -1,
         "evidence": "Extreme EXBlocksRegistryInit.registerRecipes line 209: eight iron nuggets and one torch; the modern vanilla recipe has identical inputs. RecipeHelper float32 sum = 711.1111F; old blockLantern uses circuits, so no metal workbench gate."
     }
-    assert sum(name.startswith("modern_ite:") for name in recipes) == 154
-    assert len(recipes) == 155
+    assert sum(name.startswith("modern_ite:") for name in recipes) == 157
+    assert len(recipes) == 158
     return {
         "author": "NingMeng123",
         "source": "R196 RecipeHelper / frozen runtime-registry.json, MITE-ITE 2.0.28 and Extreme LH 0.6.6 decompiled registrations; explicit overrides precede float32 whole-batch component sums",
@@ -176,7 +179,7 @@ def generate() -> dict:
             "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
             "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
             "Gem upgrades preserve the old counted-stack expansion into three components; lanterns and the metal upgrading furnace use explicitly identified modern adaptations.",
-            "Coverage: 154 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+            "Coverage: 157 static extension recipes, including Extreme's one-to-four-bundle torch unpacking, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
             "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
         ],
         "components": {name: {"difficulty": value, "evidence": evidence} for name, (value, evidence) in sorted(components.items())},

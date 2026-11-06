@@ -1,0 +1,22 @@
+{
+  "type": "mite:stacking_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "modern_ite:stack_torch"
+    },
+    {
+      "item": "modern_ite:stack_torch"
+    },
+    {
+      "item": "modern_ite:stack_torch"
+    },
+    {
+      "item": "modern_ite:stack_torch"
+    }
+  ],
+  "result": {
+    "id": "minecraft:torch",
+    "count": 64
+  }
+}

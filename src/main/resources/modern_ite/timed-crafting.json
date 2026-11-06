@@ -6,7 +6,7 @@
     "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
     "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
     "Gem upgrades preserve the old counted-stack expansion into three components; lanterns and the metal upgrading furnace use explicitly identified modern adaptations.",
-    "Coverage: 154 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+    "Coverage: 157 static extension recipes, including Extreme's one-to-four-bundle torch unpacking, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
     "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
   ],
   "components": {
@@ -1344,7 +1344,25 @@
       "difficulty": 9.999999717180685e-10,
       "required_bench": null,
       "source_order": -1,
-      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:stack_torch (9.999999717180685e-10)"
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:stack_torch (9.999999717180685e-10); Extreme EXItemsRegistryInit.registerRecipes: one to four bundles yield sixteen torches each; oversized batches use the base stacking serializer without changing the torch stack limit"
+    },
+    "modern_ite:unpack_torches_2": {
+      "difficulty": 1.999999943436137e-09,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * modern_ite:stack_torch (9.999999717180685e-10); Extreme EXItemsRegistryInit.registerRecipes: one to four bundles yield sixteen torches each; oversized batches use the base stacking serializer without changing the torch stack limit"
+    },
+    "modern_ite:unpack_torches_3": {
+      "difficulty": 2.999999804131903e-09,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:stack_torch (9.999999717180685e-10); Extreme EXItemsRegistryInit.registerRecipes: one to four bundles yield sixteen torches each; oversized batches use the base stacking serializer without changing the torch stack limit"
+    },
+    "modern_ite:unpack_torches_4": {
+      "difficulty": 3.999999886872274e-09,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * modern_ite:stack_torch (9.999999717180685e-10); Extreme EXItemsRegistryInit.registerRecipes: one to four bundles yield sixteen torches each; oversized batches use the base stacking serializer without changing the torch stack limit"
     },
     "modern_ite:vibranium_chest": {
       "difficulty": 409600.0,
