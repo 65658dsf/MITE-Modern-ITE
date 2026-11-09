@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.client.compat;
 
 import com.mojang.logging.LogUtils;
+import io.github.ningmeng123.modernite.gear.EnhanceGemItem;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -19,7 +20,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
 
-/** Keep rendered vibranium sprites active when cached meshes bypass Sodium's quad path. @author NingMeng123 */
+/** Keep rendered vibranium and gem sprites active when cached meshes bypass Sodium's quad path. @author NingMeng123 */
 public final class VibraniumSpriteActivity {
     private static final Set<String> NATIVE_TOOLS = Set.of("vibranium_sword", "vibranium_axe",
             "vibranium_battle_axe", "vibranium_dagger", "vibranium_hatchet", "vibranium_hoe",
@@ -33,6 +34,8 @@ public final class VibraniumSpriteActivity {
             "simplyswords_vibranium_cutlass", "simplyswords_vibranium_claymore", "simplyswords_vibranium_greataxe",
             "simplyswords_vibranium_greathammer", "simplyswords_vibranium_chakram",
             "simplyswords_vibranium_scythe", "simplyswords_vibranium_halberd");
+    private static final Set<String> PLAIN_GEMS = Set.of("gem_shard_2", "gem_shard_3",
+            "gem_shard_4", "gem_shard_5", "gem_shard_6");
     // Item rendering is on the render thread. Weak keys release replaced models after resource reloads.
     private static final Map<BakedModel, List<TextureAtlasSprite>> MODEL_SPRITES = new WeakHashMap<>();
     private static boolean disabled;
@@ -51,15 +54,20 @@ public final class VibraniumSpriteActivity {
             if (failure instanceof ThreadDeath fatal) throw fatal;
             disabled = true;
             MODEL_SPRITES.clear();
-            LogUtils.getLogger().warn("Disabled optional Sodium vibranium sprite activity compatibility", failure);
+            LogUtils.getLogger().warn("Disabled optional Sodium animated item sprite activity compatibility", failure);
         }
     }
 
     private static boolean supported(ItemStack stack) {
         var id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        if (id.getNamespace().equals("modern_ite")) {
+            // Both GUI and held cached draws must keep the native animation clock
+            // alive throughout the quiet frame as well as the visible shine.
+            return id.getPath().equals("club_vibranium") || stack.getItem() instanceof EnhanceGemItem
+                    || PLAIN_GEMS.contains(id.getPath());
+        }
         return id.getNamespace().equals("mite")
-                && (NATIVE_TOOLS.contains(id.getPath()) || SIMPLY_SWORDS_WEAPONS.contains(id.getPath()))
-                || id.getNamespace().equals("modern_ite") && id.getPath().equals("club_vibranium");
+                && (NATIVE_TOOLS.contains(id.getPath()) || SIMPLY_SWORDS_WEAPONS.contains(id.getPath()));
     }
 
     private static List<TextureAtlasSprite> sprites(BakedModel model) {
@@ -93,7 +101,7 @@ public final class VibraniumSpriteActivity {
                 return MethodHandles.publicLookup().findVirtual(api, "markSpriteActive",
                         MethodType.methodType(void.class, TextureAtlasSprite.class)).bindTo(singleton);
             } catch (ReflectiveOperationException | LinkageError | RuntimeException failure) {
-                LogUtils.getLogger().warn("Sodium public sprite activity API is unavailable; vibranium compatibility was not enabled", failure);
+                LogUtils.getLogger().warn("Sodium public sprite activity API is unavailable; animated item compatibility was not enabled", failure);
                 return null;
             }
         }

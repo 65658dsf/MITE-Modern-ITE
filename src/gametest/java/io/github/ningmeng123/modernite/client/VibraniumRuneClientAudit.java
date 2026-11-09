@@ -10,6 +10,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.logging.LogUtils;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -52,6 +53,7 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL21;
+import org.lwjgl.glfw.GLFW;
 
 /** Observes native atlas animation on real title-screen ticks; never advances an animation itself. @author NingMeng123 */
 @EventBusSubscriber(modid = ModernIte.MOD_ID, value = Dist.CLIENT)
@@ -62,6 +64,7 @@ public final class VibraniumRuneClientAudit {
             "spear","glaive","warglaive","cutlass","claymore","greataxe","greathammer","chakram","scythe","halberd");
     private static final List<ObservedSprite> SPRITES = new ArrayList<>();
     private static boolean baked, finished;
+    private static boolean auditWindowHidden;
     private static int waiting, titleTicks, observationTick, captureSpan, itemDrawFrames;
     private static int firstSampleTick=-1,lastSampleTick=-1;
     private static AcceleratedProbe accelerated;
@@ -70,6 +73,9 @@ public final class VibraniumRuneClientAudit {
     private static NativeImage atlasPixels;
 
     private VibraniumRuneClientAudit() {}
+
+    private static boolean gemMode() { return Boolean.getBoolean("modern_ite.gemShineAudit"); }
+    private static boolean guiMode() { return gemMode() && Boolean.getBoolean("modern_ite.gemShineGuiAudit"); }
 
     @EventBusSubscriber(modid = ModernIte.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
     public static final class BakingListener {
@@ -82,6 +88,12 @@ public final class VibraniumRuneClientAudit {
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         if (!Boolean.getBoolean("modern_ite.runeAudit") || finished) return;
         Minecraft mc = Minecraft.getInstance();
+        // Opt-in background-only audit. Never hide an instance attached to a world.
+        if (!auditWindowHidden && Boolean.getBoolean("modern_ite.hideAuditWindow")
+                && mc.level == null && mc.getConnection() == null && mc.getSingleplayerServer() == null) {
+            GLFW.glfwHideWindow(mc.getWindow().getWindow());
+            auditWindowHidden = true;
+        }
         if (report == null) report = initialReport();
         if (mc.level != null || mc.getConnection() != null || mc.getSingleplayerServer() != null) {
             report.getAsJsonArray("failures").add("Refused to audit or close a client attached to a world/server");
@@ -115,8 +127,8 @@ public final class VibraniumRuneClientAudit {
         if (!(event.getScreen() instanceof TitleScreen) || mc.getOverlay() != null
                 || mc.level != null || mc.getConnection() != null || mc.getSingleplayerServer() != null) return;
         try {
-            // Draw only the held-item path. GUI icons would independently mark sprites
-            // visible and conceal the accelerated first-person mesh-cache regression.
+            // Exercise one context per process. Drawing GUI and held items together
+            // could mark sprites visible and hide a freeze in the other cached path.
             var graphics=event.getGuiGraphics();
             var buffers=mc.renderBuffers().bufferSource();
             graphics.flush();
@@ -125,42 +137,50 @@ public final class VibraniumRuneClientAudit {
             float cellWidth=(event.getScreen().width-32F)/columns;
             float cellHeight=Math.min(56,(event.getScreen().height-32F)/rows);
             float scale=Math.min(38,Math.min(cellWidth,cellHeight)*.7F);
-            boolean previousHand=accelerated.enterHand();
+            boolean previousHand=accelerated.enterDraw();
             try {
                 Lighting.setupForFlatItems();
                 for(int i=0;i<SPRITES.size();i++) {
                     ObservedSprite sprite=SPRITES.get(i);
                     graphics.pose().pushPose();
                     try {
-                        graphics.pose().translate(16+(i%columns+.5F)*cellWidth,16+(i/columns+.5F)*cellHeight,150);
-                        graphics.pose().scale(scale,-scale,scale);
-                        graphics.pose().mulPose(Axis.YP.rotationDegrees(35));
-                        accelerated.beforeDraw(mc,sprite,buffers);
-                        mc.getItemRenderer().renderStatic(sprite.stack,ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
-                                15728880,OverlayTexture.NO_OVERLAY,graphics.pose(),buffers,null,0);
+                        if (guiMode()) {
+                            graphics.pose().translate(16+(i%columns+.5F)*cellWidth-scale/2,
+                                    16+(i/columns+.5F)*cellHeight-scale/2,150);
+                            graphics.pose().scale(scale/16,scale/16,1);
+                            accelerated.beforeDraw(mc,sprite,buffers);
+                            graphics.renderItem(sprite.stack,0,0);
+                        } else {
+                            graphics.pose().translate(16+(i%columns+.5F)*cellWidth,16+(i/columns+.5F)*cellHeight,150);
+                            graphics.pose().scale(scale,-scale,scale);
+                            graphics.pose().mulPose(Axis.YP.rotationDegrees(35));
+                            accelerated.beforeDraw(mc,sprite,buffers);
+                            mc.getItemRenderer().renderStatic(sprite.stack,ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
+                                    15728880,OverlayTexture.NO_OVERLAY,graphics.pose(),buffers,null,0);
+                        }
                         sprite.itemDraws++;
                     } finally {graphics.pose().popPose();}
                 }
                 buffers.endBatch();
                 for(ObservedSprite sprite:SPRITES)accelerated.afterDraw(mc,sprite);
             } finally {
-                accelerated.leaveHand(previousHand);
+                accelerated.leaveDraw(previousHand);
                 Lighting.setupFor3DItems();
             }
             itemDrawFrames++;
             if(itemDrawFrames<=20||waiting==lastSampleTick)return;
             if(firstSampleTick<0) {
                 firstSampleTick=waiting;
-                Path image=output().getParent().resolve("rune-audit").resolve("first-person-hand-context.png");
+                Path image=output().getParent().resolve("rune-audit").resolve(guiMode()?"gui-context.png":"first-person-hand-context.png");
                 Files.createDirectories(image.getParent());
                 try(NativeImage frame=Screenshot.takeScreenshot(mc.getMainRenderTarget())){frame.writeToFile(image);}
-                report.addProperty("actual_first_person_draw_screenshot",image.toString());
+                report.addProperty(guiMode()?"actual_gui_draw_screenshot":"actual_first_person_draw_screenshot",image.toString());
             }
             capture();
             lastSampleTick=waiting;
             observationTick++;
             int span=lastSampleTick-firstSampleTick;
-            if(span>=captureSpan&&(SPRITES.stream().allMatch(ObservedSprite::twoCyclesObserved)||span>=captureSpan*4)) {
+            if(span>=captureSpan&&(gemMode()||SPRITES.stream().allMatch(ObservedSprite::twoCyclesObserved)||span>=captureSpan*4)) {
                 for(ObservedSprite sprite:SPRITES)sprite.complete();
                 report.addProperty("native_client_ticks_elapsed",waiting);
                 report.addProperty("actual_gpu_frame_samples",observationTick);
@@ -183,11 +203,13 @@ public final class VibraniumRuneClientAudit {
         result.addProperty("author", "NingMeng123");
         result.addProperty("timestamp", Instant.now().toString());
         result.addProperty("property", "modern_ite.runeAudit=true");
-        result.addProperty("scope", "FIRST_PERSON_RIGHT_HAND native item draws only at the title screen; real rendered-frame GPU atlas observations mapped to native client ticks");
+        result.addProperty("scope", (guiMode()?"GUI":"FIRST_PERSON_RIGHT_HAND")
+                + " native item draws only at the title screen; real rendered-frame GPU atlas observations mapped to native client ticks");
+        result.addProperty("gem_shine_audit",gemMode());
         result.addProperty("world_created", false);
         result.addProperty("server_connected", false);
         result.addProperty("manual_animation_advance", false);
-        result.addProperty("gui_item_icons_drawn",false);
+        result.addProperty("gui_item_icons_drawn",guiMode());
         result.addProperty("real_draw_warmup_frames",20);
         result.addProperty("sample_phase","ScreenEvent.Render.Post after real held-item draws and native buffer flush");
         result.addProperty("native_title_texture_tick_condition", "Minecraft.isLevelRunningNormally: level == null || level.tickRateManager().runsNormally()");
@@ -197,6 +219,22 @@ public final class VibraniumRuneClientAudit {
     }
 
     private static void initialize(Minecraft mc) throws Exception {
+        if (gemMode()) {
+            inspectGemVisibilitySetting();
+            for (var gem : ExtremeGear.GEMS) observe(mc, BuiltInRegistries.ITEM.getKey(gem.get()));
+            for (var gem : ExtremeGear.SHARDS) observe(mc, BuiltInRegistries.ITEM.getKey(gem.get()));
+            accelerated = new AcceleratedProbe();
+            report.add("accelerated_rendering",accelerated.facts);
+            check(SPRITES.size()==65,"Expected all 65 registered gem sprites");
+            // Two complete visible shines take at most 254 ticks, even when the
+            // twelve-cycle schedule is much longer. Bound frozen negative controls.
+            captureSpan = 350;
+            report.addProperty("gem_count",SPRITES.size());
+            report.addProperty("required_observation_span_ticks",captureSpan);
+            report.addProperty("model_baking_completed",baked);
+            report.addProperty("title_screen_visible",mc.screen instanceof TitleScreen);
+            return;
+        }
         for (String tool : NATIVE_TOOLS) observe(mc, ResourceLocation.fromNamespaceAndPath("mite", "vibranium_" + tool));
         observe(mc, ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID, "club_vibranium"));
         int simplySwordsCount=0;
@@ -217,6 +255,22 @@ public final class VibraniumRuneClientAudit {
         report.addProperty("required_observation_span_ticks", captureSpan);
     }
 
+    /** Read the live option, not a disk copy that may differ from this client. */
+    private static void inspectGemVisibilitySetting() throws Exception {
+        Class<?> sodium;
+        try { sodium = Class.forName("net.caffeinemc.mods.sodium.client.SodiumClientMod"); }
+        catch (ClassNotFoundException absent) { report.addProperty("sodium_present",false); return; }
+        Object options = sodium.getMethod("options").invoke(null);
+        Object performance = options.getClass().getField("performance").get(options);
+        boolean visibleOnly = performance.getClass().getField("animateOnlyVisibleTextures").getBoolean(performance);
+        report.addProperty("sodium_present",true);
+        report.addProperty("sodium_animate_only_visible_textures",visibleOnly);
+        boolean required = Boolean.parseBoolean(System.getProperty("modern_ite.gemShineRequireVisibleOnly","true"));
+        report.addProperty("sodium_visible_only_required",required);
+        check(!required || visibleOnly,"Gem compatibility audit requires live Sodium animate_only_visible_textures=true; "
+                + "set gemShineRequireVisibleOnly=false only for an intentional animate-all control");
+    }
+
     /** Test-only, optional public AR hand scope plus read-only accelerated-consumer/cache evidence. */
     private static final class AcceleratedProbe {
         final JsonObject facts=new JsonObject();
@@ -228,7 +282,8 @@ public final class VibraniumRuneClientAudit {
             try{core=Class.forName("com.github.argon4w.acceleratedrendering.core.CoreFeature");}
             catch(ClassNotFoundException absent){facts.addProperty("mod_present",false);return;}
             present=true;
-            isHand=core.getMethod("isRenderingHand");setHand=core.getMethod("setRenderingHand");resetHand=core.getMethod("resetRenderingHand");
+            String context = guiMode()?"Gui":"Hand";
+            isHand=core.getMethod("isRendering"+context);setHand=core.getMethod("setRendering"+context);resetHand=core.getMethod("resetRendering"+context);
             Class<?> feature=Class.forName("com.github.argon4w.acceleratedrendering.features.items.AcceleratedItemRenderingFeature");
             usesPipeline=feature.getMethod("shouldUseAcceleratedPipeline");
             forcePipeline=feature.getMethod("forceUseAcceleratedPipeline");
@@ -239,15 +294,21 @@ public final class VibraniumRuneClientAudit {
             boolean loaded=(Boolean)core.getMethod("isLoaded").invoke(null);
             boolean enabled=(Boolean)feature.getMethod("isEnabled").invoke(null);
             boolean pipeline=(Boolean)usesPipeline.invoke(null);
-            boolean hand=(Boolean)feature.getMethod("shouldAccelerateInHand").invoke(null);
+            boolean hand=(Boolean)feature.getMethod("shouldAccelerateIn"+context).invoke(null);
             expectedAccelerated=loaded&&enabled&&pipeline&&hand;
             facts.addProperty("mod_present",true);facts.addProperty("core_loaded",loaded);
             facts.addProperty("item_feature_enabled",enabled);facts.addProperty("accelerated_pipeline_selected",pipeline);
-            facts.addProperty("hand_acceleration_enabled",hand);facts.addProperty("expected_accelerated_hand_draw",expectedAccelerated);
-            facts.addProperty("hand_scope","same public CoreFeature.setRenderingHand/resetRenderingHand scope as native GameRenderer hand hook; real ItemRenderer FIRST_PERSON_RIGHT_HAND draws");
+            facts.addProperty(guiMode()?"gui_acceleration_enabled":"hand_acceleration_enabled",hand);
+            facts.addProperty("expected_accelerated_draw",expectedAccelerated);
+            facts.addProperty("render_context",guiMode()?"GUI":"FIRST_PERSON_RIGHT_HAND");
+            facts.addProperty("draw_scope","public CoreFeature.setRendering"+context+"/resetRendering"+context+" scope; native item draw path");
+            if (!guiMode()) {
+                facts.addProperty("expected_accelerated_hand_draw",expectedAccelerated);
+                facts.addProperty("hand_scope","same public CoreFeature.setRenderingHand/resetRenderingHand scope as native GameRenderer hand hook; real ItemRenderer FIRST_PERSON_RIGHT_HAND draws");
+            }
         }
 
-        boolean enterHand()throws Exception {
+        boolean enterDraw()throws Exception {
             if(!present)return false;
             boolean previous=(Boolean)isHand.invoke(null);
             previousPipeline=(Boolean)usesPipeline.invoke(null);
@@ -269,7 +330,7 @@ public final class VibraniumRuneClientAudit {
             }
         }
 
-        void leaveHand(boolean previous)throws Exception {
+        void leaveDraw(boolean previous)throws Exception {
             if(!present)return;
             try{(previous?setHand:resetHand).invoke(null);}finally{resetPipeline.invoke(null);}
             check((Boolean)isHand.invoke(null)==previous,"AR hand scope was not restored");
@@ -405,6 +466,22 @@ public final class VibraniumRuneClientAudit {
             metadata.forEachFrame((index, time) -> duration[0] += time);
             cycleTicks = duration[0] > 0 ? duration[0] : indices.length * metadata.getDefaultFrameTime();
             check(indices.length > 1 && cycleTicks > 0, "Expected a native multi-frame rune animation: " + item);
+            if (gemMode()) {
+                check(width==16&&height==16&&indices.length==28&&!interpolated,
+                        "Gem must retain 28 original 16x16 frames without interpolation: "+item);
+                int[] expected = {0}, cooldowns = {0};
+                JsonArray rests = new JsonArray();
+                metadata.forEachFrame((index,time)->{
+                    check(index==expected[0],"Gem schedule has skipped/reordered frames: "+item);
+                    if(index==0) {
+                        check(time>=30&&time<=100,"Gem cooldown must be 1.5–5 seconds: "+item);
+                        cooldowns[0]++; rests.add(time);
+                    } else check(time==1,"Gem active frames must be one tick: "+item);
+                    expected[0]=(expected[0]+1)%28;
+                });
+                check(expected[0]==0&&cooldowns[0]==12,"Gem schedule must contain twelve complete shines: "+item);
+                facts.add("cooldown_ticks",rests);
+            }
             ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(sprite.contents().name().getNamespace(), "textures/" + sprite.contents().name().getPath() + ".png");
             Resource resource = mc.getResourceManager().getResource(texture).orElseThrow();
             byte[] png;
@@ -434,6 +511,7 @@ public final class VibraniumRuneClientAudit {
                 int columns = source.getWidth() / width;
                 check(columns > 0, "Source strip narrower than stitched frame: " + item);
                 for (int index : indices) sourceHashes.add(hash(pixels(source, index % columns * width, index / columns * height, width, height)));
+                if (gemMode()) cycleAnchor = hash(pixels(source, 0, 0, width, height));
                 facts.addProperty("source_strip_width", source.getWidth());
                 facts.addProperty("source_strip_height", source.getHeight());
             }
@@ -441,7 +519,7 @@ public final class VibraniumRuneClientAudit {
             JsonArray sourceHashArray = new JsonArray(); sourceHashes.forEach(sourceHashArray::add);
             facts.add("source_visible_frame_sha256", sourceHashArray);
             facts.add("samples", samples);
-            facts.add("accelerated_hand_draw",acceleratedFacts);
+            facts.add(guiMode()?"accelerated_gui_draw":"accelerated_hand_draw",acceleratedFacts);
         }
 
         void sample(NativeImage image, int tick) throws Exception {
@@ -505,11 +583,11 @@ public final class VibraniumRuneClientAudit {
             }
             facts.addProperty("gpu_unique_frame_contact_sheet", contact.toString());
             boolean passed = itemDraws>20&&twoCyclesObserved()
-                    &&sampleTicks.get(sampleTicks.size()-1)-sampleTicks.get(0)>=cycleTicks*2;
+                    &&sampleTicks.get(sampleTicks.size()-1)-sampleTicks.get(0)>=(gemMode()?captureSpan:cycleTicks*2);
             if (!interpolated) passed &= sourceHashes.equals(gpuFrames.keySet());
             if(accelerated.expectedAccelerated)passed&=acceleratedConsumerDraws>20&&meshReuseDraws>10;
             facts.addProperty("status", passed ? "passed" : "failed");
-            if (!passed) report.getAsJsonArray("failures").add(item + ": native GPU atlas did not reproduce all source rune frames and two complete real-tick cycles");
+            if (!passed) report.getAsJsonArray("failures").add(item + ": native GPU atlas did not reproduce all source frames and two complete visible real-tick cycles");
         }
 
         boolean twoCyclesObserved(){return gpuFrames.size()>=sourceHashes.size()&&gpuFrames.size()>1&&maximumChangedPixels>0&&completeCycles>=2;}

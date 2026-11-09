@@ -1,0 +1,13 @@
+// Observe native GPU animation in one item context per isolated launch. Author: NingMeng123.
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    def phase = project.providers.gradleProperty('gemShinePhase').getOrElse('gem-shine')
+    project.extensions.getByName('neoForge').runs.named('client') {
+        systemProperty 'modern_ite.runeAudit', 'true'
+        systemProperty 'modern_ite.gemShineAudit', 'true'
+        systemProperty 'modern_ite.hideAuditWindow', 'true'
+        systemProperty 'modern_ite.gemShineGuiAudit', project.providers.gradleProperty('gemShineGui').getOrElse('false')
+        systemProperty 'modern_ite.runeAuditOutput', project.file("build/verification/gem-shine-compat/${phase}/audit.json").absolutePath
+        programArguments.addAll '--width', '1280', '--height', '900'
+    }
+}

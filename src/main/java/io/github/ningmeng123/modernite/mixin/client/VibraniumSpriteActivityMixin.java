@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class VibraniumSpriteActivityMixin {
     @Inject(method = "render(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/resources/model/BakedModel;)V",
             at = @At("HEAD"))
-    private void modernite$markRenderedVibranium(ItemStack stack, ItemDisplayContext context, boolean leftHand,
+    private void modernite$markRenderedAnimatedItem(ItemStack stack, ItemDisplayContext context, boolean leftHand,
             PoseStack pose, MultiBufferSource buffers, int light, int overlay, BakedModel model, CallbackInfo ci) {
         VibraniumSpriteActivity.markRendered(stack, model);
     }
