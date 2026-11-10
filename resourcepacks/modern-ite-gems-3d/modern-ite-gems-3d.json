@@ -1,0 +1,510 @@
+{
+  "author": "NingMeng123",
+  "format": 1,
+  "minecraft": "1.21.1",
+  "pack_format": 34,
+  "frames": 28,
+  "frame_size": 64,
+  "items": [
+    {
+      "id": "modern_ite:gem_damage_1",
+      "rank": 1,
+      "kind": "damage",
+      "texture": "modern_ite:item/gem3d/gem_damage_1"
+    },
+    {
+      "id": "modern_ite:gem_health_1",
+      "rank": 1,
+      "kind": "health",
+      "texture": "modern_ite:item/gem3d/gem_health_1"
+    },
+    {
+      "id": "modern_ite:gem_protection_1",
+      "rank": 1,
+      "kind": "protection",
+      "texture": "modern_ite:item/gem3d/gem_protection_1"
+    },
+    {
+      "id": "modern_ite:gem_recover_1",
+      "rank": 1,
+      "kind": "recover",
+      "texture": "modern_ite:item/gem3d/gem_recover_1"
+    },
+    {
+      "id": "modern_ite:gem_effect_1",
+      "rank": 1,
+      "kind": "effect",
+      "texture": "modern_ite:item/gem3d/gem_effect_1"
+    },
+    {
+      "id": "modern_ite:gem_durable_1",
+      "rank": 1,
+      "kind": "durable",
+      "texture": "modern_ite:item/gem3d/gem_durable_1"
+    },
+    {
+      "id": "modern_ite:gem_speed_1",
+      "rank": 1,
+      "kind": "speed",
+      "texture": "modern_ite:item/gem3d/gem_speed_1"
+    },
+    {
+      "id": "modern_ite:gem_fireproof_1",
+      "rank": 1,
+      "kind": "fireproof",
+      "texture": "modern_ite:item/gem3d/gem_fireproof_1"
+    },
+    {
+      "id": "modern_ite:gem_explosionproof_1",
+      "rank": 1,
+      "kind": "explosionproof",
+      "texture": "modern_ite:item/gem3d/gem_explosionproof_1"
+    },
+    {
+      "id": "modern_ite:gem_nutrition_1",
+      "rank": 1,
+      "kind": "nutrition",
+      "texture": "modern_ite:item/gem3d/gem_nutrition_1"
+    },
+    {
+      "id": "modern_ite:gem_damage_2",
+      "rank": 2,
+      "kind": "damage",
+      "texture": "modern_ite:item/gem3d/gem_damage_2"
+    },
+    {
+      "id": "modern_ite:gem_health_2",
+      "rank": 2,
+      "kind": "health",
+      "texture": "modern_ite:item/gem3d/gem_health_2"
+    },
+    {
+      "id": "modern_ite:gem_protection_2",
+      "rank": 2,
+      "kind": "protection",
+      "texture": "modern_ite:item/gem3d/gem_protection_2"
+    },
+    {
+      "id": "modern_ite:gem_recover_2",
+      "rank": 2,
+      "kind": "recover",
+      "texture": "modern_ite:item/gem3d/gem_recover_2"
+    },
+    {
+      "id": "modern_ite:gem_effect_2",
+      "rank": 2,
+      "kind": "effect",
+      "texture": "modern_ite:item/gem3d/gem_effect_2"
+    },
+    {
+      "id": "modern_ite:gem_durable_2",
+      "rank": 2,
+      "kind": "durable",
+      "texture": "modern_ite:item/gem3d/gem_durable_2"
+    },
+    {
+      "id": "modern_ite:gem_speed_2",
+      "rank": 2,
+      "kind": "speed",
+      "texture": "modern_ite:item/gem3d/gem_speed_2"
+    },
+    {
+      "id": "modern_ite:gem_fireproof_2",
+      "rank": 2,
+      "kind": "fireproof",
+      "texture": "modern_ite:item/gem3d/gem_fireproof_2"
+    },
+    {
+      "id": "modern_ite:gem_explosionproof_2",
+      "rank": 2,
+      "kind": "explosionproof",
+      "texture": "modern_ite:item/gem3d/gem_explosionproof_2"
+    },
+    {
+      "id": "modern_ite:gem_nutrition_2",
+      "rank": 2,
+      "kind": "nutrition",
+      "texture": "modern_ite:item/gem3d/gem_nutrition_2"
+    },
+    {
+      "id": "modern_ite:gem_shard_2",
+      "rank": 2,
+      "kind": "shard",
+      "texture": "modern_ite:item/gem3d/gem_shard_2"
+    },
+    {
+      "id": "modern_ite:gem_damage_3",
+      "rank": 3,
+      "kind": "damage",
+      "texture": "modern_ite:item/gem3d/gem_damage_3"
+    },
+    {
+      "id": "modern_ite:gem_health_3",
+      "rank": 3,
+      "kind": "health",
+      "texture": "modern_ite:item/gem3d/gem_health_3"
+    },
+    {
+      "id": "modern_ite:gem_protection_3",
+      "rank": 3,
+      "kind": "protection",
+      "texture": "modern_ite:item/gem3d/gem_protection_3"
+    },
+    {
+      "id": "modern_ite:gem_recover_3",
+      "rank": 3,
+      "kind": "recover",
+      "texture": "modern_ite:item/gem3d/gem_recover_3"
+    },
+    {
+      "id": "modern_ite:gem_effect_3",
+      "rank": 3,
+      "kind": "effect",
+      "texture": "modern_ite:item/gem3d/gem_effect_3"
+    },
+    {
+      "id": "modern_ite:gem_durable_3",
+      "rank": 3,
+      "kind": "durable",
+      "texture": "modern_ite:item/gem3d/gem_durable_3"
+    },
+    {
+      "id": "modern_ite:gem_speed_3",
+      "rank": 3,
+      "kind": "speed",
+      "texture": "modern_ite:item/gem3d/gem_speed_3"
+    },
+    {
+      "id": "modern_ite:gem_fireproof_3",
+      "rank": 3,
+      "kind": "fireproof",
+      "texture": "modern_ite:item/gem3d/gem_fireproof_3"
+    },
+    {
+      "id": "modern_ite:gem_explosionproof_3",
+      "rank": 3,
+      "kind": "explosionproof",
+      "texture": "modern_ite:item/gem3d/gem_explosionproof_3"
+    },
+    {
+      "id": "modern_ite:gem_nutrition_3",
+      "rank": 3,
+      "kind": "nutrition",
+      "texture": "modern_ite:item/gem3d/gem_nutrition_3"
+    },
+    {
+      "id": "modern_ite:gem_shard_3",
+      "rank": 3,
+      "kind": "shard",
+      "texture": "modern_ite:item/gem3d/gem_shard_3"
+    },
+    {
+      "id": "modern_ite:gem_damage_4",
+      "rank": 4,
+      "kind": "damage",
+      "texture": "modern_ite:item/gem3d/gem_damage_4"
+    },
+    {
+      "id": "modern_ite:gem_health_4",
+      "rank": 4,
+      "kind": "health",
+      "texture": "modern_ite:item/gem3d/gem_health_4"
+    },
+    {
+      "id": "modern_ite:gem_protection_4",
+      "rank": 4,
+      "kind": "protection",
+      "texture": "modern_ite:item/gem3d/gem_protection_4"
+    },
+    {
+      "id": "modern_ite:gem_recover_4",
+      "rank": 4,
+      "kind": "recover",
+      "texture": "modern_ite:item/gem3d/gem_recover_4"
+    },
+    {
+      "id": "modern_ite:gem_effect_4",
+      "rank": 4,
+      "kind": "effect",
+      "texture": "modern_ite:item/gem3d/gem_effect_4"
+    },
+    {
+      "id": "modern_ite:gem_durable_4",
+      "rank": 4,
+      "kind": "durable",
+      "texture": "modern_ite:item/gem3d/gem_durable_4"
+    },
+    {
+      "id": "modern_ite:gem_speed_4",
+      "rank": 4,
+      "kind": "speed",
+      "texture": "modern_ite:item/gem3d/gem_speed_4"
+    },
+    {
+      "id": "modern_ite:gem_fireproof_4",
+      "rank": 4,
+      "kind": "fireproof",
+      "texture": "modern_ite:item/gem3d/gem_fireproof_4"
+    },
+    {
+      "id": "modern_ite:gem_explosionproof_4",
+      "rank": 4,
+      "kind": "explosionproof",
+      "texture": "modern_ite:item/gem3d/gem_explosionproof_4"
+    },
+    {
+      "id": "modern_ite:gem_nutrition_4",
+      "rank": 4,
+      "kind": "nutrition",
+      "texture": "modern_ite:item/gem3d/gem_nutrition_4"
+    },
+    {
+      "id": "modern_ite:gem_shard_4",
+      "rank": 4,
+      "kind": "shard",
+      "texture": "modern_ite:item/gem3d/gem_shard_4"
+    },
+    {
+      "id": "modern_ite:gem_damage_5",
+      "rank": 5,
+      "kind": "damage",
+      "texture": "modern_ite:item/gem3d/gem_damage_5"
+    },
+    {
+      "id": "modern_ite:gem_health_5",
+      "rank": 5,
+      "kind": "health",
+      "texture": "modern_ite:item/gem3d/gem_health_5"
+    },
+    {
+      "id": "modern_ite:gem_protection_5",
+      "rank": 5,
+      "kind": "protection",
+      "texture": "modern_ite:item/gem3d/gem_protection_5"
+    },
+    {
+      "id": "modern_ite:gem_recover_5",
+      "rank": 5,
+      "kind": "recover",
+      "texture": "modern_ite:item/gem3d/gem_recover_5"
+    },
+    {
+      "id": "modern_ite:gem_effect_5",
+      "rank": 5,
+      "kind": "effect",
+      "texture": "modern_ite:item/gem3d/gem_effect_5"
+    },
+    {
+      "id": "modern_ite:gem_durable_5",
+      "rank": 5,
+      "kind": "durable",
+      "texture": "modern_ite:item/gem3d/gem_durable_5"
+    },
+    {
+      "id": "modern_ite:gem_speed_5",
+      "rank": 5,
+      "kind": "speed",
+      "texture": "modern_ite:item/gem3d/gem_speed_5"
+    },
+    {
+      "id": "modern_ite:gem_fireproof_5",
+      "rank": 5,
+      "kind": "fireproof",
+      "texture": "modern_ite:item/gem3d/gem_fireproof_5"
+    },
+    {
+      "id": "modern_ite:gem_explosionproof_5",
+      "rank": 5,
+      "kind": "explosionproof",
+      "texture": "modern_ite:item/gem3d/gem_explosionproof_5"
+    },
+    {
+      "id": "modern_ite:gem_nutrition_5",
+      "rank": 5,
+      "kind": "nutrition",
+      "texture": "modern_ite:item/gem3d/gem_nutrition_5"
+    },
+    {
+      "id": "modern_ite:gem_shard_5",
+      "rank": 5,
+      "kind": "shard",
+      "texture": "modern_ite:item/gem3d/gem_shard_5"
+    },
+    {
+      "id": "modern_ite:gem_damage_6",
+      "rank": 6,
+      "kind": "damage",
+      "texture": "modern_ite:item/gem3d/gem_damage_6"
+    },
+    {
+      "id": "modern_ite:gem_health_6",
+      "rank": 6,
+      "kind": "health",
+      "texture": "modern_ite:item/gem3d/gem_health_6"
+    },
+    {
+      "id": "modern_ite:gem_protection_6",
+      "rank": 6,
+      "kind": "protection",
+      "texture": "modern_ite:item/gem3d/gem_protection_6"
+    },
+    {
+      "id": "modern_ite:gem_recover_6",
+      "rank": 6,
+      "kind": "recover",
+      "texture": "modern_ite:item/gem3d/gem_recover_6"
+    },
+    {
+      "id": "modern_ite:gem_effect_6",
+      "rank": 6,
+      "kind": "effect",
+      "texture": "modern_ite:item/gem3d/gem_effect_6"
+    },
+    {
+      "id": "modern_ite:gem_durable_6",
+      "rank": 6,
+      "kind": "durable",
+      "texture": "modern_ite:item/gem3d/gem_durable_6"
+    },
+    {
+      "id": "modern_ite:gem_speed_6",
+      "rank": 6,
+      "kind": "speed",
+      "texture": "modern_ite:item/gem3d/gem_speed_6"
+    },
+    {
+      "id": "modern_ite:gem_fireproof_6",
+      "rank": 6,
+      "kind": "fireproof",
+      "texture": "modern_ite:item/gem3d/gem_fireproof_6"
+    },
+    {
+      "id": "modern_ite:gem_explosionproof_6",
+      "rank": 6,
+      "kind": "explosionproof",
+      "texture": "modern_ite:item/gem3d/gem_explosionproof_6"
+    },
+    {
+      "id": "modern_ite:gem_nutrition_6",
+      "rank": 6,
+      "kind": "nutrition",
+      "texture": "modern_ite:item/gem3d/gem_nutrition_6"
+    },
+    {
+      "id": "modern_ite:gem_shard_6",
+      "rank": 6,
+      "kind": "shard",
+      "texture": "modern_ite:item/gem3d/gem_shard_6"
+    }
+  ],
+  "cuts": [
+    {
+      "rank": 1,
+      "sides": 3,
+      "faces": 30,
+      "cut": "trillion",
+      "bounds": {
+        "min": [
+          0.13626933041053585,
+          0.21,
+          0.08000000000000002
+        ],
+        "max": [
+          0.8637306695894642,
+          0.76,
+          0.7100000000000002
+        ]
+      }
+    },
+    {
+      "rank": 2,
+      "sides": 4,
+      "faces": 40,
+      "cut": "diamond",
+      "bounds": {
+        "min": [
+          0.08000000000000002,
+          0.21,
+          0.08000000000000002
+        ],
+        "max": [
+          0.9199999999999999,
+          0.76,
+          0.9199999999999999
+        ]
+      }
+    },
+    {
+      "rank": 3,
+      "sides": 5,
+      "faces": 50,
+      "cut": "pentagonal",
+      "bounds": {
+        "min": [
+          0.1005562631560355,
+          0.21,
+          0.08000000000000002
+        ],
+        "max": [
+          0.8994437368439645,
+          0.76,
+          0.8397871376374779
+        ]
+      }
+    },
+    {
+      "rank": 4,
+      "sides": 6,
+      "faces": 60,
+      "cut": "hexagonal",
+      "bounds": {
+        "min": [
+          0.1362693304105358,
+          0.21,
+          0.08000000000000002
+        ],
+        "max": [
+          0.8637306695894642,
+          0.76,
+          0.9199999999999999
+        ]
+      }
+    },
+    {
+      "rank": 5,
+      "sides": 7,
+      "faces": 70,
+      "cut": "heptagonal",
+      "bounds": {
+        "min": [
+          0.09053027688363408,
+          0.21,
+          0.08000000000000002
+        ],
+        "max": [
+          0.909469723116366,
+          0.76,
+          0.878406924519016
+        ]
+      }
+    },
+    {
+      "rank": 6,
+      "sides": 8,
+      "faces": 80,
+      "cut": "octagonal",
+      "bounds": {
+        "min": [
+          0.08000000000000002,
+          0.21,
+          0.08000000000000002
+        ],
+        "max": [
+          0.9199999999999999,
+          0.76,
+          0.9199999999999999
+        ]
+      }
+    }
+  ]
+}

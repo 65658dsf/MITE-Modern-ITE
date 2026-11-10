@@ -1,0 +1,12 @@
+// Native inspect key + first-person GPU audit. Author: NingMeng123.
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    def phase = project.providers.gradleProperty('gemInspectionPhase').getOrElse('native')
+    project.extensions.getByName('neoForge').runs.named('client') {
+        systemProperty 'modern_ite.gemInspectionAudit', 'true'
+        systemProperty 'modern_ite.gemInspectionSmoothPreview', project.providers.gradleProperty('gemInspectionSmoothPreview').getOrElse('false')
+        systemProperty 'modern_ite.gemInspectionAuditAllowedRoot', project.file('build/verification').absolutePath
+        systemProperty 'modern_ite.gemInspectionAuditOutput', project.file("build/verification/gem-inspection/${phase}/audit.json").absolutePath
+        programArguments.addAll '--width', '1280', '--height', '900'
+    }
+}

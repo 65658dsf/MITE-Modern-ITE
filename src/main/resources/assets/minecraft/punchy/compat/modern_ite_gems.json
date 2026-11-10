@@ -1,0 +1,524 @@
+{
+  "itemSpecific": {
+    "modern_ite:gem_damage_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_damage_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_damage_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_damage_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_damage_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_damage_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_health_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_health_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_health_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_health_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_health_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_health_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_protection_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_protection_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_protection_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_protection_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_protection_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_protection_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_recover_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_recover_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_recover_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_recover_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_recover_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_recover_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_effect_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_effect_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_effect_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_effect_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_effect_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_effect_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_durable_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_durable_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_durable_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_durable_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_durable_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_durable_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_speed_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_speed_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_speed_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_speed_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_speed_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_speed_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_fireproof_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_fireproof_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_fireproof_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_fireproof_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_fireproof_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_fireproof_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_explosionproof_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_explosionproof_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_explosionproof_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_explosionproof_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_explosionproof_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_explosionproof_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_nutrition_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_nutrition_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_nutrition_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_nutrition_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_nutrition_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_nutrition_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_shard_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_shard_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_shard_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_shard_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_shard_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    }
+  }
+}

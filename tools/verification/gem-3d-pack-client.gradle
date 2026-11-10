@@ -1,0 +1,14 @@
+// Native genuine-3D gemstone resource-pack audit. Author: NingMeng123.
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    def phase = project.providers.gradleProperty('gem3dPhase').getOrElse('native')
+    def packExpected = project.providers.gradleProperty('gem3dPackExpected').getOrElse('true')
+    project.extensions.getByName('neoForge').runs.named('client') {
+        systemProperty 'modern_ite.gem3dPackAudit', 'true'
+        systemProperty 'modern_ite.gem3dPackExpected', packExpected
+        systemProperty 'modern_ite.gem3dTextureSize', project.providers.gradleProperty('gem3dTextureSize').getOrElse(packExpected == 'false' ? '16' : '64')
+        systemProperty 'modern_ite.gem3dFrameCount', project.providers.gradleProperty('gem3dFrameCount').getOrElse('28')
+        systemProperty 'modern_ite.gem3dPackAuditOutput', project.file("build/verification/gem-3d-pack/${phase}/audit.json").absolutePath
+        programArguments.addAll '--width', '1280', '--height', '900'
+    }
+}

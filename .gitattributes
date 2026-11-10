@@ -6,6 +6,11 @@
 *.gradle text eol=lf
 *.properties text eol=lf
 *.toml text eol=lf
+*.mjs text eol=lf
+*.mcmeta text eol=lf
+resourcepacks/**/*.obj text eol=lf
+resourcepacks/**/*.mtl text eol=lf
+resourcepacks/**/README.txt text eol=lf
 gradlew text eol=lf
 *.bat text eol=crlf
 *.jar binary
