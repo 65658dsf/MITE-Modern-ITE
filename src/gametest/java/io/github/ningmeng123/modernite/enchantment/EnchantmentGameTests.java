@@ -57,6 +57,49 @@ public final class EnchantmentGameTests {
   h.assertTrue(!ExtremeEnchantments.applicable("chain",new ItemStack(Items.STONE_PICKAXE),false),"Stone is below the Chain threshold");
   h.assertTrue(!ExtremeEnchantments.applicable("chain",new ItemStack(Items.IRON_SWORD),false),"A sword is not a pick or war hammer");h.succeed();
  }
+ @GameTest(template="gear_empty")
+ public static void vampiricAcquisitionKeepsExtremeMaterialLimitsAndClubExceptions(GameTestHelper h) {
+  for(String itemId:List.of("minecraft:iron_sword","minecraft:wooden_sword","mite:wooden_cudgel",
+          "mite:iron_scythe","modern_ite:club_copper","modern_ite:club_silver","modern_ite:club_mithril")) {
+   var item=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(itemId));
+   h.assertTrue(item!=Items.AIR,"The allowed test item is registered: "+itemId);
+   for(String enchantmentId:List.of("vampiric","mite:vampiric"))
+    h.assertTrue(R196EnchantmentCatalog.supported(enchantmentId,new ItemStack(item)),
+            "The real extension policy accepts source-compatible vampiric targets: "+itemId);
+  }
+  for(String itemId:List.of("mite:silver_sword","mite:mithril_sword","mite:adamantium_sword","mite:vibranium_sword",
+          "mite:adamantium_scythe","mite:vibranium_scythe","modern_ite:club_adamantium","modern_ite:club_vibranium",
+          "minecraft:apple")) {
+   var item=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(itemId));
+   h.assertTrue(item!=Items.AIR,"The excluded test item is registered: "+itemId);
+   for(String enchantmentId:List.of("vampiric","mite:vampiric"))
+    h.assertFalse(R196EnchantmentCatalog.supported(enchantmentId,new ItemStack(item)),
+            "The real extension policy enforces source vampiric material and equipment restrictions: "+itemId);
+  }
+  var vampiric=h.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(
+          net.minecraft.resources.ResourceKey.create(Registries.ENCHANTMENT,net.minecraft.resources.ResourceLocation.parse("mite:vampiric")));
+  var savedWeapon=new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+          net.minecraft.resources.ResourceLocation.parse("mite:vibranium_sword")));
+  savedWeapon.enchant(vampiric,3);
+  var restored=ItemStack.parse(h.getLevel().registryAccess(),savedWeapon.save(h.getLevel().registryAccess())).orElseThrow();
+  h.assertTrue(io.github.ningmeng123.mite.enchantment.R196Enchantments.level(restored,h.getLevel(),"vampiric")==3,
+          "Acquisition restrictions preserve the stored vampiric level and its effect view on older weapons");
+  h.succeed();
+ }
+ @GameTest(template="gear_empty")
+ public static void woodenAndMetalClubsAcceptAllThreeSourceDamageEnchantments(GameTestHelper h) {
+  for(String itemId:List.of("minecraft:wooden_sword","mite:wooden_cudgel","modern_ite:club_copper",
+          "modern_ite:club_adamantium","modern_ite:club_vibranium")) {
+   var item=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(itemId));
+   h.assertTrue(item!=Items.AIR,"The source club is registered: "+itemId);
+   for(String name:List.of("sharpness","smite","bane_of_arthropods")) {
+    h.assertTrue(R196EnchantmentCatalog.supported(name,new ItemStack(item))
+            && R196EnchantmentCatalog.supported("minecraft:"+name,new ItemStack(item)),
+            "The extension recognizes both catalog and registry names for club damage enchantments: "+itemId+" / "+name);
+   }
+  }
+  h.succeed();
+ }
  @GameTest(template="gear_empty") public static void ordinaryAndGrowthLevelsStaySeparateInTheStoredItem(GameTestHelper h) {
   ItemStack weapon=new ItemStack(Items.IRON_SWORD);weapon.enchant(enchant(h,"crit"),2);
   weapon.set(GearProgression.PROGRESS.get(),new GearProgress(UUID.randomUUID(),3,713,Map.of(ExtremeEnchantments.key("crit"),1),1));

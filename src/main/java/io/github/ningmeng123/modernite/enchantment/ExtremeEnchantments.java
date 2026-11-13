@@ -98,10 +98,19 @@ public final class ExtremeEnchantments {
         return holder.unwrapKey().map(k->definition(k.location().toString())!=null).orElse(false)||original;
     }
     public static boolean applicable(String id,ItemStack stack,boolean original) {
+        ToolFamily family=R196EnchantmentCatalog.family(stack);
+        boolean club=family==ToolFamily.CUDGEL || family==ToolFamily.CLUB || stack.is(Items.WOODEN_SWORD);
+        if(id.equals("vampiric") || id.equals("mite:vampiric")) {
+            var tool=EquipmentDurability.toolProfile(stack);
+            if(tool!=null && tool.materialDurability()>=256F) return false;
+            return club || original;
+        }
+        if(club && (id.equals("sharpness") || id.equals("minecraft:sharpness")
+                || id.equals("smite") || id.equals("minecraft:smite")
+                || id.equals("bane_of_arthropods") || id.equals("minecraft:bane_of_arthropods"))) return true;
         Definition definition=definition(id);
         if(definition==null) return original;
         if(stack.isEmpty()) return false;
-        ToolFamily family=R196EnchantmentCatalog.family(stack);
         boolean armor=stack.getItem() instanceof ArmorItem && !(stack.getItem() instanceof AnimalArmorItem);
         boolean weapon=family!=null && switch(family) {case SWORD,BATTLE_AXE,WAR_HAMMER ->true; default->false;};
         return switch(definition.id()) {

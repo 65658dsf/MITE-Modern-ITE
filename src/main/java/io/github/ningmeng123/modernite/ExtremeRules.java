@@ -29,6 +29,8 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /** One provider owns all extension decisions; the base scheduler remains authoritative. @author NingMeng123 */
 public final class ExtremeRules implements MiteExtensions.Policy {
+    private static final Set<String> DAMAGE_ENCHANTMENTS = Set.of(
+            "minecraft:sharpness", "minecraft:smite", "minecraft:bane_of_arthropods");
     @Override public int gemSacrificeExperience(ItemStack stack,int original) { return io.github.ningmeng123.modernite.item.IteItemRules.gemSacrificeExperience(stack,original); }
     @Override public boolean canSacrificeGem(Player player,ItemStack stack,boolean original) { return io.github.ningmeng123.modernite.item.IteItemRules.canSacrificeGem(player,stack,original); }
     @Override public int foodUseDuration(ItemStack stack,LivingEntity user,int original) { return io.github.ningmeng123.modernite.item.IteItemRules.foodUseDuration(stack,user,original); }
@@ -216,6 +218,23 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public boolean enchantmentSupported(Holder<Enchantment> enchantment,boolean original) { return ExtremeEnchantments.supported(enchantment,original); }
     @Override public boolean enchantmentApplicable(String id,ItemStack stack,boolean original) { return ExtremeEnchantments.applicable(id,stack,original); }
     @Override public boolean enchantmentsCompatible(String left,String right,boolean original) { return ExtremeEnchantments.compatible(left,right,original); }
+    @Override public boolean tableEnchantmentsCompatible(ItemStack stack, Holder<Enchantment> left,
+            Holder<Enchantment> right, boolean original) {
+        if (original) return true;
+        if (left.equals(right) || !io.github.ningmeng123.mite.enchantment.R196EnchantmentTable.vibranium(stack)) return false;
+        String first = left.unwrapKey().map(key -> key.location().toString()).orElse("");
+        String second = right.unwrapKey().map(key -> key.location().toString()).orElse("");
+        return DAMAGE_ENCHANTMENTS.contains(first) && DAMAGE_ENCHANTMENTS.contains(second);
+    }
+    @Override public boolean anvilEnchantmentsCompatible(ItemStack stack, Holder<Enchantment> left,
+            Holder<Enchantment> right, boolean original) {
+        float capacity = io.github.ningmeng123.mite.crafting.WorkbenchRules.materialCapacity(
+                io.github.ningmeng123.mite.progression.GearProgression.material(stack));
+        return !left.equals(right) && (original || capacity >= 256F);
+    }
+    @Override public float enchantmentPowerMultiplier(float roll, float original) {
+        return 1F + (roll - .75F) * .5F;
+    }
     @Override public io.github.ningmeng123.mite.progression.GearAffixRules.Definition affixDefinition(ItemStack stack,Holder<Enchantment> enchantment,io.github.ningmeng123.mite.progression.GearAffixRules.Definition original) { return ExtremeEnchantments.affixDefinition(stack,enchantment,original); }
     @Override public double maximumHealthAttributeRange(double original) { return 1_000_000D; }
     @Override public double mobHealthLimit(Mob mob,double original) {
