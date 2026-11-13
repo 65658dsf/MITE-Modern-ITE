@@ -28,11 +28,11 @@ for p in sorted((RES/'assets').rglob('*')):
 json_files=list(RES.rglob('*.json'))
 for p in json_files:json.loads(p.read_text(encoding='utf-8'))
 version=re.search(r'^mod_version=(.+)$',(ROOT/'gradle.properties').read_text(),re.M)[1].strip()
-jar=ROOT/f'build/libs/modern-ite-{version}.jar'
+jar=ROOT/f'build/libs/MITE-Modern-ITE-{version}.jar'
 report={'author':'NingMeng123','version':version,'source_archives':source_hashes,'json_files_checked':len(json_files),'asset_count':len(assets),'assets':assets}
 base_root=ROOT.parent/'miteto1.21.1neoforge'
 base_version=re.search(r'^mod_version=(.+)$',(base_root/'gradle.properties').read_text(),re.M)[1].strip()
-base_jar=base_root/f'build/libs/mite-{base_version}.jar'
+base_jar=base_root/f'build/libs/MITE-Modern-{base_version}.jar'
 source_metadata=(RES/'META-INF/neoforge.mods.toml').read_text(encoding='utf-8')
 base_dependency=re.search(r'\[\[dependencies\.modern_ite\]\]\s*modId="mite"\s+type="required"\s+versionRange="([^"]+)"',source_metadata)[1]
 if base_jar.exists():

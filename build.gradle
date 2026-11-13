@@ -4,7 +4,7 @@ plugins {
 }
 version = mod_version
 group = 'io.github.ningmeng123.modernite'
-base { archivesName = 'modern-ite' }
+base { archivesName = 'MITE-Modern-ITE' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 repositories {
     mavenCentral()
@@ -13,7 +13,7 @@ repositories {
         content { includeGroup 'mezz.jei' }
     }
 }
-def miteJar = file(providers.gradleProperty('miteJar').getOrElse('../miteto1.21.1neoforge/build/libs/mite-0.3.1.jar'))
+def miteJar = file(providers.gradleProperty('miteJar').getOrElse("../miteto1.21.1neoforge/build/libs/MITE-Modern-${mod_version}.jar"))
 sourceSets {
     gametest {
         compileClasspath += sourceSets.main.output
