@@ -7,6 +7,7 @@ import io.github.ningmeng123.mite.registry.MiteArmorContent;
 import io.github.ningmeng123.mite.crafting.CraftingQuality;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
 import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.Quality;
+import io.github.ningmeng123.modernite.content.ExtremeContent;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -26,7 +27,10 @@ import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.BlockHitResult;
@@ -78,6 +82,64 @@ public final class GearGameTests {
         }
         h.assertTrue(identifiers.size() == 4 && Math.abs(total[0] - 6) < .00001,
                 "Four rank-six protection gems contribute all four independent armor bonuses");
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void savedIronHelmetBasesUseBalancedStatsBeforeForgeAndProtectionBonuses(GameTestHelper h) {
+        var canonical = ResourceLocation.withDefaultNamespace("armor.helmet");
+        var socket = ExtremeGear.id("socket_armor_head");
+        var oldBase = ItemAttributeModifiers.builder()
+                .add(Attributes.ARMOR, new AttributeModifier(canonical, 3D, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                .add(Attributes.ARMOR_TOUGHNESS, new AttributeModifier(canonical, 1.25D, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.HEAD)
+                .build();
+        ItemStack[] helmets = {new ItemStack(Items.IRON_HELMET), new ItemStack(ExtremeContent.BUCKET_HELMET.get())};
+        for (ItemStack helmet : helmets) {
+            double[] defaults = {0, 0};
+            helmet.forEachModifier(EquipmentSlot.HEAD, (attribute, modifier) -> {
+                if (attribute.equals(Attributes.ARMOR)) defaults[0] += modifier.amount();
+                if (attribute.equals(Attributes.ARMOR_TOUGHNESS)) defaults[1] += modifier.amount();
+            });
+            h.assertTrue(Math.abs(defaults[0] - 4D) < .00001 && Math.abs(defaults[1] - .5D) < .00001,
+                    "Fresh iron and addon bucket helmets expose four armor and half a toughness point");
+            for (int grade : new int[]{0, 3}) for (int rank : new int[]{0, 6}) {
+                ItemStack old = helmet.copy();
+                old.set(DataComponents.ATTRIBUTE_MODIFIERS, oldBase);
+                old.set(ExtremeGear.FORGE_GRADE.get(), grade);
+                old.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, rank == 0 ? 0 : GemType.PROTECTION.ordinal() * 6 + rank));
+                ItemStack restored = ItemStack.parse(h.getLevel().registryAccess(), old.save(h.getLevel().registryAccess())).orElseThrow();
+                h.assertTrue(ExtremeGear.grade(restored) == grade && ExtremeGear.rank(restored, GemType.PROTECTION) == rank,
+                        "Saved helmets retain their existing forge grade and protection gem");
+                h.assertValueEqual(restored.get(DataComponents.ATTRIBUTE_MODIFIERS), oldBase,
+                        "Effective base migration preserves the saved component data");
+                double forging = ((Math.pow(1.028D, grade * 2.28D) - 1D) * 4D * .68D + grade / 3D) * .75D;
+                double protection = rank * .25D;
+                for (int refresh = 0; refresh < 3; refresh++) {
+                    double[] amounts = {0, 0, 0};
+                    int[] counts = {0, 0, 0};
+                    restored.forEachModifier(EquipmentSlot.HEAD, (attribute, modifier) -> {
+                        if (attribute.equals(Attributes.ARMOR)) {
+                            amounts[0] += modifier.amount();
+                            if (modifier.id().equals(canonical)) counts[0]++;
+                            if (modifier.id().equals(socket)) {
+                                amounts[2] += modifier.amount();
+                                counts[2]++;
+                            }
+                        }
+                        if (attribute.equals(Attributes.ARMOR_TOUGHNESS)) {
+                            amounts[1] += modifier.amount();
+                            if (modifier.id().equals(canonical)) counts[1]++;
+                        }
+                    });
+                    h.assertTrue(Math.abs(amounts[0] - 4D - forging - protection) < .00001,
+                            "Forging uses the new four-point base and adds the independent gem bonus once");
+                    h.assertTrue(Math.abs(amounts[1] - .5D) < .00001 && counts[0] == 1 && counts[1] == 1,
+                            "Each repeated attribute refresh replaces the old three armor and 1.25 toughness with one balanced base");
+                    h.assertTrue(Math.abs(amounts[2] - forging - protection) < .00001
+                                    && counts[2] == (grade == 0 && rank == 0 ? 0 : 1),
+                            "Forge-only, gem-only and combined saved bonuses each contribute exactly one socket modifier");
+                }
+            }
+        }
         h.succeed();
     }
     @GameTest(template = "gear_empty")
