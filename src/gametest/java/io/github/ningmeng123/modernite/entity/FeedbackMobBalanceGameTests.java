@@ -294,16 +294,16 @@ public final class FeedbackMobBalanceGameTests {
     }
 
     @GameTest(template="gear_empty",batch="feedback_balance")
-    public static void copperClubUsesTheSharedSurvivalMaterialBudget(GameTestHelper h) {
+    public static void copperAndSilverClubsRestoreTheirEqualSourceDamage(GameTestHelper h) {
         var club=new ItemStack(ExtremeContent.ITEM_ENTRIES.get("club_copper").get());
         var silver=new ItemStack(ExtremeContent.ITEM_ENTRIES.get("club_silver").get());
         double[] damage={0},reference={0};
         club.forEachModifier(EquipmentSlot.MAINHAND,(attribute,modifier)->{if(attribute.equals(Attributes.ATTACK_DAMAGE))damage[0]+=modifier.amount();});
         silver.forEachModifier(EquipmentSlot.MAINHAND,(attribute,modifier)->{if(attribute.equals(Attributes.ATTACK_DAMAGE))reference[0]+=modifier.amount();});
-        h.assertTrue(Math.abs(1+damage[0]-5.25)<.001,"The source seven-point copper club uses one0.75 material budget; the superseded0.6 penalty is absent");
-        h.assertTrue(Math.abs(1+reference[0]-5.6)<.001,"The source seven-point silver club uses one0.8 material budget");
-        h.assertTrue(Math.abs((1+damage[0])-(1+reference[0])*.9375)<.001,
-                "Copper5.25 and silver5.6 preserve the reviewed0.75/0.8 material ratio without the superseded40% penalty");
+        h.assertTrue(Math.abs(1+damage[0]-7)<.001,"The copper club restores its source seven-point total damage");
+        h.assertTrue(Math.abs(1+reference[0]-7)<.001,"The silver club restores its source seven-point total damage");
+        h.assertTrue(Math.abs(damage[0]-reference[0])<.001,
+                "Copper and silver share their source base before target-specific bonuses");
         h.succeed();
     }
 }

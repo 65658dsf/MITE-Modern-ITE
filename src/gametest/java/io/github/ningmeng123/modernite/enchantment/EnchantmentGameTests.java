@@ -204,8 +204,8 @@ public final class EnchantmentGameTests {
       h.assertTrue(stack.getUseAnimation()!=net.minecraft.world.item.UseAnim.BLOCK,"A club has no right-click block pose");
       var result=stack.getItem().use(h.getLevel(),session.player,net.minecraft.world.InteractionHand.MAIN_HAND);
       h.assertFalse(result.getResult().consumesAction()||session.player.isUsingItem(),"Real item use leaves attacks available and never starts a club block");
-      h.assertTrue(Math.abs(io.github.ningmeng123.mite.combat.SourcePlayerReach.baseMeleeReach(stack,3D)-3D)<.00001D,
-              "Every actual ITE club shares the sword's complete three-block baseline");
+      h.assertTrue(Math.abs(io.github.ningmeng123.mite.combat.SourcePlayerReach.baseMeleeReach(stack,3D)-2D)<.00001D,
+              "Every actual ITE club uses the selected two-block close-range baseline");
      }
     }
    }

@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.gear;
 
 import io.github.ningmeng123.mite.combat.WeaponEncumbrance;
+import io.github.ningmeng123.mite.combat.SourcePlayerReach;
 import io.github.ningmeng123.mite.compat.simplyswords.SimplySwordsCompat;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
 import io.github.ningmeng123.mite.progression.GearModifier;
@@ -35,15 +36,16 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class WeaponBalanceGameTests {
     @GameTest(template = "gear_empty")
-    public static void allEightRegisteredClubsUseOneSharedDamageReductionAndPlayerOnlyWeight(GameTestHelper h) {
+    public static void allEightRegisteredClubsUseSourceDamageWithShortReachAndPlayerOnlyWeight(GameTestHelper h) {
         String[] metals = {"copper", "silver", "gold", "iron", "ancient_metal", "mithril", "adamantium", "vibranium"};
-        double[] expected = {5.25, 5.6, 4.8, 6.4, 6.4, 7.2, 8.0, 10.4};
+        double[] expected = {7, 7, 6, 8, 8, 9, 10, 13};
         var player = h.makeMockPlayer(GameType.SURVIVAL);
         double normalMovement = player.getAttributeValue(Attributes.MOVEMENT_SPEED);
         for (int index = 0; index < metals.length; index++) {
             ItemStack club = new ItemStack(ExtremeContent.ITEM_ENTRIES.get("club_"+metals[index]).get());
             close(h, 1D+addition(club, Attributes.ATTACK_DAMAGE), expected[index], "Registered "+metals[index]+" club uses the shared balanced total base damage");
-            close(h, 4D+addition(club, Attributes.ATTACK_SPEED), 1.1D, "Every metal club has the deliberate1.1/s heavy attack cadence");
+            close(h, 4D+addition(club, Attributes.ATTACK_SPEED), 1.2D, "Every metal club uses the slower-than-sword attack cadence");
+            close(h, SourcePlayerReach.baseMeleeReach(club, 3D), 2D, "Metal clubs require a close-range blunt hit");
             close(h, WeaponEncumbrance.penalty(club), .08D, "ITE external tool registration participates in the centralized8% player weight");
             player.setItemInHand(InteractionHand.MAIN_HAND, club); WeaponEncumbrance.refresh(player);
             close(h, player.getAttributeValue(Attributes.MOVEMENT_SPEED), normalMovement*.92D, "Changing club materials cannot stack player weight");
@@ -58,13 +60,13 @@ public final class WeaponBalanceGameTests {
     @GameTest(template = "gear_empty")
     public static void oldClubAttributesNormalizeBeforeForgeAndKeepGemsGrowthQualityNamesAndOrdinaryEnchantments(GameTestHelper h) {
         assertSavedWeapon(h, new ItemStack(ExtremeContent.ITEM_ENTRIES.get("club_vibranium").get()),
-                10.4D, 1.1D, .08D, "Saved ITE club");
+                13D, 1.2D, .08D, "Saved ITE club");
         if (SimplySwordsCompat.enabled()) {
             ItemStack hammer = new ItemStack(SimplySwordsCompat.weapon("vibranium", "greathammer"));
             h.assertFalse(hammer.isEmpty(), "The combined-mod fixture uses the real registered Simply Swords vibranium greathammer");
-            close(h, 1D+addition(hammer, Attributes.ATTACK_DAMAGE), 12.32D, "The plain greathammer has the independently balanced total base damage");
-            close(h, SimplySwordsCompat.damageBonus(hammer), 11.32D, "The greathammer canonical base bonus excludes the player's inherent damage");
-            assertSavedWeapon(h, hammer, 12.32D, .7D, .25D, "Saved Simply Swords greathammer");
+            close(h, 1D+addition(hammer, Attributes.ATTACK_DAMAGE), 17.5D, "The greathammer spends its weapon budget on a strong individual hit");
+            close(h, SimplySwordsCompat.damageBonus(hammer), 16.5D, "The greathammer canonical base bonus excludes the player's inherent damage");
+            assertSavedWeapon(h, hammer, 17.5D, .56D, .25D, "Saved Simply Swords greathammer");
         }
         h.succeed();
     }
@@ -88,7 +90,7 @@ public final class WeaponBalanceGameTests {
         ItemStack restored = ItemStack.parse(h.getLevel().registryAccess(), legacy.save(h.getLevel().registryAccess())).orElseThrow();
         // HIGHEST base normalization must run before HIGH legacy growth and LOWEST ITE forging.
         double forgeBase = balancedTotal + 2D + 2D; // Balanced total + explicit external modifier + retained historical growth.
-        double expected = forgeBase*(1D+GearMath.enhanceFactor(10))+6D;
+        double expected = forgeBase*Math.pow(1.028D, 22.8D)+6D;
         for (int read = 0; read < 8; read++) close(h, 1D+addition(restored, Attributes.ATTACK_DAMAGE), expected,
                 savedName+": old raw base13 is replaced before forging; each gem/growth/forge effect contributes exactly once");
         close(h, attributeValue(restored, Attributes.ATTACK_SPEED, 4D), attackSpeed,

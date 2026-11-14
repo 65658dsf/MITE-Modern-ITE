@@ -19,7 +19,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class ClubAttackCadenceGameTests {
     @GameTest(template="gear_empty")
-    public static void everyMetalClubRechargesInNineteenTicksAndRepeatedClicksUseNativeDamageScaling(GameTestHelper h){
+    public static void everyMetalClubRechargesInSeventeenTicksAndRepeatedClicksUseNativeDamageScaling(GameTestHelper h){
         for(String metal:new String[]{"copper","silver","gold","iron","ancient_metal","mithril","adamantium","vibranium"}){
             Player player=h.makeMockPlayer(GameType.SURVIVAL);
             player.setPos(h.absoluteVec(new net.minecraft.world.phys.Vec3(1,12,1)));
@@ -28,7 +28,7 @@ public final class ClubAttackCadenceGameTests {
             RecordingCow target=new RecordingCow(h);target.setPos(player.position().add(1,0,0));
             try{
                 ticks(player,25);
-                close(h,player.getAttributeValue(Attributes.ATTACK_SPEED),1.1D,metal+" live equipped attack speed");
+                close(h,player.getAttributeValue(Attributes.ATTACK_SPEED),1.2D,metal+" live equipped attack speed");
                 player.attack(target);
                 float full=target.damage;
                 h.assertTrue(full>0F,metal+" charged primary attack reaches the target");
@@ -37,9 +37,11 @@ public final class ClubAttackCadenceGameTests {
                 float strength=.5F/player.getCurrentItemAttackStrengthDelay();
                 close(h,target.damage,full*(.2F+strength*strength*.8F),metal+" immediate repeat uses the native weak-strike damage curve");
                 ticks(player,10);
-                h.assertTrue(player.getAttackStrengthScale(0F)<.56F,metal+" cannot fully recharge at a sword animation's half-second cadence");
-                ticks(player,9);
-                close(h,player.getAttackStrengthScale(0F),1D,metal+" completes its 18.18 tick recharge by tick19");
+                h.assertTrue(player.getAttackStrengthScale(0F)<.61F,metal+" cannot fully recharge after half a second");
+                ticks(player,6);
+                h.assertTrue(player.getAttackStrengthScale(0F)<1F,metal+" remains below full charge at tick16");
+                ticks(player,1);
+                close(h,player.getAttackStrengthScale(0F),1D,metal+" completes its 16.67 tick recharge by tick17");
                 player.attack(target);
                 close(h,target.damage,full,metal+" a fully recovered repeat delivers the same primary damage");
             }finally{target.discard();player.discard();}
