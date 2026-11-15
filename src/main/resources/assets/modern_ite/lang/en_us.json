@@ -153,6 +153,7 @@
   "item.modern_ite.gem_shard_6": "Plain Gem 6",
   "item.modern_ite.gem_box": "Triangular Gem Box",
   "item.modern_ite.protection_tome": "Protection Tome",
+  "tooltip.modern_ite.protection_tome": "Combine with armor in a crafting grid to convert or add a Protection growth modifier.",
   "item.modern_ite.iron_enhance_stone": "Iron Enhancement Stone",
   "item.modern_ite.mithril_enhance_stone": "Mithril Enhancement Stone",
   "item.modern_ite.adamantium_enhance_stone": "Adamantium Enhancement Stone",

@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.gear;
 
 import io.github.ningmeng123.mite.progression.GearProgress;
 import io.github.ningmeng123.mite.progression.GearProgression;
+import io.github.ningmeng123.mite.progression.GearModifier;
 import java.util.HashMap;
 import java.util.List;
 import net.minecraft.core.HolderLookup;
@@ -15,9 +16,13 @@ import net.minecraft.world.level.Level;
 
 /** Deterministic protection conversion, preserving the actual baseline growth identity. @author NingMeng123 */
 public final class ProtectionTomeRecipe extends CustomRecipe {
-    private static final ResourceLocation PROTECTION = ResourceLocation.withDefaultNamespace("protection");
-    private static final List<ResourceLocation> REPLACED = List.of("fire_protection", "blast_protection", "projectile_protection", "thorns")
-            .stream().map(ResourceLocation::withDefaultNamespace).toList();
+    private static final ResourceLocation PROTECTION = GearModifier.ARMOR_PROTECTION.id();
+    private static final ResourceLocation LEGACY_PROTECTION = ResourceLocation.withDefaultNamespace("protection");
+    private static final List<ResourceLocation> REPLACED = List.of(
+            GearModifier.ARMOR_FIRE_PROTECTION.id(), GearModifier.ARMOR_EXPLOSION_PROTECTION.id(),
+            GearModifier.ARMOR_PROJECTILE_PROTECTION.id(), ResourceLocation.withDefaultNamespace("fire_protection"),
+            ResourceLocation.withDefaultNamespace("blast_protection"), ResourceLocation.withDefaultNamespace("projectile_protection"),
+            ResourceLocation.withDefaultNamespace("thorns"));
     public ProtectionTomeRecipe(CraftingBookCategory category) { super(category); }
     private ItemStack armor(CraftingInput input) {
         ItemStack armor = ItemStack.EMPTY; int books = 0;
@@ -29,7 +34,7 @@ public final class ProtectionTomeRecipe extends CustomRecipe {
         }
         if (books != 1 || armor.isEmpty()) return ItemStack.EMPTY;
         GearProgress state = GearProgression.state(armor);
-        if (state.affixes().containsKey(PROTECTION)) return ItemStack.EMPTY;
+        if (state.affixes().containsKey(PROTECTION) || state.affixes().containsKey(LEGACY_PROTECTION)) return ItemStack.EMPTY;
         boolean replaces = REPLACED.stream().anyMatch(state.affixes()::containsKey);
         return replaces || state.level() < GearProgression.maxLevel(armor) ? armor : ItemStack.EMPTY;
     }
@@ -38,7 +43,6 @@ public final class ProtectionTomeRecipe extends CustomRecipe {
         ItemStack source = armor(input);
         if (source.isEmpty()) return ItemStack.EMPTY;
         ItemStack result = source.copy();
-        GearProgression.ensureId(result);
         GearProgress state = GearProgression.state(result);
         var affixes = new HashMap<>(state.affixes());
         int protection = 1; boolean replaces = false;
@@ -46,7 +50,7 @@ public final class ProtectionTomeRecipe extends CustomRecipe {
             Integer previous = affixes.remove(key);
             if (previous != null) { replaces = true; protection = Math.max(protection, previous); }
         }
-        affixes.put(PROTECTION, Math.min(protection, 5));
+        affixes.put(PROTECTION, Math.min(protection, GearModifier.ARMOR_PROTECTION.maximumLevel()));
         result.set(GearProgression.PROGRESS.get(), new GearProgress(state.id(), state.level() + (replaces ? 0 : 1),
                 replaces ? state.experienceMillis() : 0L, affixes, state.version()));
         return result;

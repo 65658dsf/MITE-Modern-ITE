@@ -88,7 +88,11 @@ public final class ExtremeGear {
             }));
     }
     public static final DeferredItem<GemBoxItem> GEM_BOX = ITEMS.registerItem("gem_box", GemBoxItem::new);
-    public static final DeferredItem<Item> PROTECTION_TOME = ITEMS.registerSimpleItem("protection_tome", new Item.Properties().stacksTo(1).fireResistant());
+    public static final DeferredItem<Item> PROTECTION_TOME = ITEMS.registerItem("protection_tome", properties -> new Item(properties.stacksTo(1).fireResistant()) {
+        @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<net.minecraft.network.chat.Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
+            tooltip.add(net.minecraft.network.chat.Component.translatable("tooltip.modern_ite.protection_tome").withStyle(net.minecraft.ChatFormatting.GRAY));
+        }
+    });
     public static final DeferredBlock<GearStationBlock> GEM_SETTING = station("gem_setting", -1);
     public static final DeferredBlock<GrinderBlock> GRINDER = BLOCKS.register("grinder", () -> new GrinderBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).strength(2, 10)));
     public static final List<DeferredBlock<GearStationBlock>> FORGES = new ArrayList<>();

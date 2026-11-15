@@ -10,10 +10,17 @@ import io.github.ningmeng123.mite.crafting.StackBatchShapelessRecipe;
 import io.github.ningmeng123.mite.crafting.TimedCraftingController;
 import io.github.ningmeng123.mite.crafting.TimedCraftingRecipes;
 import io.github.ningmeng123.mite.crafting.TimedCraftingRules;
+import io.github.ningmeng123.mite.crafting.WorkbenchRules;
 import io.github.ningmeng123.mite.registry.MiteItems;
+import io.github.ningmeng123.mite.registry.MiteArmorContent;
 import io.github.ningmeng123.mite.registry.MiteWorkbenches;
 import io.github.ningmeng123.mite.registry.StackingRecipeSerializers;
+import io.github.ningmeng123.mite.progression.GearModifier;
+import io.github.ningmeng123.mite.progression.GearProgress;
+import io.github.ningmeng123.mite.progression.GearProgression;
 import io.github.ningmeng123.mite.survival.PlayerExperience;
+import io.github.ningmeng123.modernite.gear.ExtremeGear;
+import io.github.ningmeng123.modernite.gear.ProtectionTomeRecipe;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.buffer.Unpooled;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +33,7 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.FrontAndTop;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
@@ -43,6 +51,7 @@ import net.minecraft.world.inventory.CraftingMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RepairItemRecipe;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -403,6 +412,111 @@ public final class SourceCraftingGameTests {
                 h.assertTrue(ItemStack.matches(delivered, expected), "The actual completed transaction preserves the exact native repair result: " + material);
                 session.tick(50);
                 h.assertValueEqual(session.outputs(item), 1, "An exhausted repair cannot manufacture an extra lantern: " + material);
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void protectionTomeUsesCurrentModifiersThroughBothCraftingMenusAndPickupModes(GameTestHelper h) {
+        for (boolean workbench : new boolean[]{false, true}) {
+            try (Session session = new Session(h, workbench)) {
+                for (ClickType click : List.of(ClickType.PICKUP, ClickType.QUICK_MOVE)) {
+                    session.clear();
+                    ItemStack armor = new ItemStack(MiteArmorContent.get("mite:mithril_chestplate"));
+                    armor.setDamageValue(24);
+                    armor.enchant(h.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT)
+                            .getHolderOrThrow(Enchantments.FIRE_PROTECTION), 4);
+                    armor.set(ExtremeGear.FORGE_GRADE.get(), 2);
+                    UUID id = GearProgression.ensureId(armor);
+                    armor.set(GearProgression.PROGRESS.get(), new GearProgress(id, 3, 74_000,
+                            Map.of(GearModifier.ARMOR_PROJECTILE_PROTECTION.id(), 1,
+                                    GearModifier.ARMOR_BLESSED.id(), 1, GearModifier.ARMOR_DURABILITY.id(), 1), 1));
+                    session.grid.setItem(0, armor.copy());
+                    session.grid.setItem(1, new ItemStack(ExtremeGear.PROTECTION_TOME.get()));
+                    session.menu.slotsChanged(session.grid);
+                    var holder = h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING,
+                            session.grid.asCraftInput(), h.getLevel()).orElseThrow();
+                    h.assertTrue(holder.value() instanceof ProtectionTomeRecipe
+                            && holder.id().equals(ResourceLocation.parse("modern_ite:apply_protection_tome")),
+                            "The registered maintenance recipe matches the screenshot's current mithril armor modifiers");
+                    ItemStack expected = holder.value().assemble(session.grid.asCraftInput(), h.getLevel().registryAccess());
+                    h.assertTrue(!WorkbenchRules.allows(session.menu, expected)
+                            && WorkbenchRules.allows(session.menu, expected, h.getLevel()),
+                            "Only the exact maintenance result receives the low-tier crafting exemption");
+                    ItemStack stale = expected.copy();
+                    stale.setDamageValue(stale.getDamageValue() + 1);
+                    h.assertTrue(!WorkbenchRules.allows(session.menu, stale, h.getLevel()),
+                            "An altered result cannot borrow the maintenance recipe's workbench exemption");
+                    h.assertTrue(ItemStack.matches(session.menu.getSlot(0).getItem(), expected),
+                            "Both inventory and workbench menus preview the exact protection conversion");
+                    session.menu.clicked(0, 0, click, session.player);
+                    h.assertTrue(TimedCraftingController.isActive(session.player),
+                            "Both normal and shift pickup start the real maintenance operation on worn armor");
+                    session.finishBatch(0, armor.getItem(), 1);
+                    ItemStack delivered = session.menu.getCarried().is(armor.getItem()) ? session.menu.getCarried()
+                            : session.player.getInventory().items.stream().filter(stack -> stack.is(armor.getItem())).findFirst().orElseThrow();
+                    h.assertTrue(ItemStack.matches(delivered, expected),
+                            "Actual completion preserves ordinary enchantments, durability, forging and growth identity");
+                    var state = GearProgression.state(delivered);
+                    h.assertTrue(state.level() == 3 && state.experienceMillis() == 74_000 && state.id().equals(id)
+                            && state.affixes().equals(Map.of(GearModifier.ARMOR_PROTECTION.id(), 1,
+                                    GearModifier.ARMOR_BLESSED.id(), 1, GearModifier.ARMOR_DURABILITY.id(), 1)),
+                            "The delivered item replaces the current projectile modifier and retains the other growth modifiers");
+                    h.assertTrue(session.grid.isEmpty() && session.player.totalExperience == 0,
+                            "One armor and one tome are consumed with the source maintenance XP exemption");
+                    session.tick(50);
+                    h.assertValueEqual(session.outputs(armor.getItem()), 1, "Repeated production ticks cannot duplicate converted armor");
+                }
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void protectionTomePreviewsAndCompletesForArmorWithoutAnAssignedGrowthIdentity(GameTestHelper h) {
+        var assignedIds = new java.util.HashSet<UUID>();
+        for (boolean workbench : new boolean[]{false, true}) {
+            try (Session session = new Session(h, workbench)) {
+                for (boolean savedProgress : new boolean[]{false, true}) {
+                    for (ClickType click : List.of(ClickType.PICKUP, ClickType.QUICK_MOVE)) {
+                        session.clear();
+                        ItemStack armor = new ItemStack(MiteArmorContent.get("mite:mithril_chestplate"));
+                        armor.setDamageValue(24);
+                        if (savedProgress) armor.set(GearProgression.PROGRESS.get(), new GearProgress(GearProgress.UNASSIGNED,
+                                2, 713, Map.of(GearModifier.ARMOR_DURABILITY.id(), 1), 1));
+                        ItemStack before = armor.copy();
+                        session.grid.setItem(0, armor.copy());
+                        session.grid.setItem(1, new ItemStack(ExtremeGear.PROTECTION_TOME.get()));
+                        session.menu.slotsChanged(session.grid);
+                        var holder = h.getLevel().getRecipeManager().getRecipeFor(RecipeType.CRAFTING,
+                                session.grid.asCraftInput(), h.getLevel()).orElseThrow();
+                        ItemStack expected = holder.value().assemble(session.grid.asCraftInput(), h.getLevel().registryAccess());
+                        ItemStack repeated = holder.value().assemble(session.grid.asCraftInput(), h.getLevel().registryAccess());
+                        h.assertTrue(ItemStack.matches(expected, repeated) && ItemStack.matches(session.grid.getItem(0), before)
+                                && GearProgression.state(expected).id().equals(GearProgress.UNASSIGNED),
+                                "Repeated previews preserve the source and keep its unassigned identity deterministic");
+                        h.assertTrue(ItemStack.matches(session.menu.getSlot(0).getItem(), expected),
+                                "The real menu previews the same output for both absent and unassigned growth data");
+                        session.menu.clicked(0, 0, click, session.player);
+                        h.assertTrue(TimedCraftingController.isActive(session.player),
+                                "An unassigned input starts through each normal inventory and workbench pickup path");
+                        session.finishBatch(0, armor.getItem(), 1);
+                        ItemStack delivered = session.menu.getCarried().is(armor.getItem()) ? session.menu.getCarried()
+                                : session.player.getInventory().items.stream().filter(stack -> stack.is(armor.getItem())).findFirst().orElseThrow();
+                        h.assertTrue(ItemStack.matches(delivered, expected) && session.grid.isEmpty(),
+                                "One deterministic maintenance result is delivered and both ingredients are consumed");
+                        h.assertTrue(GearProgression.state(delivered).level() == (savedProgress ? 3 : 1)
+                                && GearProgression.state(delivered).experienceMillis() == 0
+                                && GearModifier.ARMOR_PROTECTION.level(delivered) == 1,
+                                "New protection uses exactly one available growth level on either saved-data format");
+                        GearProgression.award(delivered, 2, session.player);
+                        UUID assigned = GearProgression.id(delivered);
+                        h.assertTrue(assigned != null && assignedIds.add(assigned)
+                                && GearProgression.ensureId(delivered).equals(assigned),
+                                "The next real growth award gives each converted item its own stable identity");
+                    }
+                }
             }
         }
         h.succeed();

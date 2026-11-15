@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.gear;
 
 import io.github.ningmeng123.mite.progression.GearProgress;
 import io.github.ningmeng123.mite.progression.GearProgression;
+import io.github.ningmeng123.mite.progression.GearModifier;
 import io.github.ningmeng123.mite.registry.MiteTools;
 import io.github.ningmeng123.mite.registry.MiteArmorContent;
 import io.github.ningmeng123.mite.crafting.CraftingQuality;
@@ -262,7 +263,7 @@ public final class GearGameTests {
         var progress = GearProgression.state(result);
         h.assertTrue(progress.level() == GearProgression.state(armor).level() && progress.experienceMillis() == 713,
                 "Conversion does not consume another growth level or reset experience");
-        h.assertTrue(progress.affixes().get(ResourceLocation.withDefaultNamespace("protection")) == 4
+        h.assertTrue(progress.affixes().get(GearModifier.ARMOR_PROTECTION.id()) == 4
                 && !progress.affixes().containsKey(ResourceLocation.withDefaultNamespace("fire_protection")), "The highest old protection rank is converted");
         h.assertTrue(result.get(DataComponents.ENCHANTMENTS).equals(armor.get(DataComponents.ENCHANTMENTS)) && result.getDamageValue() == 23,
                 "Normal enchantments and actual wear are preserved");
@@ -277,6 +278,81 @@ public final class GearGameTests {
         h.assertTrue(manufactured != null && manufactured.fixed() && manufactured.exempt() && manufactured.cost() == 0
                 && EquipmentDurability.quality(manufactured.stack()) == EquipmentDurability.quality(armor),
                 "Actual timed crafting treats tome application as fixed-quality, XP-exempt maintenance");
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void protectionTomeConvertsCurrentModifiersAtTheGrowthCap(GameTestHelper h) {
+        var recipe = new ProtectionTomeRecipe(CraftingBookCategory.EQUIPMENT);
+        for (GearModifier replaced : java.util.List.of(GearModifier.ARMOR_FIRE_PROTECTION,
+                GearModifier.ARMOR_EXPLOSION_PROTECTION, GearModifier.ARMOR_PROJECTILE_PROTECTION)) {
+            ItemStack armor = new ItemStack(MiteArmorContent.get("mite:mithril_chestplate"));
+            armor.setDamageValue(24);
+            armor.set(ExtremeGear.FORGE_GRADE.get(), 2);
+            armor.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, GemType.HEALTH.ordinal() * 6 + 6));
+            UUID id = GearProgression.ensureId(armor);
+            armor.set(GearProgression.PROGRESS.get(), new GearProgress(id, GearProgression.maxLevel(armor), 74_000,
+                    Map.of(replaced.id(), 3, GearModifier.ARMOR_DURABILITY.id(), 1, GearModifier.ARMOR_BLESSED.id(), 1), 1));
+            ItemStack before = armor.copy();
+            var input = CraftingInput.of(2, 1, java.util.List.of(armor, new ItemStack(ExtremeGear.PROTECTION_TOME.get())));
+            h.assertTrue(recipe.matches(input, h.getLevel()), "Current protection modifiers can convert at maximum growth");
+            ItemStack result = recipe.assemble(input, h.getLevel().registryAccess());
+            var progress = GearProgression.state(result);
+            h.assertTrue(progress.affixes().equals(Map.of(GearModifier.ARMOR_PROTECTION.id(), 3,
+                    GearModifier.ARMOR_DURABILITY.id(), 1, GearModifier.ARMOR_BLESSED.id(), 1)),
+                    "The current protection modifier replaces only the corresponding conflicting modifier");
+            h.assertTrue(progress.id().equals(id) && progress.level() == GearProgression.state(before).level()
+                    && progress.experienceMillis() == 74_000, "A conversion preserves the existing growth identity and progress");
+            ItemStack expected = before.copy();
+            expected.set(GearProgression.PROGRESS.get(), progress);
+            h.assertTrue(ItemStack.matches(result, expected) && ItemStack.matches(armor, before),
+                    "Preview preserves all other equipment components and the source item");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void protectionTomeAddsProtectionWithinTheCapAndRejectsBothExistingProtectionFormats(GameTestHelper h) {
+        var recipe = new ProtectionTomeRecipe(CraftingBookCategory.EQUIPMENT);
+        ItemStack armor = new ItemStack(Items.IRON_CHESTPLATE);
+        UUID id = GearProgression.ensureId(armor);
+        armor.set(GearProgression.PROGRESS.get(), new GearProgress(id, 2, 713, Map.of(GearModifier.ARMOR_DURABILITY.id(), 2), 1));
+        var tome = new ItemStack(ExtremeGear.PROTECTION_TOME.get());
+        var input = CraftingInput.of(2, 1, java.util.List.of(armor, tome));
+        ItemStack result = recipe.assemble(input, h.getLevel().registryAccess());
+        var progress = GearProgression.state(result);
+        h.assertTrue(progress.level() == 3 && progress.experienceMillis() == 0
+                && progress.affixes().equals(Map.of(GearModifier.ARMOR_PROTECTION.id(), 1, GearModifier.ARMOR_DURABILITY.id(), 2)),
+                "Adding a new protection modifier uses one growth level and resets that level's experience");
+        for (ResourceLocation key : java.util.List.of(GearModifier.ARMOR_PROTECTION.id(), ResourceLocation.withDefaultNamespace("protection"))) {
+            armor.set(GearProgression.PROGRESS.get(), new GearProgress(id, 2, 713, Map.of(key, 1), 1));
+            h.assertTrue(!recipe.matches(input, h.getLevel()) && recipe.assemble(input, h.getLevel().registryAccess()).isEmpty(),
+                    "Existing protection in either saved format rejects another application");
+        }
+        armor.set(GearProgression.PROGRESS.get(), new GearProgress(id, GearProgression.maxLevel(armor), 713, Map.of(), 1));
+        h.assertTrue(!recipe.matches(input, h.getLevel()), "New protection requires an available growth level");
+        h.succeed();
+    }
+    @GameTest(template = "gear_empty")
+    public static void protectionTomeConvertsMixedSavedModifiersAtTheHighestCappedRank(GameTestHelper h) {
+        ItemStack armor = new ItemStack(Items.IRON_CHESTPLATE);
+        UUID id = GearProgression.ensureId(armor);
+        int level = GearProgression.maxLevel(armor);
+        armor.set(GearProgression.PROGRESS.get(), new GearProgress(id, level, 713,
+                Map.of(GearModifier.ARMOR_PROJECTILE_PROTECTION.id(), 3,
+                        ResourceLocation.withDefaultNamespace("fire_protection"), 7,
+                        ResourceLocation.withDefaultNamespace("blast_protection"), 4,
+                        ResourceLocation.withDefaultNamespace("projectile_protection"), 2,
+                        ResourceLocation.withDefaultNamespace("thorns"), 6,
+                        GearModifier.ARMOR_DURABILITY.id(), 1), 1));
+        ItemStack before = armor.copy();
+        var recipe = new ProtectionTomeRecipe(CraftingBookCategory.EQUIPMENT);
+        var input = CraftingInput.of(2, 1, java.util.List.of(armor, new ItemStack(ExtremeGear.PROTECTION_TOME.get())));
+        ItemStack result = recipe.assemble(input, h.getLevel().registryAccess());
+        var progress = GearProgression.state(result);
+        h.assertTrue(progress.affixes().equals(Map.of(GearModifier.ARMOR_PROTECTION.id(), 5,
+                GearModifier.ARMOR_DURABILITY.id(), 1)),
+                "Mixed current and legacy defenses convert the highest existing rank, capped at protection five");
+        h.assertTrue(progress.level() == level && progress.experienceMillis() == 713 && progress.id().equals(id)
+                && ItemStack.matches(armor, before), "A mixed-format conversion preserves its source and capped growth progress");
         h.succeed();
     }
     private static GearStationEntity preparedForge(GameTestHelper h) {

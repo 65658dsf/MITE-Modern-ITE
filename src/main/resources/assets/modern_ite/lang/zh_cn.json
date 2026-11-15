@@ -153,6 +153,7 @@
   "item.modern_ite.gem_shard_6": "朴素八角宝石",
   "item.modern_ite.gem_box": "三角宝石箱",
   "item.modern_ite.protection_tome": "防护宝典",
+  "tooltip.modern_ite.protection_tome": "与护甲放入合成格使用，可转换或添加保护成长副词条。",
   "item.modern_ite.iron_enhance_stone": "铁强化石",
   "item.modern_ite.mithril_enhance_stone": "秘银强化石",
   "item.modern_ite.adamantium_enhance_stone": "艾德曼强化石",
