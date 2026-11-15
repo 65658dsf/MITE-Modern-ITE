@@ -43,6 +43,7 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class ExtremeNativeMobs {
     private static final String PROFILE="modern_ite:source_profile";
+    private static final String SKELETON_HEALTH_PROFILE="modern_ite:skeleton_health_v2";
     public static final double WITHER_MAX_HEALTH=1300;
     public static final double DRAGON_MAX_HEALTH=7500;
     private ExtremeNativeMobs(){}
@@ -108,12 +109,20 @@ public final class ExtremeNativeMobs {
     }
     public static void initialize(Mob m){
         if(m instanceof WitherBoss wither){initializeWither(wither);return;}
-        CompoundTag t=m.getPersistentData();if(t.getBoolean(PROFILE))return;t.putBoolean(PROFILE,true);
+        CompoundTag t=m.getPersistentData();
+        if(t.getBoolean(PROFILE)){
+            migrateSkeletonHealth(m);
+            return;
+        }
+        t.putBoolean(PROFILE,true);
         float ratio=m.getHealth()/Math.max(1,m.getMaxHealth());String key=id(m);
         if(m instanceof EnderDragon){t.putBoolean("modern_ite:boss",true);stat(m,Attributes.MAX_HEALTH,DRAGON_MAX_HEALTH);}
         else if(key.equals("minecraft:zombie")||key.equals("minecraft:zombie_villager"))body(m,15,8,.23,64);
         else if(key.equals("minecraft:zombified_piglin"))body(m,40,12,.25,64);
-        else if(key.equals("minecraft:skeleton"))body(m,15,8,.3,64);
+        else if(key.equals("minecraft:skeleton")){
+            body(m,6,8,.3,64);
+            t.putBoolean(SKELETON_HEALTH_PROFILE,true);
+        }
         else if(key.equals("minecraft:wither_skeleton"))body(m,45,13,.25,64);
         else if(key.equals("minecraft:enderman"))body(m,60,15,.3,64);
         // Player.hurt rejects zero before the fixed 25/28 incoming-damage rule can run.
@@ -135,6 +144,20 @@ public final class ExtremeNativeMobs {
         if(m instanceof MagmaCube)stat(m,Attributes.MAX_HEALTH,m.getAttributeBaseValue(Attributes.MAX_HEALTH)+30);
         IteMobSettingsRules.rememberBoneLordProfile(m);
         m.setHealth(Math.min(m.getMaxHealth(),m.getMaxHealth()*ratio));
+    }
+    /** Correct the former ordinary-skeleton profile while retaining wounds and independent modifiers. */
+    private static void migrateSkeletonHealth(Mob mob) {
+        if (mob.getType() != EntityType.SKELETON) return;
+        var data = mob.getPersistentData();
+        if (data.getBoolean(SKELETON_HEALTH_PROFILE)) return;
+        data.putBoolean(SKELETON_HEALTH_PROFILE, true);
+
+        var healthAttribute = mob.getAttribute(Attributes.MAX_HEALTH);
+        if (healthAttribute == null || healthAttribute.getBaseValue() != 15D) return;
+        float healthRatio = mob.getHealth() / Math.max(1F, mob.getMaxHealth());
+        healthAttribute.setBaseValue(6D);
+        mob.setHealth(Math.min(mob.getMaxHealth(), mob.getMaxHealth() * healthRatio));
+        MonsterDayScaling.refresh(mob);
     }
     private static void initializeWither(WitherBoss wither){
         var data=wither.getPersistentData();boolean enhanced=WitherEncounters.isEnhanced(wither);
