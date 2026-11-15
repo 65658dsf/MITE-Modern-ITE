@@ -168,7 +168,7 @@ public final class ExtremeGear {
         if (!(player instanceof ServerPlayer server)) return original;
         return GearMath.health(player.experienceLevel, BloodMoonInvasion.highestDay(server.serverLevel()), worn(player, GemType.HEALTH));
     }
-    public static int nutritionCapacity(Player player, int original) { return Math.min(20, original + worn(player, GemType.NUTRITION)); }
+    public static int nutritionCapacity(Player player, int original) { return original + Math.min(20, worn(player, GemType.NUTRITION)); }
     public static float regeneration(Player player, float original) { return original * (1F + worn(player, GemType.RECOVER) * .125F); }
     public static float naturalRegeneration(Player player, float original) { return regeneration(player, original); }
     public static int maximumGearLevel(ItemStack stack, int original) {

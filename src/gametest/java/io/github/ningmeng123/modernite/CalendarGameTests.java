@@ -109,7 +109,12 @@ public final class CalendarGameTests {
             h.assertTrue(player.getMaxHealth()==78&&player.getHealth()==78,"Removing a six-rank gem clips excess health");
             player.experienceLevel=1000;
             h.assertTrue(MiteExtensions.maximumHealth(player)==78,"Unlimited player levels do not grow base health beyond 60");
-            h.assertTrue(MiteExtensions.foodCapacity(player)==20,"Food and nutrition remain at most 20");
+            h.assertTrue(MiteExtensions.foodCapacity(player)==20,"Base food capacity reaches twenty without nutrition gems");
+            for (var slot : List.of(EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+                var stack = player.getItemBySlot(slot);
+                stack.set(ExtremeGear.SOCKETS.get(), ExtremeGear.sockets(stack).with(2, GemType.NUTRITION.ordinal()*6+6));
+            }
+            h.assertTrue(MiteExtensions.foodCapacity(player)==38,"Three equipped rank-six nutrition gems add eighteen capacity above the level base");
         } finally {
             for(var slot:List.of(EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET))player.setItemSlot(slot,ItemStack.EMPTY);
             level.setDayTime(oldDay);history.restoreProgress(oldHighest);

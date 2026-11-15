@@ -18,8 +18,9 @@ public final class EnhanceGemItem extends Item {
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         double value = switch (type) {
             case RECOVER, FIREPROOF, EXPLOSION_PROOF -> rank * 12.5;
-            case DURABILITY, SPEED -> rank * 5;
-            case EFFICIENCY -> rank * rank + 1;
+            case DURABILITY -> rank * 3.75;
+            case SPEED -> rank * 5;
+            case EFFICIENCY -> rank;
             default -> type.rate * rank;
         };
         tooltip.add(Component.translatable("tooltip.modern_ite.gem_" + type.id,

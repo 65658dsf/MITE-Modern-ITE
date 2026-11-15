@@ -197,6 +197,14 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public int foodCapacity(Player player,int original) { return ExtremeGear.nutritionCapacity(player,original); }
     @Override public int gearMaximumLevel(ItemStack stack,int original) { return ExtremeGear.maximumGearLevel(stack,original); }
     @Override public float naturalRegeneration(Player player,float original) { return ExtremeGear.naturalRegeneration(player,original); }
+    @Override public double armorSpeedBonus(Player player,double original) {
+        return original + ExtremeGear.activeRank(player.getItemBySlot(EquipmentSlot.FEET),
+                io.github.ningmeng123.modernite.gear.GemType.SPEED) * .05D;
+    }
+    @Override public float unbreakingNegationChance(ItemStack stack,float original) {
+        return io.github.ningmeng123.modernite.gear.GemEffectRules.unbreakingNegationChance(original,
+                ExtremeGear.activeRank(stack,io.github.ningmeng123.modernite.gear.GemType.DURABILITY));
+    }
     @Override public long gearExperience(ItemStack stack,long original) { return ExtremeGear.gearExperience(stack,original); }
     @Override public int materialUpgradeIngots(ItemStack stack,int original) {
         var itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());

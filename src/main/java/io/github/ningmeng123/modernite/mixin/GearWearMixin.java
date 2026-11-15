@@ -1,24 +1,24 @@
 package io.github.ningmeng123.modernite.mixin;
 
-import io.github.ningmeng123.mite.item.EquipmentDurability;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import io.github.ningmeng123.mite.enchantment.R196Enchantments;
+import io.github.ningmeng123.mite.progression.EnchantmentSources;
 import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import io.github.ningmeng123.modernite.gear.GemType;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/** Socket durability is an independent source, preserving baseline enchantment arithmetic. @author NingMeng123 */
-@Mixin(value = EquipmentDurability.class, remap = false)
+/** Gem-only equipment enters the same single-roll path as ordinary and growth Unbreaking. @author NingMeng123 */
+@Mixin(EnchantmentHelper.class)
 public abstract class GearWearMixin {
-    @ModifyVariable(method = "hurt", at = @At("HEAD"), argsOnly = true, ordinal = 0)
-    private static int modernite$socketWear(int amount, ItemStack stack, int ignored, LivingEntity owner, EquipmentSlot slot) {
-        int rank = ExtremeGear.activeRank(stack, GemType.DURABILITY);
-        if (rank == 0 || amount <= 0 || owner.level().isClientSide) return amount;
-        int remaining = 0;
-        for (int i = 0; i < amount; i++) if (owner.getRandom().nextFloat() >= rank * .05F) remaining++;
-        return remaining;
+    @WrapMethod(method = "processDurabilityChange")
+    private static int modernite$socketWear(ServerLevel level, ItemStack stack, int amount, Operation<Integer> original) {
+        boolean gemOnly = ExtremeGear.activeRank(stack, GemType.DURABILITY) > 0
+                && !EnchantmentSources.levels(stack, level, "minecraft:unbreaking").present();
+        int remaining = original.call(level, stack, amount);
+        return gemOnly ? R196Enchantments.unbreakingDamage(stack, level, remaining, 0) : remaining;
     }
 }

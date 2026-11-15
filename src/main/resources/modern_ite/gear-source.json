@@ -50,9 +50,9 @@
     "quality_reward_preserves_better_existing_quality": true
   },
   "adaptations": [
-    "Nutrition capacity retains current limit20",
+    "Satiation and nutrition capacity add the highest nutrition gem rank on each worn armor piece to base capacity, with the total gem bonus capped at 20 extra points",
     "Forging grade does not alter current growth maximum; grinding adds up to3",
     "Universal enhancement stone substitutes for typed enhancement stones",
-    "Gem wear preserves baseline unbreaking as an independent source"
+    "Gem durability adds to ordinary and progression unbreaking probabilities with one roll per point"
   ]
 }

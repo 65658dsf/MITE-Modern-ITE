@@ -45,18 +45,13 @@ public final class GearEvents {
                     + (factor * base * .68 + ExtremeGear.grade(stack) / 3D) * .75;
             if (protection > 0) event.addModifier(Attributes.ARMOR, new AttributeModifier(ExtremeGear.id("socket_armor_" + armor.getEquipmentSlot().getName()), protection,
                     AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.bySlot(armor.getEquipmentSlot()));
-            if (armor.getEquipmentSlot() == EquipmentSlot.FEET && ExtremeGear.activeRank(stack, GemType.SPEED) > 0)
-                event.addModifier(Attributes.MOVEMENT_SPEED, new AttributeModifier(ExtremeGear.id("socket_speed"),
-                        ExtremeGear.activeRank(stack, GemType.SPEED) * .05, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), EquipmentSlotGroup.FEET);
         }
     }
     @SubscribeEvent(priority = EventPriority.NORMAL)
     public static void mining(PlayerEvent.BreakSpeed event) {
         ItemStack stack = event.getEntity().getMainHandItem();
         if (!ExtremeGear.socketable(stack) || event.getNewSpeed() <= 0) return;
-        int rank = ExtremeGear.activeRank(stack, GemType.EFFICIENCY);
         float speed = event.getNewSpeed();
-        if (rank > 0 && stack.getDestroySpeed(event.getState()) > 1F) speed += rank * rank + 1;
         if (!GearProgression.canKill(stack) && !event.getEntity().isInWaterRainOrBubble()) speed *= 1 + GearMath.enhanceFactor(ExtremeGear.grade(stack));
         event.setNewSpeed(speed);
     }
