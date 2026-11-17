@@ -1,6 +1,6 @@
 # MITE: Modern ITE 0.3.6
 
-November 16, 2026. Developed by NingMeng123.
+November 17, 2026. Developed by NingMeng123.
 
 ## Changes
 
@@ -10,6 +10,12 @@ November 16, 2026. Developed by NingMeng123.
 - Fixed speed gems to add their movement bonus to the Speed enchantment through the shared equipment-speed calculation. The combined equipment bonus also applies alongside potion movement effects.
 - Updated English and Chinese gem tooltips to describe the capacity, Efficiency, durability and speed rules.
 - Updated the minimum required MITE: Modern version to 0.3.6.
+- Restored the one-in-five bat-mount generation for skeleton variants and eligible creepers. Ordinary skeletons use ordinary bats, while qualifying skeleton variants and creepers use vampire bats.
+- Joined bat riders and their fresh mounts through the same natural-spawn transaction. Failed finalization or world admission releases the temporary mount and population reservation, and worker-thread mount requests are completed on the main thread.
+- Fixed raid-wave membership, leader and health accounting after a raider fails to enter the world. Native special-spawn callers now receive the actual admission result, including Warden spawning.
+- Fixed missing structure residents, including end-city shulkers, igloo zombie villagers and mansion residents. Fresh residents generated on worker threads enter population admission on the main thread, and deferred residents can retry after protection or crowding restrictions clear.
+- Restored mithril lantern crafting and its creative-tab, search and JEI entries. Mithril and adamantium lanterns use the corresponding legacy light-source recipes, and vibranium upgrades an adamantium lantern through the same tiered layout. Manufacturing difficulty follows the updated ingredients.
+- Increased mithril, adamantium and vibranium lantern durability to 9,600, 19,200 and 28,800, providing 40, 80 and 120 minutes of continuous offhand use at 20 TPS.
 
 Build file `MITE-Modern-ITE-0.3.6.jar`.
 
@@ -23,6 +29,12 @@ Requires MITE: Modern 0.3.6 or newer, Minecraft 1.21.1, Java 21 and NeoForge 21.
 - 修复速度宝石与移速附魔的叠加，通过统一的装备移速计算将两者加成相加，并计入药水移动效果。
 - 更新中英文宝石提示，明确容量、效率、耐久及速度效果。
 - 最低本体依赖更新为 MITE: Modern 0.3.6。
+- 恢复骷髅变种和符合条件的苦力怕五分之一概率生成蝙蝠坐骑的规则。普通骷髅使用普通蝙蝠，符合条件的骷髅变种与苦力怕使用吸血蝙蝠。
+- 蝙蝠骑手与新建坐骑通过同一自然生成事务入场。初始化或入场失败时回收临时坐骑和人口预留，生成线程上的坐骑请求交由主线程完成。
+- 修复袭击者入场失败后的波次成员、队长和生命总量状态，原生特殊生成调用会获得真实入场结果，覆盖监守者等生成入口。
+- 修复末地城潜影贝、雪屋僵尸村民及林地府邸居民等结构居民丢失的问题。生成线程创建的新居民在主线程执行人口准入，暂存居民可在保护或拥挤限制解除后重试入场。
+- 恢复秘银提灯配方及创造栏、搜索与 JEI 展示。秘银与艾德曼提灯使用对应旧版光源配方，振金按同一分级布局使用艾德曼提灯升级，制造难度按更新后的材料计算。
+- 秘银、艾德曼、振金提灯耐久分别提高至 9600、19200、28800，20 TPS 下副手连续使用时间分别为 40、80、120 分钟。
 
 构建文件为 `MITE-Modern-ITE-0.3.6.jar`。
 
