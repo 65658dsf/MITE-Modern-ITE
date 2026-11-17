@@ -9,7 +9,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-/** ITE 2.0.28 material costs, levels and quality rewards. @author NingMeng123 */
+/** ITE material costs and quality rewards with modern high-grade netherite payments. @author NingMeng123 */
 public final class ForgeRecipes {
     public record Cost(String id, int count) {}
     private ForgeRecipes() {}
@@ -22,9 +22,9 @@ public final class ForgeRecipes {
             case 4 -> List.of(c("minecraft:gold_ingot", 1), c("mite:mithril_ingot", 1), c("minecraft:redstone", 1), stone(1, 1));
             case 5 -> List.of(c("minecraft:gold_ingot", 2), c("mite:mithril_ingot", 1), c("minecraft:redstone", 2), stone(1, 1));
             case 6 -> List.of(c("minecraft:gold_ingot", 2), c("mite:mithril_ingot", 2), c("minecraft:redstone_block", 1), stone(1, 1));
-            case 7 -> List.of(c("minecraft:ghast_tear", 1), c("mite:adamantium_ingot", 1), c("mite:mithril_ingot", 2), stone(2, 1));
-            case 8 -> List.of(c("minecraft:ghast_tear", 2), c("mite:adamantium_ingot", 1), c("mite:mithril_ingot", 2), stone(2, 1));
-            case 9 -> List.of(c("minecraft:ghast_tear", 2), c("mite:adamantium_ingot", 2), c("mite:mithril_ingot", 2), stone(2, 1));
+            case 7 -> List.of(c("minecraft:ghast_tear", 1), c("mite:adamantium_ingot", 1), c("mite:mithril_ingot", 2), stone(2, 1), c("minecraft:netherite_scrap", 1));
+            case 8 -> List.of(c("minecraft:ghast_tear", 2), c("mite:adamantium_ingot", 1), c("mite:mithril_ingot", 2), stone(2, 1), c("minecraft:netherite_scrap", 2));
+            case 9 -> List.of(c("minecraft:ghast_tear", 2), c("mite:adamantium_ingot", 2), c("mite:mithril_ingot", 2), stone(2, 1), c("minecraft:netherite_scrap", 3));
             default -> List.of();
         };
     }

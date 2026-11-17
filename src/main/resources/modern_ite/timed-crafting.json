@@ -6,7 +6,7 @@
     "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
     "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
     "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
-    "Coverage: 158 static extension recipes, including Extreme's one-to-four-bundle torch unpacking and restored mithril dynamic core, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+    "Coverage: 160 static extension recipes, including Extreme's one-to-four-bundle torch unpacking, restored mithril dynamic core and existing iron and ancient-metal knives, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
     "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
   ],
   "components": {
@@ -94,6 +94,10 @@
       "difficulty": 100.0,
       "evidence": "R196 runtime-registry.json item 399: crafting_difficulty_as_component"
     },
+    "minecraft:netherite_ingot": {
+      "difficulty": 3200.0,
+      "evidence": "Modern netherite adaptation: WorkbenchRules.materialCapacity(netherite) 32F * metal ingot component factor 100F"
+    },
     "minecraft:oak_planks": {
       "difficulty": 80.0,
       "evidence": "R196 runtime-registry.json item 5: crafting_difficulty_as_component"
@@ -110,6 +114,10 @@
       "difficulty": 0.0,
       "evidence": "R196 item 397 has no component or producing recipe; RecipeHelper skips unresolved negative components"
     },
+    "minecraft:stick": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 280: crafting_difficulty_as_component"
+    },
     "minecraft:string": {
       "difficulty": 25.0,
       "evidence": "R196 runtime-registry.json item 287: crafting_difficulty_as_component"
@@ -121,6 +129,10 @@
     "mite:adamantium_ingot": {
       "difficulty": 25600.0,
       "evidence": "R196 runtime-registry.json item 965: crafting_difficulty_as_component"
+    },
+    "mite:ancient_metal_ingot": {
+      "difficulty": 1600.0,
+      "evidence": "R196 runtime-registry.json item 966: crafting_difficulty_as_component"
     },
     "mite:bottle_of_disenchanting": {
       "difficulty": 25.0,
@@ -483,6 +495,12 @@
       "required_bench": "iron",
       "source_order": -1,
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * mite:adamantium_ingot (25600.0); 1 * modern_ite:mithril_forging_table (800.0); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
+    },
+    "modern_ite:ancient_metal_knife": {
+      "difficulty": 1650.0,
+      "required_bench": "ancient_metal",
+      "source_order": -1,
+      "evidence": "Preserve the existing ExtremeRules.craftingDifficulty equipment fallback used before this recipe was included in the manufacturing ledger"
     },
     "modern_ite:blaze_coal_powder": {
       "difficulty": 125.0,
@@ -1282,6 +1300,12 @@
       "source_order": -1,
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * minecraft:oak_planks (80.0); 1 * minecraft:iron_ingot (800.0); 1 * mite:iron_crafting_table (160.0); 1 * minecraft:anvil (24800.0); 3 * minecraft:obsidian (240.00001525878906); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
     },
+    "modern_ite:iron_knife": {
+      "difficulty": 850.0,
+      "required_bench": "iron",
+      "source_order": -1,
+      "evidence": "Preserve the existing ExtremeRules.craftingDifficulty equipment fallback used before this recipe was included in the manufacturing ledger"
+    },
     "modern_ite:maple_planks": {
       "difficulty": 120.00001,
       "required_bench": "wood",
@@ -1397,16 +1421,16 @@
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 8 * mite:vibranium_ingot (51200.0)"
     },
     "modern_ite:vibranium_forging_table": {
-      "difficulty": 154400.0,
+      "difficulty": 160800.0,
       "required_bench": "iron",
       "source_order": -1,
-      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * mite:vibranium_ingot (51200.0); 1 * modern_ite:adamantium_forging_table (800.0); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * mite:vibranium_ingot (51200.0); 2 * minecraft:netherite_ingot (3200.0); 1 * modern_ite:adamantium_forging_table (800.0); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
     },
     "modern_ite:vibranium_furnace": {
-      "difficulty": 158560.0,
+      "difficulty": 164480.0,
       "required_bench": "vibranium",
       "source_order": -1,
-      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * mite:vibranium_ingot (51200.0); 2 * minecraft:obsidian (240.00001525878906); 2 * mite:adamantium_ingot (25600.0); 2 * minecraft:diamond (1600.0); 1 * mite:netherrack_furnace (1280.0)"
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 2 * mite:vibranium_ingot (51200.0); 2 * minecraft:netherite_ingot (3200.0); 2 * mite:adamantium_ingot (25600.0); 2 * minecraft:diamond (1600.0); 1 * mite:netherrack_furnace (1280.0)"
     },
     "modern_ite:voucher_club_core": {
       "difficulty": 3.0,

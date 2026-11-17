@@ -119,8 +119,9 @@ shaped('mithril_enhance_stone', [' I ','GMG',' I '], {'I':'minecraft:iron_ingot'
 shaped('adamantium_enhance_stone', [' D ','MAM',' R '], {'D':'minecraft:diamond','M':'mite:mithril_ingot','A':'mite:adamantium_ingot','R':'minecraft:redstone_block'})
 shaped('universal_enhance_stone', ['gDg','bTb','BEB'], {'g':'minecraft:glowstone_dust','D':'mite:bottle_of_disenchanting','b':'minecraft:blaze_powder','T':'minecraft:ghast_tear','B':'minecraft:book','E':'minecraft:ender_pearl'})
 shaped('iron_forging_table', ['WIT',' A ','OOO'], {'W':'minecraft:oak_planks','I':'minecraft:iron_ingot','T':'mite:iron_crafting_table','A':'minecraft:anvil','O':'minecraft:obsidian'})
-for old, new in [('iron','mithril'),('mithril','adamantium'),('adamantium','vibranium')]:
+for old, new in [('iron','mithril'),('mithril','adamantium')]:
     shaped(f'{new}_forging_table', ['III',' T '], {'I':f'mite:{new}_ingot','T':f'modern_ite:{old}_forging_table'})
+shaped('vibranium_forging_table', ['III','NTN'], {'I':'mite:vibranium_ingot','T':'modern_ite:adamantium_forging_table','N':'minecraft:netherite_ingot'})
 
 messages = {
  'subtitles.modern_ite.gem_box.open': ('宝石箱开启', 'Gem box opens'),

@@ -3,7 +3,7 @@
   "category": "misc",
   "pattern": [
     "III",
-    " T "
+    "NTN"
   ],
   "key": {
     "I": {
@@ -11,6 +11,9 @@
     },
     "T": {
       "item": "modern_ite:adamantium_forging_table"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
     }
   },
   "result": {

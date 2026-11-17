@@ -1,5 +1,7 @@
 package io.github.ningmeng123.modernite.content;
 
+import io.github.ningmeng123.mite.furnace.FurnaceThermalController;
+import io.github.ningmeng123.mite.registry.MiteFurnaces;
 import io.github.ningmeng123.mite.registry.MiteTools;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -36,12 +39,19 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.level.BlockDropsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -89,7 +99,7 @@ public final class ResourceContentGameTests {
             craft(h,"club_"+metal,"modern_ite:club_"+metal,1,new String[]{"#*#","#*#"," * "},Map.of('#',nugget,'*',ns+metal+"_ingot"));
         }
         craft(h,"vibranium_furnace","modern_ite:vibranium_furnace",1,new String[]{"VOA","DND","AOV"},
-                Map.of('V',"mite:vibranium_ingot",'O',"minecraft:obsidian",'A',"mite:adamantium_ingot",'D',"minecraft:diamond",'N',"mite:netherrack_furnace"));
+                Map.of('V',"mite:vibranium_ingot",'O',"minecraft:netherite_ingot",'A',"mite:adamantium_ingot",'D',"minecraft:diamond",'N',"mite:netherrack_furnace"));
         craft(h,"vibranium_chest","modern_ite:vibranium_chest",1,new String[]{"VVV","V V","VVV"},Map.of('V',"mite:vibranium_ingot"));
         craft(h,"maple_planks","modern_ite:maple_planks",4,new String[]{"L"},Map.of('L',"modern_ite:maple_log"));
         craft(h,"maple_slab","modern_ite:maple_slab",6,new String[]{"PPP"},Map.of('P',"modern_ite:maple_planks"));
@@ -98,6 +108,142 @@ public final class ResourceContentGameTests {
                 Map.of('F',"modern_ite:voucher_fishing",'P',"modern_ite:voucher_planting",'V',"modern_ite:voucher_villager"));
         smelt(h,"minecraft:coal_block","modern_ite:diamond_chunk");smelt(h,"modern_ite:maple_log","minecraft:charcoal");
         smelt(h,"modern_ite:nether_adamantium_ore","mite:adamantium_ingot");h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void vibraniumFurnaceRequiresNetheriteInBothFormerObsidianSlots(GameTestHelper h) {
+        var ingredients = new ArrayList<ItemStack>();
+        for (String id : new String[]{"mite:vibranium_ingot", "minecraft:netherite_ingot", "mite:adamantium_ingot",
+                "minecraft:diamond", "mite:netherrack_furnace", "minecraft:diamond",
+                "mite:adamantium_ingot", "minecraft:netherite_ingot", "mite:vibranium_ingot"})
+            ingredients.add(stack(id));
+        var recipe = (CraftingRecipe)h.getLevel().getRecipeManager().byKey(ExtremeContent.id("vibranium_furnace"))
+                .orElseThrow().value();
+        h.assertTrue(recipe.matches(CraftingInput.of(3, 3, ingredients), h.getLevel()),
+                "Both netherite ingots match the registered furnace recipe");
+        for (int slot : new int[]{1, 7}) {
+            ingredients.set(slot, new ItemStack(Items.OBSIDIAN));
+            h.assertTrue(!recipe.matches(CraftingInput.of(3, 3, ingredients), h.getLevel()),
+                    "Either former obsidian slot independently requires a netherite ingot");
+            ingredients.set(slot, new ItemStack(Items.NETHERITE_INGOT));
+        }
+        ingredients.set(1, new ItemStack(Items.OBSIDIAN));
+        ingredients.set(7, new ItemStack(Items.OBSIDIAN));
+        h.assertTrue(!recipe.matches(CraftingInput.of(3, 3, ingredients), h.getLevel()),
+                "The old two-obsidian furnace recipe no longer matches");
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void netherAdamantiumDropsRawMetalWithSourceFortuneAndSilkTouch(GameTestHelper h) {
+        var state = ExtremeContent.NETHER_ADAMANTIUM.get().defaultBlockState();
+        BlockPos pos = h.absolutePos(new BlockPos(1, 1, 1));
+        ItemStack pick = stack("mite:mithril_pickaxe");
+        Item raw = item("mite:raw_adamantium");
+        var enchantments = h.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        for (int sample = 0; sample < 24; sample++) {
+            var ordinary = Block.getDrops(state, h.getLevel(), pos, null, null, pick);
+            h.assertTrue(ordinary.size() == 1 && ordinary.getFirst().is(raw) && ordinary.getFirst().getCount() == 1,
+                    "Ordinary nether adamantium mining returns one existing raw adamantium");
+        }
+        pick.enchant(enchantments.getHolderOrThrow(Enchantments.FORTUNE), 10);
+        for (int sample = 0; sample < 24; sample++) {
+            var fortune = Block.getDrops(state, h.getLevel(), pos, null, null, pick);
+            h.assertTrue(fortune.size() == 1 && fortune.getFirst().is(raw) && fortune.getFirst().getCount() == 2,
+                    "The shared source fortune rule grants one guaranteed extra raw metal at level ten");
+        }
+        var explosion = state.getDrops(new LootParams.Builder(h.getLevel())
+                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                .withParameter(LootContextParams.TOOL, pick)
+                .withParameter(LootContextParams.EXPLOSION_RADIUS, 1F));
+        h.assertTrue(explosion.size() == 1 && explosion.getFirst().is(raw) && explosion.getFirst().getCount() == 1,
+                "Explosion loot receives no fortune copies even when a tool is supplied");
+        pick.enchant(enchantments.getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
+        var silk = Block.getDrops(state, h.getLevel(), pos, null, null, pick);
+        h.assertTrue(silk.size() == 1 && silk.getFirst().is(ExtremeContent.NETHER_ADAMANTIUM.get().asItem())
+                && silk.getFirst().getCount() == 1, "Silk touch takes precedence and returns one nether ore block");
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void netherAdamantiumNativeDropEventsRetainHarvestExperience(GameTestHelper h) {
+        var level = h.getLevel();
+        var state = ExtremeContent.NETHER_ADAMANTIUM.get().defaultBlockState();
+        BlockPos pos = h.absolutePos(new BlockPos(1, 1, 1));
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var enchantments = level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+        ItemStack ordinary = stack("mite:mithril_pickaxe");
+        ItemStack fortune = ordinary.copy();
+        fortune.enchant(enchantments.getHolderOrThrow(Enchantments.FORTUNE), 10);
+        ItemStack silk = fortune.copy();
+        silk.enchant(enchantments.getHolderOrThrow(Enchantments.SILK_TOUCH), 1);
+        var observations = new ArrayList<BlockDropsEvent>();
+        Consumer<BlockDropsEvent> observe = event -> {
+            if (event.getLevel() == level && event.getPos().equals(pos)) {
+                observations.add(event);
+                event.setCanceled(true);
+            }
+        };
+        boolean previousDrops = level.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS);
+        level.getGameRules().getRule(GameRules.RULE_DOBLOCKDROPS).set(true, level.getServer());
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, BlockDropsEvent.class, observe);
+        try {
+            for (ItemStack tool : new ItemStack[]{ordinary, fortune, silk}) for (int sample = 0; sample < 16; sample++) {
+                observations.clear();
+                Block.dropResources(state, level, pos, null, player, tool);
+                h.assertValueEqual(observations.size(), 1, "Each real drop transaction fires one native event");
+                var event = observations.getFirst();
+                h.assertValueEqual(event.getDrops().size(), 1, "The native event contains one material stack");
+                ItemStack drop = event.getDrops().getFirst().getItem();
+                if (tool == silk) {
+                    h.assertTrue(drop.is(ExtremeContent.NETHER_ADAMANTIUM.get().asItem()) && drop.getCount() == 1,
+                            "The native silk transaction returns its one ore block");
+                    h.assertValueEqual(event.getDroppedExperience(), 0, "Silk touch suppresses native harvest XP");
+                } else {
+                    h.assertTrue(drop.is(item("mite:raw_adamantium")) && drop.getCount() == (tool == fortune ? 2 : 1),
+                            "The native mining transaction delivers the expected raw-metal quantity");
+                    h.assertTrue(event.getDroppedExperience() >= 3 && event.getDroppedExperience() <= 7,
+                            "Ordinary and fortune mining retain the ore's original three-to-seven harvest XP");
+                }
+            }
+        } finally {
+            NeoForge.EVENT_BUS.unregister(observe);
+            level.getGameRules().getRule(GameRules.RULE_DOBLOCKDROPS).set(previousDrops, level.getServer());
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty")
+    public static void netherAdamantiumRawMetalSmeltsAtHeatFourInTheExistingFurnace(GameTestHelper h) {
+        BlockPos orePos = h.absolutePos(new BlockPos(1, 1, 1));
+        var drops = Block.getDrops(ExtremeContent.NETHER_ADAMANTIUM.get().defaultBlockState(), h.getLevel(),
+                orePos, null, null, stack("mite:mithril_pickaxe"));
+        ItemStack raw = drops.getFirst().copy();
+        h.assertTrue(raw.is(item("mite:raw_adamantium")), "The actual mined output enters the smelting regression");
+        smelt(h, "mite:raw_adamantium", "mite:adamantium_ingot");
+        h.assertValueEqual(FurnaceThermalController.requiredHeat(raw), 4,
+                "The reused raw metal retains the base adamantium heat tier");
+        h.assertValueEqual(FurnaceThermalController.requiredHeat(stack("modern_ite:nether_adamantium_ore")), 4,
+                "Silk-touched nether ore retains the same heat tier");
+        BlockPos furnacePos = h.absolutePos(new BlockPos(2, 2, 2));
+        h.getLevel().setBlockAndUpdate(furnacePos.north(), Blocks.AIR.defaultBlockState());
+        h.getLevel().setBlockAndUpdate(furnacePos, MiteFurnaces.NETHERRACK_FURNACE.get().defaultBlockState());
+        var furnace = (AbstractFurnaceBlockEntity)h.getLevel().getBlockEntity(furnacePos);
+        furnace.setItem(0, raw);
+        furnace.setItem(1, new ItemStack(Items.COAL));
+        for (int tick = 0; tick < 200; tick++)
+            AbstractFurnaceBlockEntity.serverTick(h.getLevel(), furnacePos, h.getLevel().getBlockState(furnacePos), furnace);
+        h.assertTrue(furnace.getItem(0).getCount() == 1 && furnace.getItem(2).isEmpty()
+                && furnace.getItem(1).is(Items.COAL), "Cold fuel cannot consume or smelt the mined raw metal");
+        furnace.setItem(1, new ItemStack(Items.BLAZE_ROD));
+        for (int tick = 0; tick < 199; tick++)
+            AbstractFurnaceBlockEntity.serverTick(h.getLevel(), furnacePos, h.getLevel().getBlockState(furnacePos), furnace);
+        h.assertTrue(furnace.getItem(0).getCount() == 1 && furnace.getItem(2).isEmpty(),
+                "Heat-four raw metal smelting waits for the complete source furnace cycle");
+        AbstractFurnaceBlockEntity.serverTick(h.getLevel(), furnacePos, h.getLevel().getBlockState(furnacePos), furnace);
+        h.assertTrue(furnace.getItem(0).isEmpty() && furnace.getItem(2).is(item("mite:adamantium_ingot"))
+                && furnace.getItem(2).getCount() == 1, "One mined raw adamantium completes as one ingot on tick 200");
+        h.succeed();
     }
 
     @GameTest(template="gear_empty")

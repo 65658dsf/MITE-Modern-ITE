@@ -343,6 +343,7 @@ public final class SourceCraftingGameTests {
                 Map.entry("resurrection_array", 25F), Map.entry("voucher_club_core", 3F),
                 Map.entry("dynamic_core_mithril", 102910F), Map.entry("dynamic_core_adamantium", 153721F),
                 Map.entry("dynamic_core_vibranium", 153721F),
+                Map.entry("vibranium_furnace", 164480F),
                 Map.entry("maple_slab", 240F), Map.entry("maple_stairs", 480F),
                 Map.entry("iron_enhance_stone", 2400F), Map.entry("mithril_enhance_stone", 8800F),
                 Map.entry("adamantium_enhance_stone", 40000F), Map.entry("universal_enhance_stone", 580F));

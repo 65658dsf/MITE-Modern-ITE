@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
@@ -51,7 +50,7 @@ public final class ExtremeContent {
     public static final DeferredBlock<Block> RESURRECTION = block("resurrection_array", () -> new ResurrectionBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN).strength(2F, 60000F).noOcclusion()));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ResurrectionBlockEntity>> RESURRECTION_ENTITY = TYPES.register("resurrection_array", () -> BlockEntityType.Builder.of(ResurrectionBlockEntity::new, RESURRECTION.get()).build(null));
     public static final DeferredBlock<RedDiamondOreBlock> RED_ORE = block("fancy_red_ore", () -> new RedDiamondOreBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_ORE).strength(3F).requiresCorrectToolForDrops()));
-    public static final DeferredBlock<DropExperienceBlock> NETHER_ADAMANTIUM = block("nether_adamantium_ore", () -> new DropExperienceBlock(UniformInt.of(3, 7), BlockBehaviour.Properties.ofFullCopy(Blocks.ANCIENT_DEBRIS).strength(4F).requiresCorrectToolForDrops()));
+    public static final DeferredBlock<DropExperienceBlock> NETHER_ADAMANTIUM = block("nether_adamantium_ore", () -> new NetherAdamantiumOreBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.ANCIENT_DEBRIS).strength(4F).requiresCorrectToolForDrops()));
     public static final DeferredBlock<RotatedPillarBlock> MAPLE_LOG = block("maple_log", () -> new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
     public static final DeferredBlock<Block> MAPLE_PLANKS = block("maple_planks", () -> new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)));
     public static final DeferredBlock<LeavesBlock> MAPLE_LEAVES = block("maple_leaves", () -> new LeavesBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES)));

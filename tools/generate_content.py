@@ -155,6 +155,30 @@ crossbow={'parent':'minecraft:item/crossbow','textures':{'layer0':'modern_ite:it
 save('assets/modern_ite/models/item/crossbow.json',crossbow)
 for id,src,cn,eng in [('resurrection_array','block_spawn','复活传送阵','Resurrection Array'),('fancy_red_ore','fancy_red','红钻矿石','Red Diamond Ore')]:tex(EX,f'assets/extreme/textures/blocks/{src}.png','block/'+id);cube(id);named(id,cn,eng,True)
 tex(ITE,'assets/miteite/textures/blocks/nether_adamantium_ore.png','block/nether_adamantium_ore');cube('nether_adamantium_ore');named('nether_adamantium_ore','下界艾德曼矿石','Nether Adamantium Ore',True)
+# Reuse the base raw metal and furnace recipes. The block preserves native harvest XP.
+save('data/modern_ite/loot_table/blocks/nether_adamantium_ore.json', {
+    'type': 'minecraft:block',
+    'pools': [{
+        'rolls': 1,
+        'conditions': [{'condition': 'minecraft:survives_explosion'}],
+        'entries': [{
+            'type': 'minecraft:alternatives',
+            'children': [{
+                'type': 'minecraft:item',
+                'name': 'modern_ite:nether_adamantium_ore',
+                'conditions': [{
+                    'condition': 'minecraft:match_tool',
+                    'predicate': {'predicates': {'minecraft:enchantments': [{
+                        'enchantments': 'minecraft:silk_touch', 'levels': {'min': 1},
+                    }]}},
+                }],
+            }, {
+                'type': 'minecraft:item',
+                'name': 'mite:raw_adamantium',
+            }],
+        }],
+    }],
+})
 for id,src in [('maple_log','log_maple'),('maple_log_top','log_maple_top'),('maple_leaves','leaves_maple'),('maple_planks','planks_maple'),('maple_sapling','sapling_maple')]:tex(EX,'assets/extreme/textures/blocks/'+src+'.png','block/'+id)
 cube('maple_planks');cube('maple_leaves');slab('maple_slab','maple_planks');stairs('maple_stairs','maple_planks')
 block_model('maple_leaves','minecraft:block/leaves',{'all':'modern_ite:block/maple_leaves'},render_type='minecraft:cutout_mipped')
@@ -169,7 +193,7 @@ for lit in [False,True]:block_model('vibranium_furnace'+('_on' if lit else ''),'
 state('vibranium_furnace',{'variants':{f'facing={f},lit={str(lit).lower()}':{'model':'modern_ite:block/vibranium_furnace'+('_on' if lit else ''),'y':y} for f,y in [('north',0),('east',90),('south',180),('west',270)] for lit in [False,True]}});block_item('vibranium_furnace');loot('vibranium_furnace');named('vibranium_furnace','振金熔炉','Vibranium Furnace',True)
 state('vibranium_chest',{'variants':{'':{'model':'minecraft:block/chest'}}});save('assets/modern_ite/models/item/vibranium_chest.json',{'parent':'minecraft:builtin/entity','textures':{'particle':'mite:block/vibranium_block'}});loot('vibranium_chest');named('vibranium_chest','振金私人箱','Vibranium Private Chest',True)
 shaped('resurrection_array',['ABA','BCB','ABA'],{'A':'mite:mithril_ingot','B':'minecraft:diamond','C':'minecraft:ender_pearl'})
-shaped('vibranium_furnace',['VOA','DND','AOV'],{'V':'mite:vibranium_ingot','O':'minecraft:obsidian','A':'mite:adamantium_ingot','D':'minecraft:diamond','N':'mite:netherrack_furnace'})
+shaped('vibranium_furnace',['VOA','DND','AOV'],{'V':'mite:vibranium_ingot','O':'minecraft:netherite_ingot','A':'mite:adamantium_ingot','D':'minecraft:diamond','N':'mite:netherrack_furnace'})
 shaped('vibranium_chest',['VVV','V V','VVV'],{'V':'mite:vibranium_ingot'})
 shaped('dynamic_core_mithril',['ADA','BCB','ADA'],{'A':'mite:adamantium_ingot','B':'minecraft:blaze_rod','C':'minecraft:nether_star','D':'minecraft:ghast_tear'})
 shaped('dynamic_core_adamantium',['ADA','BCB','ADA'],{'A':'minecraft:glowstone','B':'mite:vibranium_ingot','C':'modern_ite:dynamic_core_mithril','D':'mite:adamantium_ingot'})

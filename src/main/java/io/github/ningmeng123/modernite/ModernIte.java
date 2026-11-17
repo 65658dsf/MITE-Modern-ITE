@@ -24,6 +24,8 @@ public final class ModernIte {
         ExtremeContent.register(bus);
         io.github.ningmeng123.modernite.content.metal.MetalUpgradingContent.register(bus);
         ExtremeGear.register(bus);
+        bus.addListener(net.neoforged.bus.api.EventPriority.LOWEST,
+                io.github.ningmeng123.modernite.gear.NetheriteTrimProtection::defaults);
         io.github.ningmeng123.modernite.content.wither.WitherTreasureContent.register(bus);
         ExtremeMobs.register(bus);
         io.github.ningmeng123.modernite.entity.InfernalExplosionPayload.register(bus);

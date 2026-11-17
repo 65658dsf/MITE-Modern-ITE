@@ -41,9 +41,9 @@ public final class ForgeJeiRecipesGameTests {
             Map.of("minecraft:gold_ingot", 1, "mite:mithril_ingot", 1, "minecraft:redstone", 1, "modern_ite:mithril_enhance_stone", 1),
             Map.of("minecraft:gold_ingot", 2, "mite:mithril_ingot", 1, "minecraft:redstone", 2, "modern_ite:mithril_enhance_stone", 1),
             Map.of("minecraft:gold_ingot", 2, "mite:mithril_ingot", 2, "minecraft:redstone_block", 1, "modern_ite:mithril_enhance_stone", 1),
-            Map.of("minecraft:ghast_tear", 1, "mite:adamantium_ingot", 1, "mite:mithril_ingot", 2, "modern_ite:adamantium_enhance_stone", 1),
-            Map.of("minecraft:ghast_tear", 2, "mite:adamantium_ingot", 1, "mite:mithril_ingot", 2, "modern_ite:adamantium_enhance_stone", 1),
-            Map.of("minecraft:ghast_tear", 2, "mite:adamantium_ingot", 2, "mite:mithril_ingot", 2, "modern_ite:adamantium_enhance_stone", 1));
+            Map.of("minecraft:ghast_tear", 1, "mite:adamantium_ingot", 1, "mite:mithril_ingot", 2, "modern_ite:adamantium_enhance_stone", 1, "minecraft:netherite_scrap", 1),
+            Map.of("minecraft:ghast_tear", 2, "mite:adamantium_ingot", 1, "mite:mithril_ingot", 2, "modern_ite:adamantium_enhance_stone", 1, "minecraft:netherite_scrap", 2),
+            Map.of("minecraft:ghast_tear", 2, "mite:adamantium_ingot", 2, "mite:mithril_ingot", 2, "modern_ite:adamantium_enhance_stone", 1, "minecraft:netherite_scrap", 3));
 
     private ForgeJeiRecipesGameTests() {}
 
@@ -208,6 +208,11 @@ public final class ForgeJeiRecipesGameTests {
         station.setItem(4, new ItemStack(ExtremeGear.STONES.get(3).get()));
         h.assertTrue(station.canStart() && ForgeRecipes.usesUniversal(station) && station.data.get(4) == 50,
                 "A mixed stone payment uses the universal probability, even when only one stone is universal");
+        h.assertTrue(ForgeRecipes.consume(station, false) && station.getItem(2).getCount() == 1
+                && station.getItem(4).getCount() == 1, "A split-stone payment can be previewed without consuming either stack");
+        h.assertTrue(ForgeRecipes.consume(station, true), "The allocator commits the split ordinary and universal stone payment");
+        for (int slot = 0; slot < 5; slot++)
+            h.assertTrue(station.getItem(slot).isEmpty(), "Each split material stack is charged exactly once");
         h.succeed();
     }
 
