@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "mite:equipment_upgrade_smithing_template"
+  },
+  "base": {
+    "item": "modern_ite:iron_knife"
+  },
+  "addition": {
+    "item": "mite:ancient_metal_ingot"
+  },
+  "result": {
+    "id": "modern_ite:ancient_metal_knife"
+  }
+}

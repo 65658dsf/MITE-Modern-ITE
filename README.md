@@ -2,7 +2,7 @@
 
 面向 Minecraft 1.21.1 的 MITE: Modern 生存扩展，将 MITE-ITE 2.0.28 与 Extreme LH 0.6.6 的移植内容整合为一个模组。在本体的生存、装备与日历系统上，加入极难生物、领主技能、宝石镶嵌、独立强化锻造和后期探索内容。
 
-开发者 **NingMeng123** · 当前源码配套版本 **0.3.6** · 模组 ID `modern_ite`
+开发者 **NingMeng123** · 当前源码配套版本 **0.3.7-DEV1** · 模组 ID `modern_ite`
 
 [安装与版本配套](#安装与版本配套) · [主要内容](#主要内容) · [玩法配置](#玩法配置) · [本地开发](#本地开发) · [文档与历史记录](#文档与历史记录)
 
@@ -15,8 +15,8 @@
 | Minecraft | 1.21.1 |
 | 模组加载器 | NeoForge 21.1.259 或更新的 21.1 系列版本 |
 | Java | 21 |
-| 必需前置 | MITE: Modern 0.3.6 或更新版本 |
-| 当前配套文件 | `MITE-Modern-0.3.6.jar` 与 `MITE-Modern-ITE-0.3.6.jar` |
+| 必需前置 | MITE: Modern 0.3.7-DEV1 或更新版本 |
+| 当前配套文件 | `MITE-Modern-0.3.7-DEV1.jar` 与 `MITE-Modern-ITE-0.3.7-DEV1.jar` |
 | 联机安装 | 客户端和服务端均安装本体与 ITE 扩展 |
 
 1. 首次加装或升级前备份存档。准备对应版本的本体和 ITE 扩展 JAR，源码构建步骤见下方“本地开发”。
@@ -96,10 +96,10 @@ cd ..\MITE-Modern-ITE
 .\gradlew.bat build
 ```
 
-默认本体依赖路径由 `mod_version` 决定，当前为 `../miteto1.21.1neoforge/build/libs/MITE-Modern-0.3.6.jar`。扩展产物输出到 `build/libs/MITE-Modern-ITE-0.3.6.jar`。也可通过 `miteJar` 指定本体文件。
+默认本体依赖路径由 `mod_version` 决定，当前为 `../miteto1.21.1neoforge/build/libs/MITE-Modern-0.3.7-DEV1.jar`。扩展产物输出到 `build/libs/MITE-Modern-ITE-0.3.7-DEV1.jar`。也可通过 `miteJar` 指定本体文件。
 
 ```powershell
-.\gradlew.bat build "-PmiteJar=D:\Mods\MITE-Modern-0.3.6.jar"
+.\gradlew.bat build "-PmiteJar=D:\Mods\MITE-Modern-0.3.7-DEV1.jar"
 ```
 
 | 命令 | 作用 |

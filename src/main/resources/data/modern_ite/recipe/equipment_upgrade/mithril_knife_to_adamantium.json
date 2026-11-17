@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": {
+    "item": "mite:equipment_upgrade_smithing_template"
+  },
+  "base": {
+    "item": "modern_ite:mithril_knife"
+  },
+  "addition": {
+    "item": "mite:adamantium_ingot"
+  },
+  "result": {
+    "id": "modern_ite:adamantium_knife"
+  }
+}

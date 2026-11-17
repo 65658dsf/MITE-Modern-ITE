@@ -76,6 +76,16 @@ public final class ExtremeContent {
             MiteExtensions.registerExternalTool(definition);
             ITEM_ENTRIES.put("club_"+material, ITEMS.registerItem("club_"+material, p -> new R196ToolItem(definition,p)));
         }
+        for (String material : List.of("iron", "ancient_metal", "mithril", "adamantium")) {
+            var dagger = MiteTools.definitions().stream().filter(entry -> entry.id().equals("mite:" + material + "_dagger"))
+                    .findFirst().orElseThrow();
+            String name = material + "_knife";
+            var definition = new MiteTools.Definition("modern_ite:" + name, EquipmentDurabilityRules.ToolFamily.KNIFE,
+                    material, -1, dagger.speed(), dagger.damage() - 1F, dagger.enchantability(), dagger.harvestLevel(),
+                    .25F, dagger.materialDurability(), dagger.maxQuality());
+            MiteExtensions.registerExternalTool(definition);
+            ITEM_ENTRIES.put(name, ITEMS.registerItem(name, properties -> new R196ToolItem(definition, properties)));
+        }
         MiteExtensions.registerExternalArmor(new MiteArmorContent.Definition("modern_ite:iron_bucket_helmet",-1,"iron",ArmorItem.Type.HELMET,5,false,false,256,15,30,Quality.LEGENDARY,0,1280));
         TABS.register("content", () -> CreativeModeTab.builder().title(Component.translatable("itemGroup.modern_ite")).icon(() -> new ItemStack(FANCY_RED.get())).displayItems((p,out) -> {
             var seen = new HashSet<Item>();

@@ -218,6 +218,10 @@ public final class ExtremeRules implements MiteExtensions.Policy {
         return switch(itemId.getPath()) {
             case "club_copper","club_silver","club_gold","club_iron","club_ancient_metal",
                     "club_mithril","club_adamantium","club_vibranium" -> 1F;
+            case "iron_knife" -> 850F;
+            case "ancient_metal_knife" -> 1650F;
+            case "mithril_knife" -> 6450F;
+            case "adamantium_knife" -> 25650F;
             default -> original;
         };
     }

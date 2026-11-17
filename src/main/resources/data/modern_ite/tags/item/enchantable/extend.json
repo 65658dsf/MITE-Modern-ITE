@@ -473,6 +473,22 @@
     {
       "id": "modern_ite:club_vibranium",
       "required": false
+    },
+    {
+      "id": "modern_ite:iron_knife",
+      "required": false
+    },
+    {
+      "id": "modern_ite:ancient_metal_knife",
+      "required": false
+    },
+    {
+      "id": "modern_ite:mithril_knife",
+      "required": false
+    },
+    {
+      "id": "modern_ite:adamantium_knife",
+      "required": false
     }
   ]
 }

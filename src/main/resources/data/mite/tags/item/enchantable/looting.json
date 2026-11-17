@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "modern_ite:iron_knife",
+    "modern_ite:ancient_metal_knife",
+    "modern_ite:mithril_knife",
+    "modern_ite:adamantium_knife"
+  ]
+}
