@@ -54,7 +54,7 @@ public final class IteConfig {
         add(builder, "Block", "mob_spawner_extra_delay_reduction", 2, 0D, 1000000D, "非方块刷怪笼近场加速每tick额外减少的冷却（tick）。需要开启近场加速；0保留原生倒计时速度。普通方块刷怪笼固定9秒，不受此值影响。");
         add(builder, "Entities", "enhance_limit", 366, 0D, 1000000D, "特殊生物生命成长天数上限。种类专属攻击固定为第1天数值，旧存档日期攻击会一次归一化；本体生命成长由主模组设置控制。");
         add(builder, "Entities", "skeleton_triple_shot", true, 0D, 1D, "三发骷髅。允许已抽中三发特性的骷髅发射额外两支箭。");
-        add(builder, "Entities", "compressed_skeleton", true, 0D, 1D, "分裂骷髅。允许非 Boss 骷髅以3%概率获得死亡分裂特性，生成同类小型骷髅。时间领主、湮灭骷髅和骷髅暴君禁止分裂。幼体无法再次分裂，仍服从召援数量与密度限制。");
+        add(builder, "Entities", "compressed_skeleton", true, 0D, 1D, "分裂骷髅。允许符合条件的非 Boss 骷髅以3%概率获得死亡分裂特性，生成同类小型骷髅。时间领主、湮灭骷髅、骷髅暴君和镜像骷髅禁止分裂。幼体无法再次分裂，仍服从召援数量与密度限制。");
         add(builder, "Entities", "compressed_skeleton_crack_stand_time", 20, 1D, 100000000D, "分裂骷髅停滞时间（tick）。分裂后小型骷髅的虚弱、缓慢与抗性持续时间。");
         add(builder, "Entities", "compressed_skeleton_expand_count", 7, 0D, 64D, "分裂骷髅分裂数量中值。实际随机取设置值±1（限制在1～64），默认7生成6～8只，0禁用；仍服从召援数量与密度限制。");
         add(builder, "Entities", "skeleton_force_melee_attack", true, 0D, 1D, "允许强制骷髅近战。控制带近战特性的骷髅；不强制所有骷髅近战。");

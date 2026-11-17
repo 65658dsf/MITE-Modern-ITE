@@ -48,7 +48,8 @@ public final class MobSplittingGameTests {
         try (Fixture fixture=new Fixture(h)) {
             List<EntityType<?>> types=new ArrayList<>(List.of(EntityType.SKELETON,EntityType.WITHER_SKELETON,EntityType.STRAY,EntityType.BOGGED));
             for (var kind:List.of(MobKind.LONGDEAD,MobKind.LONGDEAD_GUARDIAN,MobKind.BONE_LORD,MobKind.ANCIENT_BONE_LORD)) types.add(MiteMobs.type(kind));
-            for (var kind:ExtremeKind.values()) if (kind.family==ExtremeKind.Family.SKELETON&&!kind.boss()) types.add(ExtremeMobs.type(kind));
+            for (var kind:ExtremeKind.values()) if (kind.family==ExtremeKind.Family.SKELETON&&!kind.boss()
+                    &&kind!=ExtremeKind.MIRROR_SKELETON) types.add(ExtremeMobs.type(kind));
             for (var type:types) {
                 Mob parent=fixture.spawn(type);
                 parent.getPersistentData().putBoolean("modern_ite:compressed",true);
@@ -68,7 +69,7 @@ public final class MobSplittingGameTests {
     }
 
     @GameTest(template="gear_empty",batch="mob_splitting")
-    public static void skeletonBossesNeverRollOrSplitEvenWithSavedCompressedTraits(GameTestHelper h) {
+    public static void excludedSkeletonsNeverRollOrSplitEvenWithSavedCompressedTraits(GameTestHelper h) {
         try (Fixture fixture=new Fixture(h)) {
             fixture.set("Entities.skeleton_triple_shot",false);
             Mob ordinary=fixture.spawn(EntityType.SKELETON);
@@ -85,24 +86,24 @@ public final class MobSplittingGameTests {
             h.assertTrue(ordinary.getPersistentData().getBoolean("modern_ite:compressed"),"The same join-handler seed grants the compressed trait to an ordinary skeleton");
             fixture.clear();
             for (var kind:ExtremeKind.values()) {
-                if (kind.family!=ExtremeKind.Family.SKELETON||!kind.boss()) continue;
+                if (kind.family!=ExtremeKind.Family.SKELETON||!kind.boss()&&kind!=ExtremeKind.MIRROR_SKELETON) continue;
                 var type=ExtremeMobs.type(kind);
-                Mob boss=fixture.spawn(type);
-                h.assertFalse(boss.getPersistentData().getBoolean("modern_ite:compressed"),"A newly joined skeleton boss has no compressed trait: "+kind);
-                boss.getPersistentData().remove("modern_ite:legacy_rolls");
-                boss.getRandom().setSeed(splitSeed);
-                ExtremeMobEvents.join(new EntityJoinLevelEvent(boss,h.getLevel(),false));
-                h.assertFalse(boss.getPersistentData().getBoolean("modern_ite:compressed"),"A successful ordinary split roll cannot mark a skeleton boss: "+kind);
+                Mob skeleton=fixture.spawn(type);
+                h.assertFalse(skeleton.getPersistentData().getBoolean("modern_ite:compressed"),"A newly joined excluded skeleton has no compressed trait: "+kind);
+                skeleton.getPersistentData().remove("modern_ite:legacy_rolls");
+                skeleton.getRandom().setSeed(splitSeed);
+                ExtremeMobEvents.join(new EntityJoinLevelEvent(skeleton,h.getLevel(),false));
+                h.assertFalse(skeleton.getPersistentData().getBoolean("modern_ite:compressed"),"A successful ordinary split roll cannot mark an excluded skeleton: "+kind);
 
-                boss.getPersistentData().putBoolean("modern_ite:compressed",true);
-                CompoundTag saved=new CompoundTag();boss.saveWithoutId(saved);fixture.clear();
+                skeleton.getPersistentData().putBoolean("modern_ite:compressed",true);
+                CompoundTag saved=new CompoundTag();skeleton.saveWithoutId(saved);fixture.clear();
                 Mob loaded=(Mob)type.create(h.getLevel());loaded.load(saved);fixture.owned.add(loaded);
-                h.assertTrue(h.getLevel().addFreshEntity(loaded),"A saved compressed boss passes the real join handlers: "+kind);
+                h.assertTrue(h.getLevel().addFreshEntity(loaded),"A saved compressed excluded skeleton passes the real join handlers: "+kind);
                 h.assertTrue(loaded.getPersistentData().getBoolean("modern_ite:compressed"),"The reload retains the old compressed trait before death: "+kind);
                 loaded.setHealth(0);loaded.die(loaded.damageSources().generic());
-                h.assertTrue(fixture.children(loaded).isEmpty(),"A skeleton boss carrying a saved compressed trait produces no children on native death: "+kind);
+                h.assertTrue(fixture.children(loaded).isEmpty(),"An excluded skeleton carrying a saved compressed trait produces no children on native death: "+kind);
                 MobSplitting.trySplit(loaded);
-                h.assertTrue(fixture.children(loaded).isEmpty(),"Repeated split callbacks cannot create skeleton boss children: "+kind);
+                h.assertTrue(fixture.children(loaded).isEmpty(),"Repeated split callbacks cannot create excluded skeleton children: "+kind);
                 fixture.clear();
             }
         }

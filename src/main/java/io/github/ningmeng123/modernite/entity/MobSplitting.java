@@ -26,7 +26,7 @@ import net.neoforged.neoforge.event.entity.EntityEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
-/** Rare, single-generation miniature offspring; bosses and black infernal creepers never split. @author NingMeng123 */
+/** Bosses, mirror skeletons and black infernal creepers never split. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class MobSplitting {
     public static final String CHILD="modern_ite:split_child", HANDLED="modern_ite:split_handled";
@@ -36,6 +36,14 @@ public final class MobSplitting {
 
     public static boolean isChild(Entity entity){return entity!=null&&entity.getPersistentData().getBoolean(CHILD);}
     public static float damageMultiplier(Entity entity){return isChild(entity)?.5F:1F;}
+
+    static boolean canSplit(Mob mob) {
+        return !isChild(mob) && !ExtremeMobs.isBoss(mob)
+                && (mob instanceof Creeper || mob instanceof AbstractSkeleton)
+                && !(mob instanceof ExtremeMob extreme
+                        && (extreme.extremeKind() == ExtremeKind.MIRROR_SKELETON
+                                || extreme.extremeKind() == ExtremeKind.BLACK_INFERNAL_CREEPER));
+    }
 
     /** Attribute modifiers use native persistence and tracking packets, including late observers. */
     public static void markChild(Mob mob){
@@ -86,9 +94,7 @@ public final class MobSplitting {
         if(!event.isCanceled()&&event.getEntity() instanceof Mob mob)trySplit(mob);
     }
     public static void trySplit(Mob parent){
-        if(!(parent.level() instanceof ServerLevel)||isChild(parent)||ExtremeMobs.isBoss(parent)
-                ||!(parent instanceof Creeper||parent instanceof AbstractSkeleton))return;
-        if(parent instanceof ExtremeMob extreme&&extreme.extremeKind()==ExtremeKind.BLACK_INFERNAL_CREEPER)return;
+        if(!(parent.level() instanceof ServerLevel)||!canSplit(parent))return;
         var data=parent.getPersistentData();
         if(data.getBoolean(HANDLED))return;
         data.putBoolean(HANDLED,true);

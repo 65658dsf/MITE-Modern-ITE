@@ -58,7 +58,7 @@
   "modern_ite.config.skeleton_triple_shot": "Triple-shot skeletons",
   "modern_ite.config.skeleton_triple_shot.tooltip": "Triple-shot skeletons. Default: true.",
   "modern_ite.config.compressed_skeleton": "Splitting skeletons",
-  "modern_ite.config.compressed_skeleton.tooltip": "Give non-boss skeleton types a 3% chance to split into miniature skeletons of the same type on death. Time Lords, Annihilation Skeletons and Skeleton Elite Lords cannot split. Offspring cannot split again and obey support and local population limits. Default: true.",
+  "modern_ite.config.compressed_skeleton.tooltip": "Give eligible non-boss skeleton types a 3% chance to split into miniature skeletons of the same type on death. Time Lords, Annihilation Skeletons, Skeleton Elite Lords and Mirror Skeletons cannot split. Offspring cannot split again and obey support and local population limits. Default: true.",
   "modern_ite.config.compressed_skeleton_crack_stand_time": "Split skeleton stun duration (ticks)",
   "modern_ite.config.compressed_skeleton_crack_stand_time.tooltip": "Duration of weakness, slowness and resistance on newly split miniature skeletons. Default: 20 ticks.",
   "modern_ite.config.compressed_skeleton_expand_count": "Split skeleton offspring count midpoint",
