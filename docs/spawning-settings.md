@@ -52,7 +52,7 @@ ITE 0.2.10 调用本体的可配置调度、动态配置页面及出生装备接
 | `full_moon_natural_local_hostile_limit` | 10 | 0～1000000整数 | 满月夜自然拥挤阈值 |
 | `blood_moon_natural_local_hostile_limit` | 12 | 0～1000000整数 | 血月夜自然拥挤阈值 |
 | `deep_hostile_cap_multiplier` | 2 | 0～1000 | 深层独立额度倍率 |
-| `hostile_spawn_interval_ticks` | 1 | 1～72000整数 | 敌对自然刷怪调度间隔，单位tick |
+| `hostile_spawn_interval_ticks` | 3 | 1～72000整数 | 敌对自然刷怪调度间隔，单位tick |
 | `deep_spawn_chance_percent` | 10 | 0～100 | 每轮深层通过率，单位% |
 | `surface_spawn_chance_percent` | 17 | 0～100 | 每轮浅层通过率，单位% |
 | `blood_moon_spawn_chance_multiplier` | 1 | 0～100 | 血月轮次概率倍率 |
@@ -127,7 +127,7 @@ deep_hostile_cap_multiplier = 2.0
 natural_local_hostile_limit = 8
 full_moon_natural_local_hostile_limit = 10
 blood_moon_natural_local_hostile_limit = 12
-hostile_spawn_interval_ticks = 1
+hostile_spawn_interval_ticks = 3
 deep_spawn_chance_percent = 10.0
 surface_spawn_chance_percent = 17.0
 blood_moon_spawn_chance_multiplier = 1.0

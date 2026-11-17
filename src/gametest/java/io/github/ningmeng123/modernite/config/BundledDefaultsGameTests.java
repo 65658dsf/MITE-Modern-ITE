@@ -25,6 +25,11 @@ public final class BundledDefaultsGameTests {
             compare(helper, new TomlParser().parse(reader), List.of());
         }
         helper.assertValueEqual(IteConfig.localSnapshot(), IteConfig.defaults(), "Loaded ITE scalar snapshot matches the factory preset, including shared day three");
+        helper.assertValueEqual(IteConfig.defaults().get("hostile_spawn_interval_ticks"), 3,
+                "The factory natural-spawn scheduler interval is three ticks");
+        helper.assertValueEqual(IteConfig.validated(java.util.Map.of("hostile_spawn_interval_ticks", 5))
+                        .get("hostile_spawn_interval_ticks"), 5,
+                "An explicitly saved interval keeps its configured value");
         helper.assertValueEqual(IteSpawnConfig.localSnapshot(), IteSpawnConfig.defaultRates(), "Loaded rate snapshot matches the unchanged exported empty list");
         helper.assertValueEqual(IteSpawnConfig.localWeights(), IteSpawnConfig.defaultWeights(), "Loaded weight snapshot matches the exported integral weights");
         helper.succeed();

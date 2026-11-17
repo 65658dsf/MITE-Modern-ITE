@@ -125,7 +125,7 @@ public final class IteConfig {
         add(builder, "GameMechanics.MobSpawning", "hostile_spawn_groups", 3, 0D, 64D, "普通日期每轮每个有效区块的生成组数，默认3。0停止自然生成尝试，不清除已有怪物。");
         add(builder, "GameMechanics.MobSpawning", "blood_moon_hostile_spawn_groups", 3, 0D, 64D, "血月每轮每个有效区块的生成组数，默认4。0停止自然生成尝试，不清除已有怪物。");
         add(builder, "GameMechanics.MobSpawning", "hostile_spawn_attempts", 4, 0D, 256D, "每组敌对生成尝试次数，默认4。0停止自然生成尝试；保留相位蜘蛛等物种专属处理。");
-        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_interval_ticks", 1, 1D, 72000D, "敌对自然刷怪调度间隔（tick），默认5。每次间隔后仍需通过深浅层概率与随机节奏筛选；增大此值降低刷新频率。");
+        add(builder, "GameMechanics.MobSpawning", "hostile_spawn_interval_ticks", 3, 1D, 72000D, "敌对自然刷怪调度间隔（tick），默认3。每次间隔后仍需通过深浅层概率与随机节奏筛选；增大此值降低刷新频率。");
         add(builder, "GameMechanics.MobSpawning", "deep_spawn_chance_percent", 10D, 0D, 100D, "每轮深层刷怪通过率（%），默认10。调度间隔后判定，之后仍应用随机节奏、密度及物种条件；0停止深层自然尝试。");
         add(builder, "GameMechanics.MobSpawning", "surface_spawn_chance_percent", 17D, 0D, 100D, "每轮浅层刷怪通过率（%），默认17。调度间隔后判定，之后仍应用随机节奏、密度及物种条件；0停止浅层自然尝试。");
         add(builder, "GameMechanics.MobSpawning", "blood_moon_spawn_chance_multiplier", 1D, 0D, 100D, "血月刷怪轮次概率倍率，默认1。乘深浅层通过率，不改变每轮组数或额度；最终概率最多100%。");

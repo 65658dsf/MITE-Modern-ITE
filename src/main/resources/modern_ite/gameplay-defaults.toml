@@ -103,7 +103,7 @@
 		hostile_spawn_groups = 3
 		blood_moon_hostile_spawn_groups = 4
 		hostile_spawn_attempts = 4
-		hostile_spawn_interval_ticks = 5
+		hostile_spawn_interval_ticks = 3
 		deep_spawn_chance_percent = 10.0
 		surface_spawn_chance_percent = 17.0
 		blood_moon_spawn_chance_multiplier = 1.0

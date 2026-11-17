@@ -349,7 +349,7 @@
   "modern_ite.config.deep_hostile_cap_multiplier": "深层敌对额度倍率",
   "modern_ite.config.deep_hostile_cap_multiplier.tooltip": "默认2。深层独立计数，在区块与日期额度相加后乘此倍率。0停止深层自然补怪；不会清除已有怪物。",
   "modern_ite.config.hostile_spawn_interval_ticks": "自然刷怪调度间隔（tick）",
-  "modern_ite.config.hostile_spawn_interval_ticks.tooltip": "默认1，范围1～72000。每次间隔后仍需通过深浅层概率、随机节奏及拥挤筛选；增大间隔降低刷新频率。",
+  "modern_ite.config.hostile_spawn_interval_ticks.tooltip": "默认3，范围1～72000。每次间隔后仍需通过深浅层概率、随机节奏及拥挤筛选；增大间隔降低刷新频率。",
   "modern_ite.config.deep_spawn_chance_percent": "深层每轮刷怪通过率（%）",
   "modern_ite.config.deep_spawn_chance_percent.tooltip": "默认10%。调度后判定，仍应用随机节奏、拥挤与物种条件。0停止深层自然尝试。",
   "modern_ite.config.surface_spawn_chance_percent": "浅层每轮刷怪通过率（%）",

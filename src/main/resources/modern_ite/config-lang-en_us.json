@@ -349,7 +349,7 @@
   "modern_ite.config.deep_hostile_cap_multiplier": "Deep hostile cap multiplier",
   "modern_ite.config.deep_hostile_cap_multiplier.tooltip": "Default 2. The independently counted deep cap is the chunk allowance plus date allowance, multiplied by this value. 0 stops deep natural additions without removing mobs.",
   "modern_ite.config.hostile_spawn_interval_ticks": "Natural spawn interval (ticks)",
-  "modern_ite.config.hostile_spawn_interval_ticks.tooltip": "Default 1; range 1–72000. Each scheduled pass still checks band probability, random pacing and crowding. Larger intervals reduce refresh frequency.",
+  "modern_ite.config.hostile_spawn_interval_ticks.tooltip": "Default 3; range 1–72000. Each scheduled pass still checks band probability, random pacing and crowding. Larger intervals reduce refresh frequency.",
   "modern_ite.config.deep_spawn_chance_percent": "Deep spawn chance per pass (%)",
   "modern_ite.config.deep_spawn_chance_percent.tooltip": "Default 10%. Checked after scheduling; random pacing, crowding and species conditions still apply. 0 stops deep natural attempts.",
   "modern_ite.config.surface_spawn_chance_percent": "Surface spawn chance per pass (%)",
