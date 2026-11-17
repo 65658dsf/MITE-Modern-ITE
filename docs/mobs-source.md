@@ -51,9 +51,9 @@
 | mirror_skeleton | 镜像骷髅 | EntityMirrorSkeleton | 自然；通用维度 | 复制装备/效果/生命，复制物不掉落 |
 | skeleton_fast_arrow | 速射手骷髅 | EntitySkeletonFastArrow | 自然；通用维度 | 30 tick 射击间隔 |
 | skeleton_knockback | 击飞骷髅 | EntitySkeletonKnockback | 自然；下界/地底 | 木剑近战、有效命中上升约15格，快落及金心不再漏飞，保留原水平击退 |
-| skeleton_lightning | 闪电骷髅 | EntitySkeletonLightning | 自然；96 天起，下界/地底 | 箭命中玩家最终伤害6（三颗心），视觉落雷、充能苦力怕同款流动电弧外层与电火花环绕 |
-| skeleton_floating | 漂浮骷髅 | EntitySkeletonFloating | 自然；仅地底 | 命中悬浮200 tick、脚边云雾 |
-| skeleton_blaze | 烈焰骷髅 | EntitySkeletonBlaze | 自然；33 天起 | 火矢 II、火焰免疫、双层旋转火焰与熔岩粒子、5% 烈焰粉 |
+| skeleton_lightning | 闪电骷髅 | EntitySkeletonLightning | 自然；96 天起，下界/地底 | 箭命中玩家最终伤害6（三颗心），视觉落雷、镂空骨架、青蓝发光裂纹、导电骨刺与少量贴身电火花 |
+| skeleton_floating | 漂浮骷髅 | EntitySkeletonFloating | 自然；仅地底 | 命中悬浮200 tick、悬空断骨、紫青异色眼、脚边浮动碎骨与紫色微光 |
+| skeleton_blaze | 烈焰骷髅 | EntitySkeletonBlaze | 自然；33 天起 | 火矢 II、火焰免疫、焦黑骨骼、熔火裂纹、肩头小火苗与余烬、5% 烈焰粉 |
 | wither_skeleton_arrow | 凋零骷髅射手 | EntityWitherSkeletonArrow | 自然；下界；凋零召援 | 原版凋零骷髅模型、古金弓、冲击 II、命中凋零 300 tick、煤/稀有头颅 |
 | skeleton_elite_lord | 骷髅暴君 | EntitySkeletonEliteLord | 自然；33天起，通用维度；末影龙援军 | 振金近战装备、专属生命曲线、最多召 6 骷髅；与本体骷髅领主不同身份 |
 | skeleton_zombie | 骷髅僵尸 | EntitySkeletonZombie | 自然；通用维度 | 弓/锈铁剑双武器，5/6 格阈值切换，备用武器存读 |

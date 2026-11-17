@@ -43,11 +43,19 @@ final class MobAuraPreviews {
     private static final ExtremeKind[] KINDS={ExtremeKind.SKELETON_BLAZE,ExtremeKind.SKELETON_LIGHTNING,
             ExtremeKind.SKELETON_FLOATING,ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.UNDYING_ZOMBIE_EMPEROR};
     private static final String[] LABELS={"烈焰骷髅","闪电骷髅","漂浮骷髅","湮灭骷髅","不朽尸王","振金星空盔甲"};
-    private static final String[] DETAILS={"火焰环绕 · 熔岩火星","电光环绕 · 电弧火花","脚下云朵 · 漂浮气流",
+    private static final String[] DETAILS={"肩头微焰 · 焦骨余烬","贴骨电光 · 局部火花","紫尘旋绕 · 悬浮碎骨",
             "虚空紫环 · 暗影烟雾","猩红灵焰 · 振金星空盔甲","原生振金材质 · 动态星光叠加"};
     private MobAuraPreviews() {}
 
     static JsonArray capture(Minecraft mc) throws Exception {
+        return capture(mc,false);
+    }
+
+    static JsonArray captureElemental(Minecraft mc) throws Exception {
+        return capture(mc,true);
+    }
+
+    private static JsonArray capture(Minecraft mc,boolean elementalOnly) throws Exception {
         if(mc.level==null||mc.player==null)throw new IllegalStateException("Aura previews require the audit world");
         Path folder=Path.of(System.getProperty("modern_ite.mobRenderAuditOutput","build/verification/mob-render-audit.json"))
                 .toAbsolutePath().normalize().getParent().resolve("mob-render-audit");
@@ -59,13 +67,16 @@ final class MobAuraPreviews {
         long dayTime=mc.level.getDayTime();
         boolean daylight=mc.level.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DAYLIGHT);
         var particleSetting=mc.options.particles().get();
-        try(NativeImage sheet=new NativeImage(WIDTH*2,HEIGHT*3,false)) {
+        int samples=elementalOnly?3:6;
+        int columns=elementalOnly?3:2;
+        int rows=(samples+columns-1)/columns;
+        try(NativeImage sheet=new NativeImage(WIDTH*columns,HEIGHT*rows,false)) {
             mc.options.particles().set(net.minecraft.client.ParticleStatus.ALL);
             mc.level.setDayTime(6000);
             mc.gameRenderer.lightTexture().tick();
             mc.gameRenderer.lightTexture().updateLightTexture(1);
             for(var slot:equipment.keySet())mc.player.setItemSlot(slot,ItemStack.EMPTY);
-            for(int index=0;index<6;index++) {
+            for(int index=0;index<samples;index++) {
                 LivingEntity living;
                 Mob mob=null;
                 String id;
@@ -105,7 +116,7 @@ final class MobAuraPreviews {
                                     changed++;
                                     if(delta(before,0xFF201810)<18)outsideModel++;
                                 }
-                                sheet.setPixelRGBA((index%2)*WIDTH+x,(index/2)*HEIGHT+y,after);
+                                sheet.setPixelRGBA((index%columns)*WIDTH+x,(index/columns)*HEIGHT+y,after);
                             }
                             if(mob!=null&&outsideModel<20)throw new IllegalStateException("Native aura has no visible particles outside the model: "+id+" ("+outsideModel+")");
                             Path file=folder.resolve("aura_"+id+".png");
@@ -125,8 +136,8 @@ final class MobAuraPreviews {
                     mc.particleEngine.setLevel(mc.level);
                 }
             }
-            sheet.writeToFile(folder.resolve("aura-previews.png"));
-            results.addAll(VibraniumGildingPreviews.capture(mc,folder));
+            sheet.writeToFile(folder.resolve(elementalOnly?"elemental-aura-previews.png":"aura-previews.png"));
+            if(!elementalOnly)results.addAll(VibraniumGildingPreviews.capture(mc,folder));
         } finally {
             for(var entry:equipment.entrySet())mc.player.setItemSlot(entry.getKey(),entry.getValue());
             playerState.restore(mc.player);

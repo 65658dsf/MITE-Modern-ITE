@@ -18,6 +18,8 @@ import org.joml.Vector3f;
 public final class ExtremeMobParticles {
     private static final DustParticleOptions CRIMSON = new DustParticleOptions(new Vector3f(.52F, .015F, .04F), 1.2F);
     private static final DustParticleOptions VOID = new DustParticleOptions(new Vector3f(.36F, .025F, .58F), 1.15F);
+    private static final DustParticleOptions EMBER = new DustParticleOptions(new Vector3f(1F, .35F, .055F), .45F);
+    private static final DustParticleOptions LEVITATION = new DustParticleOptions(new Vector3f(.62F, .35F, .85F), .55F);
     private ExtremeMobParticles() {}
 
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
@@ -43,18 +45,24 @@ public final class ExtremeMobParticles {
                     if (clock % 8 == 0) point(living, ParticleTypes.SOUL, .7, .4, .035);
                 }
                 case SKELETON_LIGHTNING -> {
-                    if (clock % 2 == 0) ring(living, ParticleTypes.ELECTRIC_SPARK, .62,
-                            .2 + (clock % 30) / 30.0 * 1.8, clock * .28, 5, .025);
+                    if (clock % 4 == 0) ring(living, ParticleTypes.ELECTRIC_SPARK, .32,
+                            1.05 + Math.sin(clock * .16) * .4, clock * .32, 2, .005);
                 }
                 case SKELETON_FLOATING -> {
-                    if (clock % 5 == 0) ring(living, ParticleTypes.CLOUD, .5, .08, clock * .035, 3, .008);
+                    if (clock % 4 == 0) ring(living, LEVITATION, .34, .24, clock * .055, 1, .008);
+                    if (clock % 5 == 0) ring(living, LEVITATION, .38,
+                            .8 + Math.sin(clock * .05) * .5, -clock * .045, 1, .006);
+                    if (clock % 40 == 0) ring(living, ParticleTypes.END_ROD, .22, .3, clock * .055, 1, .005);
                 }
                 case SKELETON_BLAZE -> {
-                    if (clock % 3 == 0) {
-                        ring(living, ParticleTypes.FLAME, .58, .2 + (clock % 48) / 48.0 * 1.8, clock * .16, 4, .018);
-                        ring(living, ParticleTypes.SMALL_FLAME, .8, 1, -clock * .12, 3, .012);
+                    if (clock % 5 == 0) {
+                        attached(living, ParticleTypes.SMALL_FLAME, -.3, 0, 1.45, .012);
+                        attached(living, ParticleTypes.SMALL_FLAME, .3, 0, 1.45, .012);
                     }
-                    if (clock % 9 == 0) point(living, ParticleTypes.LAVA, .45, .5, .01);
+                    if (clock % 10 == 0) {
+                        attached(living, ParticleTypes.FLAME, 0, -.08, 1.85, .008);
+                        point(living, EMBER, .2, 1.25, .018);
+                    }
                 }
                 case ANNIHILATION_SKELETON -> {
                     if (clock % 3 == 0) {
@@ -76,6 +84,14 @@ public final class ExtremeMobParticles {
                 default -> {}
             }
         }
+    }
+
+    private static void attached(LivingEntity entity, ParticleOptions particle, double side, double forward, double y, double rise) {
+        double yaw = Math.toRadians(entity.yBodyRot);
+        double sin = Math.sin(yaw);
+        double cos = Math.cos(yaw);
+        entity.level().addParticle(particle, entity.getX() + side * cos - forward * sin,
+                entity.getY() + y, entity.getZ() + side * sin + forward * cos, 0, rise, 0);
     }
 
     private static void ring(LivingEntity entity, ParticleOptions particle, double radius, double y, double angle, int count, double rise) {

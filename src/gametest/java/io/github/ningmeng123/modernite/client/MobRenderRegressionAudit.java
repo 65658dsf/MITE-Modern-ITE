@@ -186,6 +186,12 @@ public final class MobRenderRegressionAudit {
                 report.add("model_compatibility", ModelCompatibilityAudit.capture(mc, screenshots()));
                 return;
             }
+            if (Boolean.getBoolean("modern_ite.elementalSkeletonAudit")) {
+                report.addProperty("scope", "Three elemental skeleton models, bone UVs, native bow and armor poses, emissive and invisible GPU rendering");
+                report.add("elemental_skeletons", ElementalSkeletonModelAudit.capture(mc, screenshots()));
+                report.add("elemental_particle_previews", MobAuraPreviews.captureElemental(mc));
+                return;
+            }
             if (Boolean.getBoolean("modern_ite.reversedPlayerAudit")) {
                 report.addProperty("scope", "Native upside-down player predicate, pose matrices and equipped GPU renders for both skins");
                 report.add("reversed_player", ReversedPlayerClientAudit.capture(mc, screenshots()));

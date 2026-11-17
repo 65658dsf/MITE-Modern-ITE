@@ -38,7 +38,6 @@ public final class ExtremeMobRenderers {
     private static final ModelLayerLocation LEGACY_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"legacy_zombie"),"main");
     private static final ModelLayerLocation STRONG_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"zombie_fly_away_uv64"),"main");
     private static final ModelLayerLocation SKELETON_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"skeleton_zombie"),"main");
-    private static final ModelLayerLocation SKELETON_LIGHTNING_POWER=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"skeleton_lightning"),"power");
     private static final ModelLayerLocation SOURCE_WITCH=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"source_witch"),"main");
     private static final ModelLayerLocation HEADLESS_ZOMBIE=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"headless_zombie"),"main");
     private static final ModelLayerLocation GHAST_HEAD=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"zombie_ghast_head"),"main");
@@ -52,7 +51,9 @@ public final class ExtremeMobRenderers {
         event.registerLayerDefinition(LEGACY_ZOMBIE,()->LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE,0),64,32));
         event.registerLayerDefinition(STRONG_ZOMBIE,ExtremeMobRenderers::strongZombieLayer);
         event.registerLayerDefinition(SKELETON_ZOMBIE,()->LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE,0),64,64));
-        event.registerLayerDefinition(SKELETON_LIGHTNING_POWER,LightningSkeletonPowerLayer::layer);
+        for(var kind:new ExtremeKind[]{ExtremeKind.SKELETON_BLAZE,ExtremeKind.SKELETON_LIGHTNING,ExtremeKind.SKELETON_FLOATING}){
+            event.registerLayerDefinition(elementalLayer(kind),()->ElementalSkeletonModel.layer(kind));
+        }
         event.registerLayerDefinition(SOURCE_WITCH,WitchModel::createBodyLayer);
         event.registerLayerDefinition(HEADLESS_ZOMBIE,VariantZombieModel::headlessLayer);
         event.registerLayerDefinition(GHAST_HEAD,SpeciesHeadLayer::ghastLayer);
@@ -70,6 +71,9 @@ public final class ExtremeMobRenderers {
         return LayerDefinition.create(mesh,64,64);
     }
     private static ResourceLocation texture(String name){return ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,"textures/entity/source/"+name+".png");}
+    private static ModelLayerLocation elementalLayer(ExtremeKind kind){
+        return new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(ModernIte.MOD_ID,kind.id()),"elemental");
+    }
     private static String source(ExtremeKind k){return switch(k){
         case ZOMBIE_FLY_AWAY -> "zombie_fly_away";case ZOMBIE_CHAOS -> "zombie_chaos";case ZOMBIE_GHAST -> "zombie_ghast";
         case ZOMBIE_JUMP -> "zombie_jump";case ZOMBIE_INVISIBLE_LOOK_UP -> "zombie_invisible_look_up";case ZOMBIE_SIEGE -> "zombie_siege";
@@ -129,11 +133,23 @@ public final class ExtremeMobRenderers {
                             addLayer(new TimeLordClockLayer(this,context.getItemInHandRenderer()));
                         }
                         if(kind==ExtremeKind.SKELETON_ZOMBIE)this.model=new SkeletonZombieModel(context.bakeLayer(SKELETON_ZOMBIE),()->context.bakeLayer(ModelLayers.SKELETON));
-                        if(kind==ExtremeKind.SKELETON_LIGHTNING)addLayer(new LightningSkeletonPowerLayer(this,context.bakeLayer(SKELETON_LIGHTNING_POWER)));
+                        if(ElementalSkeletonModel.supports(kind)){
+                            this.model=new ElementalSkeletonModel(context.bakeLayer(elementalLayer(kind)),kind,()->context.bakeLayer(ModelLayers.SKELETON));
+                            addLayer(new SourceGlowLayer<AbstractSkeleton,SkeletonModel<AbstractSkeleton>>(this,skeleton->ElementalSkeletonModel.texture(kind,true)));
+                        }
                         if(kind==ExtremeKind.ANNIHILATION_SKELETON)addLayer(new SourceGlowLayer<AbstractSkeleton,SkeletonModel<AbstractSkeleton>>(this,skeleton->texture("skeleton/annihilation_skeleton_glow")));
                     }
-                    @Override public ResourceLocation getTextureLocation(AbstractSkeleton skeleton){return kind==ExtremeKind.TIME_LORD?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/stray.png"):kind==ExtremeKind.WITHER_SKELETON_ARROW?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/wither_skeleton.png"):source(kind)==null?super.getTextureLocation(skeleton):texture(source(kind));}
+                    @Override public ResourceLocation getTextureLocation(AbstractSkeleton skeleton){
+                        if(ElementalSkeletonModel.supports(kind))return ElementalSkeletonModel.texture(kind,false);
+                        return kind==ExtremeKind.TIME_LORD?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/stray.png"):kind==ExtremeKind.WITHER_SKELETON_ARROW?ResourceLocation.withDefaultNamespace("textures/entity/skeleton/wither_skeleton.png"):source(kind)==null?super.getTextureLocation(skeleton):texture(source(kind));
+                    }
                     @Override protected void scale(AbstractSkeleton skeleton,PoseStack pose,float partial){super.scale(skeleton,pose,partial);if(kind==ExtremeKind.WITHER_SKELETON_ARROW)pose.scale(1.2F,1.2F,1.2F);if(kind==ExtremeKind.TIME_LORD)pose.scale(1.15F,1.15F,1.15F);}
+                    @Override protected void setupRotations(AbstractSkeleton skeleton,PoseStack pose,float age,float yaw,float partial,float scale){
+                        super.setupRotations(skeleton,pose,age,yaw,partial,scale);
+                        if(kind==ExtremeKind.SKELETON_FLOATING&&skeleton.isAlive()&&!skeleton.isPassenger()){
+                            pose.translate(0,.2+Math.sin(age*.08)*.025,0);
+                        }
+                    }
                 };
                 case CREEPER -> new CreeperRenderer(context){
                     {
