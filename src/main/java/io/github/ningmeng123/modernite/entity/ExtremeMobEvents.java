@@ -44,7 +44,7 @@ public final class ExtremeMobEvents {
             skeleton.getPersistentData().putBoolean("modern_ite:legacy_rolls",true);
             skeleton.getPersistentData().putBoolean("modern_ite:triple",IteConfig.bool("Entities.skeleton_triple_shot")&&skeleton.getRandom().nextInt(100)>85);
             skeleton.getPersistentData().putBoolean("modern_ite:fire_arrows",skeleton.getRandom().nextInt(10)>5);
-            skeleton.getPersistentData().putBoolean("modern_ite:compressed",!MobSplitting.isChild(skeleton)&&IteConfig.bool("Entities.compressed_skeleton")&&skeleton.getRandom().nextInt(100)<3);
+            skeleton.getPersistentData().putBoolean("modern_ite:compressed",!MobSplitting.isChild(skeleton)&&!ExtremeMobs.isBoss(skeleton)&&IteConfig.bool("Entities.compressed_skeleton")&&skeleton.getRandom().nextInt(100)<3);
         }
         if(event.getEntity() instanceof AbstractArrow arrow&&arrow.getOwner() instanceof AbstractSkeleton skeleton
                 &&!arrow.getPersistentData().getBoolean("modern_ite:split_arrow")){

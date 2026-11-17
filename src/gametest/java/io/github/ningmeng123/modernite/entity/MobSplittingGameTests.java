@@ -30,6 +30,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.level.ExplosionEvent;
@@ -47,7 +48,7 @@ public final class MobSplittingGameTests {
         try (Fixture fixture=new Fixture(h)) {
             List<EntityType<?>> types=new ArrayList<>(List.of(EntityType.SKELETON,EntityType.WITHER_SKELETON,EntityType.STRAY,EntityType.BOGGED));
             for (var kind:List.of(MobKind.LONGDEAD,MobKind.LONGDEAD_GUARDIAN,MobKind.BONE_LORD,MobKind.ANCIENT_BONE_LORD)) types.add(MiteMobs.type(kind));
-            for (var kind:ExtremeKind.values()) if (kind.family==ExtremeKind.Family.SKELETON) types.add(ExtremeMobs.type(kind));
+            for (var kind:ExtremeKind.values()) if (kind.family==ExtremeKind.Family.SKELETON&&!kind.boss()) types.add(ExtremeMobs.type(kind));
             for (var type:types) {
                 Mob parent=fixture.spawn(type);
                 parent.getPersistentData().putBoolean("modern_ite:compressed",true);
@@ -67,6 +68,67 @@ public final class MobSplittingGameTests {
     }
 
     @GameTest(template="gear_empty",batch="mob_splitting")
+    public static void skeletonBossesNeverRollOrSplitEvenWithSavedCompressedTraits(GameTestHelper h) {
+        try (Fixture fixture=new Fixture(h)) {
+            fixture.set("Entities.skeleton_triple_shot",false);
+            Mob ordinary=fixture.spawn(EntityType.SKELETON);
+            long splitSeed;
+            for (splitSeed=0;splitSeed<10000;splitSeed++) {
+                ordinary.getRandom().setSeed(splitSeed);
+                ordinary.getRandom().nextInt(10);
+                if (ordinary.getRandom().nextInt(100)<3) break;
+            }
+            h.assertTrue(splitSeed<10000,"A deterministic seed selects the compressed skeleton trait after its fire-arrow roll");
+            ordinary.getPersistentData().remove("modern_ite:legacy_rolls");
+            ordinary.getRandom().setSeed(splitSeed);
+            ExtremeMobEvents.join(new EntityJoinLevelEvent(ordinary,h.getLevel(),false));
+            h.assertTrue(ordinary.getPersistentData().getBoolean("modern_ite:compressed"),"The same join-handler seed grants the compressed trait to an ordinary skeleton");
+            fixture.clear();
+            for (var kind:ExtremeKind.values()) {
+                if (kind.family!=ExtremeKind.Family.SKELETON||!kind.boss()) continue;
+                var type=ExtremeMobs.type(kind);
+                Mob boss=fixture.spawn(type);
+                h.assertFalse(boss.getPersistentData().getBoolean("modern_ite:compressed"),"A newly joined skeleton boss has no compressed trait: "+kind);
+                boss.getPersistentData().remove("modern_ite:legacy_rolls");
+                boss.getRandom().setSeed(splitSeed);
+                ExtremeMobEvents.join(new EntityJoinLevelEvent(boss,h.getLevel(),false));
+                h.assertFalse(boss.getPersistentData().getBoolean("modern_ite:compressed"),"A successful ordinary split roll cannot mark a skeleton boss: "+kind);
+
+                boss.getPersistentData().putBoolean("modern_ite:compressed",true);
+                CompoundTag saved=new CompoundTag();boss.saveWithoutId(saved);fixture.clear();
+                Mob loaded=(Mob)type.create(h.getLevel());loaded.load(saved);fixture.owned.add(loaded);
+                h.assertTrue(h.getLevel().addFreshEntity(loaded),"A saved compressed boss passes the real join handlers: "+kind);
+                h.assertTrue(loaded.getPersistentData().getBoolean("modern_ite:compressed"),"The reload retains the old compressed trait before death: "+kind);
+                loaded.setHealth(0);loaded.die(loaded.damageSources().generic());
+                h.assertTrue(fixture.children(loaded).isEmpty(),"A skeleton boss carrying a saved compressed trait produces no children on native death: "+kind);
+                MobSplitting.trySplit(loaded);
+                h.assertTrue(fixture.children(loaded).isEmpty(),"Repeated split callbacks cannot create skeleton boss children: "+kind);
+                fixture.clear();
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="mob_splitting")
+    public static void blackInfernalCreepersNeverSplitOnDeathOrSelfExplosion(GameTestHelper h) {
+        try (Fixture fixture=new Fixture(h)) {
+            var type=ExtremeMobs.type(ExtremeKind.BLACK_INFERNAL_CREEPER);
+            Creeper killed=(Creeper)fixture.spawn(type);roll(killed,true);
+            killed.setHealth(0);killed.die(killed.damageSources().generic());
+            h.assertTrue(fixture.children(killed).isEmpty(),"A successful split seed cannot create black infernal creeper children on native death");
+            roll(killed,true);MobSplitting.trySplit(killed);
+            h.assertTrue(fixture.children(killed).isEmpty(),"Repeated death callbacks cannot create black infernal creeper children");
+            fixture.clear();
+            Creeper exploded=(Creeper)fixture.spawn(type);roll(exploded,true);
+            explosionRadius(h,exploded);
+            h.assertTrue(exploded.isRemoved()&&fixture.children(exploded).isEmpty(),"Native black infernal self-detonation removes the parent and creates no split children");
+            roll(exploded,true);MobSplitting.trySplit(exploded);
+            h.assertTrue(fixture.children(exploded).isEmpty(),"Repeated post-explosion callbacks cannot create black infernal creeper children");
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="mob_splitting")
     public static void everyCreeperFamilySplitsIntoSixToEightSameTypeMiniatures(GameTestHelper h) {
         try (Fixture fixture=new Fixture(h)) {
             List<EntityType<?>> types=new ArrayList<>(List.of(EntityType.CREEPER,MiteMobs.type(MobKind.INFERNAL_CREEPER)));
@@ -76,7 +138,9 @@ public final class MobSplittingGameTests {
                 parent.setHealth(0);parent.die(parent.damageSources().generic());
                 List<Mob> children=fixture.children(parent);
                 assertChildren(h,parent,children);
-                h.assertTrue(children.stream().noneMatch(Entity::isPassenger),"Miniature creepers do not spawn extra bat mounts: "+type);
+                h.assertTrue(children.stream().allMatch(child->!child.isPassenger()
+                        ||child.getVehicle().getType()==BatRiders.mountType(child)),
+                        "Miniature creepers follow their species' bat-mount rule: "+type);
                 fixture.clear();
             }
         }
@@ -319,9 +383,16 @@ public final class MobSplittingGameTests {
         private List<Mob> children(Mob parent) {
             List<Mob> children=helper.getLevel().getEntitiesOfClass(Mob.class,parent.getBoundingBox().inflate(16),mob->mob.getPersistentData().hasUUID(SpawnPopulation.SUMMONER)&&mob.getPersistentData().getUUID(SpawnPopulation.SUMMONER).equals(parent.getUUID()));
             for(Mob child:children) if(!owned.contains(child)) owned.add(child);
-            return children;
+            return children.stream().filter(MobSplitting::isChild).toList();
         }
-        private void clear() {owned.forEach(Mob::discard);owned.clear();SpawnPopulation.clearReservations(helper.getLevel());}
+        private void clear() {
+            for (Mob mob:List.copyOf(owned)) {
+                if (mob.getVehicle() instanceof Mob mount&&!owned.contains(mount)
+                        &&mount.getPersistentData().hasUUID(SpawnPopulation.SUMMONER)
+                        &&mount.getPersistentData().getUUID(SpawnPopulation.SUMMONER).equals(mob.getUUID())) owned.add(mount);
+            }
+            owned.forEach(Mob::discard);owned.clear();SpawnPopulation.clearReservations(helper.getLevel());
+        }
         @Override public void close() {
             clear();settings.forEach((key,value)->IteConfig.setting(key).set(value));IteConfig.refresh();
             var level=helper.getLevel().getServer().overworld();level.setDayTime(time);var history=BloodMoonInvasionData.get(level);history.restoreProgress(highest);history.setDirty(dirty);ExtremeWorldState.restoreGraceEnded(level,grace);
