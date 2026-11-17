@@ -5,8 +5,8 @@
   "notes": [
     "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
     "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
-    "Gem upgrades preserve the old counted-stack expansion into three components; lanterns and the metal upgrading furnace use explicitly identified modern adaptations.",
-    "Coverage: 157 static extension recipes, including Extreme's one-to-four-bundle torch unpacking, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+    "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
+    "Coverage: 158 static extension recipes, including Extreme's one-to-four-bundle torch unpacking and restored mithril dynamic core, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
     "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
   ],
   "components": {
@@ -21,6 +21,10 @@
     "minecraft:blaze_powder": {
       "difficulty": 25.0,
       "evidence": "R196 runtime-registry.json item 377: crafting_difficulty_as_component"
+    },
+    "minecraft:blaze_rod": {
+      "difficulty": 200.0,
+      "evidence": "R196 runtime-registry.json item 369: crafting_difficulty_as_component"
     },
     "minecraft:book": {
       "difficulty": 175.0,
@@ -62,6 +66,10 @@
       "difficulty": 200.0,
       "evidence": "R196 runtime-registry.json item 20: crafting_difficulty_as_component"
     },
+    "minecraft:glowstone": {
+      "difficulty": 30.000001907348633,
+      "evidence": "R196 runtime-registry.json item 89: crafting_difficulty_as_component"
+    },
     "minecraft:glowstone_dust": {
       "difficulty": 25.0,
       "evidence": "R196 runtime-registry.json item 348: crafting_difficulty_as_component"
@@ -81,6 +89,10 @@
     "minecraft:iron_nugget": {
       "difficulty": 88.88888549804688,
       "evidence": "R196 runtime-registry.json item 958: crafting_difficulty_as_component"
+    },
+    "minecraft:nether_star": {
+      "difficulty": 100.0,
+      "evidence": "R196 runtime-registry.json item 399: crafting_difficulty_as_component"
     },
     "minecraft:oak_planks": {
       "difficulty": 80.0,
@@ -153,6 +165,14 @@
     "modern_ite:diamond_chunk": {
       "difficulty": 400.0,
       "evidence": "ITE MITEITEItemRegistryInit DIAMOND_CHUNK: diamond component 1600F / 4F"
+    },
+    "modern_ite:dynamic_core_adamantium": {
+      "difficulty": 1.0,
+      "evidence": "Extreme EXItemsRegistryInit.registerItems: adamantium dynamic core lowest crafting difficulty override 1F; RecipeHelper uses it as the upgrade component"
+    },
+    "modern_ite:dynamic_core_mithril": {
+      "difficulty": 1.0,
+      "evidence": "Extreme EXItemsRegistryInit.registerItems: mithril dynamic core lowest crafting difficulty override 1F; RecipeHelper uses it as the upgrade component"
     },
     "modern_ite:fancy_red": {
       "difficulty": 1600.0,
@@ -501,16 +521,22 @@
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * modern_ite:diamond_chunk (400.0)"
     },
     "modern_ite:dynamic_core_adamantium": {
-      "difficulty": 128200.0,
+      "difficulty": 153721.0,
       "required_bench": null,
       "source_order": -1,
-      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 5 * mite:adamantium_ingot (25600.0); 1 * minecraft:glass (200.0); 1 * minecraft:torch (0.0); modern material-lantern adaptation uses the existing modern recipe; preserve its existing absence of a workbench-material gate"
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:glowstone (30.000001907348633); 2 * mite:adamantium_ingot (25600.0); 2 * mite:vibranium_ingot (51200.0); 1 * modern_ite:dynamic_core_mithril (1.0); Extreme EXItemsRegistryInit.registerRecipes restores the matching source dynamic-core recipe as a held lantern; preserve the existing absence of a workbench-material gate"
+    },
+    "modern_ite:dynamic_core_mithril": {
+      "difficulty": 102910.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * mite:adamantium_ingot (25600.0); 2 * minecraft:ghast_tear (5.0); 2 * minecraft:blaze_rod (200.0); 1 * minecraft:nether_star (100.0); Extreme EXItemsRegistryInit.registerRecipes restores the matching source dynamic-core recipe as a held lantern; preserve the existing absence of a workbench-material gate"
     },
     "modern_ite:dynamic_core_vibranium": {
-      "difficulty": 256200.0,
+      "difficulty": 153721.0,
       "required_bench": null,
       "source_order": -1,
-      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 5 * mite:vibranium_ingot (51200.0); 1 * minecraft:glass (200.0); 1 * minecraft:torch (0.0); modern material-lantern adaptation uses the existing modern recipe; preserve its existing absence of a workbench-material gate"
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:glowstone (30.000001907348633); 2 * mite:adamantium_ingot (25600.0); 2 * mite:vibranium_ingot (51200.0); 1 * modern_ite:dynamic_core_adamantium (1.0); vibranium lantern adapts the source adamantium upgrade layout with an adamantium lantern at the center; preserve the existing absence of a workbench-material gate"
     },
     "modern_ite:gem_box_from_gem_damage_1": {
       "difficulty": 75.0,

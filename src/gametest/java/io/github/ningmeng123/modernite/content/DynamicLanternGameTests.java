@@ -46,9 +46,10 @@ public final class DynamicLanternGameTests {
 
     @GameTest(template = "gear_empty")
     public static void everyMaterialHasTheSameLightAndIncreasingLifetime(GameTestHelper h) {
-        int[] durability = {4800, 8000, 12800};
+        int[] durability = {9600, 19200, 28800};
+        int[] lifetimeMinutes = {40, 80, 120};
         h.assertValueEqual((int) BuiltInRegistries.ITEM.stream().filter(item -> item instanceof DynamicCoreItem).count(),
-                MATERIALS.length, "Only the hidden mithril lantern and the two available lantern tiers remain registered");
+                MATERIALS.length, "Mithril, adamantium and vibranium lanterns remain registered");
         for (String removed : new String[]{"copper", "silver", "gold", "iron", "ancient_metal"}) {
             h.assertFalse(BuiltInRegistries.ITEM.containsKey(ExtremeContent.id("dynamic_core_" + removed)),
                     "Removed lantern tiers cannot remain registered: " + removed);
@@ -58,15 +59,16 @@ public final class DynamicLanternGameTests {
                 .flatMap(tab -> tab.getDisplayItems().stream())
                 .filter(stack -> stack.getItem() instanceof DynamicCoreItem)
                 .map(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem())).collect(Collectors.toSet());
-        Set<ResourceLocation> availableLanterns = Set.of(ExtremeContent.id("dynamic_core_adamantium"),
+        Set<ResourceLocation> availableLanterns = Set.of(ExtremeContent.id("dynamic_core_mithril"),
+                ExtremeContent.id("dynamic_core_adamantium"),
                 ExtremeContent.id("dynamic_core_vibranium"));
         h.assertTrue(visibleLanterns.equals(availableLanterns),
-                "Actual creative tabs expose only adamantium and vibranium lanterns");
+                "Actual creative tabs expose mithril, adamantium and vibranium lanterns");
         Set<ResourceLocation> searchableLanterns = CreativeModeTabs.searchTab().getDisplayItems().stream()
                 .filter(stack -> stack.getItem() instanceof DynamicCoreItem)
                 .map(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem())).collect(Collectors.toSet());
         h.assertTrue(searchableLanterns.equals(availableLanterns),
-                "Actual creative search exposes only adamantium and vibranium lanterns");
+                "Actual creative search exposes mithril, adamantium and vibranium lanterns");
         Player player = h.makeMockPlayer(GameType.SURVIVAL);
         int previous = 0;
         for (int i = 0; i < MATERIALS.length; i++) {
@@ -81,6 +83,21 @@ public final class DynamicLanternGameTests {
             player.setItemInHand(InteractionHand.OFF_HAND, stack);
             h.assertValueEqual(ExtremeLifeEvents.coreLevel(player), 5,
                     "All lantern materials provide the same equipped illumination: " + MATERIALS[i]);
+            int lifetimeTicks = lifetimeMinutes[i] * 60 * 20;
+            for (int tick = 1; tick < lifetimeTicks; tick++) {
+                tick(player, tick);
+            }
+            h.assertValueEqual(stack.getDamageValue(), stack.getMaxDamage() - 2,
+                    "The final fuel payment remains until the requested continuous lifetime: " + MATERIALS[i]);
+            h.assertValueEqual(ExtremeLifeEvents.coreLevel(player), 5,
+                    "The lantern illuminates until its final scheduled fuel payment: " + MATERIALS[i]);
+            tick(player, lifetimeTicks);
+            h.assertValueEqual(stack.getDamageValue(), stack.getMaxDamage(),
+                    "The final payment exhausts the lantern at its requested lifetime: " + MATERIALS[i]);
+            h.assertValueEqual(ExtremeLifeEvents.coreLevel(player), 0,
+                    "The requested continuous lifetime ends its illumination: " + MATERIALS[i]);
+            h.assertTrue(!stack.isEmpty() && player.getOffhandItem() == stack,
+                    "An exhausted lantern remains available for repair: " + MATERIALS[i]);
         }
         player.discard();
         h.succeed();

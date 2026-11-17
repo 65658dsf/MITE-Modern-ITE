@@ -341,6 +341,8 @@ public final class SourceCraftingGameTests {
                 Map.entry("gem_damage_2", 75F), Map.entry("gem_health_6", 75F),
                 Map.entry("gem_box_from_gem_speed_6", 75F), Map.entry("nether_ender_eye", 100F),
                 Map.entry("resurrection_array", 25F), Map.entry("voucher_club_core", 3F),
+                Map.entry("dynamic_core_mithril", 102910F), Map.entry("dynamic_core_adamantium", 153721F),
+                Map.entry("dynamic_core_vibranium", 153721F),
                 Map.entry("maple_slab", 240F), Map.entry("maple_stairs", 480F),
                 Map.entry("iron_enhance_stone", 2400F), Map.entry("mithril_enhance_stone", 8800F),
                 Map.entry("adamantium_enhance_stone", 40000F), Map.entry("universal_enhance_stone", 580F));

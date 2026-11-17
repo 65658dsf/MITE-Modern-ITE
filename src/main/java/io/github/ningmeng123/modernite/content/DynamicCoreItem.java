@@ -14,7 +14,7 @@ public final class DynamicCoreItem extends Item {
     public static final int REPAIR_COMPONENTS = 5;
 
     public enum Material {
-        MITHRIL(4800), ADAMANTIUM(8000), VIBRANIUM(12800);
+        MITHRIL(9600), ADAMANTIUM(19200), VIBRANIUM(28800);
 
         public final int durability;
         public final String id;

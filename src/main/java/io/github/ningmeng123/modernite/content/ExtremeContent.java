@@ -39,7 +39,6 @@ public final class ExtremeContent {
     public static final DeferredItem<Item> TORCH_BUNDLE = item("stack_torch", new Item.Properties().stacksTo(16));
     public static final DeferredItem<CrossbowItem> CROSSBOW = ITEMS.registerItem("crossbow", CrossbowItem::new, new Item.Properties().durability(326));
     public static final DeferredItem<FortressEyeItem> FORTRESS_EYE = ITEMS.registerItem("nether_ender_eye", FortressEyeItem::new);
-    // Keep the legacy mithril identity for existing stacks, without exposing new ones in the catalog.
     public static final DeferredItem<DynamicCoreItem> MITHRIL_CORE = lantern("mithril", DynamicCoreItem.Material.MITHRIL);
     public static final DeferredItem<DynamicCoreItem> ADAMANTIUM_CORE = lantern("adamantium", DynamicCoreItem.Material.ADAMANTIUM);
     public static final DeferredItem<DynamicCoreItem> VIBRANIUM_CORE = lantern("vibranium", DynamicCoreItem.Material.VIBRANIUM);
@@ -82,7 +81,7 @@ public final class ExtremeContent {
             var seen = new HashSet<Item>();
             net.minecraft.core.registries.BuiltInRegistries.ITEM.forEach(item -> {
                 if (net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item).getNamespace().equals(ModernIte.MOD_ID)
-                        && item != MITHRIL_CORE.get() && seen.add(item)) out.accept(item);
+                        && seen.add(item)) out.accept(item);
             });
         }).build());
     }

@@ -73,17 +73,16 @@ public final class ResourceContentGameTests {
 
     @GameTest(template="gear_empty")
     public static void loadedSourceCraftingRecipesMatchCoreClubFurnaceChestAndMapleInputs(GameTestHelper h) {
-        for (String metal : new String[]{"adamantium","vibranium"}) {
-            craft(h,"dynamic_core_"+metal,"modern_ite:dynamic_core_"+metal,1,new String[]{" I ","IGI","ITI"},
-                    Map.of('I',"mite:"+metal+"_ingot",'G',"minecraft:glass",'T',"minecraft:torch"));
-        }
+        craft(h,"dynamic_core_mithril","modern_ite:dynamic_core_mithril",1,new String[]{"ADA","BCB","ADA"},
+                Map.of('A',"mite:adamantium_ingot",'B',"minecraft:blaze_rod",'C',"minecraft:nether_star",'D',"minecraft:ghast_tear"));
+        craft(h,"dynamic_core_adamantium","modern_ite:dynamic_core_adamantium",1,new String[]{"ADA","BCB","ADA"},
+                Map.of('A',"minecraft:glowstone",'B',"mite:vibranium_ingot",'C',"modern_ite:dynamic_core_mithril",'D',"mite:adamantium_ingot"));
+        craft(h,"dynamic_core_vibranium","modern_ite:dynamic_core_vibranium",1,new String[]{"ADA","BCB","ADA"},
+                Map.of('A',"minecraft:glowstone",'B',"mite:vibranium_ingot",'C',"modern_ite:dynamic_core_adamantium",'D',"mite:adamantium_ingot"));
         var manager = h.getLevel().getRecipeManager();
-        for (String metal : new String[]{"copper","silver","gold","iron","ancient_metal","mithril"})
+        for (String metal : new String[]{"copper","silver","gold","iron","ancient_metal"})
             h.assertTrue(manager.byKey(ExtremeContent.id("dynamic_core_"+metal)).isEmpty(),
-                    "Removed and hidden lantern tiers have no loaded crafting recipe: "+metal);
-        h.assertFalse(manager.getRecipes().stream().anyMatch(holder ->
-                        holder.value().getResultItem(h.getLevel().registryAccess()).is(ExtremeContent.MITHRIL_CORE.get())),
-                "The retained hidden mithril lantern cannot be obtained from any loaded recipe");
+                    "Removed lantern tiers have no loaded crafting recipe: "+metal);
         for (String metal : new String[]{"copper","silver","gold","iron"}) {
             String ns = metal.equals("silver") ? "mite:" : "minecraft:";
             String nugget = metal.equals("copper") ? "mite:copper_nugget" : ns + metal + "_nugget";
@@ -151,11 +150,9 @@ public final class ResourceContentGameTests {
         Set<String> worldOrRuntime=Set.of("fancy_red_ore","nether_adamantium_ore","maple_log","maple_leaves","maple_sapling",
                 "voucher_fishing","voucher_planting","voucher_villager","crossbow","iron_bucket_helmet","wither_treasure");
         // WitherEncounterGameTests audits the treasure's enhanced-only death-event acquisition route.
-        // Preserve existing saves without granting this hidden item a survival acquisition route.
-        Set<String> hiddenCompatibilityItems=Set.of("dynamic_core_mithril");
         for(var entry:BuiltInRegistries.ITEM.entrySet()) {
             ResourceLocation id=entry.getKey().location();Item item=entry.getValue();if(!id.getNamespace().equals(ModernIte.MOD_ID)||item instanceof SpawnEggItem)continue;
-            h.assertTrue(results.contains(item)||worldOrRuntime.contains(id.getPath())||hiddenCompatibilityItems.contains(id.getPath())||item instanceof EnhanceGemItem gem&&gem.rank==1,
+            h.assertTrue(results.contains(item)||worldOrRuntime.contains(id.getPath())||item instanceof EnhanceGemItem gem&&gem.rank==1,
                     "Every available extension item has a loaded recipe or a specifically audited runtime route: "+id);
         }
         // These exceptions are backed by the actual loaded biome data, leaf loot and monster equipment.

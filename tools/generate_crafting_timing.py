@@ -39,13 +39,15 @@ def generate() -> dict:
     old_items = {
         "minecraft:oak_planks": 5, "#minecraft:logs": 17,
         "minecraft:glass": 20, "minecraft:obsidian": 49,
+        "minecraft:glowstone": 89,
         "minecraft:torch": 50, "minecraft:furnace": 61,
         "minecraft:coal_block": 173, "minecraft:coal": 263,
         "minecraft:charcoal": 263, "minecraft:diamond": 264,
         "minecraft:iron_ingot": 265, "minecraft:gold_ingot": 266,
         "minecraft:string": 287, "minecraft:book": 340,
         "minecraft:glowstone_dust": 348, "minecraft:ender_pearl": 368,
-        "minecraft:gold_nugget": 371, "minecraft:blaze_powder": 377,
+        "minecraft:blaze_rod": 369, "minecraft:gold_nugget": 371,
+        "minecraft:blaze_powder": 377, "minecraft:nether_star": 399,
         "mite:copper_nugget": 956, "mite:silver_nugget": 957,
         "minecraft:iron_nugget": 958, "minecraft:copper_ingot": 962,
         "mite:silver_ingot": 963, "mite:mithril_ingot": 964,
@@ -76,6 +78,9 @@ def generate() -> dict:
               "Extreme ItemFancyRed extends ItemRock with diamond material: explicit rock component 1600F precedes lowest-production override 1F")
     component("modern_ite:stack_torch", 1e-9,
               "Extreme EXItemsRegistryInit.registerItems: Stack_Torch component 1.0E-9F")
+    for material in ("mithril", "adamantium"):
+        component(f"modern_ite:dynamic_core_{material}", 1,
+                  f"Extreme EXItemsRegistryInit.registerItems: {material} dynamic core lowest crafting difficulty override 1F; RecipeHelper uses it as the upgrade component")
     for name in ("fishing", "planting", "villager"):
         component(f"modern_ite:voucher_{name}", 1,
                   "Extreme EXItemsRegistryInit.registerItems: voucher lowest crafting difficulty override 1F")
@@ -136,7 +141,11 @@ def generate() -> dict:
         elif name in ("vibranium_chest", "vibranium_furnace"):
             required_bench = "vibranium"
         elif name.startswith("dynamic_core_"):
-            evidence += "; modern material-lantern adaptation uses the existing modern recipe; preserve its existing absence of a workbench-material gate"
+            if name in ("dynamic_core_mithril", "dynamic_core_adamantium"):
+                evidence += "; Extreme EXItemsRegistryInit.registerRecipes restores the matching source dynamic-core recipe as a held lantern"
+            else:
+                evidence += "; vibranium lantern adapts the source adamantium upgrade layout with an adamantium lantern at the center"
+            evidence += "; preserve the existing absence of a workbench-material gate"
         if name.startswith("gem_") and name[-1:].isdigit():
             evidence += "; R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
         if name.startswith("unpack_torches_"):
@@ -156,7 +165,7 @@ def generate() -> dict:
         recipes["modern_ite:" + name] = {"difficulty": difficulty, "required_bench": required_bench,
             "source_order": source_order, "evidence": evidence}
 
-    assert len(recipes) == 157, f"Review added/removed static recipes: {len(recipes)}"
+    assert len(recipes) == 158, f"Review added/removed static recipes: {len(recipes)}"
     assert recipes["modern_ite:stack_torch_string_coal"]["difficulty"] == 195.0
     assert recipes["modern_ite:unpack_torches_1"]["difficulty"] == f32(1e-9)
 
@@ -169,8 +178,8 @@ def generate() -> dict:
         "difficulty": lantern_difficulty, "required_bench": None, "source_order": -1,
         "evidence": "Extreme EXBlocksRegistryInit.registerRecipes line 209: eight iron nuggets and one torch; the modern vanilla recipe has identical inputs. RecipeHelper float32 sum = 711.1111F; old blockLantern uses circuits, so no metal workbench gate."
     }
-    assert sum(name.startswith("modern_ite:") for name in recipes) == 157
-    assert len(recipes) == 158
+    assert sum(name.startswith("modern_ite:") for name in recipes) == 158
+    assert len(recipes) == 159
     return {
         "author": "NingMeng123",
         "source": "R196 RecipeHelper / frozen runtime-registry.json, MITE-ITE 2.0.28 and Extreme LH 0.6.6 decompiled registrations; explicit overrides precede float32 whole-batch component sums",
@@ -178,8 +187,8 @@ def generate() -> dict:
         "notes": [
             "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
             "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
-            "Gem upgrades preserve the old counted-stack expansion into three components; lanterns and the metal upgrading furnace use explicitly identified modern adaptations.",
-            "Coverage: 157 static extension recipes, including Extreme's one-to-four-bundle torch unpacking, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+            "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
+            "Coverage: 158 static extension recipes, including Extreme's one-to-four-bundle torch unpacking and restored mithril dynamic core, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
             "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
         ],
         "components": {name: {"difficulty": value, "evidence": evidence} for name, (value, evidence) in sorted(components.items())},

@@ -2,7 +2,6 @@ package io.github.ningmeng123.modernite.integration.jei;
 
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.client.gear.GearStationScreen;
-import io.github.ningmeng123.modernite.content.ExtremeContent;
 import java.util.Collection;
 import java.util.List;
 import mezz.jei.api.IModPlugin;
@@ -32,8 +31,7 @@ public final class ModernIteJeiPlugin implements IModPlugin {
 
     @Override public void onRuntimeAvailable(IJeiRuntime runtime) {
         runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK,
-                List.of(new ItemStack(ExtremeContent.MITHRIL_CORE.get()),
-                        new ItemStack(io.github.ningmeng123.mite.registry.MiteItems.FLINT_CHIP.get())));
+                List.of(new ItemStack(io.github.ningmeng123.mite.registry.MiteItems.FLINT_CHIP.get())));
     }
 
     @Override public void registerCategories(IRecipeCategoryRegistration registration) {

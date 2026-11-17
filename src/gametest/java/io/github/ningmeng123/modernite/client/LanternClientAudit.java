@@ -54,7 +54,7 @@ final class LanternClientAudit {
             .filter(item -> item instanceof DynamicCoreItem)
             .map(item -> (DynamicCoreItem) item)
             .sorted(Comparator.comparingInt(item -> item.material.ordinal())).toList();
-        check(items.size() == 3, "Expected the hidden mithril lantern and two available lantern material registrations");
+        check(items.size() == 3, "Expected mithril, adamantium and vibranium lantern material registrations");
         Path folder = Path.of(System.getProperty("modern_ite.mobRenderAuditOutput", "build/verification/mob-render-audit.json"))
             .toAbsolutePath().normalize().getParent().resolve("mob-render-audit");
         Files.createDirectories(folder);
