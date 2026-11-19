@@ -314,15 +314,18 @@ public final class SpawnBalanceGameTests {
             mob.moveTo(origin);mob.setNoAi(true);mobs.add(mob);return mob;
         }
         ServerPlayer player(int x) {
+            return player(level,origin.add(x,0,0));
+        }
+        ServerPlayer player(ServerLevel targetLevel,Vec3 position) {
             var cookie=CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(),"balance-player"),false);
-            var player=new ServerPlayer(level.getServer(),level,cookie.gameProfile(),cookie.clientInformation());
+            var player=new ServerPlayer(targetLevel.getServer(),targetLevel,cookie.gameProfile(),cookie.clientInformation());
             var connection=new Connection(PacketFlow.SERVERBOUND);var channel=new EmbeddedChannel(connection);channels.add(channel);
-            player.connection=new ServerGamePacketListenerImpl(level.getServer(),connection,player,cookie) {
+            player.connection=new ServerGamePacketListenerImpl(targetLevel.getServer(),connection,player,cookie) {
                 @Override public void send(Packet<?> packet) {}
                 @Override public void send(Packet<?> packet,PacketSendListener listener) {}
             };
-            player.setGameMode(GameType.SURVIVAL);player.moveTo(origin.add(x,0,0));player.setNoGravity(true);
-            level.addNewPlayer(player);players.add(player);return player;
+            player.setGameMode(GameType.SURVIVAL);player.moveTo(position);player.setNoGravity(true);
+            targetLevel.addNewPlayer(player);players.add(player);return player;
         }
         @Override public void close() {
             mobs.forEach(Mob::discard);players.forEach(ServerPlayer::discard);channels.forEach(EmbeddedChannel::finishAndReleaseAll);

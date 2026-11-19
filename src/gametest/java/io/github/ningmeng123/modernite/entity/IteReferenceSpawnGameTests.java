@@ -7,13 +7,19 @@ import io.github.ningmeng123.mite.rules.R196SpawnRules;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import static io.github.ningmeng123.modernite.entity.ExtremeKind.*;
@@ -25,12 +31,14 @@ public final class IteReferenceSpawnGameTests {
     private IteReferenceSpawnGameTests() {}
 
     @GameTest(template="gear_empty",batch="reference_ite_spawns")
-    public static void constructorAdditionsRetainUnderworldDuplicatesAndHellClear(GameTestHelper h) {
+    public static void constructorAdditionsRetainUnderworldDuplicatesAndUseNetherHabitats(GameTestHelper h) {
         try(Fixture f=new Fixture(h)) {
             var site=f.site;site.date(224,224,true);
             for(ServerLevel level:site.level.getServer().getAllLevels()) {
                 List<R196MobSpawning.Entry> entries=new ArrayList<>();
-                IteReferenceSpawns.addEntries(context(level),net.minecraft.core.BlockPos.containing(site.origin),entries);
+                BlockPos pos=BlockPos.containing(site.origin);
+                if(level.dimension()==Level.NETHER)pos=pos.atY(150);
+                IteReferenceSpawns.addEntries(context(level),pos,entries);
                 if(level.dimension()==Level.OVERWORLD) {
                     h.assertTrue(originalEntries(entries)==6,"The six old ITE additions survive alongside the unlocked Extra candidates");
                     assertEntry(h,entries,EntityType.GIANT,10,1,1,4);
@@ -43,10 +51,71 @@ public final class IteReferenceSpawnGameTests {
                         h.assertTrue(entries.stream().filter(entry->entry.type()==ExtremeMobs.type(kind)).count()==2,"Both constructor additions survive: "+kind);
                     assertEntry(h,entries,MiteMobs.type(MobKind.HELLHOUND),15,1,2,8);
                 }else if(level.dimension()==Level.NETHER) {
-                    h.assertTrue(originalEntries(entries)==3,"Hell retains its three old ITE additions alongside eligible Extra candidates");
-                    assertEntry(h,entries,MiteMobs.type(MobKind.HELLHOUND),20,1,2,8);
-                    h.assertTrue(entries.stream().noneMatch(entry->entry.type()==ExtremeMobs.type(ZOMBIE_LORD)),"Hell does not inherit the overworld lord entry");
+                    h.assertTrue(originalEntries(entries)==5,"The Nether pool includes all four reference identities and a hellhound entry");
+                    var hellhound=MiteMobs.type(MobKind.HELLHOUND);
+                    assertEntry(h,entries,hellhound,20,1,2,8);
+                    assertEntry(h,entries,ExtremeMobs.type(ZOMBIE_LORD),2,1,1,1);
+                    assertEntry(h,entries,ExtremeMobs.type(WANDERING_WITCH),1,1,1,1);
+                    var hostEntry=entries.stream().filter(entry->entry.type()==hellhound).findFirst().orElseThrow();
+                    var merged=IteReferenceSpawns.pool(context(level),pos,List.of(hostEntry));
+                    h.assertTrue(merged.stream().filter(entry->entry.type()==hellhound).count()==1,
+                            "The host hellhound entry keeps one natural slot when ITE is loaded");
                 }else if(level.dimension()==Level.END)h.assertTrue(entries.isEmpty(),"End clears the parent additions");
+            }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="reference_ite_spawns")
+    public static void unlockedNetherCandidatesQualifyAndJoinNaturally(GameTestHelper h) {
+        try(Fixture f=new Fixture(h)) {
+            var site=f.site;
+            var nether=site.level.getServer().getLevel(Level.NETHER);
+            var pos=BlockPos.containing(site.origin.x,150,site.origin.z);
+            var lord=ExtremeMobs.type(ZOMBIE_LORD);
+            f.preset.set("wandering_witch_spawn_chance_overworld",100);
+            site.date(64,64,true);
+            h.assertFalse(IteReferenceSpawns.naturalAllowed(nether,lord,pos),"The Nether shares the configured species date");
+            site.date(224,224,true);
+            var pool=IteReferenceSpawns.pool(context(nether),pos,List.of());
+            for(var kind:List.of(ZOMBIE_LORD,WANDERING_WITCH,SKELETON_FLOATING,MINER_ZOMBIE,BLACK_INFERNAL_CREEPER,
+                    UNDYING_ZOMBIE_EMPEROR,WITCH_LORD,TIME_LORD)) {
+                h.assertTrue(pool.stream().anyMatch(entry->entry.type()==ExtremeMobs.type(kind)),"Unlocked Nether candidate: "+kind);
+            }
+            for(var kind:List.of(MIMIC_ZOMBIE,ZOMBIE_BOSS))
+                h.assertFalse(pool.stream().anyMatch(entry->entry.type()==ExtremeMobs.type(kind)),"Scripted identity stays outside natural pools: "+kind);
+
+            var floor=pos.below();
+            var previous=nether.getBlockState(floor);
+            nether.setBlockAndUpdate(floor,Blocks.NETHERRACK.defaultBlockState());
+            try {
+                site.player(nether,Vec3.atBottomCenterOf(pos).add(32,0,0));
+                h.assertFalse(R196MobSpawning.eligibleChunks(nether,true).isEmpty(),
+                        "A Nether player supplies the scheduler's eligible chunks and hostile capacity");
+                var remaining=new HashSet<EntityType<?>>(List.of(lord,MiteMobs.type(MobKind.GHOUL)));
+                var random=RandomSource.create(58_748L);
+                for(int draw=0;draw<4096&&!remaining.isEmpty();draw++) {
+                    var selected=R196MobSpawning.select(nether,pos,R196SpawnRules.Category.MONSTER,random,false,true);
+                    if(selected!=null)remaining.remove(selected.type());
+                }
+                h.assertTrue(remaining.isEmpty(),"The combined scheduler selects Nether mobs from both mods: "+remaining);
+                for(var type:List.of(lord,ExtremeMobs.type(WANDERING_WITCH),ExtremeMobs.type(SKELETON_FLOATING),RabidDogContent.RABID_DOG.get())) {
+                    h.assertTrue(pool.stream().anyMatch(entry->entry.type()==type),"The live ITE pool contains "+type);
+                    Mob mob=type.create(nether);
+                    h.assertTrue(mob!=null,"Registered Nether candidate creates: "+type);
+                    site.mobs.add(mob);
+                    mob.moveTo(pos.getX()+.5,pos.getY(),pos.getZ()+.5,0,0);
+                    h.assertTrue(R196MobSpawning.qualifiesWithEvent(mob,nether,MobSpawnType.NATURAL,true,true),
+                            "The actual Nether placement predicate accepts "+type);
+                    var result=R196MobSpawning.finalizeNaturalMonster(nether,mob,null,1);
+                    h.assertTrue(result.monsters()==1&&mob.isAddedToLevel()&&mob.getSpawnType()==MobSpawnType.NATURAL,
+                            "The scheduler admits one real natural Nether spawn for "+type);
+                    mob.discard();
+                    SpawnPopulation.release(mob);
+                }
+            } finally {
+                nether.setBlockAndUpdate(floor,previous);
+                SpawnPopulation.clearReservations(nether);
             }
         }
         h.succeed();

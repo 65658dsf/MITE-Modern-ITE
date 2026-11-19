@@ -56,14 +56,15 @@ public final class MobAbilities {
         if(day(l)<IteConfig.extremeMobFirstDay("modern_ite:"+k.id(),l.dimension()==Level.OVERWORLD)
                 ||k==MIMIC_ZOMBIE||k==ZOMBIE_BOSS||k.family==Family.PILLAGER)return false;
         boolean nether=l.dimension()==Level.NETHER,under=underground(l),over=l.dimension()==Level.OVERWORLD;
-        if(!over&&!nether&&!under)return false;
-        if(k==SKELETON_FLOATING)return under;
-        if(k==DARK_IRON_GOLEM||k==SKELETON_KNOCKBACK||k==SKELETON_LIGHTNING)return under||nether;
-        if(k==WITHER_SKELETON_ARROW)return nether;
-        if(k==BLACK_INFERNAL_CREEPER)return over;
-        if(k==UNDYING_ZOMBIE_EMPEROR||k==WITCH_LORD||k==TIME_LORD||k==WANDERING_WITCH||k==MINER_ZOMBIE)return over||under;
-        if(k==ZOMBIE_PIGMAN_LORD)return nether||under||io.github.ningmeng123.mite.rules.LunarCalendar.state(l.getDayTime(),true).bloodPeriod();
-        return true;
+        if(nether)return true;
+        if(!over&&!under)return false;
+        return switch(k) {
+            case SKELETON_FLOATING,DARK_IRON_GOLEM,SKELETON_KNOCKBACK,SKELETON_LIGHTNING -> under;
+            case WITHER_SKELETON_ARROW -> false;
+            case BLACK_INFERNAL_CREEPER -> over;
+            case ZOMBIE_PIGMAN_LORD -> under||io.github.ningmeng123.mite.rules.LunarCalendar.state(l.getDayTime(),true).bloodPeriod();
+            default -> true;
+        };
     }
     public static boolean spawnRules(Mob mob,ExtremeKind k,LevelAccessor level,MobSpawnType reason){
         if(reason==MobSpawnType.SPAWN_EGG||reason==MobSpawnType.COMMAND||SpawnPopulation.explicit(mob))return true;

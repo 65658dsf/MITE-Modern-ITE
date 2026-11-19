@@ -66,10 +66,9 @@ public final class IteReferenceSpawns {
         boolean over=level.dimension()==Level.OVERWORLD,under=MobAbilities.underground(level),nether=level.dimension()==Level.NETHER;
         var id=BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if(id.getNamespace().equals(ModernIte.MOD_ID)) {
-            if(type==ExtremeMobs.type(ZOMBIE_LORD))return over||under;
+            if(type==ExtremeMobs.type(ZOMBIE_LORD)||type==ExtremeMobs.type(ANNIHILATION_SKELETON)
+                    ||type==ExtremeMobs.type(WANDERING_WITCH))return over||under||nether;
             if(type==ExtremeMobs.type(ZOMBIE_PIGMAN_LORD))return nether;
-            if(type==ExtremeMobs.type(ANNIHILATION_SKELETON))return over||under||nether;
-            if(type==ExtremeMobs.type(WANDERING_WITCH))return over||under;
             if(type==RabidDogContent.RABID_DOG.get())return RabidDogContent.maySpawn(level);
             for(var kind:ExtremeKind.values())if(type==ExtremeMobs.type(kind))return MobAbilities.customNaturalAllowed(kind,level);
             return false;
@@ -115,8 +114,10 @@ public final class IteReferenceSpawns {
             if(fortress!=null&&(level.structureManager().getStructureWithPieceAt(pos,fortress).isValid()
                     ||level.getBlockState(pos.below()).is(Blocks.NETHER_BRICKS)&&level.structureManager().getStructureAt(pos,fortress).isValid()))return;
             add(entries,ExtremeMobs.type(ZOMBIE_PIGMAN_LORD),null,frequency(ZOMBIE_PIGMAN_LORD),1,1,1);
-            add(entries,ExtremeMobs.type(ANNIHILATION_SKELETON),null,frequency(ANNIHILATION_SKELETON),1,1,1);
-            add(entries,MiteMobs.type(MobKind.HELLHOUND),MobKind.HELLHOUND.sourceClass(),20,1,2,8);
+            addIteBase(entries);
+            var hellhound=MiteMobs.type(MobKind.HELLHOUND);
+            if(entries.stream().noneMatch(entry->entry.type()==hellhound))
+                add(entries,hellhound,MobKind.HELLHOUND.sourceClass(),20,1,2,8);
             ExtremeMobs.addExtraSpawnEntries(context,pos,entries);
             return;
         }

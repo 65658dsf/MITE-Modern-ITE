@@ -146,7 +146,7 @@ public final class ExtremeMobSpawnDayGameTests {
             h.assertTrue(nether!=null&&!SpawnPopulation.automaticAllowed(nether,ExtremeMobs.type(WANDERING_WITCH)),"Other-dimension automatic admission waits for its later date");
             site.date(15,15,true);
             h.assertTrue(SpawnPopulation.automaticAllowed(nether,ExtremeMobs.type(WANDERING_WITCH)),"Other-dimension automatic admission unlocks on day 15");
-            h.assertFalse(MobAbilities.maySpawn(WANDERING_WITCH,nether,BlockPos.containing(site.origin)),"Unlocking dates keeps natural habitat restrictions intact");
+            h.assertTrue(MobAbilities.maySpawn(WANDERING_WITCH,nether,BlockPos.containing(site.origin)),"The other-dimension date also unlocks the natural Nether candidate");
         }
         h.succeed();
     }

@@ -103,7 +103,7 @@ public final class RabidDogGameTests {
     }
 
     @GameTest(template = "gear_empty", batch = "spawn_balance")
-    public static void naturalPoolRespectsGraceAndOnlyUsesOverworldAndUnderworld(GameTestHelper h) {
+    public static void naturalPoolRespectsGraceAndAllowsNether(GameTestHelper h) {
         var level = h.getLevel();
         var progress = BloodMoonInvasionData.get(level);
         long oldDay = progress.highestDay(), oldTime = level.getDayTime();
@@ -138,8 +138,8 @@ public final class RabidDogGameTests {
             var nether = level.getServer().getLevel(Level.NETHER);
             var end = level.getServer().getLevel(Level.END);
             h.assertTrue(nether != null && end != null, "Standard non-overworld dimensions exist");
-            h.assertFalse(RabidDogContent.maySpawn(nether) || RabidDogContent.maySpawn(end),
-                    "Rabid dogs do not spill into Nether or End pools");
+            h.assertTrue(RabidDogContent.maySpawn(nether), "The unlocked rabid dog can enter the Nether pool");
+            h.assertFalse(RabidDogContent.maySpawn(end), "The End remains outside the rabid dog's natural habitat");
         } finally {
             startSetting.set(startBefore);io.github.ningmeng123.modernite.config.IteConfig.refresh();
             level.setDayTime(oldTime);

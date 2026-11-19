@@ -54,7 +54,7 @@ public final class RabidDogContent {
     }
 
     public static boolean maySpawn(ServerLevel level) {
-        return (level.dimension() == Level.OVERWORLD || MobAbilities.underground(level))
+        return (level.dimension() == Level.OVERWORLD || level.dimension() == Level.NETHER || MobAbilities.underground(level))
                 && level.getDifficulty() != Difficulty.PEACEFUL && SpawnPopulation.automaticAllowed(level, RABID_DOG.get());
     }
 

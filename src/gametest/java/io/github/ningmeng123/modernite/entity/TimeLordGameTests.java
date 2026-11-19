@@ -180,15 +180,16 @@ public final class TimeLordGameTests {
         try (var site = new SpawnBalanceGameTests.Site(h); var settings = new IteReferenceSpawnGameTests.Settings()) {
             settings.set("extreme_mob_spawn_limit_day", 3);
             settings.set("time_lord_spawn_limit_day", 96);
+            var nether = site.level.getServer().getLevel(net.minecraft.world.level.Level.NETHER);
             site.date(95, 95, true);
             h.assertFalse(MobAbilities.maySpawn(ExtremeKind.TIME_LORD, site.level, BlockPos.containing(site.origin)), "The preceding day keeps the new lord locked");
+            h.assertFalse(MobAbilities.maySpawn(ExtremeKind.TIME_LORD, nether, BlockPos.containing(site.origin)), "The same date locks the lord in the Nether");
             site.date(96, 96, true);
             h.assertTrue(MobAbilities.maySpawn(ExtremeKind.TIME_LORD, site.level, BlockPos.containing(site.origin)), "The configured date unlocks the lord in the Overworld");
+            h.assertTrue(MobAbilities.maySpawn(ExtremeKind.TIME_LORD, nether, BlockPos.containing(site.origin)), "The configured date unlocks the lord in the Nether");
             h.assertTrue(ExtremeMobs.spawnWeight(ExtremeKind.TIME_LORD) == 1, "Default natural weight is rare");
             settings.set("time_lord_spawn_frequency", 0);
             h.assertTrue(ExtremeMobs.spawnWeight(ExtremeKind.TIME_LORD) == 0, "The live weight setting disables the natural candidate");
-            var nether = site.level.getServer().getLevel(net.minecraft.world.level.Level.NETHER);
-            h.assertFalse(MobAbilities.customNaturalAllowed(ExtremeKind.TIME_LORD, nether), "The lord does not enter the Nether habitat");
             site.date(1, 1, true);
             var lord = ExtremeMobs.type(ExtremeKind.TIME_LORD).create(site.level);
             h.assertTrue(MobAbilities.spawnRules(lord, ExtremeKind.TIME_LORD, site.level, net.minecraft.world.entity.MobSpawnType.COMMAND),

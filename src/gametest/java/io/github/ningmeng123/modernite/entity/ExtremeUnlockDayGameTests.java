@@ -111,9 +111,12 @@ public final class ExtremeUnlockDayGameTests {
             f.site.date(96,96,true);
             h.assertTrue(MobAbilities.maySpawn(SKELETON_LIGHTNING,nether,f.pos),"Lightning skeleton can appear in its later Nether habitat");
             h.assertFalse(MobAbilities.maySpawn(SKELETON_LIGHTNING,f.site.level,f.pos),"Unlocking the date does not add an overworld lightning-skeleton habitat");
-            h.assertFalse(MobAbilities.maySpawn(UNDYING_ZOMBIE_EMPEROR,nether,f.pos),"The emperor does not gain a Nether habitat");
+            h.assertFalse(MobAbilities.maySpawn(UNDYING_ZOMBIE_EMPEROR,nether,f.pos),"The emperor's later species date applies in the Nether too");
+            f.site.date(128,128,true);
+            h.assertTrue(MobAbilities.maySpawn(UNDYING_ZOMBIE_EMPEROR,nether,f.pos),"The emperor enters the Nether pool on day 128");
             h.assertFalse(MobAbilities.maySpawn(RUN_CREEPER,end,f.pos),"The End remains outside ordinary Extra habitats");
-            h.assertFalse(RabidDogContent.maySpawn(nether)||RabidDogContent.maySpawn(end),"Rabid dogs retain only overworld/Underworld habitats");
+            h.assertTrue(RabidDogContent.maySpawn(nether),"An unlocked rabid dog enters the Nether pool");
+            h.assertFalse(RabidDogContent.maySpawn(end),"The rabid dog still has no End habitat");
         }
         h.succeed();
     }
@@ -123,13 +126,13 @@ public final class ExtremeUnlockDayGameTests {
         try(Fixture f=new Fixture(h)) {
             f.preset.set("extreme_mob_spawn_limit_day",33);f.site.date(224,224,true);
             for(ServerLevel level:f.site.level.getServer().getAllLevels()) {
-                var entries=pool(level,f.pos);
+                var entries=pool(level,level.dimension()==Level.NETHER?f.pos.atY(150):f.pos);
                 for(var kind:ExtremeKind.values())if(!IteReferenceSpawns.referenceIdentity(kind))
                     h.assertTrue(count(entries,ExtremeMobs.type(kind))<=1,"Appending Extra candidates never duplicates identity "+kind+" in "+level.dimension().location());
                 h.assertTrue(count(entries,RabidDogContent.RABID_DOG.get())<=1,"Rabid dogs are appended once");
-                if(level.dimension()==Level.OVERWORLD||MobAbilities.underground(level)) {
-                    h.assertTrue(count(entries,ExtremeMobs.type(ZOMBIE_IRON_BUCKET))==1,"Eligible overworld and Underworld pools contain an Extra zombie");
-                    h.assertTrue(count(entries,RabidDogContent.RABID_DOG.get())==1,"Eligible overworld and Underworld pools contain a rabid dog");
+                if(level.dimension()==Level.OVERWORLD||level.dimension()==Level.NETHER||MobAbilities.underground(level)) {
+                    h.assertTrue(count(entries,ExtremeMobs.type(ZOMBIE_IRON_BUCKET))==1,"Every eligible dimension adds an Extra zombie once");
+                    h.assertTrue(count(entries,RabidDogContent.RABID_DOG.get())==1,"Every eligible dimension adds a rabid dog once");
                     for(var kind:List.of(ZOMBIE_LORD,ANNIHILATION_SKELETON,WANDERING_WITCH))
                         h.assertTrue(count(entries,ExtremeMobs.type(kind))==(MobAbilities.underground(level)?2:1),"The old ITE constructor multiplicity is preserved: "+kind);
                 }
