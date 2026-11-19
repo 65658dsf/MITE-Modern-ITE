@@ -208,7 +208,8 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public long gearExperience(ItemStack stack,long original) { return ExtremeGear.gearExperience(stack,original); }
     @Override public int materialUpgradeIngots(ItemStack stack,int original) {
         var itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return itemId.getNamespace().equals("modern_ite")&&itemId.getPath().startsWith("club_")?4:original;
+        int cost=itemId.getNamespace().equals("modern_ite")&&itemId.getPath().startsWith("club_")?4:original;
+        return io.github.ningmeng123.modernite.crafting.EquipmentSmithingRules.ingots(stack,cost);
     }
     @Override public float craftingDifficulty(ItemStack stack,float original) {
         var itemId=BuiltInRegistries.ITEM.getKey(stack.getItem());

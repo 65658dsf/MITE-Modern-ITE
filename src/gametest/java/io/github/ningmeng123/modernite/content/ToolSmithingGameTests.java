@@ -68,13 +68,13 @@ import net.neoforged.neoforge.network.registration.NetworkRegistry;
 @GameTestHolder("modern_ite_tool_smithing")
 @PrefixGameTestTemplate(false)
 public final class ToolSmithingGameTests {
-    private static final Set<String> HIGH_METALS = Set.of("mithril", "adamantium", "vibranium");
+    private static final Set<String> HIGH_METALS = Set.of("ancient_metal", "mithril", "adamantium", "vibranium");
     private static final List<String> CHAIN = List.of("iron", "ancient_metal", "mithril", "adamantium", "vibranium");
 
     private ToolSmithingGameTests() {}
 
     @GameTest(template = "gear_empty")
-    public static void highTierToolsHaveNoCraftingResultsWhileAncientMetalAndArmorKeepRecipes(GameTestHelper h) {
+    public static void ancientMetalAndHigherToolsHaveNoCraftingResultsWhileIronKeepsItsRecipe(GameTestHelper h) {
         var manager = h.getLevel().getRecipeManager();
         for (var holder : manager.getAllRecipesFor(RecipeType.CRAFTING)) {
             ItemStack result = holder.value().getResultItem(h.getLevel().registryAccess());
@@ -93,7 +93,8 @@ public final class ToolSmithingGameTests {
                     "The synchronized ID index cannot retain the original direct tool recipe: " + definition.id());
         }
         for (String id : List.of("mite:ancient_metal_pickaxe", "mite:mithril_chestplate", "mite:adamantium_chestplate"))
-            h.assertTrue(manager.byKey(ResourceLocation.parse(id)).isPresent(), "Existing lower tool and armor recipes remain available: " + id);
+            h.assertTrue(manager.byKey(ResourceLocation.parse(id)).isEmpty(), "Old direct advanced-equipment recipes are absent: " + id);
+        h.assertTrue(manager.byKey(ResourceLocation.parse("minecraft:iron_pickaxe")).isPresent(), "Iron retains its direct starting recipe");
         h.succeed();
     }
 
@@ -189,10 +190,11 @@ public final class ToolSmithingGameTests {
         }
         fixtures.add(fixture("ancient_tool", item("mite:ancient_metal_pickaxe")));
         fixtures.add(fixture("high_armor", item("mite:mithril_chestplate")));
+        fixtures.add(fixture("starting_tool", Items.IRON_PICKAXE));
         var smithing = h.getLevel().getRecipeManager().byKey(ResourceLocation.parse("mite:equipment_upgrade/ancient_metal_pickaxe_to_mithril")).orElseThrow();
         fixtures.add(smithing);
         manager.replaceRecipes(fixtures);
-        h.assertTrue(manager.getRecipes().size() == 3 && manager.getAllRecipesFor(RecipeType.CRAFTING).size() == 2
+        h.assertTrue(manager.getRecipes().size() == 2 && manager.getAllRecipesFor(RecipeType.CRAFTING).size() == 1
                         && manager.getAllRecipesFor(RecipeType.SMITHING).size() == 1,
                 "Runtime recipe replacement applies the same tool restriction to both indexes and retains smithing");
         for (var holder : fixtures) {
@@ -240,7 +242,7 @@ public final class ToolSmithingGameTests {
             if (!HIGH_METALS.contains(material)) {
                 h.assertTrue(manager.byKey(ResourceLocation.parse(namespace + material + "_knife"))
                                 .map(holder -> holder.value().getType() == RecipeType.CRAFTING).orElse(false),
-                        "Iron and ancient-metal knives retain direct starting recipes: " + material);
+                        "Iron knives retain their direct starting recipe: " + material);
                 var input = CraftingInput.of(2, 1, List.of(new ItemStack(ingot(material)), new ItemStack(Items.STICK)));
                 var recipe = manager.getRecipeFor(RecipeType.CRAFTING, input, h.getLevel()).orElseThrow();
                 ItemStack result = recipe.value().assemble(input, h.getLevel().registryAccess());
