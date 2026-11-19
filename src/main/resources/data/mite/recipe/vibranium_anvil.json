@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AVA",
+    " C ",
+    "NIN"
+  ],
+  "key": {
+    "A": {
+      "item": "mite:adamantium_block"
+    },
+    "V": {
+      "item": "mite:vibranium_block"
+    },
+    "C": {
+      "item": "mite:ancient_metal_anvil"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "I": {
+      "item": "mite:vibranium_ingot"
+    }
+  },
+  "result": {
+    "id": "mite:vibranium_anvil",
+    "count": 1
+  }
+}
