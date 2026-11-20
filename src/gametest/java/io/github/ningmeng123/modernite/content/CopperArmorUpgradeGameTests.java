@@ -90,7 +90,7 @@ public final class CopperArmorUpgradeGameTests {
             helper.assertValueEqual(smithingPages.size(), 1, "JEI indexes exactly one copper-club material-upgrade page");
             var page = smithingPages.getFirst();
             helper.assertTrue(page.additions().size() == 1 && page.additions().getFirst().is(Items.IRON_INGOT)
-                    && page.additions().getFirst().getCount() == 4 && page.baseTicks() >= 25,
+                    && page.additions().getFirst().getCount() == 4 && page.durationTicks(0, false) >= 25,
                     "The JEI material-upgrade page displays four iron ingots and the complete smithing duration");
             helper.assertTrue(io.github.ningmeng123.mite.integration.jei.WorkbenchJeiRecipes.index(helper.getLevel())
                     .originals().stream().noneMatch(old -> old.id().equals(recipeId)),

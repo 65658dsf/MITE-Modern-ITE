@@ -28,8 +28,7 @@ public final class ForgeJeiRecipes {
 
     /** Safe during plugin discovery, before deferred blocks have been bound. */
     public static List<Integer> categoryTiers() {
-        return List.of("iron", "mithril", "adamantium", "vibranium").stream()
-                .map(GearMath::tableTier).distinct().sorted().toList();
+        return List.of(0, 1, 2, 3);
     }
 
     public static Map<Integer, Profile> profiles() {
@@ -50,7 +49,7 @@ public final class ForgeJeiRecipes {
         return ExtremeGear.socketable(input) && GearMath.maximumGrade(GearProgression.material(input)) > 0;
     }
 
-    public static int minimumTier(ItemStack input) { return GearMath.tableTier(GearProgression.material(input)); }
+    public static int minimumTier(ItemStack input) { return GearMath.minimumTableTier(ExtremeGear.grade(input)); }
 
     /** Mirrors the equipment insertion and strengthening gates, excluding transient inventory/tool availability. */
     public static boolean canForge(int tableTier, ItemStack input) {
@@ -81,18 +80,18 @@ public final class ForgeJeiRecipes {
     public static List<ForgeJeiRecipe> build() {
         if (tools(ToolFamily.AXE).isEmpty() || tools(ToolFamily.WAR_HAMMER).isEmpty()) return List.of();
         Map<Integer, ToolStats> normal = new LinkedHashMap<>(), universal = new LinkedHashMap<>();
+        var profiles = profiles();
         List<ForgeJeiRecipe> result = new ArrayList<>();
         for (var item : BuiltInRegistries.ITEM.stream()
                 .sorted(Comparator.comparing(value -> BuiltInRegistries.ITEM.getKey(value).toString())).toList()) {
             ItemStack base = item.getDefaultInstance();
             if (!supports(base)) continue;
-            int minimumTier = minimumTier(base);
-            if (!profiles().containsKey(minimumTier)) continue;
             for (int grade = 0; grade < GearMath.maximumGrade(GearProgression.material(base)); grade++) {
                 ItemStack input = base.copy();
                 if (grade == 0) input.remove(ExtremeGear.FORGE_GRADE.get());
                 else input.set(ExtremeGear.FORGE_GRADE.get(), grade);
-                if (!canForge(minimumTier, input)) continue;
+                int minimumTier = minimumTier(input);
+                if (!profiles.containsKey(minimumTier) || !canForge(minimumTier, input)) continue;
                 ItemStack output = input.copy();
                 output.set(ExtremeGear.FORGE_GRADE.get(), grade + 1);
                 var reward = ForgeRecipes.reward(grade);

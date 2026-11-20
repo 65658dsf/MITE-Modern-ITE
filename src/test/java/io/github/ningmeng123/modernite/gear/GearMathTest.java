@@ -22,15 +22,21 @@ public final class GearMathTest {
         assertEquals(30, GearMath.health(45, 170, 6));
         assertEquals(60, GearMath.health(134, 170, 2));
     }
-    @Test void materialMaximumsAndTableRequirementsAreIndependentOfGrowth() {
+    @Test void equipmentMaterialsKeepTheirMaximumEnhancementGrades() {
         assertEquals(3, GearMath.maximumGrade("iron"));
         assertEquals(3, GearMath.maximumGrade("ancient_metal"));
         assertEquals(5, GearMath.maximumGrade("mithril"));
         assertEquals(7, GearMath.maximumGrade("adamantium"));
         assertEquals(10, GearMath.maximumGrade("vibranium"));
         assertEquals(0, GearMath.maximumGrade("wood"));
-        assertEquals(1, GearMath.tableTier("ancient_metal"));
-        assertEquals(3, GearMath.tableTier("vibranium"));
+    }
+    @Test void theNextEnhancementGradeSetsTheMinimumTableTier() {
+        int[] tiersByInputGrade = {0, 0, 0, 1, 1, 2, 2, 3, 3, 3};
+        for (int grade = 0; grade < tiersByInputGrade.length; grade++) {
+            assertEquals(tiersByInputGrade[grade], GearMath.minimumTableTier(grade), "target grade +" + (grade + 1));
+        }
+        assertEquals(4, GearMath.minimumTableTier(-1));
+        assertEquals(4, GearMath.minimumTableTier(10));
     }
     @Test void forgeFailureToolsAndSourceEnhancementAreDeterministic() {
         assertEquals(35, GearMath.failurePercent(0, 2, 2));

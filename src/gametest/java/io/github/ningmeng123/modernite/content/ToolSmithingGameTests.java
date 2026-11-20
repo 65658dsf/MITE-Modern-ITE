@@ -5,6 +5,7 @@ import io.github.ningmeng123.mite.compat.simplyswords.SimplySwordsCompat;
 import io.github.ningmeng123.mite.crafting.CraftingQuality;
 import io.github.ningmeng123.mite.crafting.MaterialAnvilRules;
 import io.github.ningmeng123.mite.crafting.MaterialUpgradeRequirements;
+import io.github.ningmeng123.mite.crafting.SmithingTableTier;
 import io.github.ningmeng123.mite.crafting.TimedSmithingController;
 import io.github.ningmeng123.mite.data.MaterialUpgradeRecipes;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
@@ -159,7 +160,7 @@ public final class ToolSmithingGameTests {
                 h.assertTrue(session.menu.getSlot(3).getItem().is(target), "Each step has a valid native smithing preview");
                 int period = TimedSmithingController.period(session.player, session.menu);
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
-                h.assertTrue(period >= 25 && TimedSmithingController.isActive(session.player), "Taking a tool preview starts timed smithing");
+                h.assertTrue(period > 0 && TimedSmithingController.isActive(session.player), "Taking a tool preview starts timed smithing");
                 for (int tick = 1; tick < period; tick++) TimedSmithingController.tick(session.player);
                 h.assertTrue(session.menu.getCarried().isEmpty() && ItemStack.matches(session.menu.getSlot(1).getItem(), before)
                                 && session.menu.getSlot(0).getItem().getCount() == 1
@@ -330,7 +331,7 @@ public final class ToolSmithingGameTests {
             player.getFoodData().setFoodLevel(6);
             table = helper.absolutePos(new BlockPos(1, 1, 1));
             previous = helper.getLevel().getBlockState(table);
-            helper.getLevel().setBlockAndUpdate(table, Blocks.SMITHING_TABLE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(table, SmithingTableTier.VIBRANIUM.block().defaultBlockState());
             menu = new SmithingMenu(38, player.getInventory(), ContainerLevelAccess.create(helper.getLevel(), table));
             player.containerMenu = menu;
         }

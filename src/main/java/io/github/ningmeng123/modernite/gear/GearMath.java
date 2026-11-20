@@ -16,10 +16,14 @@ public final class GearMath {
             case "mithril" -> 5; case "adamantium" -> 7; case "vibranium" -> 10; default -> 0;
         };
     }
-    public static int tableTier(String material) {
-        return switch (material == null ? "" : material) {
-            case "iron" -> 0; case "ancient_metal", "mithril" -> 1;
-            case "adamantium" -> 2; case "vibranium" -> 3; default -> 4;
+    /** Minimum table tier for the transition from the current grade to the next grade. */
+    public static int minimumTableTier(int inputGrade) {
+        return switch (inputGrade) {
+            case 0, 1, 2 -> 0;
+            case 3, 4 -> 1;
+            case 5, 6 -> 2;
+            case 7, 8, 9 -> 3;
+            default -> 4;
         };
     }
     public static int materialTier(String material) {

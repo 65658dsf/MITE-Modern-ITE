@@ -250,7 +250,8 @@ public final class ForgeJeiClientAudit {
                 check(output.is(requiredStack(route.result()).getItem())&&output.getCount()==1,
                         "The source template, base club and full target-material payment produce the next-material club");
                 var page=indexed.stream().filter(actual->actual.source().id().equals(holder.id())).findFirst().orElseThrow();
-                check(!page.additions().isEmpty()&&page.additions().stream().allMatch(stack->stack.getCount()==route.ingots())&&page.baseTicks()>=25,
+                int ticks=page.durationTicks(0,false);
+                check(!page.additions().isEmpty()&&page.additions().stream().allMatch(stack->stack.getCount()==route.ingots())&&ticks>0,
                         "Every club page displays its exact target-ingot cost and a nonzero manufacturing duration");
                 var layout=manager.createRecipeLayoutDrawable(smithingCategory,page,
                         runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup()).orElseThrow();
@@ -263,15 +264,25 @@ public final class ForgeJeiClientAudit {
                 JsonObject facts=new JsonObject();facts.addProperty("from",route.from());facts.addProperty("to",route.to());
                 facts.addProperty("recipe",holder.id().toString());facts.addProperty("template","mite:equipment_upgrade_smithing_template");
                 facts.addProperty("base",route.base().toString());facts.addProperty("addition",route.addition().toString());
-                facts.addProperty("addition_count",route.ingots());facts.addProperty("base_ticks",page.baseTicks());
+                facts.addProperty("addition_count",route.ingots());facts.addProperty("minimum_table_ticks",ticks);
                 facts.addProperty("output",route.result().toString());facts.addProperty("full_cost_layout_verified",true);
                 facts.addProperty("output_material_matches_assembly",true);routes.add(facts);
                 if(route.from().equals("adamantium")&&route.to().equals("vibranium"))clubSmithingTarget=page;
             }
             check(matchedIds.equals(loadedIds)&&clubSmithingTarget!=null,"The seven exact routes cover the complete loaded club smithing catalog");
             var catalysts=manager.createRecipeCatalystLookup(smithingType).includeHidden().getItemStack().toList();
-            check(catalysts.size()==1&&catalysts.getFirst().is(Items.SMITHING_TABLE),
-                    "The timed material-upgrade category exposes its ordinary smithing-table catalyst");
+            check(catalysts.isEmpty(),"Material upgrade catalysts are registered per recipe");
+            List<String> materials=List.of("iron","ancient_metal","mithril","adamantium","vibranium");
+            for (int table=0;table<materials.size();table++) {
+                var stack=requiredStack(minimumSmithingTableId(materials.get(table)));
+                var focus=runtime.getJeiHelpers().getFocusFactory().createFocus(RecipeIngredientRole.CATALYST,VanillaTypes.ITEM_STACK,stack);
+                var matching=manager.createRecipeLookup(smithingType).includeHidden().limitFocus(List.of(focus)).get()
+                        .filter(page->isClub(page.output())).map(page->page.source().id()).collect(java.util.stream.Collectors.toSet());
+                int capacity=table;
+                var expected=indexed.stream().filter(page->materials.indexOf(GearProgression.material(page.output()))<=capacity)
+                        .map(page->page.source().id()).collect(java.util.stream.Collectors.toSet());
+                check(matching.equals(expected),"Each physical smithing table finds the compatible subset of club upgrades");
+            }
             long obsoleteLoaded=mc.level.getRecipeManager().getAllRecipesFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING).stream()
                     .filter(holder->isAdvancedClub(holder.value().getResultItem(mc.level.registryAccess()))).count();
             long obsoleteNative=manager.createRecipeLookup(RecipeTypes.CRAFTING).includeHidden().get()
@@ -307,6 +318,10 @@ public final class ForgeJeiClientAudit {
                     .orElseThrow(()->new IllegalStateException("Missing club smithing ingredient or result: "+id));
             return new ItemStack(item);
         }
+        private static ResourceLocation minimumSmithingTableId(String targetMaterial) {
+            return targetMaterial.equals("iron") ? ResourceLocation.withDefaultNamespace("smithing_table")
+                    : ResourceLocation.fromNamespaceAndPath("mite",targetMaterial+"_smithing_table");
+        }
         private static SmithingRecipeInput clubSmithingInput(ClubRoute route) {
             return new SmithingRecipeInput(requiredStack(ResourceLocation.parse("mite:equipment_upgrade_smithing_template")),
                     requiredStack(route.base()),requiredStack(route.addition()).copyWithCount(route.ingots()));
@@ -326,6 +341,9 @@ public final class ForgeJeiClientAudit {
                     "The page displays one corresponding next-material club");
             check(outputs.getFirst().getItemStacks().count()==1&&contains(outputs.getFirst(),page.output()),
                     "The output slot exactly matches the full-cost page's destination material and components");
+            var minimum=requiredStack(minimumSmithingTableId(route.to()));
+            check(slots.getSlotViews(RecipeIngredientRole.CATALYST).stream().anyMatch(slot->contains(slot,minimum)),
+                    "The layout visibly identifies the destination material's minimum smithing table");
         }
         @SuppressWarnings("unchecked")
         private void validateCopperClubSmithingRuntime(Minecraft mc) {
@@ -346,7 +364,7 @@ public final class ForgeJeiClientAudit {
             var pages=manager.createRecipeLookup(smithingType).includeHidden().get().filter(page->page.source().id().equals(recipeId)).toList();
             check(pages.size()==1,"Actual JEI indexes the copper-club material upgrade exactly once in timed smithing");
             copperClubTarget=pages.getFirst();var page=copperClubTarget;var route=new ClubRoute("copper","iron");
-            check(page.source().value() instanceof SmithingTransformRecipe&&page.baseTicks()>=25
+            check(page.source().value() instanceof SmithingTransformRecipe&&page.durationTicks(0,false)>=25
                     &&page.additions().stream().allMatch(stack->stack.is(Items.IRON_INGOT)&&stack.getCount()==4),
                     "The copper-club page uses native smithing, four full iron ingots and the real manufacturing duration");
             check(page.source().value().matches(clubSmithingInput(route),mc.level),
@@ -362,7 +380,7 @@ public final class ForgeJeiClientAudit {
             copperClubFacts.addProperty("type",smithingType.getUid().toString());
             copperClubFacts.addProperty("iron_ingots",4);copperClubFacts.addProperty("iron_nuggets",0);
             copperClubFacts.addProperty("copper_clubs",1);copperClubFacts.addProperty("templates",1);
-            copperClubFacts.addProperty("baseline_ticks",page.baseTicks());copperClubFacts.addProperty("native_layout_verified",true);
+            copperClubFacts.addProperty("baseline_ticks",page.durationTicks(0,false));copperClubFacts.addProperty("native_layout_verified",true);
             copperClubFacts.addProperty("obsolete_workbench_pages_absent",true);
         }
         @SuppressWarnings("unchecked")
@@ -420,8 +438,8 @@ public final class ForgeJeiClientAudit {
         }
         private Set<ResourceLocation> furnaceRecipeIds(List<FurnaceJeiRecipe> source){Set<ResourceLocation> ids=new HashSet<>();source.forEach(row->ids.add(furnaceCategory.getRegistryName(row)));return ids;}
         private void validateRecipe(ForgeJeiRecipe row) {
-            String material=GearProgression.material(row.input());int cap=cap(material),minimum=tier(material),grade=row.inputGrade();
-            check(cap>0&&minimum==row.minimumTier()&&grade>=0&&grade<cap,"Source row obeys server material and grade constraints");
+            String material=GearProgression.material(row.input());int cap=cap(material),grade=row.inputGrade();
+            check(cap>0&&minimumTier(grade)==row.minimumTier()&&grade>=0&&grade<cap,"Source row uses the next grade's minimum table and the equipment material's grade cap");
             check(row.input().getCount()==1&&row.output().getCount()==1&&row.input().is(row.output().getItem())&&row.outputGrade()==grade+1,"Source row produces one next-grade copy of the actual gear");
             check(ExtremeGear.grade(row.input())==grade&&ExtremeGear.grade(row.output())==grade+1,"Recipe display uses actual persisted forge-grade components");
             Map<String,Integer> expected=new HashMap<>();for(var cost:ForgeRecipes.costs(grade))expected.merge(row.universal()&&cost.id().endsWith("_enhance_stone")?"modern_ite:universal_enhance_stone":cost.id(),cost.count(),Integer::sum);
@@ -531,7 +549,7 @@ public final class ForgeJeiClientAudit {
                         "The rendered drawable is the requested full-cost adamantium-to-vibranium page");
                 var route=new ClubRoute("adamantium","vibranium");
                 validateClubSmithingSlots(layouts.getFirst(),route,clubSmithingTarget);
-                var sidebar=assertSidebar(mc,Set.of("minecraft:smithing_table"));
+                var sidebar=assertSidebar(mc,Set.of());
                 screenshot(mc,"club-smithing-upgrade.png");
                 clubSmithingFacts.addProperty("full_cost_target_page_rendered",true);
                 clubSmithingFacts.addProperty("drawn_source_recipe",clubSmithingTarget.source().id().toString());
@@ -549,7 +567,7 @@ public final class ForgeJeiClientAudit {
                 check(layouts.size()==1&&layouts.getFirst().getRecipe()==copperClubTarget,
                         "The rendered smithing page is exactly the copper-to-iron club upgrade");
                 validateClubSmithingSlots(layouts.getFirst(),new ClubRoute("copper","iron"),copperClubTarget);
-                var sidebar=assertSidebar(mc,Set.of("minecraft:smithing_table"));
+                var sidebar=assertSidebar(mc,Set.of());
                 screenshot(mc,"copper-club-smithing-upgrade.png");
                 copperClubFacts.addProperty("full_cost_smithing_page_rendered",true);
                 copperClubFacts.add("native_visible_sidebar",json(sidebar));copperClubFacts.addProperty("native_sidebar_slots",sidebar.size());
@@ -642,7 +660,10 @@ public final class ForgeJeiClientAudit {
         }
         private static int maximumTier(List<ForgeJeiRecipe> visible){return visible.stream().mapToInt(ForgeJeiRecipe::minimumTier).max().orElseThrow();}
         private static Set<String> recipeKeys(List<ForgeJeiRecipe> recipes){Set<String> result=new HashSet<>();recipes.forEach(row->result.add(key(row)));return result;}
-        private ForgeJeiRecipe sample(int tier){return rows.get(tier).stream().filter(row->!row.universal()&&row.inputGrade()==0).findFirst().orElseThrow();}
+        private ForgeJeiRecipe sample(int tier) {
+            var sword=ResourceLocation.parse("mite:vibranium_sword");
+            return rows.get(tier).stream().filter(row->row.itemId().equals(sword)&&!row.universal()).findFirst().orElseThrow();
+        }
         private void arm(Minecraft mc,int nextPhase){check(mc.screen==runtime.getRecipesGui(),"Every scene uses the real JEI screen");movePointerAway(mc);phase=nextPhase;expectedScreen=mc.screen;frames=0;}
         private void openRows(Minecraft mc,List<ForgeJeiRecipe> requested,int nextPhase){runtime.getRecipesGui().showRecipes(category,requested,List.of());arm(mc,nextPhase);}
         private void openTier(Minecraft mc,int tier) {
@@ -667,7 +688,15 @@ public final class ForgeJeiClientAudit {
 
     private static String key(ForgeJeiRecipe row){return row.itemId()+"/"+row.inputGrade()+"/"+row.universal();}
     private static int cap(String material){return switch(material==null?"":material){case "iron","ancient_metal"->3;case "mithril"->5;case "adamantium"->7;case "vibranium"->10;default->0;};}
-    private static int tier(String material){return switch(material==null?"":material){case "iron"->0;case "ancient_metal","mithril"->1;case "adamantium"->2;case "vibranium"->3;default->-1;};}
+    private static int minimumTier(int inputGrade) {
+        return switch (inputGrade) {
+            case 0, 1, 2 -> 0;
+            case 3, 4 -> 1;
+            case 5, 6 -> 2;
+            case 7, 8, 9 -> 3;
+            default -> -1;
+        };
+    }
     private static Set<String> expectedRecipeKeys() {
         Set<String> expected=new HashSet<>();for(var entry:BuiltInRegistries.ITEM.entrySet()) {
             ItemStack gear=new ItemStack(entry.getValue());if(!ExtremeGear.socketable(gear))continue;

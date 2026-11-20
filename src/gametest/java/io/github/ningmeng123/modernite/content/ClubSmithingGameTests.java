@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.content;
 
 import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
+import io.github.ningmeng123.mite.crafting.SmithingTableTier;
 import io.github.ningmeng123.mite.crafting.TimedSmithingController;
 import io.github.ningmeng123.mite.progression.GearProgress;
 import io.github.ningmeng123.mite.progression.GearProgression;
@@ -47,6 +48,7 @@ import net.minecraft.world.item.crafting.SmithingRecipeInput;
 import net.minecraft.world.item.crafting.SmithingTransformRecipe;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -166,7 +168,7 @@ public final class ClubSmithingGameTests {
 
     @GameTest(template = "gear_empty")
     public static void timedSmithingPickupAndShiftClickConsumeOneTemplateAndExactLegalMaterialStacks(GameTestHelper h) {
-        try (SmithingSession session = new SmithingSession(h)) {
+        try (SmithingSession session = new SmithingSession(h, SmithingTableTier.VIBRANIUM.block())) {
             for (Route route : ROUTES) {
                 session.clear();
                 int required = route.to().equals("ancient_metal") ? 2 : 4;
@@ -182,9 +184,9 @@ public final class ClubSmithingGameTests {
                 assertPersonalComponents(h, before, session.menu.getSlot(3).getItem());
                 h.assertTrue(ItemStack.matches(source, before) && session.menu.getSlot(0).getItem().getCount() == 3
                         && session.menu.getSlot(2).getItem().getCount() == 4, "Preview consumes or modifies no input");
-                int period = TimedSmithingController.period(session.player, session.menu);
-                h.assertTrue(period >= 25, "Material upgrades require a real production period");
                 session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
+                int period = TimedSmithingController.period(session.player, session.menu);
+                h.assertValueEqual(period, 13, "The vibranium table halves the 25-tick baseline, rounded up to a complete tick");
                 h.assertTrue(TimedSmithingController.isActive(session.player) && session.menu.getCarried().isEmpty(),
                         "Picking up the preview starts manufacturing rather than delivering an instant upgrade");
                 for (int tick = 1; tick < period; tick++) TimedSmithingController.tick(session.player);
@@ -230,7 +232,7 @@ public final class ClubSmithingGameTests {
 
     @GameTest(template = "gear_empty")
     public static void copperClubSmithingCountsOnlyIronIngotsAndCommitsItsInventoryReserveAtTheFinalTick(GameTestHelper h) {
-        try (SmithingSession session = new SmithingSession(h)) {
+        try (SmithingSession session = new SmithingSession(h, Blocks.SMITHING_TABLE)) {
             ItemStack source = personalClub(h, "copper"), before = source.copy();
             session.menu.getSlot(0).set(template());
             session.menu.getSlot(1).set(source);
@@ -273,7 +275,7 @@ public final class ClubSmithingGameTests {
 
     @GameTest(template = "gear_empty")
     public static void changedOrMissingSmithingInputsInvalidateThePreviewWithoutChargingOrDuplicating(GameTestHelper h) {
-        try (SmithingSession session = new SmithingSession(h)) {
+        try (SmithingSession session = new SmithingSession(h, SmithingTableTier.VIBRANIUM.block())) {
             for (Route route : ROUTES) {
                 session.clear();
                 int required = route.to().equals("ancient_metal") ? 2 : 4;
@@ -394,7 +396,7 @@ public final class ClubSmithingGameTests {
         private final SmithingMenu menu;
         private final BlockPos table;
         private final BlockState previous;
-        private SmithingSession(GameTestHelper helper) {
+        private SmithingSession(GameTestHelper helper, Block station) {
             this.helper = helper;
             var cookie = CommonListenerCookie.createInitial(new GameProfile(UUID.randomUUID(), "club-smithing-ui"), false);
             player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
@@ -407,7 +409,7 @@ public final class ClubSmithingGameTests {
             player.setNoGravity(true); player.getInventory().clearContent(); PlayerExperience.setTotal(player, 0);
             player.getFoodData().setFoodLevel(6);
             table = helper.absolutePos(new BlockPos(1, 1, 1)); previous = helper.getLevel().getBlockState(table);
-            helper.getLevel().setBlockAndUpdate(table, Blocks.SMITHING_TABLE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(table, station.defaultBlockState());
             menu = new SmithingMenu(37, player.getInventory(), ContainerLevelAccess.create(helper.getLevel(), table));
             player.containerMenu = menu;
         }

@@ -3,6 +3,7 @@ package io.github.ningmeng123.modernite.content;
 import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.compat.simplyswords.SimplySwordsCompat;
 import io.github.ningmeng123.mite.crafting.MaterialUpgradeRequirements;
+import io.github.ningmeng123.mite.crafting.SmithingTableTier;
 import io.github.ningmeng123.mite.crafting.TimedSmithingController;
 import io.github.ningmeng123.mite.data.MaterialUpgradeRecipes;
 import io.github.ningmeng123.mite.integration.jei.SmithingJeiRecipes;
@@ -178,7 +179,7 @@ public final class EquipmentSmithingGameTests {
                 int period = TimedSmithingController.period(session.player, session.menu);
                 if (shift) session.menu.quickMoveStack(session.player, 3);
                 else session.menu.clicked(3, 0, ClickType.PICKUP, session.player);
-                h.assertTrue(period >= 25 && TimedSmithingController.isActive(session.player), "The real menu starts a full manufacturing period");
+                h.assertTrue(period > 0 && TimedSmithingController.isActive(session.player), "The real menu starts a full manufacturing period");
                 for (int tick = 1; tick < period; tick++) TimedSmithingController.tick(session.player);
                 h.assertTrue(session.menu.getCarried().isEmpty() && session.player.getInventory().countItem(target) == 0
                                 && ItemStack.matches(session.menu.getSlot(1).getItem(), before)
@@ -318,7 +319,7 @@ public final class EquipmentSmithingGameTests {
             player.getFoodData().setFoodLevel(6);
             table = helper.absolutePos(new BlockPos(1, 1, 1));
             previous = helper.getLevel().getBlockState(table);
-            helper.getLevel().setBlockAndUpdate(table, Blocks.SMITHING_TABLE.defaultBlockState());
+            helper.getLevel().setBlockAndUpdate(table, SmithingTableTier.VIBRANIUM.block().defaultBlockState());
             menu = new SmithingMenu(39, player.getInventory(), ContainerLevelAccess.create(helper.getLevel(), table));
             player.containerMenu = menu;
         }

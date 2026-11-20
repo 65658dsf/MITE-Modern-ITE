@@ -33,6 +33,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class ForgeJeiRecipesGameTests {
     private record Transition(ResourceLocation item, int grade, boolean universal) {}
 
+    private static final List<Integer> TABLE_TIERS_BY_INPUT_GRADE = List.of(0, 0, 0, 1, 1, 2, 2, 3, 3, 3);
     private static final List<Map<String, Integer>> SOURCE_COSTS = List.of(
             Map.of("minecraft:gold_ingot", 1, "minecraft:iron_ingot", 1, "modern_ite:iron_enhance_stone", 1),
             Map.of("minecraft:gold_ingot", 1, "minecraft:iron_ingot", 2, "modern_ite:iron_enhance_stone", 1),
@@ -110,7 +111,7 @@ public final class ForgeJeiRecipesGameTests {
     public static void categoryCatalystsAndAllTransitionsMatchActualForgeEligibility(GameTestHelper h) {
         var profiles = ForgeJeiRecipes.profiles();
         var pages = ForgeJeiRecipes.build();
-        h.assertTrue(profiles.size() == 4 && !pages.isEmpty(), "Four nonempty forge categories are available without JEI");
+        h.assertTrue(profiles.size() == 4 && !pages.isEmpty(), "Four forge profiles and their recipe pages are available without JEI");
         for (int tier = 0; tier < 4; tier++) {
             h.assertTrue(profiles.containsKey(tier) && profiles.get(tier).tier() == tier
                     && profiles.get(tier).id().equals(BuiltInRegistries.BLOCK.getKey(ExtremeGear.FORGES.get(tier).get())),
@@ -127,9 +128,9 @@ public final class ForgeJeiRecipesGameTests {
         for (ForgeJeiRecipe page : pages) {
             String label = page.itemId() + " +" + page.inputGrade() + " universal=" + page.universal();
             h.assertTrue(ids.add(page.id()), "Every transition and stone variant has its own stable recipe ID: " + label);
-            int expectedTier = GearMath.tableTier(GearProgression.material(page.input()));
+            int expectedTier = TABLE_TIERS_BY_INPUT_GRADE.get(page.inputGrade());
             h.assertTrue(page.minimumTier() == expectedTier && ForgeJeiRecipes.minimumTier(page.input()) == expectedTier,
-                    "Display category uses the server's material gate: " + label);
+                    "The next enhancement grade sets the display's minimum table tier: " + label);
             h.assertTrue(page.outputGrade() == page.inputGrade() + 1, "Every page displays exactly one strengthening step: " + label);
             h.assertTrue(counts(page.materials()).equals(sourceCosts(page.inputGrade(), page.universal())),
                     "Each indexed page carries exact source material counts: " + label);
@@ -139,7 +140,7 @@ public final class ForgeJeiRecipesGameTests {
             GearStationEntity actual = station(h, tier);
             for (ForgeJeiRecipe page : pages) {
                 String label = page.itemId() + " +" + page.inputGrade() + " universal=" + page.universal();
-                int expectedTier = GearMath.tableTier(GearProgression.material(page.input()));
+                int expectedTier = TABLE_TIERS_BY_INPUT_GRADE.get(page.inputGrade());
                 prepare(h, actual, page);
                 h.assertTrue(actual.canPlaceItem(5, page.input()), "Every displayed target fits the real equipment slot: " + label);
                 h.assertTrue(actual.canStart() == (tier >= expectedTier)
@@ -263,10 +264,10 @@ public final class ForgeJeiRecipesGameTests {
     @GameTest(template = "gear_empty")
     public static void independentPreviewOutputsMatchActualCompletedTransitionsAndQuality(GameTestHelper h) {
         List<ForgeJeiRecipe> pages = ForgeJeiRecipes.build();
-        var station = station(h, 3);
         Quality[] rewards = {null, Quality.FINE, Quality.FINE, Quality.EXCELLENT, Quality.EXCELLENT,
                 Quality.SUPERB, Quality.SUPERB, Quality.MASTERWORK, Quality.MASTERWORK, Quality.LEGENDARY};
         for (int grade = 0; grade < 10; grade++) for (boolean universal : List.of(false, true)) {
+            GearStationEntity station = station(h, TABLE_TIERS_BY_INPUT_GRADE.get(grade));
             ForgeJeiRecipe page = vibraniumPage(pages, grade, universal);
             ItemStack inputBefore = page.input().copy(), outputBefore = page.output().copy();
             h.assertTrue(page.input() != page.output(), "Input and output are independent item stacks");

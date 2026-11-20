@@ -101,7 +101,7 @@ public final class GearStationEntity extends RandomizableContainerBlockEntity {
         ItemStack target = items.get(5); String material = GearProgression.material(target);
         int grade = ExtremeGear.grade(target);
         return !isGemStation() && !running() && !target.isEmpty() && items.get(8).isEmpty()
-                && grade < GearMath.maximumGrade(material) && tier() >= GearMath.tableTier(material)
+                && grade < GearMath.maximumGrade(material) && tier() >= GearMath.minimumTableTier(grade)
                 && R196EnchantmentCatalog.family(items.get(6)) == ToolFamily.AXE
                 && R196EnchantmentCatalog.family(items.get(7)) == ToolFamily.WAR_HAMMER
                 && items.get(6).isDamageableItem() && items.get(7).isDamageableItem() && ForgeRecipes.has(this);
