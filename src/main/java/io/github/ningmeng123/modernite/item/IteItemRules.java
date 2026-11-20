@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 /** Item configuration hooks and armor effects, separate from visual set qualifications. @author NingMeng123 */
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class IteItemRules {
+    public static final int GOLDEN_APPLE_ENCHANTING_COST = 400;
     private static final ResourceLocation PROTECTION=ResourceLocation.withDefaultNamespace("protection");
     private static final EquipmentSlot[] ARMOR={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
     private IteItemRules() {}

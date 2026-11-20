@@ -1,0 +1,20 @@
+{
+  "parent": "mite:r196/portal",
+  "display": {
+    "icon": {
+      "id": "mite:vibranium_war_hammer"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.kill_zombie_boss.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.kill_zombie_boss.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -3,6 +3,7 @@
   "item.modern_ite.diamond_chunk": "钻石碎块",
   "item.modern_ite.blaze_coal_powder": "烈焰煤粉",
   "item.modern_ite.nether_ender_eye": "堡垒之眼",
+  "item.modern_ite.bastion_eye": "猪灵堡垒之眼",
   "item.modern_ite.stack_torch": "捆装火把",
   "item.modern_ite.iron_bucket_helmet": "铁桶头盔",
   "item.modern_ite.crossbow": "极难弩",
@@ -51,5 +52,6 @@
   "message.modern_ite.array_exists": "你已有一个复活传送阵。",
   "message.modern_ite.strongbox_broken": "%s 破坏了 %s 的私人箱，坐标：%s",
   "message.modern_ite.fortress_missing": "附近没有找到下界堡垒。",
+  "message.modern_ite.structure_eye_missing": "附近未探测到目标。可在进度界面查看该结构的解锁条件。",
   "message.modern_ite.chest_locked": "这是 %s 的私人箱。"
 }

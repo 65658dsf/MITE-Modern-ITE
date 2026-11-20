@@ -1,6 +1,7 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.advancement.LegacyAchievements;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns;
 import java.util.*;
@@ -177,6 +178,7 @@ public final class ExtremeMobEvents {
         MobAbilities.announce(boss,"僵尸BOSS挑战成功");
         var enchantments=boss.registryAccess().registryOrThrow(Registries.ENCHANTMENT).holders().filter(h->h.value().getMaxLevel()>0).toList();
         for(var row:ranked){ServerPlayer player=level.getServer().getPlayerList().getPlayer(row.getKey());if(player==null)continue;
+            if (boss.getKillCredit() instanceof Player) LegacyAchievements.award(player, "kill_zombie_boss");
             int diamonds=(int)(row.getValue()/20),bookLevel=(int)(row.getValue()/50);
             while(diamonds>0){int n=Math.min(64,diamonds);give(player,new ItemStack(Items.DIAMOND,n));diamonds-=n;}
             if(bookLevel>0&&!enchantments.isEmpty()){

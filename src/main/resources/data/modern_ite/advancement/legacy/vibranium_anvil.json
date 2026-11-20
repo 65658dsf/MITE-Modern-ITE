@@ -1,0 +1,20 @@
+{
+  "parent": "modern_ite:legacy/vibranium_ingot",
+  "display": {
+    "icon": {
+      "id": "mite:vibranium_anvil"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.vibranium_anvil.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.vibranium_anvil.description"
+    },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

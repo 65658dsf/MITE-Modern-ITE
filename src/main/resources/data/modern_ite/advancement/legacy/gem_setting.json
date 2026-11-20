@@ -1,0 +1,20 @@
+{
+  "parent": "mite:r196/acquire_iron",
+  "display": {
+    "icon": {
+      "id": "modern_ite:gem_setting"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.gem_setting.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.gem_setting.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

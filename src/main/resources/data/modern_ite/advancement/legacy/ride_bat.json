@@ -1,0 +1,20 @@
+{
+  "parent": "mite:r196/fly_pig",
+  "display": {
+    "icon": {
+      "id": "minecraft:saddle"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.ride_bat.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.ride_bat.description"
+    },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

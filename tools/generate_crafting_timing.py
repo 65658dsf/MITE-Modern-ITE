@@ -167,6 +167,9 @@ def generate() -> dict:
         if name == "nether_ender_eye":
             difficulty = 100.0
             evidence = "Extreme RecipesArmorMixin.addRecipes explicitly calls setDifficulty(100F) for fortress eye"
+        if name == "bastion_eye":
+            difficulty = 100.0
+            evidence = "Modern bastion locator uses the same manufacturing difficulty as the Extreme fortress eye"
         if name == "resurrection_array":
             difficulty = 25.0
             evidence = "Extreme RecipesToolsMixin.addRecipes explicitly sets 25F; select explicit source override over duplicate EXBlocksRegistryInit registration"
@@ -196,7 +199,7 @@ def generate() -> dict:
             "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
             "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
             "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
-            "Coverage: 160 static extension recipes, including Extreme's one-to-four-bundle torch unpacking, restored mithril dynamic core and existing iron and ancient-metal knives, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+            "Coverage: 160 static extension recipes, including the bastion eye, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
             "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
         ],
         "components": {name: {"difficulty": value, "evidence": evidence} for name, (value, evidence) in sorted(components.items())},

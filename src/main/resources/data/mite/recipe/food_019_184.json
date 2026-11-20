@@ -1,0 +1,25 @@
+{
+  "type": "mite:food_shaped",
+  "category": "misc",
+  "result": {
+    "id": "minecraft:golden_apple",
+    "count": 1
+  },
+  "manufacturing": {
+    "difficulty": 1091.6666,
+    "required_bench": "gold",
+    "source_order": 184,
+    "output_contains_bowl": false,
+    "any_milk_buckets": false
+  },
+  "pattern": [
+    "NNN",
+    "IAI",
+    "NNN"
+  ],
+  "key": {
+    "N": { "item": "minecraft:gold_nugget" },
+    "I": { "item": "minecraft:gold_ingot" },
+    "A": { "item": "minecraft:apple" }
+  }
+}

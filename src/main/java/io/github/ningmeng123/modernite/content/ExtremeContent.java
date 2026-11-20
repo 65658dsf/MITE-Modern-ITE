@@ -38,6 +38,7 @@ public final class ExtremeContent {
     public static final DeferredItem<Item> TORCH_BUNDLE = item("stack_torch", new Item.Properties().stacksTo(16));
     public static final DeferredItem<CrossbowItem> CROSSBOW = ITEMS.registerItem("crossbow", CrossbowItem::new, new Item.Properties().durability(326));
     public static final DeferredItem<FortressEyeItem> FORTRESS_EYE = ITEMS.registerItem("nether_ender_eye", FortressEyeItem::new);
+    public static final DeferredItem<FortressEyeItem> BASTION_EYE = ITEMS.registerItem("bastion_eye", p -> new FortressEyeItem(p, "bastion_remnants"));
     public static final DeferredItem<DynamicCoreItem> MITHRIL_CORE = lantern("mithril", DynamicCoreItem.Material.MITHRIL);
     public static final DeferredItem<DynamicCoreItem> ADAMANTIUM_CORE = lantern("adamantium", DynamicCoreItem.Material.ADAMANTIUM);
     public static final DeferredItem<DynamicCoreItem> VIBRANIUM_CORE = lantern("vibranium", DynamicCoreItem.Material.VIBRANIUM);
@@ -65,6 +66,7 @@ public final class ExtremeContent {
     private static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ModernIte.MOD_ID);
     static {
         ITEM_ENTRIES.put("crossbow", CROSSBOW); ITEM_ENTRIES.put("nether_ender_eye", FORTRESS_EYE);
+        ITEM_ENTRIES.put("bastion_eye", BASTION_EYE);
         ITEM_ENTRIES.put("iron_bucket_helmet", BUCKET_HELMET);
         String[] metals = {"copper", "silver", "gold", "iron", "ancient_metal", "mithril", "adamantium", "vibranium"};
         float[] durability = {4,4,4,8,16,64,256,512}; float[] damages = {6,6,5,7,7,8,9,12};

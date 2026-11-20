@@ -3,6 +3,7 @@
   "item.modern_ite.diamond_chunk": "Diamond Chunk",
   "item.modern_ite.blaze_coal_powder": "Blaze Coal Powder",
   "item.modern_ite.nether_ender_eye": "Fortress Eye",
+  "item.modern_ite.bastion_eye": "Bastion Remnant Eye",
   "item.modern_ite.stack_torch": "Torch Bundle",
   "item.modern_ite.iron_bucket_helmet": "Iron Bucket Helmet",
   "item.modern_ite.crossbow": "Extreme Crossbow",
@@ -51,5 +52,6 @@
   "message.modern_ite.array_exists": "You already have a resurrection array.",
   "message.modern_ite.strongbox_broken": "%s broke a private chest belonging to %s at %s",
   "message.modern_ite.fortress_missing": "No Nether fortress was found nearby.",
+  "message.modern_ite.structure_eye_missing": "No target found nearby. Check the structure’s unlock requirements in Advancements.",
   "message.modern_ite.chest_locked": "This private chest belongs to %s."
 }

@@ -1,0 +1,28 @@
+{
+  "parent": "mite:r196/fishing_rod",
+  "display": {
+    "icon": {
+      "id": "minecraft:fishing_rod"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.fish_fortune.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.fish_fortune.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:fishing_rod_hooked",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:fishing_bobber"
+        },
+        "item": {
+          "items": "modern_ite:voucher_fishing"
+        }
+      }
+    }
+  }
+}

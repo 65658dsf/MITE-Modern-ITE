@@ -1,0 +1,20 @@
+{
+  "parent": "modern_ite:legacy/vibranium_ingot",
+  "display": {
+    "icon": {
+      "id": "modern_ite:vibranium_furnace"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.vibranium_furnace.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.vibranium_furnace.description"
+    },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "parent": "mite:r196/wear_all_adamantium_plate_armor",
+  "display": {
+    "icon": {
+      "id": "mite:vibranium_chestplate"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.vibranium_armor.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.vibranium_armor.description"
+    },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:tick",
+      "conditions": {
+        "player": {
+          "equipment": {
+            "head": {
+              "items": "mite:vibranium_helmet"
+            },
+            "chest": {
+              "items": "mite:vibranium_chestplate"
+            },
+            "legs": {
+              "items": "mite:vibranium_leggings"
+            },
+            "feet": {
+              "items": "mite:vibranium_boots"
+            }
+          }
+        }
+      }
+    }
+  }
+}

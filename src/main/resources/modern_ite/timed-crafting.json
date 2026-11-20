@@ -6,7 +6,7 @@
     "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
     "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
     "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
-    "Coverage: 160 static extension recipes, including Extreme's one-to-four-bundle torch unpacking, restored mithril dynamic core and existing iron and ancient-metal knives, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+    "Coverage: 160 static extension recipes, including the bastion eye, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
     "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
   ],
   "components": {
@@ -496,11 +496,11 @@
       "source_order": -1,
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * mite:adamantium_ingot (25600.0); 1 * modern_ite:mithril_forging_table (800.0); old BlockForgingTable.addItemBlockMaterials uses iron for all metadata"
     },
-    "modern_ite:ancient_metal_knife": {
-      "difficulty": 1650.0,
-      "required_bench": "ancient_metal",
+    "modern_ite:bastion_eye": {
+      "difficulty": 100.0,
+      "required_bench": null,
       "source_order": -1,
-      "evidence": "Preserve the existing ExtremeRules.craftingDifficulty equipment fallback used before this recipe was included in the manufacturing ledger"
+      "evidence": "Modern bastion locator uses the same manufacturing difficulty as the Extreme fortress eye"
     },
     "modern_ite:blaze_coal_powder": {
       "difficulty": 125.0,

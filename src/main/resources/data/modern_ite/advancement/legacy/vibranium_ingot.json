@@ -1,0 +1,20 @@
+{
+  "parent": "mite:r196/adamantium_ingot",
+  "display": {
+    "icon": {
+      "id": "mite:vibranium_ingot"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.vibranium_ingot.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.vibranium_ingot.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

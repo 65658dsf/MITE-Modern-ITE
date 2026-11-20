@@ -4,6 +4,7 @@ import io.github.ningmeng123.mite.entity.*;
 import io.github.ningmeng123.mite.enchantment.SourceEnchantmentCombat;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
 import io.github.ningmeng123.modernite.ModernIte;
+import io.github.ningmeng123.modernite.advancement.LegacyAchievements;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.modernite.content.wither.WitherEncounters;
 import io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments;
@@ -366,7 +367,13 @@ public final class ExtremeNativeMobs {
     }
     @SubscribeEvent public static void interact(PlayerInteractEvent.EntityInteract event){
         if(event.getLevel().isClientSide||event.getEntity().isSpectator())return;
-        if(event.getTarget() instanceof Bat bat&&event.getItemStack().isEmpty()&&!bat.isVehicle()){event.getEntity().startRiding(bat,true);bat.setResting(false);event.setCanceled(true);event.setCancellationResult(InteractionResult.SUCCESS);}
+        if (event.getTarget() instanceof Bat bat && event.getItemStack().isEmpty() && !bat.isVehicle()
+                && event.getEntity().startRiding(bat, true)) {
+            bat.setResting(false);
+            if (event.getEntity() instanceof ServerPlayer player) LegacyAchievements.award(player, "ride_bat");
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.SUCCESS);
+        }
         if(IteConfig.bool("Entities.can_boost_iron_golem")&&event.getTarget() instanceof IronGolem golem&&golem.getType()==EntityType.IRON_GOLEM&&!golem.getPersistentData().getBoolean("modern_ite:golem_boost")
                 &&BuiltInRegistries.ITEM.getKey(event.getItemStack().getItem()).toString().equals("mite:mithril_block")){
             golem.getPersistentData().putBoolean("modern_ite:golem_boost",true);golem.getPersistentData().putBoolean("modern_ite:golem_boost_effective",true);stat(golem,Attributes.MAX_HEALTH,golem.getAttributeBaseValue(Attributes.MAX_HEALTH)+20);golem.setHealth(golem.getMaxHealth());golem.refreshDimensions();

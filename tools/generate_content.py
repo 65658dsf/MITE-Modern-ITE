@@ -128,6 +128,7 @@ def slab(id, base):
 simple={
  'fancy_red':('红钻','Red Diamond'), 'diamond_chunk':('钻石碎块','Diamond Chunk'),
  'blaze_coal_powder':('烈焰煤粉','Blaze Coal Powder'), 'nether_ender_eye':('堡垒之眼','Fortress Eye'),
+ 'bastion_eye':('猪灵堡垒之眼','Bastion Remnant Eye'),
  'stack_torch':('捆装火把','Torch Bundle'), 'iron_bucket_helmet':('铁桶头盔','Iron Bucket Helmet'),
  'crossbow':('极难弩','Extreme Crossbow')}
 for id,(cn,eng) in simple.items():named(id,cn,eng);model(id)
@@ -200,6 +201,16 @@ shaped('dynamic_core_adamantium',['ADA','BCB','ADA'],{'A':'minecraft:glowstone',
 shaped('dynamic_core_vibranium',['ADA','BCB','ADA'],{'A':'minecraft:glowstone','B':'mite:vibranium_ingot','C':'modern_ite:dynamic_core_adamantium','D':'mite:adamantium_ingot'})
 shapeless('voucher_club_core',['modern_ite:voucher_'+v for v in ['fishing','planting','villager']])
 shapeless('nether_ender_eye',['mite:mithril_ingot','minecraft:ender_pearl'])
+shapeless('bastion_eye',['mite:adamantium_ingot','minecraft:ender_pearl'])
+save('data/modern_ite/advancement/recipes/misc/bastion_eye.json', {
+    'parent':'minecraft:recipes/root',
+    'criteria': {
+        'has_ingredient':{'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':['minecraft:ender_pearl','mite:adamantium_ingot']}]}},
+        'has_the_recipe':{'trigger':'minecraft:recipe_unlocked','conditions':{'recipe':'modern_ite:bastion_eye'}},
+    },
+    'requirements':[['has_ingredient','has_the_recipe']],
+    'rewards':{'recipes':['modern_ite:bastion_eye']},
+})
 for binding in ['minecraft:string','mite:sinew']:
  for coal in ['minecraft:coal','minecraft:charcoal']:shapeless('stack_torch_'+binding.split(':')[1]+'_'+coal.split(':')[1],[{'tag':'minecraft:logs'},binding,coal,coal],'modern_ite:stack_torch')
 shapeless('unpack_torches_1',['modern_ite:stack_torch'],'minecraft:torch',16)
@@ -228,6 +239,7 @@ tag('minecraft','item','logs',['modern_ite:maple_log']);tag('minecraft','item','
 stone=['resurrection_array','fancy_red_ore','nether_adamantium_ore','vibranium_furnace','metal_upgrading_furnace']
 tag('minecraft','block','mineable/pickaxe',['modern_ite:'+s for s in stone]);tag('minecraft','block','mineable/axe',['modern_ite:maple_'+s for s in ['log','planks','slab','stairs']]+['modern_ite:vibranium_chest']);tag('minecraft','block','needs_diamond_tool',['modern_ite:fancy_red_ore','modern_ite:nether_adamantium_ore']);tag('modern_ite','worldgen/structure','fortresses',['minecraft:fortress'])
 tag('minecraft','block','beacon_base_blocks',['mite:vibranium_block']);tag('minecraft','item','beacon_payment_items',['mite:vibranium_ingot'])
+tag('modern_ite','worldgen/structure','bastion_remnants',['minecraft:bastion_remnant'])
 for ore,base,ymin,ymax,size,count,biomes in [('fancy_red_ore','minecraft:stone_ore_replaceables',131,274,3,1,['mite:underworld']),('nether_adamantium_ore','minecraft:base_stone_nether',0,128,3,4,'#minecraft:is_nether')]:
     feature_type='modern_ite:nether_adamantium_ore' if ore=='nether_adamantium_ore' else 'minecraft:ore'
     count_placement={'type':'modern_ite:nether_adamantium_count'} if ore=='nether_adamantium_ore' else {'type':'minecraft:count','count':count}
@@ -254,6 +266,7 @@ messages={
  'message.modern_ite.array_exists':('你已有一个复活传送阵。','You already have a resurrection array.'),
  'message.modern_ite.strongbox_broken':('%s 破坏了 %s 的私人箱，坐标：%s','%s broke a private chest belonging to %s at %s'),
  'message.modern_ite.fortress_missing':('附近没有找到下界堡垒。','No Nether fortress was found nearby.'),
+ 'message.modern_ite.structure_eye_missing':('附近未探测到目标。可在进度界面查看该结构的解锁条件。','No target found nearby. Check the structure’s unlock requirements in Advancements.'),
  'message.modern_ite.chest_locked':('这是 %s 的私人箱。','This private chest belongs to %s.')}
 for k,(cn,eng) in messages.items():zh[k]=cn;en[k]=eng
 save('modern_ite/content-lang-zh_cn.json',zh);save('modern_ite/content-lang-en_us.json',en)

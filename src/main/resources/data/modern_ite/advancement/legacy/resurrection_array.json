@@ -1,0 +1,20 @@
+{
+  "parent": "mite:r196/diamonds",
+  "display": {
+    "icon": {
+      "id": "modern_ite:resurrection_array"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.resurrection_array.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.resurrection_array.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
