@@ -1,9 +1,11 @@
 package io.github.ningmeng123.modernite.entity;
 
+import io.github.ningmeng123.mite.enchantment.ConfiguredEnchantments;
+import io.github.ningmeng123.mite.enchantment.R196EnchantmentCatalog;
+import io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.advancement.LegacyAchievements;
 import io.github.ningmeng123.modernite.config.IteConfig;
-import io.github.ningmeng123.mite.worldgen.ConfiguredMonsterSpawns;
 import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
@@ -172,21 +174,47 @@ public final class ExtremeMobEvents {
             }
         }
     }
-    private static void bossReward(Mob boss,MobMemory state){
-        if(!(boss.level() instanceof ServerLevel level))return;
-        var ranked=state.contribution.entrySet().stream().sorted(Map.Entry.<UUID,Float>comparingByValue().reversed()).toList();
-        MobAbilities.announce(boss,"僵尸BOSS挑战成功");
-        var enchantments=boss.registryAccess().registryOrThrow(Registries.ENCHANTMENT).holders().filter(h->h.value().getMaxLevel()>0).toList();
-        for(var row:ranked){ServerPlayer player=level.getServer().getPlayerList().getPlayer(row.getKey());if(player==null)continue;
+    private static void bossReward(Mob boss, MobMemory state) {
+        if (!(boss.level() instanceof ServerLevel level)) return;
+        var ranked = state.contribution.entrySet().stream().sorted(Map.Entry.<UUID, Float>comparingByValue().reversed()).toList();
+        MobAbilities.announce(boss, "僵尸BOSS挑战成功");
+        for (var row : ranked) {
+            ServerPlayer player = level.getServer().getPlayerList().getPlayer(row.getKey());
+            if (player == null) continue;
             if (boss.getKillCredit() instanceof Player) LegacyAchievements.award(player, "kill_zombie_boss");
-            int diamonds=(int)(row.getValue()/20),bookLevel=(int)(row.getValue()/50);
-            while(diamonds>0){int n=Math.min(64,diamonds);give(player,new ItemStack(Items.DIAMOND,n));diamonds-=n;}
-            if(bookLevel>0&&!enchantments.isEmpty()){
-                var chosen=enchantments.get(boss.getRandom().nextInt(enchantments.size()));var book=new ItemStack(Items.ENCHANTED_BOOK);
-                book.enchant(chosen,Math.clamp(bookLevel,1,chosen.value().getMaxLevel()));give(player,book);
+            int damage = Math.round(row.getValue());
+            int diamonds = damage / 20;
+            int bookLevel = damage / 50;
+            while (diamonds > 0) {
+                int count = Math.min(64, diamonds);
+                give(player, new ItemStack(Items.DIAMOND, count));
+                diamonds -= count;
+            }
+            if (bookLevel > 0) {
+                ItemStack book = rollBossBook(boss, bookLevel);
+                if (!book.isEmpty()) give(player, book);
             }
         }
         for(int i=0;i<Math.min(5,ranked.size());i++){var row=ranked.get(i);var player=level.getServer().getPlayerList().getPlayer(row.getKey());MobAbilities.announce(boss,(i+1)+". "+(player==null?row.getKey():player.getGameProfile().getName())+"："+String.format(java.util.Locale.ROOT,"%.2f",row.getValue()));}
+    }
+
+    private static ItemStack rollBossBook(Mob boss, int bookLevel) {
+        int minimumMaximumLevel = bookLevel >= 7 ? 1 : 2;
+        var pool = boss.registryAccess().registryOrThrow(Registries.ENCHANTMENT).holders()
+                .map(holder -> new EnchantmentInstance(holder, bossBookMaximumLevel(holder)))
+                .filter(candidate -> candidate.level >= minimumMaximumLevel).toList();
+        if (pool.isEmpty()) return ItemStack.EMPTY;
+        var chosen = pool.get(boss.getRandom().nextInt(pool.size()));
+        ItemStack book = EnchantedBookItem.createForEnchantment(
+                new EnchantmentInstance(chosen.enchantment, Math.min(bookLevel, chosen.level)));
+        // A config reload during the roll can suppress the enchantment during book creation.
+        return EnchantmentHelper.getEnchantmentsForCrafting(book).isEmpty() ? ItemStack.EMPTY : book;
+    }
+
+    private static int bossBookMaximumLevel(Holder<Enchantment> enchantment) {
+        var source = enchantment.unwrapKey().map(key -> R196EnchantmentCatalog.definition(key.location().toString())).orElse(null);
+        int maximum = source == null ? enchantment.value().getMaxLevel() : source.sourceTableLevel(true);
+        return ConfiguredEnchantments.effectiveLevel(enchantment, maximum);
     }
     private static void give(Player player,ItemStack stack){if(!player.getInventory().add(stack))player.drop(stack,false);}
     @SubscribeEvent(priority=EventPriority.LOWEST)

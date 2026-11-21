@@ -1,18 +1,23 @@
 package io.github.ningmeng123.modernite.advancement;
 
 import com.mojang.authlib.GameProfile;
+import io.github.ningmeng123.mite.config.MiteConfig;
 import io.github.ningmeng123.modernite.content.ExtremeContent;
 import io.github.ningmeng123.modernite.content.ExtremeLifeEvents;
 import io.github.ningmeng123.modernite.content.wither.WitherEncounters;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
+import io.github.ningmeng123.modernite.entity.ExtremeMob;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
@@ -35,6 +40,7 @@ import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -147,6 +153,80 @@ public final class LegacyAdvancementGameTests {
             boss.discard();
         }
         helper.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void zombieBossAwardsStoredEnchantmentsAtLegacyDamageThresholds(GameTestHelper helper) {
+        var previousDisabled = MiteConfig.DISABLED_ENCHANTMENTS.get();
+        var previousCaps = MiteConfig.ENCHANTMENT_MAX_LEVELS.get();
+        var previousSnapshot = MiteConfig.effectiveSnapshot();
+        boolean remote = previousSnapshot != MiteConfig.localSnapshot();
+        try (var contributor = new Session(helper, "ite-reward"); var finisher = new Session(helper, "ite-reward-kill")) {
+            MiteConfig.clearServerSnapshot();
+            MiteConfig.ENCHANTMENT_MAX_LEVELS.set(List.of());
+            var enchantmentIds = helper.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT).holders()
+                    .map(holder -> holder.key().location().toString()).toList();
+
+            allowBossRewardEnchantments(enchantmentIds, "minecraft:looting", "minecraft:silk_touch");
+            assertBossReward(helper, contributor.player, finisher.player, 39.5F, 2, null, 0);
+            assertBossReward(helper, contributor.player, finisher.player, 49.5F, 2, "minecraft:looting", 1);
+
+            allowBossRewardEnchantments(enchantmentIds, "minecraft:looting");
+            assertBossReward(helper, contributor.player, finisher.player, 300F, 15, "minecraft:looting", 5);
+
+            allowBossRewardEnchantments(enchantmentIds, "minecraft:silk_touch");
+            assertBossReward(helper, contributor.player, finisher.player, 349F, 17, null, 0);
+            assertBossReward(helper, contributor.player, finisher.player, 349.5F, 17, "minecraft:silk_touch", 1);
+
+            allowBossRewardEnchantments(enchantmentIds);
+            assertBossReward(helper, contributor.player, finisher.player, 350F, 17, null, 0);
+            allowBossRewardEnchantments(enchantmentIds, "minecraft:looting");
+            assertBossReward(helper, contributor.player, finisher.player, 350F, 17, "minecraft:looting", 5);
+        } finally {
+            MiteConfig.DISABLED_ENCHANTMENTS.set(previousDisabled);
+            MiteConfig.ENCHANTMENT_MAX_LEVELS.set(previousCaps);
+            MiteConfig.refreshEnchantmentRules();
+            if (remote) MiteConfig.receiveServerSnapshot(previousSnapshot);
+        }
+        helper.succeed();
+    }
+
+    private static void allowBossRewardEnchantments(List<String> enchantmentIds, String... allowed) {
+        var allowedIds = List.of(allowed);
+        MiteConfig.DISABLED_ENCHANTMENTS.set(enchantmentIds.stream().filter(id -> !allowedIds.contains(id)).toList());
+        MiteConfig.refreshEnchantmentRules();
+    }
+
+    private static void assertBossReward(GameTestHelper helper, ServerPlayer contributor, ServerPlayer finisher,
+            float damage, int diamonds, String enchantmentId, int enchantmentLevel) {
+        var inventory = contributor.getInventory();
+        inventory.clearContent();
+        var boss = ExtremeMobs.type(ExtremeKind.ZOMBIE_BOSS).create(helper.getLevel());
+        try {
+            boss.moveTo(contributor.position());
+            boss.setHealth(10F);
+            // Seed the saved contribution so fractional thresholds do not depend on armor or current combat settings.
+            ((ExtremeMob) boss).extremeMemory().contribution.put(contributor.getUUID(), damage);
+            boss.hurt(boss.damageSources().playerAttack(finisher), 10000F);
+            helper.assertTrue(boss.isDeadOrDying(), "The finisher killed the actual zombie boss");
+
+            var rewards = IntStream.range(0, inventory.getContainerSize()).mapToObj(inventory::getItem).toList();
+            int diamondCount = rewards.stream().filter(stack -> stack.is(Items.DIAMOND)).mapToInt(ItemStack::getCount).sum();
+            helper.assertValueEqual(diamondCount, diamonds, "Diamonds for " + damage + " damage");
+            var books = rewards.stream().filter(stack -> stack.is(Items.ENCHANTED_BOOK)).toList();
+            int bookCount = books.stream().mapToInt(ItemStack::getCount).sum();
+            helper.assertValueEqual(bookCount, enchantmentId == null ? 0 : 1, "Books for " + damage + " damage");
+            if (enchantmentId != null) {
+                var stored = books.getFirst().getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
+                helper.assertValueEqual(stored.size(), 1, "The awarded book contains one stored enchantment");
+                var enchantment = stored.entrySet().iterator().next();
+                helper.assertValueEqual(enchantment.getKey().unwrapKey().orElseThrow().location().toString(), enchantmentId,
+                        "Only eligible, enabled enchantments can be awarded");
+                helper.assertValueEqual(enchantment.getIntValue(), enchantmentLevel, "Stored enchantment level for " + damage + " damage");
+            }
+        } finally {
+            boss.discard();
+        }
     }
 
     @GameTest(template = "gear_empty")
