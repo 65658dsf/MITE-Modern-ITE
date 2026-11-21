@@ -9,9 +9,13 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.WitherSkull;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
@@ -22,6 +26,16 @@ import net.minecraft.world.level.Level;
 /** A server-authoritative opening exchanges one treasure for one reward. @author NingMeng123 */
 public final class WitherTreasureItem extends GemBoxItem {
     public WitherTreasureItem(Properties properties) { super(properties.fireResistant().rarity(Rarity.EPIC)); }
+
+    @Override public boolean canBeHurtBy(ItemStack stack, DamageSource source) {
+        if (source.is(DamageTypeTags.IS_EXPLOSION)) {
+            if (source.getEntity() instanceof WitherBoss || source.getDirectEntity() instanceof WitherBoss) return false;
+            // A skull still in flight after its Wither dies can no longer resolve its owner.
+            if (source.getEntity() == null && source.getDirectEntity() instanceof WitherSkull skull
+                    && skull.getOwner() == null) return false;
+        }
+        return super.canBeHurtBy(stack, source);
+    }
 
     @Override protected ItemStack createOpeningReward(Player player) {
         ItemStack reward = createReward(player.level(), player.getRandom(), WitherTreasureRewards.reward(player.getRandom().nextInt(100)));
