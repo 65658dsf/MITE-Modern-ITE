@@ -1,0 +1,61 @@
+{
+  "parent": "modern_ite:wither/speed_bump",
+  "display": {
+    "icon": {
+      "id": "minecraft:wither_skeleton_skull"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.not_a_maggot.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.not_a_maggot.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:entity_killed_player",
+      "conditions": {
+        "killing_blow": {
+          "source_entity": {
+            "type": "minecraft:wither",
+            "nbt": "{NeoForgeData:{\"modern_ite:enhanced_wither\":1b}}"
+          }
+        }
+      }
+    },
+    "wither_effect": {
+      "trigger": "minecraft:entity_killed_player",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:wither",
+          "nbt": "{NeoForgeData:{\"modern_ite:enhanced_wither\":1b}}"
+        },
+        "killing_blow": {
+          "tags": [
+            {
+              "id": "modern_ite:wither_effect",
+              "expected": true
+            }
+          ]
+        }
+      }
+    },
+    "array_rescue": {
+      "trigger": "modern_ite:array_saved_from_entity",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:wither",
+          "nbt": "{NeoForgeData:{\"modern_ite:enhanced_wither\":1b}}"
+        }
+      }
+    }
+  },
+  "requirements": [
+    [
+      "earned",
+      "wither_effect",
+      "array_rescue"
+    ]
+  ]
+}

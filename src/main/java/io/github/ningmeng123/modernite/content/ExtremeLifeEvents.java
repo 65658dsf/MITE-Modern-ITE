@@ -11,7 +11,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.*;
 import net.minecraft.server.level.*;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.*;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
@@ -75,6 +77,9 @@ public final class ExtremeLifeEvents {
         ServerLevel target=anchor.get().level();BlockPos pos=anchor.get().position();
         Optional<Vec3> landing=resurrectionLanding(target,pos,player);
         if(landing.isEmpty())return;
+        Entity attacker = event.getSource().getEntity();
+        // Wither effect ticks have no source entity. Capture vanilla combat credit before teleporting.
+        if (attacker == null && event.getSource().is(DamageTypes.WITHER)) attacker = player.getKillCredit();
         // Travel can be vetoed by another mod. Keep the item and XP until the actual move succeeds.
         Vec3 destination=landing.get();float before=player.getHealth();player.setHealth(Math.min(20F,player.getMaxHealth()));
         player.teleportTo(target,destination.x,destination.y,destination.z,Set.of(),player.getYRot(),player.getXRot());
@@ -83,6 +88,7 @@ public final class ExtremeLifeEvents {
         player.setDeltaMovement(Vec3.ZERO);player.fallDistance=0;player.clearFire();
         player.addEffect(new MobEffectInstance(MobEffects.REGENERATION,1200,1));player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,600,1));player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE,1200,0));player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,18000,1));
         player.sendSystemMessage(Component.translatable("message.modern_ite.array_used"));
+        if (attacker != null) ExtremeContent.ARRAY_SAVED_FROM_ENTITY.get().trigger(player, attacker, event.getSource());
     }
     public record Anchor(ServerLevel level,BlockPos position) {}
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {

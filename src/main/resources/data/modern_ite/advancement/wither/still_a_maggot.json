@@ -1,0 +1,31 @@
+{
+  "parent": "mite:r196/portal_to_nether",
+  "display": {
+    "icon": {
+      "id": "modern_ite:wither_treasure"
+    },
+    "title": {
+      "translate": "advancement.modern_ite.still_a_maggot.title"
+    },
+    "description": {
+      "translate": "advancement.modern_ite.still_a_maggot.description"
+    },
+    "frame": "challenge"
+  },
+  "criteria": {
+    "earned": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:wither",
+          "nbt": "{NeoForgeData:{\"modern_ite:enhanced_wither\":1b}}"
+        },
+        "killing_blow": {
+          "source_entity": {
+            "type": "minecraft:player"
+          }
+        }
+      }
+    }
+  }
+}

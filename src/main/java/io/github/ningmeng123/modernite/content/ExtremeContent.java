@@ -9,6 +9,8 @@ import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules;
 import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.Quality;
 import java.util.*;
 import java.util.function.Supplier;
+import net.minecraft.advancements.CriterionTrigger;
+import net.minecraft.advancements.critereon.KilledTrigger;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -26,6 +28,8 @@ public final class ExtremeContent {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ModernIte.MOD_ID);
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(ModernIte.MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, ModernIte.MOD_ID);
+    private static final DeferredRegister<CriterionTrigger<?>> TRIGGERS = DeferredRegister.create(Registries.TRIGGER_TYPE, ModernIte.MOD_ID);
+    static final Supplier<KilledTrigger> ARRAY_SAVED_FROM_ENTITY = TRIGGERS.register("array_saved_from_entity", KilledTrigger::new);
     public static final Map<String, DeferredItem<? extends Item>> ITEM_ENTRIES = new LinkedHashMap<>();
     public static final Map<String, DeferredBlock<? extends Block>> BLOCK_ENTRIES = new LinkedHashMap<>();
     public static final DeferredItem<Item> FANCY_RED = item("fancy_red", new Item.Properties().stacksTo(8));
@@ -105,5 +109,5 @@ public final class ExtremeContent {
     }
     private static DeferredItem<Item> item(String name,Item.Properties properties) { var item=ITEMS.registerSimpleItem(name,properties); ITEM_ENTRIES.put(name,item); return item; }
     private static <T extends Block> DeferredBlock<T> block(String name,Supplier<T> factory) { var block=BLOCKS.register(name,factory); BLOCK_ENTRIES.put(name,block); ITEM_ENTRIES.put(name, ITEMS.registerSimpleBlockItem(block)); return block; }
-    public static void register(IEventBus bus) { ITEMS.register(bus); BLOCKS.register(bus); TYPES.register(bus); TABS.register(bus); ExtremeEffects.register(bus); bus.addListener(ExtremeCapabilities::register); }
+    public static void register(IEventBus bus) { ITEMS.register(bus); BLOCKS.register(bus); TYPES.register(bus); TABS.register(bus); TRIGGERS.register(bus); ExtremeEffects.register(bus); bus.addListener(ExtremeCapabilities::register); }
 }
