@@ -11,6 +11,7 @@ import java.util.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.EventPriority;
@@ -39,6 +40,10 @@ public final class SpawnPopulation {
                 ||TimeLordMinions.explicitSupport(mob)||ZombieLordAbilities.explicitSupport(mob);
     }
     public static boolean encounter(Mob mob) {return mob!=null&&mob.getPersistentData().getBoolean(ENCOUNTER);}
+    /** The completed skull ritual admits its boss before vanilla consumes the structure. */
+    public static void admitSkullSummon(WitherBoss wither) {
+        wither.getPersistentData().putBoolean(ADMITTED, true);
+    }
     /** A real player-death substitute can appear before automatic hostile spawning unlocks. */
     static void markPlayerDeathMimic(Mob mob) {
         if(mob.getType()!=ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE))throw new IllegalArgumentException("Only player mimics can use death admission");

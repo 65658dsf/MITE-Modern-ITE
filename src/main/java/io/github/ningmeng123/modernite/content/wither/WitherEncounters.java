@@ -14,6 +14,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 public final class WitherEncounters {
     public static final String SUMMON_KNOWN = "modern_ite:wither_summon_known";
     public static final String ENHANCED = "modern_ite:enhanced_wither";
+    public static final String SPECIAL_SKULL_TAG = "WitherPlusSpecial";
     public static final int TREASURE_COUNT = 5;
 
     private WitherEncounters() {}

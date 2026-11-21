@@ -1,11 +1,15 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.modernite.content.wither.WitherEncounters;
+import io.github.ningmeng123.mite.worldgen.MiteWorldDimensions;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -25,10 +29,67 @@ public final class WitherPlusEncounterGameTests {
         WitherBoss wither = WitherEncounterGameTests.summon(h, specialSkull(h), false);
         try {
             WitherEncounterGameTests.assertProfile(h, wither, true);
+            h.assertTrue(wither.getName().equals(Component.translatable("entity.modern_ite.enhanced_wither")),
+                    "The actual enhanced summon announces its localized name");
+            var renamed = Component.literal("Test Wither");
+            wither.setCustomName(renamed);
+            WitherBoss restored = EntityType.WITHER.create(h.getLevel());
+            restored.load(wither.saveWithoutId(new CompoundTag()));
+            h.assertTrue(restored.getName().equals(renamed) && WitherEncounters.isEnhanced(restored),
+                    "A player-assigned name and the special identity both survive loading");
             h.assertTrue(WitherEncounterGameTests.brainActive(wither), "The real special-head summon retains WitherPlus skills");
             h.assertTrue(wither.saveWithoutId(new CompoundTag()).getBoolean("WpSpecialSummon"),
                     "WitherPlus itself stores this actual summon as special");
         } finally { wither.discard(); }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void placedSpecialSkullRetainsIdentityAndSummonsInEitherOrientation(GameTestHelper h) {
+        for (Direction face : new Direction[]{Direction.UP, Direction.SOUTH}) {
+            WitherBoss wither = WitherEncounterGameTests.summon(h, specialSkull(h), 0, face);
+            try {
+                WitherEncounterGameTests.assertProfile(h, wither, true);
+                h.assertTrue(WitherEncounterGameTests.brainActive(wither), "The first special skull activates skills when the last skull is ordinary");
+            } finally { wither.discard(); }
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void finalWallMountedSpecialSkullIsRecognizedBeforeConsumption(GameTestHelper h) {
+        WitherBoss wither = WitherEncounterGameTests.summon(h, specialSkull(h), 2, Direction.SOUTH);
+        try {
+            WitherEncounterGameTests.assertProfile(h, wither, true);
+            h.assertTrue(WitherEncounterGameTests.brainActive(wither), "The last wall-mounted special skull activates skills");
+        } finally { wither.discard(); }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void underworldSupportsHorizontalAndUprightEnhancedSummonsAtDepth(GameTestHelper h) {
+        var underworld = h.getLevel().getServer().getLevel(MiteWorldDimensions.UNDERWORLD);
+        h.assertTrue(underworld != null, "The actual MITE Underworld dimension is loaded");
+        var center = new BlockPos(88, 5, 88);
+        try (var calendar = new SpawnBalanceGameTests.Site(h)) {
+            calendar.date(1, 1, false);
+            h.assertFalse(SpawnPopulation.automaticAllowed(underworld, EntityType.WITHER), "First-day grace blocks automatic Withers in the Underworld");
+            WitherBoss automatic = EntityType.WITHER.create(underworld);
+            try {
+                automatic.moveTo(center.getCenter());
+                automatic.makeInvulnerable();
+                h.assertFalse(underworld.addFreshEntity(automatic), "A charging Wither without a skull ritual is still denied");
+            } finally { automatic.discard(); }
+            for (int y : new int[]{5, -40}) {
+                for (Direction face : new Direction[]{Direction.UP, Direction.SOUTH}) {
+                    WitherBoss wither = WitherEncounterGameTests.summon(h, underworld, center.atY(y), specialSkull(h), 2, face);
+                    try {
+                        WitherEncounterGameTests.assertProfile(h, wither, true);
+                        h.assertTrue(WitherEncounterGameTests.brainActive(wither), "The Underworld summon has active enhanced skills at Y=" + y);
+                    } finally { wither.discard(); }
+                }
+            }
+        }
         h.succeed();
     }
 

@@ -1,5 +1,6 @@
 package io.github.ningmeng123.modernite.entity;
 
+import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.modernite.content.wither.WitherEncounters;
 import io.github.ningmeng123.modernite.content.wither.WitherTreasureContent;
 import java.util.ArrayList;
@@ -11,22 +12,23 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -40,12 +42,15 @@ public final class WitherEncounterGameTests {
 
     @GameTest(template = "gear_empty")
     public static void threeOrdinarySkullsSummonTheOrdinaryWither(GameTestHelper h) {
-        WitherBoss wither = summon(h, new ItemStack(Items.WITHER_SKELETON_SKULL), false);
-        try {
-            assertProfile(h, wither, false);
-            if (ModList.get().isLoaded("witherplus"))
-                h.assertFalse(brainActive(wither), "WitherPlus leaves a real ordinary-skull summon inactive");
-        } finally { wither.discard(); }
+        for (Direction face : new Direction[]{Direction.UP, Direction.SOUTH}) {
+            WitherBoss wither = summon(h, new ItemStack(Items.WITHER_SKELETON_SKULL), 2, face);
+            try {
+                assertProfile(h, wither, false);
+                h.assertFalse(wither.hasCustomName(), "The ordinary summon keeps its native name");
+                if (ModList.get().isLoaded("witherplus"))
+                    h.assertFalse(brainActive(wither), "WitherPlus leaves a real ordinary-skull summon inactive");
+            } finally { wither.discard(); }
+        }
         h.succeed();
     }
 
@@ -135,20 +140,26 @@ public final class WitherEncounterGameTests {
     }
 
     static WitherBoss summon(GameTestHelper h, ItemStack finalSkull, boolean unrelatedSpecialSkull) {
-        var level = h.getLevel();
-        BlockPos left = h.absolutePos(new BlockPos(1, 4, 1));
-        for (int x = -1; x <= 3; x++) for (int y = -3; y <= 1; y++) for (int z = -1; z <= 1; z++)
-            level.setBlock(left.offset(x, y, z), Blocks.AIR.defaultBlockState(), 2);
-        for (int x = 0; x < 3; x++) level.setBlock(left.offset(x, -1, 0), Blocks.SOUL_SAND.defaultBlockState(), 2);
-        level.setBlock(left.offset(1, -2, 0), Blocks.SOUL_SAND.defaultBlockState(), 2);
-        var player = h.makeMockPlayer(GameType.CREATIVE);
-        // Vanilla's mock overrides isCreative but leaves survival abilities in place.
-        // Actual creative abilities also exempt placement from MITE's ten-tick cooldown.
-        GameType.CREATIVE.updatePlayerAbilities(player.getAbilities());
+        return summon(h, finalSkull, unrelatedSpecialSkull ? -1 : 2, Direction.UP);
+    }
+
+    static WitherBoss summon(GameTestHelper h, ItemStack skull, int skullSlot, Direction face) {
+        return summon(h, h.getLevel(), h.absolutePos(new BlockPos(1, 4, 2)), skull, skullSlot, face);
+    }
+
+    static WitherBoss summon(GameTestHelper h, ServerLevel level, BlockPos left, ItemStack skull, int skullSlot, Direction face) {
+        for (BlockPos pos : BlockPos.betweenClosed(left.offset(-1, -3, -3), left.offset(3, 1, 1)))
+            level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+        Direction towardStem = face.getOpposite();
+        BlockPos crossbar = left.relative(towardStem);
+        for (int x = 0; x < 3; x++) level.setBlock(crossbar.east(x), Blocks.SOUL_SAND.defaultBlockState(), 2);
+        level.setBlock(crossbar.east().relative(towardStem), Blocks.SOUL_SAND.defaultBlockState(), 2);
+        var player = new FakePlayer(level, new GameProfile(UUID.randomUUID(), "WitherTest"));
+        player.setGameMode(GameType.CREATIVE);
         player.moveTo(Vec3.atBottomCenterOf(left.offset(1, -2, 1)));
-        if (unrelatedSpecialSkull) {
+        if (skullSlot < 0) {
             level.setBlock(left.offset(1, -1, 1), Blocks.SOUL_SAND.defaultBlockState(), 2);
-            placeSkull(h, player, left.offset(1, 0, 1), finalSkull);
+            placeSkull(h, player, left.offset(1, 0, 1), skull, Direction.UP);
         }
         var summoned = new ArrayList<WitherBoss>();
         Consumer<EntityJoinLevelEvent> capture = event -> {
@@ -157,15 +168,28 @@ public final class WitherEncounterGameTests {
         };
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, EntityJoinLevelEvent.class, capture);
         try {
-            placeSkull(h, player, left, new ItemStack(Items.WITHER_SKELETON_SKULL));
-            placeSkull(h, player, left.east(), new ItemStack(Items.WITHER_SKELETON_SKULL));
-            placeSkull(h, player, left.east(2), unrelatedSpecialSkull ? new ItemStack(Items.WITHER_SKELETON_SKULL) : finalSkull);
+            for (int slot = 0; slot < 3; slot++) {
+                BlockPos position = left.east(slot);
+                placeSkull(h, player, position, slot == skullSlot ? skull : new ItemStack(Items.WITHER_SKELETON_SKULL), face);
+                if (slot == skullSlot && slot < 2) {
+                    h.assertTrue(level.getBlockState(position).is(face == Direction.UP
+                            ? Blocks.WITHER_SKELETON_SKULL : Blocks.WITHER_SKELETON_WALL_SKULL), "The chosen mounting orientation was placed");
+                    SkullBlockEntity head = (SkullBlockEntity) level.getBlockEntity(position);
+                    h.assertTrue(head.getPersistentData().getBoolean("WitherPlusSpecial"), "The placed special skull retains its identity");
+                    var update = head.getUpdatePacket().getTag();
+                    var replica = new SkullBlockEntity(position, head.getBlockState());
+                    replica.handleUpdateTag(update, level.registryAccess());
+                    h.assertTrue(replica.getPersistentData().getBoolean("WitherPlusSpecial"), "The skull update packet preserves the special texture marker");
+                }
+            }
             h.assertTrue(summoned.size() == 1, "Placing the third actual skull summons exactly one Wither");
             WitherBoss wither = summoned.getFirst();
+            h.assertTrue(wither.isAddedToLevel(), "The created Wither was admitted to " + level.dimension().location());
             wither.setNoAi(true);
             wither.setNoGravity(true);
             for (int x = 0; x < 3; x++) h.assertTrue(level.getBlockState(left.east(x)).isAir(),
                     "The actual Wither spawn consumes each skull in the matched pattern");
+            h.assertTrue(level.getBlockState(crossbar.east().relative(towardStem)).isAir(), "The summon consumed the soul sand stem");
             return wither;
         } catch (RuntimeException | Error failure) {
             summoned.forEach(WitherBoss::discard);
@@ -173,16 +197,18 @@ public final class WitherEncounterGameTests {
         } finally { NeoForge.EVENT_BUS.unregister(capture); }
     }
 
-    private static void placeSkull(GameTestHelper h, Player player, BlockPos position, ItemStack skull) {
+    private static void placeSkull(GameTestHelper h, FakePlayer player, BlockPos position, ItemStack skull, Direction face) {
         player.setItemInHand(InteractionHand.MAIN_HAND, skull.copy());
-        var hit = new BlockHitResult(Vec3.atBottomCenterOf(position), Direction.UP, position.below(), false);
-        var context = new UseOnContext(player, InteractionHand.MAIN_HAND, hit);
-        var result = player.getMainHandItem().useOn(context);
-        h.assertTrue(result.consumesAction(), "The actual skull item places on top of soul sand: item="
+        player.setYRot(180F);
+        player.setXRot(face == Direction.UP ? 90F : 0F);
+        BlockPos support = position.relative(face.getOpposite());
+        var hit = new BlockHitResult(Vec3.atCenterOf(support).relative(face, .5D), face, support, false);
+        var result = player.gameMode.useItemOn(player, player.serverLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(result.consumesAction(), "The actual skull item places through the server interaction: item="
                 + skull.getItem() + ", pos=" + position + ", result=" + result
                 + ", instabuild=" + player.getAbilities().instabuild
                 + ", cooldown=" + io.github.ningmeng123.mite.world.PlacementDelay.remainingTicks(player)
-                + ", target=" + h.getLevel().getBlockState(position));
+                + ", target=" + player.serverLevel().getBlockState(position));
     }
 
     static Object brain(WitherBoss wither) {

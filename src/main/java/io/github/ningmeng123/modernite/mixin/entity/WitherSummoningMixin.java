@@ -2,7 +2,9 @@ package io.github.ningmeng123.modernite.mixin.entity;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import io.github.ningmeng123.modernite.content.wither.WitherEncounters;
+import io.github.ningmeng123.modernite.entity.SpawnPopulation;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.WitherSkullBlock;
@@ -23,8 +25,11 @@ public abstract class WitherSummoningMixin {
         boolean special = false;
         for (int x = 0; x < 3; x++) {
             if (pattern.getBlock(x, 0, 0).getEntity() instanceof SkullBlockEntity head
-                    && head.getPersistentData().getBoolean("WitherPlusSpecial")) special = true;
+                    && head.getPersistentData().getBoolean(WitherEncounters.SPECIAL_SKULL_TAG)) special = true;
         }
         WitherEncounters.markSummon(wither, special);
+        SpawnPopulation.admitSkullSummon(wither);
+        if (special && !wither.hasCustomName())
+            wither.setCustomName(Component.translatable("entity.modern_ite.enhanced_wither"));
     }
 }
