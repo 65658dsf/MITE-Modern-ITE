@@ -23,7 +23,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionResult;
@@ -244,9 +243,12 @@ public final class ExtremeEnchantments {
         if(event.isCanceled()||!(event.getEntity() instanceof ServerPlayer player)) return;
         if(activateEmergency(player))event.setCanceled(true);
     }
+    public static boolean isEmergencyReady(ItemStack stack) {
+        return level(stack, "emergency") > 0 && stack.getOrDefault(EMERGENCY_COOLDOWN.get(), 0) <= 0;
+    }
     private static boolean activateEmergency(ServerPlayer player) {
         var ready=new ArrayList<ItemStack>();
-        for(ItemStack stack:player.getArmorSlots()) if(level(stack,"emergency")>0&&stack.getOrDefault(EMERGENCY_COOLDOWN.get(),0)<=0) ready.add(stack);
+        for(ItemStack stack:player.getArmorSlots()) if(isEmergencyReady(stack)) ready.add(stack);
         if(ready.isEmpty()) return false;
         player.setHealth(Math.min((float)IteConfig.number("emergency_health_recover_amount"),player.getMaxHealth()));
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,60,1));
@@ -254,8 +256,7 @@ public final class ExtremeEnchantments {
         for(ItemStack stack:ready) stack.set(EMERGENCY_COOLDOWN.get(),cooldown);
         player.playSound(SoundEvents.FIREWORK_ROCKET_LARGE_BLAST,2F,.75F);
         player.playSound(SoundEvents.ANVIL_LAND,.4F,.4F);
-        player.serverLevel().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1F, 1F);
+        player.serverLevel().broadcastEntityEvent(player, EntityEvent.TALISMAN_ACTIVATE);
         player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.POOF,player.getX(),player.getY()+1,player.getZ(),24,.5,.7,.5,.05);
         player.getInventory().setChanged();
         return true;

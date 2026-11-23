@@ -13,10 +13,13 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+import net.minecraft.server.level.ChunkTrackingView;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -115,13 +118,15 @@ public final class EnchantmentGameTests {
   try(Session session=new Session(h); Session observer=new Session(h,"ite-observer")) {
    ServerPlayer player=session.player;
    observer.player.setPos(player.getX()+2,player.getY(),player.getZ());
+   observer.player.setChunkTrackingView(ChunkTrackingView.of(player.chunkPosition(),2));
+   h.getLevel().getChunkSource().move(observer.player);
    for(var pair:List.of(Map.entry(EquipmentSlot.HEAD,Items.IRON_HELMET),Map.entry(EquipmentSlot.CHEST,Items.IRON_CHESTPLATE),Map.entry(EquipmentSlot.LEGS,Items.IRON_LEGGINGS),Map.entry(EquipmentSlot.FEET,Items.IRON_BOOTS))) {
     ItemStack armor=new ItemStack(pair.getValue());armor.enchant(enchant(h,"emergency"),1);player.setItemSlot(pair.getKey(),armor);
    }
    player.setHealth(0);LivingDeathEvent death=new LivingDeathEvent(player,player.damageSources().generic());NeoForge.EVENT_BUS.post(death);
    h.assertTrue(death.isCanceled()&&player.getHealth()>0,"Emergency cancels death before any resurrection array fallback");
-   h.assertTrue(session.drainTotemSounds()==1,"One totem sound reaches the rescued player even with four ready pieces");
-   h.assertTrue(observer.drainTotemSounds()==1,"One totem sound reaches a nearby player");
+   h.assertTrue(session.drainTotemActivations(h,player)==1,"Four ready pieces send just one vanilla totem activation to the rescued player");
+   h.assertTrue(observer.drainTotemActivations(h,player)==1,"The vanilla totem activation reaches a nearby tracking player");
    for(ItemStack armor:player.getArmorSlots()) h.assertTrue(armor.getOrDefault(ExtremeEnchantments.EMERGENCY_COOLDOWN.get(),0)==48000,"Four ready pieces use40% of the120000tick source cooldown");
    var source=player.getItemBySlot(EquipmentSlot.CHEST);var repaired=new ItemStack(source.getItem());GearProgression.preserve(source,repaired);
    h.assertTrue(repaired.getOrDefault(ExtremeEnchantments.EMERGENCY_COOLDOWN.get(),0)==48000,"Actual base maintenance keeps the emergency history");
@@ -129,7 +134,7 @@ public final class EnchantmentGameTests {
    h.assertTrue(saved.getOrDefault(ExtremeEnchantments.EMERGENCY_COOLDOWN.get(),0)==48000,"Cooldown persists in item NBT");
    LivingDeathEvent again=new LivingDeathEvent(player,player.damageSources().generic());NeoForge.EVENT_BUS.post(again);
    h.assertTrue(!again.isCanceled(),"Cooling equipment does not grant a second rescue");
-   h.assertTrue(session.drainTotemSounds()==0&&observer.drainTotemSounds()==0,"Cooling equipment sends no totem sound");
+   h.assertTrue(session.drainTotemActivations(h,player)==0&&observer.drainTotemActivations(h,player)==0,"Cooling equipment sends no totem activation");
   }h.succeed();
  }
  @GameTest(template="gear_empty") public static void aNonfatalHitBelowThirtyPercentAlsoActivatesEmergency(GameTestHelper h) {
@@ -141,7 +146,7 @@ public final class EnchantmentGameTests {
    h.assertTrue(player.hurt(player.damageSources().magic(),player.getMaxHealth()*.75F),"An actual nonfatal hit passes through the native damage path");
    h.assertTrue(player.getHealth()==Math.min(10F,player.getMaxHealth())&&armor.getOrDefault(ExtremeEnchantments.EMERGENCY_COOLDOWN.get(),0)==120000,
        "Source emergency activates after surviving a hit at thirty percent health, before a later lethal fallback is needed");
-   h.assertTrue(session.drainTotemSounds()==1,"Nonfatal activation also sends one totem sound");
+   h.assertTrue(session.drainTotemActivations(h,player)==1,"Nonfatal activation also sends one vanilla totem activation");
   }h.succeed();
  }
  @GameTest(template="gear_empty") public static void aMonsterHoldingCritFiveUsesTheSourceCriticalFormula(GameTestHelper h) {
@@ -233,13 +238,16 @@ public final class EnchantmentGameTests {
    player.moveTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(h.absolutePos(new BlockPos(2,3,3))));player.setNoGravity(true);player.setOnGround(true);
    player.getInventory().clearContent();player.removeAllEffects();
   }
-  int drainTotemSounds() {
+  int drainTotemActivations(GameTestHelper h, ServerPlayer source) {
    channel.runPendingTasks();
    channel.flushOutbound();
    int count=0;
    Object packet;
    while((packet=channel.readOutbound())!=null) {
-    if(packet instanceof ClientboundSoundPacket sound&&sound.getSound().value()==SoundEvents.TOTEM_USE) count++;
+    h.assertFalse(packet instanceof ClientboundSoundPacket sound && sound.getSound().value()==SoundEvents.TOTEM_USE,
+            "The vanilla activation already plays the totem sound");
+    if(packet instanceof ClientboundEntityEventPacket event && event.getEventId()==EntityEvent.TALISMAN_ACTIVATE
+            && event.getEntity(source.level())==source) count++;
     ReferenceCountUtil.release(packet);
    }
    return count;
