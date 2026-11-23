@@ -23,7 +23,6 @@ import io.github.ningmeng123.modernite.content.ExtremeContent;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.github.ningmeng123.modernite.config.client.IteConfigValuesScreen;
-import io.github.ningmeng123.modernite.config.client.IteSettingsScreen;
 import io.github.ningmeng123.mite.client.config.MonsterSpawningRulesScreen;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -38,6 +37,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -57,7 +57,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.ClientHooks;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen.ConfigurationSectionScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.joml.Matrix4f;
@@ -148,9 +148,8 @@ public final class IteConfigClientAudit {
         Screen title = mc.screen;
         var mite = ModList.get().getModContainerById("mite").orElseThrow();
         var ite = ModList.get().getModContainerById(ModernIte.MOD_ID).orElseThrow();
-        check(IConfigScreenFactory.getForMod(ite.getModInfo()).orElseThrow()
-                .createScreen(ite, title) instanceof IteSettingsScreen, "ITE's native config factory must be registered");
-        report.addProperty("native_config_factory_registered", true);
+        check(IConfigScreenFactory.getForMod(ite.getModInfo()).isEmpty(), "ITE has no separate native config factory");
+        report.addProperty("ite_uses_only_the_mite_config_factory", true);
         for (int[] size : new int[][] {{320, 240}, {854, 480}}) {
             int width = size[0], height = size[1];
             Screen main = IConfigScreenFactory.getForMod(mite.getModInfo()).orElseThrow().createScreen(mite, title);
@@ -158,13 +157,16 @@ public final class IteConfigClientAudit {
             mc.setScreen(main);
             capture(mc, main, width, height, "mite-settings", -1, -1);
             bounds(main);
-            if (width == 320) auditRedDiamondExperience(mc, main);
-            auditBaseSpawningRules(mc,main,width,height);
-            press(main, "modern_ite.config.open");
-            check(mc.screen instanceof IteSettingsScreen, "The injected button must open ITE settings");
+            if (width == 320) {
+                auditRedDiamondExperience(mc, main);
+                auditSpawningRulesSearch(mc, main);
+                auditSpawnOverrideSearch(mc, main);
+            }
+            press(main, "mite.config.category.creatures");
             Screen home = mc.screen;
-            capture(mc, home, width, height, "ite-settings", -1, -1);
+            capture(mc, home, width, height, "mite-creature-settings", -1, -1);
             bounds(home);
+            auditBaseSpawningRules(mc, home, width, height);
             var legacyRates = new LinkedHashMap<>(IteSpawnConfig.localSnapshot());
             legacyRates.put("modern_ite:zombie_chaos",.25D);
             IteSpawnConfig.save(legacyRates,IteSpawnConfig.localWeights());
@@ -198,7 +200,7 @@ public final class IteConfigClientAudit {
             check(findButton(spawns,"mite.config.save").active,"A finite decimal weight must leave native saving enabled");
             capture(mc,spawns,width,height,"ite-natural-spawn-weight-edited",-1,-1);bounds(spawns);
             press(spawns,"mite.config.save");
-            check(mc.screen == home,"Saving the single weight editor must restore ITE settings");
+            check(mc.screen == home,"Saving the single weight editor returns to the shared Creatures category");
             check(IteSpawnConfig.localWeights().get("modern_ite:zombie_chaos")==2.5D
                             && !IteSpawnConfig.localSnapshot().containsKey("modern_ite:zombie_chaos"),
                     "Writing weight2.5 must publish exactly2.5 and remove that entity's legacy multiplier");
@@ -213,30 +215,13 @@ public final class IteConfigClientAudit {
             check(((java.util.Set<?>)invalidWeights.get(reopened)).isEmpty() && findButton(reopened,"mite.config.save").active,
                     "The saved decimal remains a valid editable draft after a complete screen round trip");
             reopened.onClose();
-            check(mc.screen == home,"Closing the reopened weight editor restores the actual ITE settings parent");
+            check(mc.screen == home,"Closing the reopened weight editor restores the shared Creatures category");
             auditSpawningRules(mc, home, width, height);
-            press(home, "modern_ite.config.values");
-            check(mc.screen instanceof IteConfigValuesScreen, "The values button must open the effective settings browser");
-            Screen values = mc.screen;
-            values.init(mc, width, height);
-            EditBox search = widgets(values).stream().filter(EditBox.class::isInstance).map(EditBox.class::cast).findFirst().orElseThrow();
-            search.setValue("征服者");
-            var count = IteConfigValuesScreen.class.getDeclaredField("matchCount");
-            count.setAccessible(true);
-            check(count.getInt(values) == 1, "Searching 征服者 must find exactly the implemented conqueror setting");
-            search.setValue("stepped_mob_damage_progress_increase_day");
-            check(count.getInt(values) == 0, "The retired date-damage setting is absent from the effective-values browser");
-            for(String key:List.of("stepped_mob_damage_factor","stepped_mob_damage_progress_max")){
-                search.setValue(key);check(count.getInt(values)==1,"Static mob combo settings remain visible: "+key);
-            }
-            search.setValue("征服者");
-            capture(mc, values, width, height, "conqueror-search", -1, -1);
-            capture(mc, values, width, height, "conqueror-tooltip", width / 2, 112);
-            bounds(values);
-            values.onClose();
-            check(mc.screen == home, "Closing the browser must restore its actual parent");
+            home.onClose();
+            check(mc.screen == main, "The shared Creatures category returns to MITE settings");
+            auditCombatSettings(mc, main, width, height);
         }
-        report.addProperty("mite_entry_button_clicked", true);
+        report.addProperty("ite_editors_open_from_mite_categories", true);
         report.addProperty("effective_values_search_verified", true);
         report.addProperty("ite_registry_spawn_browser_and_native_weights_verified", true);
         report.addProperty("ite_single_weight_editor_clears_edited_legacy_multiplier",true);
@@ -245,52 +230,65 @@ public final class IteConfigClientAudit {
         report.addProperty("mite_spawning_rules_entry_paging_validation_drafts_and_save_verified", true);
         report.addProperty("minimum_and_large_widget_bounds_verified", true);
         auditOres(mc, title);
-        var home = new IteSettingsScreen(ite, title);
-        mc.setScreen(home);
-        press(home, "modern_ite.config.edit");
-        check(mc.screen instanceof ConfigurationScreen || mc.screen instanceof ConfigurationScreen.ConfigurationSectionScreen,
-                "Edit must open NeoForge's actual configuration screen");
-        if (mc.screen instanceof ConfigurationScreen) {
-            Button common = widgets(mc.screen).stream().filter(Button.class::isInstance).map(Button.class::cast)
-                    .filter(button -> button.active && button.getWidth() == ConfigurationScreen.BIG_BUTTON_WIDTH).findFirst().orElseThrow();
-            common.onPress();
+    }
+
+    private static void auditCombatSettings(Minecraft mc, Screen main, int width, int height) throws Exception {
+        EditBox globalSearch = findEdit(main, "mite.config.search_all");
+        globalSearch.setValue("stepped_mob_damage_progress_increase_day");
+        var matches = MiteSettingsScreen.class.getDeclaredField("matches");
+        matches.setAccessible(true);
+        check(((List<?>) matches.get(main)).isEmpty(),
+                "The retired date-damage field is absent from search while retaining its TOML compatibility value");
+        for (String key : List.of("stepped_mob_damage_factor", "stepped_mob_damage_progress_max")) {
+            globalSearch.setValue(key);
+            press(main, "modern_ite.config." + key);
+            check(findEdit(mc.screen, "modern_ite.config." + key).active, "The static mob combo factor remains editable: " + key);
+            mc.screen.onClose();
+            check(mc.screen == main, "Closing the native editor returns to the global search");
+            globalSearch = findEdit(main, "mite.config.search_all");
         }
-        check(mc.screen instanceof ConfigurationScreen.ConfigurationSectionScreen, "COMMON settings must be editable");
-        Screen commonRoot=mc.screen;
-        section(mc.screen,"GameMechanics").onPress();
-        check(widgets(mc.screen).stream().noneMatch(widget->widget.getMessage().equals(
-                        Component.translatable("modern_ite.config.stepped_mob_damage_progress_increase_day"))),
-                "The native editor hides the retired date-damage field while retaining its TOML compatibility value");
-        check(findEdit(mc.screen,"modern_ite.config.stepped_mob_damage_factor").active
-                        &&findEdit(mc.screen,"modern_ite.config.stepped_mob_damage_progress_max").active,
-                "The native editor retains both static mob combo factors");
-        section(mc.screen,"MobSpawning").onPress();
-        String startDayKey="extreme_mob_spawn_limit_day";
-        EditBox startDay=findEdit(mc.screen,"modern_ite.config."+startDayKey);
-        int startDayBefore=IteConfig.integer(startDayKey);
-        int startDayEdited=startDayBefore==1000000?startDayBefore-1:startDayBefore+1;
-        check(startDay.active,"The native common-config editor exposes the extreme monster start day");
-        startDay.setValue(Integer.toString(startDayEdited));
-        check(((Number)IteConfig.setting(startDayKey).get()).intValue()==startDayEdited,
-                "Editing the native start-day box updates the actual ConfigValue");
-        startDay.setValue(Integer.toString(startDayBefore));
-        mc.screen.onClose();mc.screen.onClose();
-        check(mc.screen==commonRoot,"Closing the nested spawning sections returns to COMMON settings");
-        report.addProperty("native_extreme_start_day_number_box_edited",true);
-        section(mc.screen, "Item").onPress();
-        section(mc.screen, "Enchantment").onPress();
-        EditBox conqueror = widgets(mc.screen).stream().filter(EditBox.class::isInstance).map(EditBox.class::cast)
-                .filter(box -> box.getMessage().getString().equals(Component.translatable("modern_ite.config." + SAMPLE).getString()))
-                .findFirst().orElseThrow(() -> new IllegalStateException("The native conqueror number box is missing"));
-        expected = ((Number)originalValues.get(SAMPLE)).doubleValue() == 2D ? 3D : 2D;
+        globalSearch.setValue("");
+        press(main, "mite.config.category.combat");
+        Screen combat = mc.screen;
+        capture(mc, combat, width, height, "mite-combat-settings", -1, -1);
+        bounds(combat);
+        press(combat, "modern_ite.config.settings.enchantment_effects");
+        check(mc.screen instanceof IteConfigValuesScreen, "Combat opens the ITE enchantment settings browser");
+        Screen values = mc.screen;
+        values.init(mc, width, height);
+        EditBox search = findEdit(values, "modern_ite.config.search");
+        var count = IteConfigValuesScreen.class.getDeclaredField("matchCount");
+        count.setAccessible(true);
+        search.setValue("stepped_mob_damage_factor");
+        check(count.getInt(values) == 0, "The enchantment browser is scoped to its category");
+        search.setValue("征服者");
+        check(count.getInt(values) == 1, "Searching 征服者 finds the only matching enchantment setting");
+        capture(mc, values, width, height, "conqueror-search", -1, -1);
+        bounds(values);
+        var list = (AbstractSelectionList<?>) widgets(values).stream().filter(AbstractSelectionList.class::isInstance)
+                .findFirst().orElseThrow();
+        var rowTop = AbstractSelectionList.class.getDeclaredMethod("getRowTop", int.class);
+        rowTop.setAccessible(true);
+        int rowY = (int) rowTop.invoke(list, list.children().size() - 1) + 8;
+        capture(mc, values, width, height, "conqueror-tooltip", width / 2, rowY);
+        values.mouseClicked(width / 2D, rowY, 0);
+        check(mc.screen instanceof SingleConfigValueScreen, "Clicking an ITE value opens its native editor");
+        Screen editor = mc.screen;
+        EditBox conqueror = findEdit(editor, "modern_ite.config." + SAMPLE);
+        expected = ((Number) IteConfig.setting(SAMPLE).get()).doubleValue() == 2D ? 3D : 2D;
         conqueror.setValue(Double.toString(expected));
         check(((Number)IteConfig.setting(SAMPLE).get()).doubleValue() == expected, "The native number box must update the real ConfigValue");
-        capture(mc, mc.screen, 320, 240, "native-enchantments-edited", -1, -1);
-        bounds(mc.screen);
-        capture(mc, mc.screen, 854, 480, "native-enchantments-edited", -1, -1);
-        bounds(mc.screen);
-        for (int index = 0; index < 8 && mc.screen != home; index++) mc.screen.onClose();
-        check(mc.screen == home, "Closing native sections must save COMMON and return to ITE settings");
+        capture(mc, editor, width, height, "native-enchantments-edited", -1, -1);
+        bounds(editor);
+        var done = ConfigurationSectionScreen.class.getDeclaredField("doneButton");
+        done.setAccessible(true);
+        ((Button) done.get(editor)).onPress();
+        check(mc.screen == values && findEdit(values, "modern_ite.config.search").getValue().equals("征服者"),
+                "Saving returns to the scoped enchantment settings and preserves the search");
+        values.onClose();
+        check(mc.screen == combat, "Closing the enchantment browser restores the shared Combat category");
+        combat.onClose();
+        check(mc.screen == main, "Closing the Combat category restores the MITE homepage");
         report.addProperty("native_enchantment_number_box_edited", true);
         report.addProperty("edited_setting", SAMPLE);
         report.addProperty("edited_value", expected);
@@ -328,12 +326,39 @@ public final class IteConfigClientAudit {
         }
     }
 
+    private static void auditSpawningRulesSearch(Minecraft mc, Screen main) {
+        String key = "extreme_mob_spawn_limit_day";
+        findEdit(main, "mite.config.search_all").setValue(key);
+        press(main, "modern_ite.config." + key);
+        check(mc.screen instanceof MonsterSpawningRulesScreen
+                        && findEdit(mc.screen, "modern_ite.config." + key).active,
+                "Searching for an ITE spawn date focuses that value in the shared rules editor");
+        mc.screen.onClose();
+        check(mc.screen == main, "Closing the shared rules editor preserves the originating global search");
+        findEdit(main, "mite.config.search_all").setValue("");
+        report.addProperty("ite_spawn_date_search_opens_shared_rules", true);
+    }
+
+    private static void auditSpawnOverrideSearch(Minecraft mc, Screen main) {
+        for (String key : List.of("natural_spawn_rates", "natural_spawn_weights")) {
+            findEdit(main, "mite.config.search_all").setValue("modern_ite:GameMechanics.MobSpawning." + key);
+            press(main, "modern_ite.config." + key);
+            check(mc.screen instanceof SingleConfigValueScreen, "Searching a raw ITE override opens its native list editor: " + key);
+            mc.screen.onClose();
+            check(mc.screen == main, "Closing an override editor returns to the shared search");
+        }
+        findEdit(main, "mite.config.search_all").setValue("");
+        report.addProperty("raw_ite_spawn_override_lists_open_from_shared_search", true);
+    }
+
     private static void auditOres(Minecraft mc, Screen title) throws Exception {
         var mite = ModList.get().getModContainerById("mite").orElseThrow();
         Screen parent = IConfigScreenFactory.getForMod(mite.getModInfo()).orElseThrow().createScreen(mite, title);
         mc.setScreen(parent);
         auditRedDiamondOreChance(mc, parent);
-        press(parent, "mite.config.ore_generation");
+        press(parent, "mite.config.category.world");
+        Screen world = mc.screen;
+        press(world, "mite.config.ore_generation");
         check(mc.screen instanceof OreGenerationSettingsScreen, "The actual MITE ore button must open its multiplier page");
         Screen ores = mc.screen;
         findEdit(ores, "mite.config.ore_search").setValue("minecraft:copper_ore");
@@ -383,7 +408,7 @@ public final class IteConfigClientAudit {
         }
         editRedDiamondOre(ores);
         press(ores, "mite.config.save");
-        check(mc.screen == parent, "Saving both dimension multipliers returns to the actual MITE settings parent");
+        check(mc.screen == world, "Saving both dimension multipliers returns to the shared World category");
         check(MiteConfig.localSnapshot().oreCandidates().equals(originalBaseSnapshot.oreCandidates())
                         && MiteConfig.localSnapshot().oreChances().equals(originalBaseSnapshot.oreChances())
                         && MiteConfig.localSnapshot().overworldOreCandidates().equals(originalBaseSnapshot.overworldOreCandidates())
@@ -504,8 +529,8 @@ public final class IteConfigClientAudit {
         int editedMobDay=originalMobDay==15?16:15;
         try {
             check(!IteConfig.defaults().containsKey("reference_spawning"),"The removed spawning preset has no schema entry");
-            press(home,"modern_ite.config.spawning_rules");
-            check(mc.screen instanceof MonsterSpawningRulesScreen,"The ITE spawning shortcut opens the actual main-mod rules editor");
+            press(home,"mite.config.spawning_rules.button");
+            check(mc.screen instanceof MonsterSpawningRulesScreen,"The shared Creatures category opens the rules editor with ITE controls");
             Screen rules=mc.screen;
             capture(mc,rules,width,height,"ite-spawning-rules",-1,-1);bounds(rules);
             var dayField=findEdit(rules,"modern_ite.config."+dayKey);
@@ -694,22 +719,6 @@ public final class IteConfigClientAudit {
                         () -> new IllegalStateException("Missing active button " + key)).onPress();
     }
 
-    private static Button section(ContainerEventHandler container, String category) {
-        String title = Component.translatable("modern_ite.configuration." + category).getString();
-        boolean label = container.children().stream().filter(AbstractWidget.class::isInstance).map(AbstractWidget.class::cast)
-                .anyMatch(widget -> widget.getMessage().getString().contains(title));
-        if (label) for (var child : container.children()) if (child instanceof Button button && button.active) return button;
-        for (var child : container.children()) if (child instanceof ContainerEventHandler nested) {
-            Button found = sectionOrNull(nested, category);
-            if (found != null) return found;
-        }
-        throw new IllegalStateException("Missing native category " + category);
-    }
-
-    private static Button sectionOrNull(ContainerEventHandler container, String category) {
-        try { return section(container, category); } catch (IllegalStateException ignored) { return null; }
-    }
-
     private static void bounds(Screen screen) {
         var buttons = new ArrayList<Button>();
         for (var child : screen.children()) if (child instanceof AbstractWidget widget && widget.visible) {
@@ -780,7 +789,7 @@ public final class IteConfigClientAudit {
 
     private static JsonObject initialReport() {
         var result = new JsonObject(); result.addProperty("author", "NingMeng123"); result.addProperty("timestamp", Instant.now().toString());
-        result.addProperty("scope", "Actual config factories, MITE/ITE navigation, separate ore multipliers with cross-dimension drafts and native saves, conqueror search, GPU screenshots at 320x240 and 854x480, and byte-exact restoration of both COMMON files");
+        result.addProperty("scope", "Unified MITE config factory and categories, ITE config and spawn editing, separate ore multipliers with cross-dimension drafts and native saves, GPU screenshots at 320x240 and 854x480, and byte-exact restoration of both COMMON files");
         result.addProperty("world_created", false); result.addProperty("server_connected", false);
         result.add("failures", new JsonArray()); result.add("screenshots", new JsonArray()); return result;
     }

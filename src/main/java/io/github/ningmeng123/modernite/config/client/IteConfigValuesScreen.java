@@ -1,22 +1,66 @@
 package io.github.ningmeng123.modernite.config.client;
 
+import io.github.ningmeng123.mite.client.config.SingleConfigValueScreen;
+import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.config.ModConfigs;
 
-/** Searchable, grouped view of effective local or server settings. @author NingMeng123 */
+/** Browse effective gameplay settings and open the native editor for local values. @author NingMeng123 */
 public final class IteConfigValuesScreen extends Screen {
+    enum Group {
+        NETHER_ORES("nether_ores", "world"), CREATURE_BEHAVIOR("creature_behavior", "creatures"),
+        COMBAT("combat", "combat"), ENCHANTMENT_EFFECTS("enchantment_effects", "combat"),
+        SURVIVAL("survival", "survival"), CRAFTING("crafting", "survival"), SYSTEM("system", "system");
+
+        private final String translationKey;
+        private final String category;
+
+        Group(String key, String category) {
+            translationKey = "modern_ite.config.settings." + key;
+            this.category = category;
+        }
+
+        String translationKey() { return translationKey; }
+        String category() { return category; }
+        Component title() { return Component.translatable(translationKey); }
+
+        static Group forOption(IteConfig.Option option) {
+            String key = option.key();
+            var path = option.path();
+            return switch (path.getFirst()) {
+                case "WorldGen" -> NETHER_ORES;
+                case "Block" -> CREATURE_BEHAVIOR;
+                case "Entities" -> path.contains("Animals") || key.startsWith("villager_") ? SURVIVAL : CREATURE_BEHAVIOR;
+                case "Item" -> path.contains("Enchantment") ? ENCHANTMENT_EFFECTS
+                        : path.contains("Recipes") ? CRAFTING : SURVIVAL;
+                case "GameMechanics" -> path.contains("MobSpawning") ? CREATURE_BEHAVIOR
+                        : key.startsWith("player_") || key.startsWith("stepped_") ? COMBAT : SURVIVAL;
+                case "Misc" -> SYSTEM;
+                default -> null;
+            };
+        }
+    }
+
     private final Screen parent;
+    private final Group group;
     private String query = "";
     private ValuesList values;
+    private ModConfig editableConfig;
     private IteConfig.Option hovered;
     private int matchCount;
 
@@ -26,14 +70,28 @@ public final class IteConfigValuesScreen extends Screen {
 
     /** Start the authoritative values browser at the setting selected by the global search. */
     public IteConfigValuesScreen(Screen parent, String query) {
-        super(Component.translatable("modern_ite.config.values"));
+        this(parent, null, query);
+    }
+
+    IteConfigValuesScreen(Screen parent, Group group) {
+        this(parent, group, "");
+    }
+
+    private IteConfigValuesScreen(Screen parent, Group group, String query) {
+        super(group == null ? Component.translatable("modern_ite.config.values") : group.title());
         this.parent = parent;
+        this.group = group;
         this.query = query == null ? "" : query;
     }
 
     @Override
     protected void init() {
         double scroll = values == null ? 0D : values.getScrollAmount();
+        editableConfig = IteConfigClient.editable() && IteConfig.SPEC.isLoaded()
+                ? ModConfigs.getModConfigs(ModernIte.MOD_ID).stream()
+                        .filter(config -> config.getSpec() == IteConfig.SPEC)
+                        .findFirst().orElse(null)
+                : null;
         var search = addRenderableWidget(new EditBox(font, 16, 36, width - 32, 20,
                 Component.translatable("modern_ite.config.search")));
         search.setMaxLength(200);
@@ -53,20 +111,25 @@ public final class IteConfigValuesScreen extends Screen {
     private void rebuildRows() {
         values.clearRows();
         String filter = query.trim().toLowerCase(Locale.ROOT);
-        var categories = new LinkedHashMap<String, java.util.ArrayList<IteConfig.Option>>();
+        var categories = new LinkedHashMap<String, List<IteConfig.Option>>();
+        Set<String> sharedSpawning = group == Group.CREATURE_BEHAVIOR ? IteConfigClient.sharedSpawningKeys() : Set.of();
         matchCount = 0;
         for (var option : IteConfig.options()) {
             if (option.key().equals("stepped_mob_damage_progress_increase_day")) continue;
-            String category = option.path().size() > 1 ? option.path().getFirst() : "general";
+            if (group != null && (Group.forOption(option) != group || sharedSpawning.contains(option.key()))) continue;
+            String category = option.path().getFirst();
+            if (group == Group.SURVIVAL && option.path().size() > 2 && category.equals("GameMechanics")) {
+                category = option.path().get(1);
+            }
             if (!filter.isEmpty() && !option.key().toLowerCase(Locale.ROOT).contains(filter)
                     && !String.join(".", option.path()).toLowerCase(Locale.ROOT).contains(filter)
                     && !label(option).getString().toLowerCase(Locale.ROOT).contains(filter)
                     && !categoryLabel(category).getString().toLowerCase(Locale.ROOT).contains(filter)) continue;
-            categories.computeIfAbsent(category, ignored -> new java.util.ArrayList<>()).add(option);
+            categories.computeIfAbsent(category, ignored -> new ArrayList<>()).add(option);
             matchCount++;
         }
         categories.forEach((category, options) -> {
-            values.addRow(new ValueRow(categoryLabel(category), null));
+            if (group == null || categories.size() > 1) values.addRow(new ValueRow(categoryLabel(category), null));
             options.forEach(option -> values.addRow(new ValueRow(label(option), option)));
         });
         values.setScrollAmount(0D);
@@ -96,13 +159,15 @@ public final class IteConfigValuesScreen extends Screen {
         hovered = null;
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, title, width / 2, 14, 0xFFFFFF);
+        String hint = editableConfig != null ? "modern_ite.config.settings.edit_hint" : "modern_ite.config.settings.view_hint";
+        graphics.drawCenteredString(font, Component.translatable(hint), width / 2, 61, 0xBBBBBB);
         graphics.drawCenteredString(font, font.plainSubstrByWidth(
                         Component.translatable("modern_ite.config.values.count", matchCount).getString(), width - 24),
                 width / 2, height - 44, 0xBBBBBB);
         if (matchCount == 0) graphics.drawCenteredString(font,
                 Component.translatable("modern_ite.config.no_results"), width / 2, 88, 0xBBBBBB);
         if (hovered != null) {
-            var lines = new java.util.ArrayList<Component>();
+            var lines = new ArrayList<Component>();
             lines.add(label(hovered));
             lines.add(Component.literal(String.join(".", hovered.path())));
             lines.add(Component.translatable("modern_ite.config.current", format(IteConfig.value(hovered.key()))));
@@ -121,13 +186,20 @@ public final class IteConfigValuesScreen extends Screen {
     private final class ValuesList extends ObjectSelectionList<ValueRow> {
         private ValuesList() {
             super(IteConfigValuesScreen.this.minecraft, IteConfigValuesScreen.this.width,
-                    Math.max(32, IteConfigValuesScreen.this.height - 116), 64, 36);
+                    Math.max(32, IteConfigValuesScreen.this.height - 127), 75, 36);
         }
 
         private void clearRows() { clearEntries(); }
         private void addRow(ValueRow row) { addEntry(row); }
         @Override public int getRowWidth() { return Math.min(520, getWidth() - 44); }
         @Override protected int getScrollbarPosition() { return getRowRight() + 6; }
+
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            var selected = getSelected();
+            if (CommonInputs.selected(keyCode) && selected != null && selected.openEditor()) return true;
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
     }
 
     private final class ValueRow extends ObjectSelectionList.Entry<ValueRow> {
@@ -143,6 +215,17 @@ public final class IteConfigValuesScreen extends Screen {
         public Component getNarration() {
             return option == null ? name : Component.translatable("modern_ite.config.value_narration", name,
                     format(IteConfig.value(option.key())));
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            return (button == 0 && openEditor()) || super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        private boolean openEditor() {
+            if (option == null || editableConfig == null || !IteConfigClient.editable()) return false;
+            minecraft.setScreen(SingleConfigValueScreen.create(IteConfigValuesScreen.this, editableConfig, option.path(), name));
+            return true;
         }
 
         @Override
