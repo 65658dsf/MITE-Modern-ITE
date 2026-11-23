@@ -2,7 +2,9 @@ package io.github.ningmeng123.modernite.gear;
 
 import com.mojang.serialization.Codec;
 import io.github.ningmeng123.mite.item.EquipmentDurability;
+import io.github.ningmeng123.mite.progression.GearModifier;
 import io.github.ningmeng123.mite.progression.GearProgression;
+import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.ToolFamily;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasion;
 import java.util.ArrayList;
 import java.util.List;
@@ -148,7 +150,11 @@ public final class ExtremeGear {
                 && GearProgression.material(stack) != null);
     }
     public static boolean acceptsGem(ItemStack equipment, ItemStack gem) {
-        return gem.getItem() instanceof EnhanceGemItem item && acceptsGem(equipment, item.type);
+        return canSocketGem(equipment, gem, -1);
+    }
+    public static boolean canSocketGem(ItemStack equipment, ItemStack gem, int socket) {
+        return gem.getItem() instanceof EnhanceGemItem item && acceptsGem(equipment, item.type)
+                && (item.type != GemType.ATTACK_SPEED || sockets(equipment).levelOutside(item.type, socket) == 0);
     }
     /** Source effect families become real insertion limits; old misplaced gems remain removable. */
     public static boolean acceptsGem(ItemStack stack, GemType type) {
@@ -157,11 +163,17 @@ public final class ExtremeGear {
         EquipmentSlot slot = armor ? ((ArmorItem) stack.getItem()).getEquipmentSlot() : null;
         return switch (type) {
             case DAMAGE, EFFICIENCY -> !armor;
+            case ATTACK_SPEED -> isWeapon(stack);
             case HEALTH, PROTECTION, RECOVER, NUTRITION -> armor;
             case SPEED -> slot == EquipmentSlot.FEET;
             case FIREPROOF, EXPLOSION_PROOF -> slot == EquipmentSlot.CHEST || slot == EquipmentSlot.LEGS;
             case DURABILITY -> true;
         };
+    }
+    private static boolean isWeapon(ItemStack stack) {
+        if (GearModifier.isWeapon(stack)) return true;
+        var profile = EquipmentDurability.toolProfile(stack);
+        return profile != null && (profile.family() == ToolFamily.CLUB || profile.family() == ToolFamily.CUDGEL);
     }
     public static int grade(ItemStack stack) { return stack.getOrDefault(FORGE_GRADE.get(), 0); }
     public static double health(Player player, double original) {

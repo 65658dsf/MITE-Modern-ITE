@@ -164,6 +164,7 @@ public final class ChestGemLayer<T extends LivingEntity, M extends HumanoidModel
             case FIREPROOF -> 0x7DC3DB;
             case EXPLOSION_PROOF -> 0xA6CC4D;
             case NUTRITION -> 0xE48643;
+            case ATTACK_SPEED -> 0xE963AB;
         };
     }
 

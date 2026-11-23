@@ -480,6 +480,54 @@
         }
       ]
     },
+    "modern_ite:gem_attack_speed_1": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_attack_speed_2": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_attack_speed_3": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_attack_speed_4": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_attack_speed_5": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
+    "modern_ite:gem_attack_speed_6": {
+      "customAnimation": [
+        {
+          "type": "inspect",
+          "name": "modern_ite_gem_inspect"
+        }
+      ]
+    },
     "modern_ite:gem_shard_2": {
       "customAnimation": [
         {

@@ -104,7 +104,9 @@ def generate() -> dict:
         ingredients = list(data.get("key", {}).values()) + data.get("ingredients", [])
         for ingredient in ingredients:
             name = ingredient.get("item", "")
-            if name.startswith(("modern_ite:gem_shard_", "modern_ite:gem_")):
+            if name.startswith("modern_ite:gem_attack_speed_"):
+                component(name, 25, "Modern attack speed gems use the existing enhancement gem component difficulty of 25F")
+            elif name.startswith("modern_ite:gem_"):
                 component(name, 25,
                           "Extreme ItemEnhanceGem / ItemGemShard constructors explicitly set component to 25F")
 
@@ -176,7 +178,7 @@ def generate() -> dict:
         recipes["modern_ite:" + name] = {"difficulty": difficulty, "required_bench": required_bench,
             "source_order": source_order, "evidence": evidence}
 
-    assert len(recipes) == 160, f"Review added/removed static recipes: {len(recipes)}"
+    assert len(recipes) == 172, f"Review added/removed static recipes: {len(recipes)}"
     assert recipes["modern_ite:stack_torch_string_coal"]["difficulty"] == 195.0
     assert recipes["modern_ite:unpack_torches_1"]["difficulty"] == f32(1e-9)
 
@@ -189,8 +191,6 @@ def generate() -> dict:
         "difficulty": lantern_difficulty, "required_bench": None, "source_order": -1,
         "evidence": "Extreme EXBlocksRegistryInit.registerRecipes line 209: eight iron nuggets and one torch; the modern vanilla recipe has identical inputs. RecipeHelper float32 sum = 711.1111F; old blockLantern uses circuits, so no metal workbench gate."
     }
-    assert sum(name.startswith("modern_ite:") for name in recipes) == 160
-    assert len(recipes) == 161
     return {
         "author": "NingMeng123",
         "source": "R196 RecipeHelper / frozen runtime-registry.json, MITE-ITE 2.0.28 and Extreme LH 0.6.6 decompiled registrations; explicit overrides precede float32 whole-batch component sums",
@@ -199,7 +199,7 @@ def generate() -> dict:
             "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
             "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
             "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
-            "Coverage: 160 static extension recipes, including the bastion eye, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+            "Coverage: 172 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
             "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
         ],
         "components": {name: {"difficulty": value, "evidence": evidence} for name, (value, evidence) in sorted(components.items())},

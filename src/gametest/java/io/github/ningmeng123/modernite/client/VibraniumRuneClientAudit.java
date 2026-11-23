@@ -225,7 +225,7 @@ public final class VibraniumRuneClientAudit {
             for (var gem : ExtremeGear.SHARDS) observe(mc, BuiltInRegistries.ITEM.getKey(gem.get()));
             accelerated = new AcceleratedProbe();
             report.add("accelerated_rendering",accelerated.facts);
-            check(SPRITES.size()==65,"Expected all 65 registered gem sprites");
+            check(SPRITES.size()==71,"Expected all 71 registered gem sprites");
             // Two complete visible shines take at most 254 ticks, even when the
             // twelve-cycle schedule is much longer. Bound frozen negative controls.
             captureSpan = 350;

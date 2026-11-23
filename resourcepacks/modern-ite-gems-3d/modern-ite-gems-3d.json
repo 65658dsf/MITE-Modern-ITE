@@ -67,6 +67,12 @@
       "texture": "modern_ite:item/gem3d/gem_nutrition_1"
     },
     {
+      "id": "modern_ite:gem_attack_speed_1",
+      "rank": 1,
+      "kind": "attack_speed",
+      "texture": "modern_ite:item/gem3d/gem_attack_speed_1"
+    },
+    {
       "id": "modern_ite:gem_damage_2",
       "rank": 2,
       "kind": "damage",
@@ -125,6 +131,12 @@
       "rank": 2,
       "kind": "nutrition",
       "texture": "modern_ite:item/gem3d/gem_nutrition_2"
+    },
+    {
+      "id": "modern_ite:gem_attack_speed_2",
+      "rank": 2,
+      "kind": "attack_speed",
+      "texture": "modern_ite:item/gem3d/gem_attack_speed_2"
     },
     {
       "id": "modern_ite:gem_shard_2",
@@ -193,6 +205,12 @@
       "texture": "modern_ite:item/gem3d/gem_nutrition_3"
     },
     {
+      "id": "modern_ite:gem_attack_speed_3",
+      "rank": 3,
+      "kind": "attack_speed",
+      "texture": "modern_ite:item/gem3d/gem_attack_speed_3"
+    },
+    {
       "id": "modern_ite:gem_shard_3",
       "rank": 3,
       "kind": "shard",
@@ -257,6 +275,12 @@
       "rank": 4,
       "kind": "nutrition",
       "texture": "modern_ite:item/gem3d/gem_nutrition_4"
+    },
+    {
+      "id": "modern_ite:gem_attack_speed_4",
+      "rank": 4,
+      "kind": "attack_speed",
+      "texture": "modern_ite:item/gem3d/gem_attack_speed_4"
     },
     {
       "id": "modern_ite:gem_shard_4",
@@ -325,6 +349,12 @@
       "texture": "modern_ite:item/gem3d/gem_nutrition_5"
     },
     {
+      "id": "modern_ite:gem_attack_speed_5",
+      "rank": 5,
+      "kind": "attack_speed",
+      "texture": "modern_ite:item/gem3d/gem_attack_speed_5"
+    },
+    {
       "id": "modern_ite:gem_shard_5",
       "rank": 5,
       "kind": "shard",
@@ -389,6 +419,12 @@
       "rank": 6,
       "kind": "nutrition",
       "texture": "modern_ite:item/gem3d/gem_nutrition_6"
+    },
+    {
+      "id": "modern_ite:gem_attack_speed_6",
+      "rank": 6,
+      "kind": "attack_speed",
+      "texture": "modern_ite:item/gem3d/gem_attack_speed_6"
     },
     {
       "id": "modern_ite:gem_shard_6",

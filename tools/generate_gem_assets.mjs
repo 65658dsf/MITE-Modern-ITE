@@ -80,7 +80,7 @@ for (const [kind, palette] of Object.entries(source.palettes)) {
     count++;
   }
 }
-if (count !== 65) throw new Error(`Expected 65 gem textures, received ${count}.`);
+if (count !== 71) throw new Error(`Expected 71 gem textures, received ${count}.`);
 const box = JSON.parse(await readFile(new URL('./gem_textures/gem_box.json', import.meta.url), 'utf8'));
 const boxPixels = Buffer.from(box.rgba_base64, 'base64');
 if (box.width !== 32 || box.height !== 32 || boxPixels.length !== 32 * 32 * 4) throw new Error('Invalid gem box source.');

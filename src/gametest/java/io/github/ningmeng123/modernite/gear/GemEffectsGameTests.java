@@ -116,6 +116,69 @@ public final class GemEffectsGameTests {
     }
 
     @GameTest(templateNamespace = "modern_ite_gem_effects", template = "gear_empty")
+    public static void attackSpeedGemsShortenTheNativeMainhandCooldownWithoutStacking(GameTestHelper helper) {
+        Player player = player(helper);
+        try {
+            ItemStack sword = new ItemStack(Items.IRON_SWORD);
+            player.setItemSlot(EquipmentSlot.MAINHAND, sword);
+            player.tick();
+            double baseSpeed = player.getAttributeValue(Attributes.ATTACK_SPEED);
+            double baseDelay = player.getCurrentItemAttackStrengthDelay();
+
+            int firstCode = ((EnhanceGemItem) ExtremeGear.gem(GemType.ATTACK_SPEED, 1).getItem()).code();
+            for (int rank = 1; rank <= 6; rank++) {
+                sword.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, firstCode + rank - 1));
+                player.tick();
+                double multiplier = 1D + rank * .05D;
+                close(helper, player.getAttributeValue(Attributes.ATTACK_SPEED), baseSpeed * multiplier,
+                        "Each rank increases the equipped weapon's attack speed by five percent");
+                close(helper, player.getCurrentItemAttackStrengthDelay(), baseDelay / multiplier,
+                        "The native charge time uses the modified attack speed");
+            }
+
+            sword.set(ExtremeGear.SOCKETS.get(), ExtremeGear.sockets(sword).with(1, firstCode));
+            player.tick();
+            close(helper, player.getAttributeValue(Attributes.ATTACK_SPEED), baseSpeed * 1.3D,
+                    "An extra attack-speed gem in a loaded component does not stack");
+            player.resetAttackStrengthTicker();
+            int rechargeTicks = (int) Math.ceil(baseDelay / 1.3D);
+            for (int tick = 1; tick < rechargeTicks; tick++) player.tick();
+            helper.assertTrue(player.getAttackStrengthScale(0F) < 1F, "The weapon still needs one more tick to recharge");
+            player.tick();
+            close(helper, player.getAttackStrengthScale(0F), 1D, "The weapon recharges at the shortened interval");
+
+            player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
+            player.setItemSlot(EquipmentSlot.OFFHAND, sword);
+            player.setItemSlot(EquipmentSlot.CHEST, gemmed(Items.IRON_CHESTPLATE, GemType.ATTACK_SPEED, 6));
+            player.tick();
+            close(helper, player.getAttributeValue(Attributes.ATTACK_SPEED), baseSpeed,
+                    "An offhand weapon and an invalid armor socket cannot raise attack speed");
+
+            player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+            player.setItemSlot(EquipmentSlot.MAINHAND, sword);
+            player.tick();
+            close(helper, player.getAttributeValue(Attributes.ATTACK_SPEED), baseSpeed * 1.3D,
+                    "Returning the weapon to the main hand restores the bonus");
+            sword.remove(ExtremeGear.SOCKETS.get());
+            player.tick();
+            close(helper, player.getAttributeValue(Attributes.ATTACK_SPEED), baseSpeed,
+                    "Removing the gem from the still-equipped weapon clears the bonus");
+            close(helper, player.getCurrentItemAttackStrengthDelay(), baseDelay,
+                    "Removing the gem restores the original cooldown");
+
+            ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
+            player.setItemSlot(EquipmentSlot.MAINHAND, pickaxe);
+            player.tick();
+            double toolSpeed = player.getAttributeValue(Attributes.ATTACK_SPEED);
+            pickaxe.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, firstCode + 5));
+            player.tick();
+            close(helper, player.getAttributeValue(Attributes.ATTACK_SPEED), toolSpeed,
+                    "An invalid attack-speed gem component on a pickaxe has no effect");
+        } finally { player.discard(); }
+        helper.succeed();
+    }
+
+    @GameTest(templateNamespace = "modern_ite_gem_effects", template = "gear_empty")
     public static void protectionGemsReachAllFourSlotSpecificAttributesForEveryRank(GameTestHelper helper) {
         for (int rank = 1; rank <= 6; rank++) for (int index = 0; index < ARMOR_SLOTS.length; index++) {
             EquipmentSlot slot = ARMOR_SLOTS[index];

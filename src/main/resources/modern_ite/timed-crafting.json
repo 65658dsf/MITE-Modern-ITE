@@ -6,7 +6,7 @@
     "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
     "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
     "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
-    "Coverage: 160 static extension recipes, including the bastion eye, plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+    "Coverage: 172 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
     "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
   ],
   "components": {
@@ -189,6 +189,30 @@
     "modern_ite:fancy_red": {
       "difficulty": 1600.0,
       "evidence": "Extreme ItemFancyRed extends ItemRock with diamond material: explicit rock component 1600F precedes lowest-production override 1F"
+    },
+    "modern_ite:gem_attack_speed_1": {
+      "difficulty": 25.0,
+      "evidence": "Modern attack speed gems use the existing enhancement gem component difficulty of 25F"
+    },
+    "modern_ite:gem_attack_speed_2": {
+      "difficulty": 25.0,
+      "evidence": "Modern attack speed gems use the existing enhancement gem component difficulty of 25F"
+    },
+    "modern_ite:gem_attack_speed_3": {
+      "difficulty": 25.0,
+      "evidence": "Modern attack speed gems use the existing enhancement gem component difficulty of 25F"
+    },
+    "modern_ite:gem_attack_speed_4": {
+      "difficulty": 25.0,
+      "evidence": "Modern attack speed gems use the existing enhancement gem component difficulty of 25F"
+    },
+    "modern_ite:gem_attack_speed_5": {
+      "difficulty": 25.0,
+      "evidence": "Modern attack speed gems use the existing enhancement gem component difficulty of 25F"
+    },
+    "modern_ite:gem_attack_speed_6": {
+      "difficulty": 25.0,
+      "evidence": "Modern attack speed gems use the existing enhancement gem component difficulty of 25F"
     },
     "modern_ite:gem_damage_1": {
       "difficulty": 25.0,
@@ -555,6 +579,72 @@
       "required_bench": null,
       "source_order": -1,
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:glowstone (30.000001907348633); 2 * mite:adamantium_ingot (25600.0); 2 * mite:vibranium_ingot (51200.0); 1 * modern_ite:dynamic_core_adamantium (1.0); vibranium lantern adapts the source adamantium upgrade layout with an adamantium lantern at the center; preserve the existing absence of a workbench-material gate"
+    },
+    "modern_ite:gem_attack_speed_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_attack_speed_1 (25.0); 2 * modern_ite:gem_shard_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_attack_speed_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_attack_speed_2 (25.0); 2 * modern_ite:gem_shard_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_attack_speed_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_attack_speed_3 (25.0); 2 * modern_ite:gem_shard_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_attack_speed_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_attack_speed_4 (25.0); 2 * modern_ite:gem_shard_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_attack_speed_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 1 * modern_ite:gem_attack_speed_5 (25.0); 2 * modern_ite:gem_shard_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_attack_speed_1": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_attack_speed_1 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_attack_speed_2": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_attack_speed_2 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_attack_speed_3": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_attack_speed_3 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_attack_speed_4": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_attack_speed_4 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_attack_speed_5": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_attack_speed_5 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
+    },
+    "modern_ite:gem_box_from_gem_attack_speed_6": {
+      "difficulty": 75.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * modern_ite:gem_attack_speed_6 (25.0); R196 CraftingManager.addShapelessRecipe expands counted ItemStacks into single-item components"
     },
     "modern_ite:gem_box_from_gem_damage_1": {
       "difficulty": 75.0,
@@ -1191,6 +1281,12 @@
       "required_bench": null,
       "source_order": -1,
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_damage_1 (25.0)"
+    },
+    "modern_ite:gem_setting_from_attack_speed": {
+      "difficulty": 2825.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 3 * minecraft:iron_ingot (800.0); 5 * minecraft:oak_planks (80.0); 1 * modern_ite:gem_attack_speed_1 (25.0)"
     },
     "modern_ite:gem_setting_from_damage": {
       "difficulty": 2825.0,

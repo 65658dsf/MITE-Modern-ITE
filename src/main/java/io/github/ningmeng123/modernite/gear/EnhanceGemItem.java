@@ -20,15 +20,19 @@ public final class EnhanceGemItem extends Item {
             case RECOVER, FIREPROOF, EXPLOSION_PROOF -> rank * 12.5;
             case DURABILITY -> rank * 3.75;
             case SPEED -> rank * 5;
+            case ATTACK_SPEED -> rank * type.rate * 100;
             case EFFICIENCY -> rank;
             default -> type.rate * rank;
         };
         tooltip.add(Component.translatable("tooltip.modern_ite.gem_" + type.id,
                 String.format(java.util.Locale.ROOT, "%.3f", value).replaceAll("0+$", "").replaceAll("\\.$", ""))
                 .withStyle(ChatFormatting.AQUA));
-        tooltip.add(Component.translatable("tooltip.modern_ite.gem_highest").withStyle(ChatFormatting.GRAY));
+        if (type != GemType.ATTACK_SPEED) {
+            tooltip.add(Component.translatable("tooltip.modern_ite.gem_highest").withStyle(ChatFormatting.GRAY));
+        }
         String target = switch (type) {
             case DAMAGE, EFFICIENCY -> "tools";
+            case ATTACK_SPEED -> "single_weapon";
             case HEALTH, PROTECTION, RECOVER, NUTRITION -> "armor";
             case SPEED -> "boots";
             case FIREPROOF, EXPLOSION_PROOF -> "chest_legs";

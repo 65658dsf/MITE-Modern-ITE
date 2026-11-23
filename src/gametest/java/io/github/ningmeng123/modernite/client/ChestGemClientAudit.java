@@ -275,8 +275,10 @@ public final class ChestGemClientAudit {
             stage(mc, player);
             ItemStack chest = new ItemStack(Items.DIAMOND_CHESTPLATE);
             player.setItemSlot(EquipmentSlot.CHEST, chest);
+            int columns = 6;
+            int rows = Math.ceilDiv(GemType.values().length, columns);
             try (NativeImage empty = frame(mc, player, .18F, new ObservedBuffers(mc));
-                    NativeImage gallery = new NativeImage(WIDTH * 5, HEIGHT * 2, false)) {
+                    NativeImage gallery = new NativeImage(WIDTH * columns, HEIGHT * rows, false)) {
                 int index = 0;
                 for (GemType type : GemType.values()) {
                     chest.set(ExtremeGear.SOCKETS.get(), GemSockets.EMPTY.with(0, code(type, 1)));
@@ -291,7 +293,7 @@ public final class ChestGemClientAudit {
                         check(difference(rendered.get(earlier), actual) > 5,
                                 "Every gem category has a visibly distinct rendered star color: " + type.id);
                     Path png = folder.resolve("star-color-" + type.id + ".png"); actual.writeToFile(png);
-                    copy(actual, gallery, index / 5, index % 5);
+                    copy(actual, gallery, index / columns, index % columns);
                     JsonObject facts = new JsonObject(); samples.add(facts);
                     facts.addProperty("gem_type", type.id); facts.addProperty("star_vertices", observed.starVertices);
                     facts.addProperty("star_rgb", String.format("#%06X", ChestGemLayer.starColor(type) & 0xFFFFFF));
@@ -306,9 +308,9 @@ public final class ChestGemClientAudit {
                 }
                 Path png = folder.resolve("star-colors.png"); gallery.writeToFile(png);
                 report.addProperty("preview", png.toString());
-                report.addProperty("preview_order", "GemType enum order, five columns and two rows");
+                report.addProperty("preview_order", "GemType enum order, " + columns + " columns and " + rows + " rows");
             }
-            report.addProperty("all_ten_type_colors_visibly_distinct", true);
+            report.addProperty("all_type_colors_visibly_distinct", true);
             report.addProperty("rank_changes_preserve_star_color_and_shape", true);
             report.addProperty("status", "passed_actual_gpu_rendering"); return report;
         } finally { rendered.forEach(NativeImage::close); player.discard(); }

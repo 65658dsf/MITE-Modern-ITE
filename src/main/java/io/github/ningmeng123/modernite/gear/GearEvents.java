@@ -37,6 +37,12 @@ public final class GearEvents {
         }
         if (EquipmentDurability.toolProfile(stack) != null && attack > 0) event.addModifier(Attributes.ATTACK_DAMAGE,
                 new AttributeModifier(ExtremeGear.id("socket_damage"), attack, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND);
+        int attackSpeedRank = ExtremeGear.activeRank(stack, GemType.ATTACK_SPEED);
+        if (attackSpeedRank > 0) {
+            event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(ExtremeGear.id("socket_attack_speed"),
+                    attackSpeedRank * GemType.ATTACK_SPEED.rate, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL),
+                    EquipmentSlotGroup.MAINHAND);
+        }
         if (stack.getItem() instanceof ArmorItem armor) {
             double base = 0;
             for (var entry : List.copyOf(event.getModifiers())) if (entry.attribute().equals(Attributes.ARMOR)

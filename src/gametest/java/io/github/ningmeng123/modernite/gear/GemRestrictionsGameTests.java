@@ -1,5 +1,6 @@
 package io.github.ningmeng123.modernite.gear;
 
+import io.github.ningmeng123.modernite.content.ExtremeContent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -43,8 +44,8 @@ public final class GemRestrictionsGameTests {
         ItemStack[] gear = {new ItemStack(Items.IRON_SWORD), new ItemStack(Items.IRON_PICKAXE),
                 new ItemStack(Items.IRON_HELMET), new ItemStack(Items.IRON_CHESTPLATE),
                 new ItemStack(Items.IRON_LEGGINGS), new ItemStack(Items.IRON_BOOTS)};
-        // Explicit source-family expectations: tools, tools, head, chest, legs, feet.
-        String[] allowed = {"damage,effect,durable", "damage,effect,durable", "health,protection,recover,durable,nutrition",
+        // Explicit source-family expectations: sword, pickaxe, head, chest, legs, feet.
+        String[] allowed = {"damage,effect,durable,attack_speed", "damage,effect,durable", "health,protection,recover,durable,nutrition",
                 "health,protection,recover,durable,fireproof,explosionproof,nutrition",
                 "health,protection,recover,durable,fireproof,explosionproof,nutrition",
                 "health,protection,recover,durable,speed,nutrition"};
@@ -69,6 +70,65 @@ public final class GemRestrictionsGameTests {
                 player.getInventory().clearContent();
             }
         }
+        h.succeed();
+    }
+
+    @GameTest(template = "gear_empty")
+    public static void attackSpeedGemAllowsOnePerWeaponAndSurvivesReplacement(GameTestHelper h) {
+        BlockPos pos = h.absolutePos(new BlockPos(1, 1, 1));
+        h.getLevel().setBlockAndUpdate(pos, ExtremeGear.GEM_SETTING.get().defaultBlockState());
+        var station = (GearStationEntity) h.getLevel().getBlockEntity(pos);
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var server = new GearStationMenu(1, player.getInventory(), station, station.data, true);
+        var projected = new SimpleContainer(9);
+        var client = new GearStationMenu(2, player.getInventory(), projected, new SimpleContainerData(5), true);
+        ItemStack sword = new ItemStack(Items.IRON_SWORD);
+        ItemStack lowSpeed = ExtremeGear.gem(GemType.ATTACK_SPEED, 1);
+        ItemStack highSpeed = ExtremeGear.gem(GemType.ATTACK_SPEED, 6);
+        ItemStack damage = ExtremeGear.gem(GemType.DAMAGE, 2);
+        ItemStack club = new ItemStack(ExtremeContent.ITEM_ENTRIES.get("club_iron").get());
+        h.assertTrue(ExtremeGear.canSocketGem(club, lowSpeed, 0), "The addon club can use an attack speed gem");
+
+        station.setItem(0, sword);
+        station.setItem(8, lowSpeed);
+        station.setItem(1, damage);
+        projected.setItem(0, sword.copy());
+        h.assertTrue(station.getItem(8).is(lowSpeed.getItem()) && station.getItem(1).is(damage.getItem()),
+                "The attack speed gem and other gem types share a weapon");
+        GemSockets initial = ExtremeGear.sockets(sword);
+        for (int rank = 1; rank <= 6; rank++) {
+            ItemStack candidate = ExtremeGear.gem(GemType.ATTACK_SPEED, rank);
+            for (int slot = 1; slot <= 8; slot++) {
+                boolean replacement = slot == 8;
+                h.assertTrue(station.canPlaceItem(slot, candidate) == replacement
+                                && server.getSlot(slot).mayPlace(candidate) == replacement
+                                && client.getSlot(slot).mayPlace(candidate) == replacement,
+                        "Both menus and the station allow rank " + rank + " only in the existing attack speed socket");
+                if (!replacement) station.setItem(slot, candidate);
+            }
+        }
+        h.assertValueEqual(ExtremeGear.sockets(sword), initial, "Direct insertions cannot overwrite or fill another socket");
+
+        player.getInventory().setItem(9, highSpeed.copy());
+        h.assertTrue(server.quickMoveStack(player, 9).isEmpty()
+                        && ItemStack.matches(player.getInventory().getItem(9), highSpeed),
+                "A rejected shift-click leaves the second attack speed gem in the inventory");
+        server.setCarried(player.getInventory().removeItem(9, 1));
+        server.clicked(2, 0, ClickType.PICKUP, player);
+        h.assertTrue(ItemStack.matches(server.getCarried(), highSpeed) && station.getItem(2).isEmpty(),
+                "A rejected manual insertion leaves the second attack speed gem on the cursor");
+        server.clicked(8, 0, ClickType.PICKUP, player);
+        h.assertTrue(ItemStack.matches(server.getCarried(), lowSpeed) && station.getItem(8).is(highSpeed.getItem()),
+                "Replacing the existing attack speed gem returns the old gem");
+
+        var registries = h.getLevel().registryAccess();
+        ItemStack restored = ItemStack.parse(registries, sword.save(registries)).orElseThrow();
+        station.setItem(0, restored);
+        h.assertValueEqual(ExtremeGear.sockets(restored), ExtremeGear.sockets(sword), "Both gems survive saving and loading");
+        h.assertValueEqual(ExtremeGear.activeRank(restored, GemType.ATTACK_SPEED), 6, "The restored weapon reads the attack speed rank");
+        h.assertTrue(ItemStack.matches(station.removeItem(8, 1), highSpeed) && station.canPlaceItem(2, lowSpeed)
+                        && station.getItem(1).is(damage.getItem()),
+                "Extracting the attack speed gem reopens the other sockets and leaves the damage gem in place");
         h.succeed();
     }
 

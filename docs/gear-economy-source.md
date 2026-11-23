@@ -8,8 +8,8 @@
 
 | 系统 | 当前实现 | 主要源证据 |
 | --- | --- | --- |
-| 宝石 | 10 类、每类 6 阶，共 60 件实际注册物品；5 种朴素宝石、三角宝石箱；同类宝石升级、三颗同种同阶宝石换箱、金属块烧炼来源 | Extreme `EXItemsRegistryInit`、`GemModifierTypes`、`ItemEnhanceGem`、`ItemEnhanceGemBox` |
-| 镶嵌台 | 装备 1 槽、8 个可取出的孔位；同件装备同类取最高阶；实际宝石只保存于装备组件，GUI 孔位为投影 | Extreme `ContainerGemSetting`、`TileEntityGemSetting` |
+| 宝石 | 11 类、每类 6 阶，共 66 件实际注册物品，含 Modern ITE 新增的攻速宝石。另有 5 种朴素宝石、三角宝石箱、同类宝石升级、三颗同种同阶宝石换箱、金属块烧炼来源 | Extreme `EXItemsRegistryInit`、`GemModifierTypes`、`ItemEnhanceGem`、`ItemEnhanceGemBox` |
+| 镶嵌台 | 装备 1 槽、8 个可取出的孔位。同件装备同类取最高阶，每把武器限一颗攻速宝石。实际宝石只保存于装备组件，GUI 孔位为投影 | Extreme `ContainerGemSetting`、`TileEntityGemSetting` |
 | 生命和营养 | 等级基础生命封顶 60，四件护甲生命宝石最多另加 24；最高历史日限制总生命；营养宝石只把现有容量提高至 20 | Extreme `EXPlayerAttribute`；ITE `PlayerAttributeListener`；Extreme 玩家相关 mixin |
 | 历史磨具 | 保留旧方块与最多 3 次的历史组件；点击不再消耗方块或增加次数，成长上限改由材质与独立锻造等级决定 | Extreme `BlockEnhanceToolLevelUp`；现按 ITE 旧装备上限规则适配 |
 | 防护宝典 | 转换成长副词条中的防火/防爆/弹射保护/荆棘为保护；无可转换项时增加保护 I 并使用一个成长等级 | Extreme `ProtectionTome` 相关合成；适配基础 `GearProgress` |
@@ -44,6 +44,7 @@ dayCap = 历史最高日 < 96 时 20，96–127 时 30，128–169 时 40，170 
 | 宝石 | 每阶效果与生效对象 |
 | --- | --- |
 | 攻击 | 主手装备攻击 +1 |
+| 攻速 | 主手武器攻击速度每阶 +5%，最高 +30%。每把武器限一颗，可以和其他种类的宝石同时镶嵌。 |
 | 生命 | 穿着的四件护甲各 +1 生命，受总日上限控制 |
 | 保护 | 对应护甲槽 +0.25 现代护甲值；四个槽使用独立属性 ID，可叠加 |
 | 恢复 | 每阶增加 12.5% 实际自然恢复量，四件护甲相加 |
@@ -56,11 +57,13 @@ dayCap = 历史最高日 < 96 时 20，96–127 时 30，128–169 时 40，170 
 
 可镶嵌对象使用基础已识别的工具/武器档案和人形护甲。弓、盾、马铠不因持有宝石自动获得额外槽位。修理和其他装备维护通过基础扩展接口保存孔位、磨具次数、独立锻造等级；普通附魔和成长副词条保持各自独立。
 
+攻速宝石适用于可镶嵌的剑、匕首、小刀、棒、短木棒、战斧、战锤及已适配的 Simply Swords 武器。宝石箱可开出一阶攻速宝石，可用对应阶的碎片合成升阶。
+
 2026-10-29 插槽修复：攻击、效率仅可装入工具／武器；生命、保护、恢复、饱食仅护甲；速度仅靴子；防火、防爆仅胸甲或护腿；耐久可装入两类。旧存档错放的宝石保留，可在镶嵌台取出，错误部位不再产生宝石效果。参考 Extreme `mixin/item/ItemArmorMixin` 的靴子、胸甲／护腿提示分支及 `mixin/item/ItemMixin` 的工具效果族。旧 `inventory/container/SlotGem.isItemValid` 实际只判断宝石物品，未限制种类，因此本次插入校验是按用户要求依据效果族补齐，而非声称旧版已有这项校验。防火和防爆的胸腿适用范围按用户要求与旧版护甲提示统一，减伤继续使用现代每阶 12.5%，两件依次乘算以避免满阶产生负伤害。
 
 宝石箱右键在服务端广播一次物品破碎声（音量 0.8、音调 0.8–1.2），保留每次一颗随机一阶宝石及原有创造模式消耗策略。来源为 Extreme `ItemEnhanceGemBox.onItemRightClick` → R196 `uf.causeBreakingItemEffect` → `bcw` 的 `EnumEntityFX.item_breaking` 普通分支（`random.break`）。箱子图标以 imagegen 内置工具重制为透明背景的 32×32 木箱、金边与蓝色三角宝石；生成提示和可复现 RGBA 源保存在 `tools/gem_textures/gem_box.json`，`node tools/generate_gem_assets.mjs` 可重打包，常规装备资源脚本不再覆盖为旧箱图。
 
-对应自动验证类为 `GemRestrictionsGameTests`，覆盖全部十类六阶宝石与六类装备的八个槽、两端菜单、快捷移动、直接写入、历史错槽移除、胸腿减伤和右键声音／奖励。客户端音效听感和实际游戏画面仍需人工确认。
+对应自动验证类为 `GemRestrictionsGameTests`，覆盖十一类六阶宝石的镶嵌限制、两端菜单、快捷移动、直接写入、历史错槽移除、胸腿减伤和右键声音／奖励。`GemEffectsGameTests` 验证了主手攻速与攻击冷却。
 
 首个发布的数据组件 schema 为 1，注册键是 `modern_ite:gem_sockets_v1`、`modern_ite:grindings_v1`、`modern_ite:forge_grade_v1`，均有持久化及网络 codec。以后改变格式应使用新版本键并显式迁移，不覆盖已发布版本的旧解码格式。
 

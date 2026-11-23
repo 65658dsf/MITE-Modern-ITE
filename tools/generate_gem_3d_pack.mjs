@@ -131,7 +131,6 @@ const display = {
   firstperson_righthand: { rotation: [25, 35, -10], translation: [0, 2.5, 0], scale: [0.65, 0.65, 0.65] },
   firstperson_lefthand: { rotation: [25, -35, 10], translation: [0, 2.5, 0], scale: [0.65, 0.65, 0.65] },
 };
-files.set('pack.mcmeta', json({ pack: { pack_format: 34, description: '立体切面宝石 · NingMeng123\n65种宝石 · Minecraft 1.21.1 / NeoForge' } }));
 files.set('assets/modern_ite/models/item/gem3d/gem.mtl', '# Author: NingMeng123\nnewmtl gem\nKd 1 1 1\nmap_Kd #gem\n');
 const manifest = { author: 'NingMeng123', format: 1, minecraft: '1.21.1', pack_format: 34, frames: FRAME_COUNT, frame_size: SIZE, items: [], cuts: [] };
 for (const rank of source.ranks) {
@@ -153,9 +152,10 @@ for (const rank of source.ranks) {
     manifest.items.push({ id: `modern_ite:${id}`, rank: rank.rank, kind, texture });
   }
 }
-if (manifest.items.length !== 65) throw new Error('Expected exactly 65 model overrides.');
+if (manifest.items.length !== 71) throw new Error('Expected exactly 71 model overrides.');
+files.set('pack.mcmeta', json({ pack: { pack_format: 34, description: `立体切面宝石 · NingMeng123\n${manifest.items.length}种宝石 · Minecraft 1.21.1 / NeoForge` } }));
 files.set('modern-ite-gems-3d.json', json(manifest));
-files.set('README.txt', '立体切面宝石 / Faceted Gems 3D\nAuthor: NingMeng123\n\nMinecraft 1.21.1 + NeoForge，适用于 MITE: Modern ITE。\n将此 ZIP 放入 resourcepacks 并在资源包列表置顶。\n覆盖全部65种宝石，保持原有类型颜色和六阶外形区分。\n右下到左上扫光，1.5～5秒冷却。真实OBJ多面几何，无额外模型加载模组。\n检视动作由新版 ITE 模组与 Punchy 提供；默认 I 键，不要求启用本资源包。\n');
+files.set('README.txt', `立体切面宝石 / Faceted Gems 3D\nAuthor: NingMeng123\n\nMinecraft 1.21.1 + NeoForge，适用于 MITE: Modern ITE。\n将此 ZIP 放入 resourcepacks 并在资源包列表置顶。\n覆盖全部${manifest.items.length}种宝石，保持原有类型颜色和六阶外形区分。\n右下到左上扫光，1.5～5秒冷却。真实OBJ多面几何，无额外模型加载模组。\n检视动作由新版 ITE 模组与 Punchy 提供；默认 I 键，不要求启用本资源包。\n`);
 
 // Deterministic ZIP: UTF-8 paths, ordinary DEFLATE, fixed timestamps.
 function zip(entries) {

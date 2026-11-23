@@ -29,7 +29,9 @@ public final class GearStationMenu extends AbstractContainerMenu {
                 @Override public boolean mayPlace(ItemStack stack) {
                     if (locked()) return false;
                     if (station instanceof GearStationEntity actual) return actual.canPlaceItem(index, stack);
-                    return gemMode ? index == 0 ? ExtremeGear.socketable(stack) : ExtremeGear.acceptsGem(station.getItem(0), stack) : index != 8;
+                    if (!gemMode) return index != 8;
+                    return index == 0 ? ExtremeGear.socketable(stack)
+                            : ExtremeGear.canSocketGem(station.getItem(0), stack, index - 1);
                 }
                 @Override public boolean mayPickup(Player player) { return !locked() && super.mayPickup(player); }
                 @Override public int getMaxStackSize() { return gemMode || index >= 5 ? 1 : 64; }

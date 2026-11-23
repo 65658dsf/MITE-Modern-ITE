@@ -144,7 +144,7 @@ public final class Gem3dPackClientAudit {
         Files.createDirectories(folder());
         for (var item : ExtremeGear.GEMS) GEMS.add(new Gem(mc, new ItemStack(item.get())));
         for (var item : ExtremeGear.SHARDS) GEMS.add(new Gem(mc, new ItemStack(item.get())));
-        check(GEMS.size() == 65, "Expected all 65 gem registrations");
+        check(GEMS.size() == 71, "Expected all 71 gem registrations");
         REPORT.addProperty("gem_count", GEMS.size());
         REPORT.addProperty("genuine_3d_pack_expected", packExpected());
         REPORT.addProperty("model_baking_completed", baked);
@@ -207,7 +207,11 @@ public final class Gem3dPackClientAudit {
     }
 
     private static NativeImage renderGrid(Minecraft mc, boolean showcase, float angle) {
-        int width = showcase ? 960 : 960, height = showcase ? 640 : 1760;
+        int count = showcase ? 6 : GEMS.size();
+        int columns = showcase ? 3 : 6, cell = showcase ? 320 : 160;
+        // The full grid reserves the rank-one position in the shard row.
+        int cells = showcase ? count : count + 1;
+        int width = columns * cell, height = ((cells + columns - 1) / columns) * cell;
         TextureTarget target = new TextureTarget(width, height, true, Minecraft.ON_OSX);
         Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix());
         VertexSorting sorting = RenderSystem.getVertexSorting();
@@ -216,11 +220,9 @@ public final class Gem3dPackClientAudit {
             target.setClearColor(0.085F, 0.105F, 0.14F, 1); target.clear(Minecraft.ON_OSX); target.bindWrite(true);
             RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, width, height, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
             view.identity(); RenderSystem.applyModelViewMatrix(); Lighting.setupFor3DItems();
-            int count = showcase ? 6 : GEMS.size();
             for (int i = 0; i < count; i++) {
                 int sourceIndex = showcase ? new int[]{12, 7, 20, 27, 40, 59}[i] : i;
-                int slot = showcase ? i : i >= 60 ? i + 1 : i;
-                int columns = showcase ? 3 : 6, cell = showcase ? 320 : 160;
+                int slot = !showcase && i >= ExtremeGear.GEMS.size() ? i + 1 : i;
                 PoseStack pose = new PoseStack();
                 pose.translate((slot % columns + .5F) * cell, (slot / columns + .5F) * cell, 100);
                 float scale = showcase ? 270 : 135;

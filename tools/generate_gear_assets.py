@@ -54,7 +54,8 @@ def shaped(id, pattern, keys, result=None, count=1):
 
 types = [('damage','攻击','Damage'), ('health','生命','Health'), ('protection','保护','Protection'),
          ('recover','恢复','Recovery'), ('effect','效率','Efficiency'), ('durable','耐久','Durability'),
-         ('speed','速度','Speed'), ('fireproof','防火','Fireproof'), ('explosionproof','防爆','Blast Protection'), ('nutrition','饱食','Nutrition')]
+         ('speed','速度','Speed'), ('fireproof','防火','Fireproof'), ('explosionproof','防爆','Blast Protection'),
+         ('nutrition','饱食','Nutrition'), ('attack_speed','攻速','Attack Speed')]
 shapes = ['三角','四角','五角','六角','七角','八角']
 for kind, chinese, english in types:
     zh[f'gem.modern_ite.{kind}'], en[f'gem.modern_ite.{kind}'] = chinese, english
@@ -137,8 +138,10 @@ messages = {
  'tooltip.modern_ite.gem_fireproof': ('胸甲或护腿：火焰伤害减少 %s%%', 'Chestplate or leggings: %s%% less fire damage'),
  'tooltip.modern_ite.gem_explosionproof': ('胸甲或护腿：爆炸伤害减少 %s%%', 'Chestplate or leggings: %s%% less explosion damage'),
  'tooltip.modern_ite.gem_nutrition': ('穿着护甲时饱食度和营养容量各 +%s，宝石总加成最多额外增加20点', 'Worn armor adds %s to satiation and nutrition capacity, with at most 20 extra points from gems'),
+ 'tooltip.modern_ite.gem_attack_speed': ('主手武器攻击速度 +%s%%', 'Adds %s%% attack speed to the main-hand weapon'),
  'tooltip.modern_ite.gem_highest': ('同件装备相同类型仅最高阶生效，可在镶嵌台取出', 'Highest rank of each type per item applies. Remove at a gem table.'),
  'tooltip.modern_ite.gem_target_tools': ('仅可镶嵌于工具或武器', 'Fits tools or weapons only'),
+ 'tooltip.modern_ite.gem_target_single_weapon': ('仅可镶嵌于武器，每件限一颗，可在镶嵌台取出', 'Fits weapons only, one per weapon. Remove at a gem table.'),
  'tooltip.modern_ite.gem_target_armor': ('仅可镶嵌于护甲', 'Fits armor only'),
  'tooltip.modern_ite.gem_target_boots': ('仅可镶嵌于靴子', 'Fits boots only'),
  'tooltip.modern_ite.gem_target_chest_legs': ('仅可镶嵌于胸甲或护腿', 'Fits chestplates or leggings only'),
@@ -176,4 +179,4 @@ for fragment in sorted((RES / 'modern_ite').glob('*-sounds.json')):
     sounds.update(json.loads(fragment.read_text(encoding='utf-8')))
 save('assets/modern_ite/sounds.json', sounds)
 EX.close(); ITE.close()
-print(f'Generated gear resources: 60 gems, 5 shards, 4 stones, 6 stations; {len(zh)} translations per locale.')
+print(f'Generated gear resources: {len(types) * len(shapes)} gems, 5 shards, 4 stones, 6 stations; {len(zh)} translations per locale.')

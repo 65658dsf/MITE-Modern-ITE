@@ -3,7 +3,7 @@
 export const GEM_INSPECTION_NAME = 'modern_ite_gem_inspect';
 export const GEM_INSPECTION_SECONDS = 5.2;
 const GEM_TYPES = ['damage', 'health', 'protection', 'recover', 'effect', 'durable',
-  'speed', 'fireproof', 'explosionproof', 'nutrition'];
+  'speed', 'fireproof', 'explosionproof', 'nutrition', 'attack_speed'];
 export const GEM_INSPECTION_ITEMS = Object.freeze([
   ...GEM_TYPES.flatMap(type => Array.from({ length: 6 }, (_, i) => `modern_ite:gem_${type}_${i + 1}`)),
   ...Array.from({ length: 5 }, (_, i) => `modern_ite:gem_shard_${i + 2}`),
@@ -116,8 +116,9 @@ export function buildGemInspectClip(sourceSide = 'right') {
  */
 export function getGemInspectionResources(itemIds = GEM_INSPECTION_ITEMS) {
   const ids = [...itemIds];
-  if (ids.length !== 65 || new Set(ids).size !== 65 || ids.some(id => !GEM_INSPECTION_ITEMS.includes(id))) {
-    throw new Error('Gem inspection requires exactly the 60 Modern ITE gems and five shards.');
+  if (ids.length !== GEM_INSPECTION_ITEMS.length || new Set(ids).size !== ids.length
+      || ids.some(id => !GEM_INSPECTION_ITEMS.includes(id))) {
+    throw new Error('Gem inspection must cover each Modern ITE gem and shard exactly once.');
   }
   const itemSpecific = Object.fromEntries(ids.map(id => [id, {
     customAnimation: [{ type: 'inspect', name: GEM_INSPECTION_NAME }],
