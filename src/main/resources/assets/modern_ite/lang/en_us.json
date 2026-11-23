@@ -523,6 +523,8 @@
   "modern_ite.config.quartz_max_exp_level.tooltip": "Quartz sacrifice experience level cap. Default: 55.",
   "modern_ite.config.diamond_exp": "Diamond sacrifice experience",
   "modern_ite.config.diamond_exp.tooltip": "Diamond sacrifice experience. Default: 500.",
+  "modern_ite.config.red_diamond_exp": "Red diamond sacrifice experience",
+  "modern_ite.config.red_diamond_exp.tooltip": "Experience gained per red diamond. Defaults to 250. Set to 0 to disable red diamond sacrifice.",
   "modern_ite.config.emerald_exp": "Emerald sacrifice experience",
   "modern_ite.config.emerald_exp.tooltip": "Emerald sacrifice experience. Default: 250.",
   "modern_ite.config.quartz_exp": "Quartz sacrifice experience",

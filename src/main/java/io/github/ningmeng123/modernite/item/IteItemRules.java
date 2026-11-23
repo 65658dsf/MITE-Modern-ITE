@@ -3,6 +3,7 @@ package io.github.ningmeng123.modernite.item;
 import io.github.ningmeng123.mite.progression.GearProgression;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.content.ExtremeContent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -34,6 +35,7 @@ public final class IteItemRules {
     private IteItemRules() {}
 
     public static int gemSacrificeExperience(ItemStack stack,int original) {
+        if(stack.is(ExtremeContent.FANCY_RED.get()))return IteConfig.integer("red_diamond_exp");
         if(stack.is(Items.DIAMOND))return IteConfig.integer("diamond_exp");
         if(stack.is(Items.EMERALD))return IteConfig.integer("emerald_exp");
         if(stack.is(Items.QUARTZ))return IteConfig.integer("quartz_exp");

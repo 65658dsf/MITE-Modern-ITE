@@ -139,11 +139,6 @@ public final class ExtremeLifeEvents {
         var before=event.getOriginal().getPersistentData();var after=event.getEntity().getPersistentData();
         if(before.contains(ANCHOR))after.put(ANCHOR,before.getCompound(ANCHOR).copy());if(before.contains(PENALTY))after.put(PENALTY,before.getCompound(PENALTY).copy());
     }
-    @SubscribeEvent(priority=EventPriority.LOWEST) public static void use(PlayerInteractEvent.RightClickItem event) {
-        if(!(event.getEntity() instanceof ServerPlayer player)||!event.getItemStack().is(ExtremeContent.FANCY_RED.get()))return;
-        PlayerExperience.addPoints(player,500);if(!player.isCreative())event.getItemStack().shrink(1);
-        event.setCancellationResult(net.minecraft.world.InteractionResult.SUCCESS);event.setCanceled(true);
-    }
     public static String foreignStrongboxOwner(ServerPlayer player,BlockPos pos) {
         var entity=player.serverLevel().getBlockEntity(pos);
         if(entity instanceof StrongboxBlockEntity box&&!box.isOwner(player))return box.ownerName();

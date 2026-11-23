@@ -13,11 +13,13 @@ import com.mojang.logging.LogUtils;
 import io.github.ningmeng123.mite.client.config.MiteSettingsScreen;
 import io.github.ningmeng123.mite.client.config.MonsterSpawnSettingsScreen;
 import io.github.ningmeng123.mite.client.config.OreGenerationSettingsScreen;
+import io.github.ningmeng123.mite.client.config.SingleConfigValueScreen;
 import io.github.ningmeng123.mite.config.MiteConfig;
 import io.github.ningmeng123.mite.rules.R196OreRules;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.modernite.config.IteSpawnConfig;
+import io.github.ningmeng123.modernite.content.ExtremeContent;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
 import io.github.ningmeng123.modernite.entity.ExtremeMobs;
 import io.github.ningmeng123.modernite.config.client.IteConfigValuesScreen;
@@ -32,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
@@ -44,6 +47,9 @@ import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
@@ -152,6 +158,7 @@ public final class IteConfigClientAudit {
             mc.setScreen(main);
             capture(mc, main, width, height, "mite-settings", -1, -1);
             bounds(main);
+            if (width == 320) auditRedDiamondExperience(mc, main);
             auditBaseSpawningRules(mc,main,width,height);
             press(main, "modern_ite.config.open");
             check(mc.screen instanceof IteSettingsScreen, "The injected button must open ITE settings");
@@ -289,10 +296,43 @@ public final class IteConfigClientAudit {
         report.addProperty("edited_value", expected);
     }
 
+    private static void auditRedDiamondExperience(Minecraft mc, Screen main) {
+        String translation = "modern_ite.config.red_diamond_exp";
+        var setting = IteConfig.setting("red_diamond_exp");
+        Object original = setting.get();
+        check(setting.getDefault().equals(250), "Red diamond experience defaults to 250");
+        try {
+            setting.set(250);
+            IteConfig.refresh();
+            findEdit(main, "mite.config.search_all").setValue("红钻献祭");
+            press(main, translation);
+            check(mc.screen instanceof SingleConfigValueScreen, "MITE's search opens the editable red diamond experience setting");
+            EditBox field = findEdit(mc.screen, translation);
+            check(field.active && field.getValue().equals("250"), "The real red diamond number box displays the effective 250");
+            var stack = new ItemStack(ExtremeContent.FANCY_RED.get());
+            var tooltip = Component.translatable("tooltip.mite.gem_sacrifice", 250).withStyle(ChatFormatting.AQUA);
+            check(tooltip.getString().equals("250 点经验") && stack.getTooltipLines(Item.TooltipContext.EMPTY, null, TooltipFlag.NORMAL)
+                            .stream().filter(tooltip::equals).count() == 1,
+                    "The real red diamond tooltip renders the same translated experience line as other gems");
+            field.setValue("123");
+            check(setting.get().equals(123), "Editing red diamond experience updates the actual setting");
+            field.setValue("250");
+            mc.screen.onClose();
+            check(mc.screen == main, "Closing the red diamond editor returns to MITE settings");
+            findEdit(main, "mite.config.search_all").setValue("");
+            report.addProperty("red_diamond_experience_search_editor_and_tooltip_verified", true);
+        } finally {
+            setting.set(original);
+            IteConfig.SPEC.save();
+            IteConfig.refresh();
+        }
+    }
+
     private static void auditOres(Minecraft mc, Screen title) throws Exception {
         var mite = ModList.get().getModContainerById("mite").orElseThrow();
         Screen parent = IConfigScreenFactory.getForMod(mite.getModInfo()).orElseThrow().createScreen(mite, title);
         mc.setScreen(parent);
+        auditRedDiamondOreChance(mc, parent);
         press(parent, "mite.config.ore_generation");
         check(mc.screen instanceof OreGenerationSettingsScreen, "The actual MITE ore button must open its multiplier page");
         Screen ores = mc.screen;
@@ -331,7 +371,7 @@ public final class IteConfigClientAudit {
         check(findEdit(ores, "mite.config.ore_height_range").getValue().equals("[100,-100]"), "Invalid height text survives dimension switches");
         findEdit(ores, "mite.config.ore_height_range").setValue("[-100,100]");
         check(findButton(ores, "mite.config.save").active, "Valid negative absolute heights re-enable saving");
-        check(MiteConfig.localSnapshot() == originalBaseSnapshot, "Draft changes cannot reach gameplay before saving");
+        check(MiteConfig.localSnapshot().equals(originalBaseSnapshot), "Draft changes cannot reach gameplay before saving");
         for (var dimension : List.of(R196OreRules.Dimension.OVERWORLD, R196OreRules.Dimension.UNDERWORLD)) {
             selectOreDimension(ores, dimension);
             for (int[] size : new int[][] {{320, 240}, {854, 480}}) {
@@ -341,6 +381,7 @@ public final class IteConfigClientAudit {
                         dimension == R196OreRules.Dimension.OVERWORLD ? 2D : .5D, "Draft survives resizing and remains in the correct dimension");
             }
         }
+        editRedDiamondOre(ores);
         press(ores, "mite.config.save");
         check(mc.screen == parent, "Saving both dimension multipliers returns to the actual MITE settings parent");
         check(MiteConfig.localSnapshot().oreCandidates().equals(originalBaseSnapshot.oreCandidates())
@@ -357,6 +398,49 @@ public final class IteConfigClientAudit {
         report.addProperty("ore_height_drafts_validated_and_saved", true);
     }
 
+    private static void auditRedDiamondOreChance(Minecraft mc, Screen parent) {
+        var redDiamond = R196OreRules.Kind.valueOf("RED_DIAMOND");
+        var chance = MiteConfig.UNDERWORLD_ORE_CHANCES.get(redDiamond);
+        double original = chance.get();
+        checkDouble(chance.getDefault(), 100D, "The red diamond ore chance defaults to one hundred percent");
+        try {
+            findEdit(parent, "mite.config.search_all").setValue("underworld_generation.red_diamond.chance_percent");
+            press(parent, "红钻矿石 · 通过率（%）");
+            check(mc.screen instanceof SingleConfigValueScreen, "MITE's search opens the red diamond ore pass chance editor");
+            var field = findEdit(mc.screen, "mite.config.ore_chance");
+            check(field.active, "The red diamond ore pass chance is editable");
+            field.setValue("25");
+            mc.screen.onClose();
+            checkDouble(chance.get(), 25D, "Editing the native chance field updates the red diamond setting");
+            check(mc.screen == parent, "Closing the chance editor returns to MITE settings");
+            findEdit(parent, "mite.config.search_all").setValue("");
+            report.addProperty("red_diamond_ore_chance_search_and_edit_verified", true);
+        } finally {
+            chance.set(original);
+            MiteConfig.SPEC.save();
+            MiteConfig.refreshEnchantmentRules();
+        }
+    }
+
+    private static void editRedDiamondOre(Screen ores) {
+        selectOreDimension(ores, R196OreRules.Dimension.OVERWORLD);
+        findEdit(ores, "mite.config.ore_search").setValue("红钻矿石");
+        check(widgets(ores).stream().filter(EditBox.class::isInstance).count() == 1,
+                "Searching for red diamond ore in the Overworld leaves only the search field");
+        selectOreDimension(ores, R196OreRules.Dimension.UNDERWORLD);
+        check(widgets(ores).stream().filter(EditBox.class::isInstance).count() == 3,
+                "Searching for red diamond ore in the Underworld shows one editable ore row");
+        findEdit(ores, "mite.config.ore_search").setValue("modern_ite:fancy_red_ore");
+        press(ores, "mite.config.reset");
+        EditBox multiplier = findEdit(ores, "mite.config.ore_multiplier");
+        EditBox height = findEdit(ores, "mite.config.ore_height_range");
+        check(multiplier.getValue().equals("1") && height.getValue().equals("[131,274]"),
+                "The native red diamond ore row resets to its bundled multiplier and height defaults");
+        multiplier.setValue("1.5");
+        height.setValue("[140,260]");
+        check(findButton(ores, "mite.config.save").active, "Valid red diamond ore settings can be saved");
+    }
+
     private static void checkOreSave() throws Exception {
         checkDouble(MiteConfig.oreMultiplier(R196OreRules.Kind.COPPER, R196OreRules.Dimension.OVERWORLD), 2D,
                 "Saved surface multiplier is published to gameplay");
@@ -366,8 +450,17 @@ public final class IteConfigClientAudit {
         checkDouble(((Number)parsed.get(List.of("underworld_ores", "copper"))).doubleValue(), .5D, "Native TOML keeps the separate deep multiplier");
         check(parsed.<String>get(List.of("overworld_generation", "copper", "height_range")).equals("[-100,100]"), "Native TOML stores absolute surface heights");
         check(parsed.<String>get(List.of("underworld_generation", "copper", "height_range")).equals("[-50,200]"), "Native TOML stores independent underworld heights");
+        var redDiamond = R196OreRules.Kind.valueOf("RED_DIAMOND");
+        checkDouble(MiteConfig.underworldOreMultiplier(redDiamond), 1.5D, "Saved red diamond ore multiplier reaches gameplay");
+        check(MiteConfig.oreHeightRange(redDiamond, R196OreRules.Dimension.UNDERWORLD, false).toString().equals("[140,260]"),
+                "Saved red diamond ore heights reach gameplay");
+        checkDouble(((Number)parsed.get(List.of("underworld_ores", "red_diamond"))).doubleValue(), 1.5D,
+                "Native TOML stores the red diamond ore multiplier under the Underworld");
+        check("[140,260]".equals(parsed.get(List.of("underworld_generation", "red_diamond", "height_range"))),
+                "Native TOML stores the red diamond ore height override under the Underworld");
         report.addProperty("ore_multiplier_saved_to_toml", true);
         report.addProperty("ore_multiplier_published_to_gameplay", true);
+        report.addProperty("red_diamond_ore_search_defaults_and_save_verified", true);
     }
 
     private static void collectBaseValues(UnmodifiableConfig config) {
@@ -380,18 +473,23 @@ public final class IteConfigClientAudit {
         }
     }
 
-    private static void selectOreDimension(Screen screen, R196OreRules.Dimension dimension) throws ReflectiveOperationException {
+    private static void selectOreDimension(Screen screen, R196OreRules.Dimension dimension) {
         check(screen instanceof OreGenerationSettingsScreen && (dimension == R196OreRules.Dimension.OVERWORLD
                 || dimension == R196OreRules.Dimension.UNDERWORLD),"The ore selector targets an actual supported dimension tab");
-        String target = dimension == R196OreRules.Dimension.OVERWORLD ? "overworld" : "underworld";
-        String opposite = dimension == R196OreRules.Dimension.OVERWORLD ? "underworld" : "overworld";
-        var targetField = OreGenerationSettingsScreen.class.getDeclaredField(target);
-        var oppositeField = OreGenerationSettingsScreen.class.getDeclaredField(opposite);
-        targetField.setAccessible(true); oppositeField.setAccessible(true);
-        Button button = (Button)targetField.get(screen), other = (Button)oppositeField.get(screen);
-        check(widgets(screen).contains(button) && widgets(screen).contains(other),"Both dimension selectors are the actual attached native buttons");
+        boolean overworld = dimension == R196OreRules.Dimension.OVERWORLD;
+        Button button = oreDimensionTab(screen, overworld ? "overworld" : "underworld");
+        Button other = oreDimensionTab(screen, overworld ? "underworld" : "overworld");
         if (button.active) button.onPress();
         check(!button.active && other.active,"The real button click marks the requested ore dimension selected and keeps the opposite tab available");
+    }
+
+    private static Button oreDimensionTab(Screen screen, String dimension) {
+        var label = Component.translatable("mite.config.ore_dimension." + dimension);
+        String plain = label.getString();
+        String selected = Component.translatable("mite.config.ore_dimension.selected", label).getString();
+        return widgets(screen).stream().filter(Button.class::isInstance).map(Button.class::cast)
+                .filter(button -> button.getMessage().getString().equals(plain) || button.getMessage().getString().equals(selected))
+                .findFirst().orElseThrow(() -> new IllegalStateException("Missing ore dimension tab " + dimension));
     }
 
     private static void auditSpawningRules(Minecraft mc, Screen home, int width, int height) throws Exception {

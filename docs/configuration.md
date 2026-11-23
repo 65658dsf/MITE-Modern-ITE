@@ -79,6 +79,7 @@
 |---|---|---|---|
 | `quartz_max_exp_level` | 石英献祭等级上限 | `55` | 玩家等级达到此值时拒绝献祭石英并显示需低于该等级的提示，不消耗物品；0完全禁用石英献祭，包括负经验状态，并显示配置禁用提示。 |
 | `diamond_exp` | 钻石献祭经验 | `500` | 每颗钻石实际给予的经验；保留本体当前默认值，0禁用该献祭。 |
+| `red_diamond_exp` | 红钻献祭经验 | `250` | 每颗红钻献祭给予的经验，设为0禁用红钻献祭。 |
 | `emerald_exp` | 绿宝石献祭经验 | `250` | 每颗绿宝石实际给予的经验；0禁用该献祭。 |
 | `quartz_exp` | 石英献祭经验 | `35` | 新配置默认每颗35经验，同时受石英等级上限限制；0禁用该献祭并显示提示。已有配置的有效自定义值仍优先；若旧TOML仍为50，需要在模组设置改成35，不自动覆写用户配置。 |
 | `lapis_exp` | 青金石献祭经验 | `25` | 每颗青金石实际给予的经验；0禁用该献祭。 |
@@ -280,9 +281,11 @@
 | `diamond` | `diamond_frequency_overworld`、`diamond_chance_overworld` | `diamond_frequency_underworld`、`diamond_chance_underworld` |
 | `adamantium` | `adamantium_frequency_overworld`、`adamantium_chance_overworld` | `adamantium_frequency_underworld`、`adamantium_chance_underworld` |
 
-主模组同时提供主世界8项、地底11项矿物倍率，路径为 `overworld_ores.<矿物>` 与 `underworld_ores.<矿物>`，默认均为1；地底另含砾石、红石及虫蚀方块。倍率0禁用、0.5减半、2加倍候选次数，并保留已有高级候选次数和概率设置。实际候选数为高级候选数乘倍率，通过概率只结算一次；原生默认通过率为10%，不会自动套用旧JSON样例中的100%。所有矿物调整只影响新生成区块，不修改既有矿石。
+本体分别提供主世界和地底世界的矿物倍率，路径为 `overworld_ores.<矿物>` 与 `underworld_ores.<矿物>`。地底还可调整砾石、红石及虫蚀方块。倍率 0 禁用生成，0.5 将候选次数减半，2 将候选次数加倍。实际候选数为高级候选数乘倍率，之后按每个候选的通过率筛选一次。旧 JSON 样例的数值不会自动导入。矿物调整只影响新生成的区块。
 
 主世界艾德曼的原生高级候选次数默认0，因此仅把倍率设为1或2不会生矿；需要先在高级TOML中将 `overworld_generation.adamantium.candidates` 设为正数，并保持概率与倍率非0。旧 `overworld_adamantite_ore` 的开关用途由这里的0／正数候选设置承担。
+
+红钻矿石可在 MITE 本体的「矿石生成设置 → 地底世界」调整生成倍率和高度。在本体设置首页搜索「红钻矿石」也可打开候选次数和通过率设置。使用 `config/mite-common.toml` 时，倍率键为 `underworld_ores.red_diamond`，候选次数和通过率位于 `underworld_generation.red_diamond`。默认每区块一次候选、通过率 100%、倍率 1、高度 `[131,274]`。调整只影响新生成的区块。
 
 `underworld_mantle_block_offset` 没有单独加入这些扩展设置；地底世界保留本体当前地形与高度规则。下界艾德曼的两个扩展旧键保留名称，实际控制候选矿脉尝试次数及矿脉尺寸，不能理解成每区块最终矿石方块数量。世界生成继续保留原有替换目标、高度、弃矿概率和群系筛选。
 

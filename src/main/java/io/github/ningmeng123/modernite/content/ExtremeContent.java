@@ -7,6 +7,7 @@ import io.github.ningmeng123.mite.registry.MiteTools;
 import io.github.ningmeng123.mite.registry.MiteArmorContent;
 import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules;
 import io.github.ningmeng123.mite.rules.EquipmentDurabilityRules.Quality;
+import io.github.ningmeng123.mite.rules.StackingRules;
 import java.util.*;
 import java.util.function.Supplier;
 import net.minecraft.advancements.CriterionTrigger;
@@ -32,7 +33,7 @@ public final class ExtremeContent {
     static final Supplier<KilledTrigger> ARRAY_SAVED_FROM_ENTITY = TRIGGERS.register("array_saved_from_entity", KilledTrigger::new);
     public static final Map<String, DeferredItem<? extends Item>> ITEM_ENTRIES = new LinkedHashMap<>();
     public static final Map<String, DeferredBlock<? extends Block>> BLOCK_ENTRIES = new LinkedHashMap<>();
-    public static final DeferredItem<Item> FANCY_RED = item("fancy_red", new Item.Properties().stacksTo(8));
+    public static final DeferredItem<Item> FANCY_RED = item("fancy_red", new Item.Properties().stacksTo(StackingRules.limit("minecraft:diamond")));
     public static final DeferredItem<Item> DIAMOND_CHUNK = item("diamond_chunk", new Item.Properties().stacksTo(32));
     public static final DeferredItem<Item> BLAZE_COAL = item("blaze_coal_powder", new Item.Properties().stacksTo(16));
     public static final DeferredItem<Item> FISHING_VOUCHER = item("voucher_fishing", new Item.Properties().stacksTo(64));

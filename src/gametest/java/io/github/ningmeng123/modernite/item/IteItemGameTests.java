@@ -8,6 +8,7 @@ import io.github.ningmeng123.mite.progression.GearProgress;
 import io.github.ningmeng123.mite.progression.GearProgression;
 import io.github.ningmeng123.mite.survival.PlayerExperience;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.content.ExtremeContent;
 import io.github.ningmeng123.modernite.gear.ExtremeGear;
 import io.github.ningmeng123.mite.registry.MiteArmorContent;
 import io.github.ningmeng123.mite.registry.MiteShields;
@@ -21,16 +22,20 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.ClientboundLevelParticlesPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -75,6 +80,62 @@ public final class IteItemGameTests {
             config.set("diamond_exp",0);PlayerExperience.setTotal(session.player,0);var disabled=new ItemStack(Items.DIAMOND);
             session.player.setItemInHand(InteractionHand.MAIN_HAND,disabled);useGem(session.player);
             h.assertTrue(disabled.getCount()==1&&session.player.totalExperience==0,"A zero reward disables sacrifice without consuming a gem");
+        }h.succeed();
+    }
+
+    @GameTest(template="gear_empty",batch="ite_config")
+    public static void redDiamondSharesDiamondStackingAndSacrificeFeedback(GameTestHelper h) {
+        try(ConfigRestore config=new ConfigRestore();Session session=new Session(h)) {
+            config.set("diamond_exp",77);
+            h.assertValueEqual(IteConfig.setting("red_diamond_exp").getDefault(),250,"Red diamonds default to 250 points");
+            config.set("red_diamond_exp",250);
+            var redDiamond=ExtremeContent.FANCY_RED.get();
+            var red=new ItemStack(redDiamond);
+            h.assertValueEqual(red.getMaxStackSize(),32,"Red diamonds use the MITE diamond stack limit");
+            h.assertValueEqual(red.getMaxStackSize(),new ItemStack(Items.DIAMOND).getMaxStackSize(),"Both diamonds stack to the same limit");
+            h.assertValueEqual(GemSacrifice.experienceValue(red),250,"The tooltip's shared lookup reports the red diamond reward");
+
+            var player=session.player;
+            PlayerExperience.setTotal(player,0);
+            player.setItemInHand(InteractionHand.MAIN_HAND,red);
+            session.drainPackets();
+            h.assertTrue(useGem(player).consumesAction()&&player.getMainHandItem().isEmpty()&&player.totalExperience==250,
+                    "Using the last red diamond consumes it once and grants 250 points");
+            var packets=session.drainPackets();
+            var sounds=packets.stream().filter(ClientboundSoundPacket.class::isInstance).map(ClientboundSoundPacket.class::cast).toList();
+            h.assertTrue(sounds.size()==1&&sounds.getFirst().getSound().value()==SoundEvents.GLASS_BREAK,
+                    "The user receives exactly one diamond break sound");
+            var particles=packets.stream().filter(ClientboundLevelParticlesPacket.class::isInstance)
+                    .map(ClientboundLevelParticlesPacket.class::cast).toList();
+            h.assertTrue(particles.size()==5&&particles.stream().allMatch(packet->packet.getParticle() instanceof ItemParticleOption option
+                            &&option.getItem().is(redDiamond)&&option.getItem().getCount()==1),
+                    "All five fragments retain the red diamond's item texture after consumption");
+
+            var diamond=new ItemStack(Items.DIAMOND,2);
+            player.setItemInHand(InteractionHand.MAIN_HAND,diamond);
+            h.assertTrue(player.getCooldowns().isOnCooldown(Items.DIAMOND),"Using red diamond starts the shared diamond cooldown");
+            h.assertValueEqual(useGem(player),InteractionResult.PASS,"The game mode declines use of a cooling item");
+            h.assertTrue(diamond.getCount()==2&&player.totalExperience==250,"A blocked diamond use changes neither the stack nor experience");
+            awaitGemCooldown(h,player);
+            h.assertTrue(useGem(player).consumesAction()&&diamond.getCount()==1&&player.totalExperience==327,
+                    "A diamond is usable again when the shared timer expires");
+
+            var remaining=new ItemStack(redDiamond,2);
+            player.setItemInHand(InteractionHand.MAIN_HAND,remaining);
+            h.assertTrue(player.getCooldowns().isOnCooldown(redDiamond),"Using diamond also starts the red diamond cooldown");
+            h.assertValueEqual(useGem(player),InteractionResult.PASS,"The game mode declines use of a cooling red diamond");
+            h.assertTrue(remaining.getCount()==2&&player.totalExperience==327,"A blocked red diamond use grants no experience");
+            awaitGemCooldown(h,player);
+            player.setGameMode(GameType.CREATIVE);
+            config.set("red_diamond_exp",123);
+            h.assertValueEqual(GemSacrifice.experienceValue(remaining),123,"The tooltip uses the configured red diamond reward");
+            h.assertTrue(useGem(player).consumesAction()&&remaining.getCount()==2&&player.totalExperience==450,
+                    "Creative sacrifice awards the configured experience and preserves the red diamond stack");
+            awaitGemCooldown(h,player);
+            config.set("red_diamond_exp",0);
+            h.assertValueEqual(GemSacrifice.experienceValue(remaining),0,"Zero hides the sacrifice tooltip");
+            h.assertValueEqual(useGem(player),InteractionResult.PASS,"Zero disables the native sacrifice interaction");
+            h.assertTrue(remaining.getCount()==2&&player.totalExperience==450,"A disabled reward spends neither items nor experience");
         }h.succeed();
     }
 
@@ -424,10 +485,16 @@ public final class IteItemGameTests {
             return drain("message.modern_ite.quartz_sacrifice_");
         }
         private List<ClientboundSystemChatPacket> drain(String prefix) {
-            channel.runPendingTasks();channel.flushOutbound();var messages=new ArrayList<ClientboundSystemChatPacket>();Object packet;
-            while((packet=channel.readOutbound())!=null)if(packet instanceof ClientboundSystemChatPacket chat
+            var messages=new ArrayList<ClientboundSystemChatPacket>();
+            for(Object packet:drainPackets())if(packet instanceof ClientboundSystemChatPacket chat
                     &&chat.content().getContents() instanceof TranslatableContents text&&text.getKey().startsWith(prefix))messages.add(chat);
             return messages;
+        }
+        List<Object> drainPackets() {
+            channel.runPendingTasks();channel.flushOutbound();
+            var packets=new ArrayList<>();Object packet;
+            while((packet=channel.readOutbound())!=null)packets.add(packet);
+            return packets;
         }
         @Override public void close(){player.getInventory().clearContent();player.server.getPlayerList().remove(player);channel.finishAndReleaseAll();}
     }

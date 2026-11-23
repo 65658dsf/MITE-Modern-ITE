@@ -137,6 +137,7 @@ public final class IteConfig {
         add(builder, "GameMechanics.Nether", "nether_debuff_time", 72000, 1D, 100000000D, "下界疲劳触发时间（tick）。旧计时器缺少递增路径，现在以真实停留时间触发；计时随玩家保存和复制。");
         add(builder, "Item", "quartz_max_exp_level", 55, 0D, 1000000D, "石英献祭等级上限。玩家等级达到此值不再允许石英献祭；0完全禁用石英献祭。");
         add(builder, "Item", "diamond_exp", 500, 0D, 100000000D, "钻石献祭经验。保留本体当前500默认，0禁用此宝石献祭。");
+        add(builder, "Item", "red_diamond_exp", 250, 0D, 100000000D, "每颗红钻献祭给予的经验，默认250。设为0禁用红钻献祭。");
         add(builder, "Item", "emerald_exp", 250, 0D, 100000000D, "绿宝石献祭经验。保留本体当前250默认，0禁用此宝石献祭。");
         add(builder, "Item", "quartz_exp", 35, 0D, 100000000D, "石英献祭经验。极难版默认50，已有配置值优先，并受石英等级上限限制。");
         add(builder, "Item", "lapis_exp", 25, 0D, 100000000D, "青金石献祭经验。保留本体当前25默认，0禁用此宝石献祭。");

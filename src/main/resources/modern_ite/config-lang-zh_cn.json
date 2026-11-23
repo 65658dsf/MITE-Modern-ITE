@@ -175,6 +175,8 @@
   "modern_ite.config.quartz_max_exp_level.tooltip": "玩家等级达到此值不再允许石英献祭；0完全禁用石英献祭。",
   "modern_ite.config.diamond_exp": "钻石献祭经验",
   "modern_ite.config.diamond_exp.tooltip": "保留本体当前500默认，0禁用此宝石献祭。",
+  "modern_ite.config.red_diamond_exp": "红钻献祭经验",
+  "modern_ite.config.red_diamond_exp.tooltip": "每颗红钻献祭给予的经验，默认250。设为0禁用红钻献祭。",
   "modern_ite.config.emerald_exp": "绿宝石献祭经验",
   "modern_ite.config.emerald_exp.tooltip": "保留本体当前250默认，0禁用此宝石献祭。",
   "modern_ite.config.quartz_exp": "石英献祭经验",

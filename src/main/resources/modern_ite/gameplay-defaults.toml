@@ -114,6 +114,7 @@
 [Item]
 	quartz_max_exp_level = 55
 	diamond_exp = 500
+	red_diamond_exp = 250
 	emerald_exp = 250
 	quartz_exp = 50
 	lapis_exp = 25
