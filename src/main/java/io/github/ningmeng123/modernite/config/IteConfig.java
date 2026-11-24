@@ -2,12 +2,16 @@ package io.github.ningmeng123.modernite.config;
 
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.entity.ExtremeKind;
+import com.electronwill.nightconfig.core.concurrent.ConcurrentConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.core.io.WritingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.BooleanSupplier;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.config.ModConfigs;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -193,7 +197,8 @@ public final class IteConfig {
         OPTIONS.add(new Option(key,path,fallback,min,max));
         builder.translation("modern_ite.config."+key).comment(comment);
         ModConfigSpec.ConfigValue<?> setting;
-        if(fallback instanceof Boolean flag) setting=builder.define(path,flag);
+        // NeoForge creates an on/off switch only for the primitive boolean overload.
+        if(fallback instanceof Boolean flag) setting=builder.define(path,flag.booleanValue());
         else if(fallback instanceof Integer count) setting=builder.defineInRange(path,count,(int)min,(int)max);
         else setting=builder.defineInRange(path,((Number)fallback).doubleValue(),min,max);
         SETTINGS.put(key,setting);
@@ -231,6 +236,76 @@ public final class IteConfig {
         if(setting==null) throw new IllegalArgumentException("Unknown ITE setting: "+key);
         return (ModConfigSpec.ConfigValue<Object>)setting;
     }
+
+    /** Save a validated scalar and confirm that the local gameplay snapshot contains it. */
+    public static boolean saveOption(Option option, Object value) {
+        return option != null && value != null && saveOptions(Map.of(option, value));
+    }
+
+    /** Save related scalar settings together and confirm their published gameplay values. */
+    public static boolean saveOptions(Map<Option, ?> values) {
+        var settings = new LinkedHashMap<ModConfigSpec.ConfigValue<?>, Object>();
+        var expected = new LinkedHashMap<String, Object>();
+        for (var entry : values.entrySet()) {
+            var option = entry.getKey();
+            Object value = entry.getValue();
+            if (option == null || value == null || !OPTIONS.contains(option) || !value.equals(option.validated(value))) return false;
+            var setting = setting(option.key());
+            if (!setting.getSpec().test(value)) return false;
+            settings.put(setting, value);
+            expected.put(option.key(), value);
+        }
+        return saveValues(settings, () -> localSnapshot().entrySet().containsAll(expected.entrySet()));
+    }
+
+    static synchronized boolean saveValues(Map<ModConfigSpec.ConfigValue<?>, ?> settings, BooleanSupplier published) {
+        var config = ModConfigs.getModConfigs(ModernIte.MOD_ID).stream()
+                .filter(candidate -> candidate.getSpec() == SPEC)
+                .findFirst().orElse(null);
+        if (config == null) return false;
+        var drafts = new LinkedHashMap<List<String>, Object>();
+        settings.forEach((setting, value) -> drafts.put(setting.getPath(), value));
+
+        try {
+            for (int attempt = 0; attempt < 3; attempt++) {
+                var loaded = config.getLoadedConfig();
+                if (loaded == null || !(loaded.config() instanceof ConcurrentConfig data)) return false;
+                var previous = data.bulkUpdate(view -> {
+                    var oldValues = new LinkedHashMap<List<String>, Object>();
+                    drafts.forEach((path, value) -> oldValues.put(path, view.set(path, value)));
+                    return oldValues;
+                });
+
+                // Stage the whole draft on one loaded object and invalidate its typed value caches before Reloading.
+                if (config.getLoadedConfig() != loaded) continue;
+                SPEC.afterReload();
+                try {
+                    loaded.save();
+                } catch (WritingException exception) {
+                    if (config.getLoadedConfig() == loaded) {
+                        data.bulkUpdate(view -> {
+                            previous.forEach((path, value) -> {
+                                if (Objects.equals(view.get(path), drafts.get(path))) view.set(path, value);
+                            });
+                        });
+                        SPEC.afterReload();
+                    }
+                    throw exception;
+                }
+
+                // A watcher may already have read an older version. Retry against its replacement to keep other values.
+                if (config.getLoadedConfig() != loaded) continue;
+                boolean current = data.bulkRead(view -> {
+                    return drafts.entrySet().stream().allMatch(entry -> Objects.equals(view.get(entry.getKey()), entry.getValue()));
+                });
+                if (current && published.getAsBoolean()) return true;
+            }
+        } catch (RuntimeException exception) {
+            org.slf4j.LoggerFactory.getLogger(IteConfig.class).warn("Could not save ITE configuration values {}", drafts.keySet(), exception);
+        }
+        return false;
+    }
+
     /** Publish immutable values so spawning workers never read ConfigSpec caches. */
     public static void refresh() {
         var values=new LinkedHashMap<String,Object>();

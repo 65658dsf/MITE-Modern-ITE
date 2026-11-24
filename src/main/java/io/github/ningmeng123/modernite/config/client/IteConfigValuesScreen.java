@@ -1,7 +1,5 @@
 package io.github.ningmeng123.modernite.config.client;
 
-import io.github.ningmeng123.mite.client.config.SingleConfigValueScreen;
-import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -17,10 +15,8 @@ import net.minecraft.client.gui.navigation.CommonInputs;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.config.ModConfigs;
 
-/** Browse effective gameplay settings and open the native editor for local values. @author NingMeng123 */
+/** Browse effective gameplay settings and edit local values. @author NingMeng123 */
 public final class IteConfigValuesScreen extends Screen {
     enum Group {
         NETHER_ORES("nether_ores", "world"), CREATURE_BEHAVIOR("creature_behavior", "creatures"),
@@ -60,7 +56,7 @@ public final class IteConfigValuesScreen extends Screen {
     private final Group group;
     private String query = "";
     private ValuesList values;
-    private ModConfig editableConfig;
+    private boolean editable;
     private IteConfig.Option hovered;
     private int matchCount;
 
@@ -87,11 +83,7 @@ public final class IteConfigValuesScreen extends Screen {
     @Override
     protected void init() {
         double scroll = values == null ? 0D : values.getScrollAmount();
-        editableConfig = IteConfigClient.editable() && IteConfig.SPEC.isLoaded()
-                ? ModConfigs.getModConfigs(ModernIte.MOD_ID).stream()
-                        .filter(config -> config.getSpec() == IteConfig.SPEC)
-                        .findFirst().orElse(null)
-                : null;
+        editable = IteConfigClient.editable() && IteConfig.SPEC.isLoaded();
         var search = addRenderableWidget(new EditBox(font, 16, 36, width - 32, 20,
                 Component.translatable("modern_ite.config.search")));
         search.setMaxLength(200);
@@ -143,13 +135,15 @@ public final class IteConfigValuesScreen extends Screen {
         return Component.translatable("modern_ite.config.category." + category);
     }
 
-    private static String format(Object value) {
+    static String format(Object value) {
         if (value instanceof Boolean enabled)
             return Component.translatable(enabled ? "modern_ite.config.enabled" : "modern_ite.config.disabled").getString();
         if (value instanceof Number number) {
             double decimal = number.doubleValue();
-            return Double.isFinite(decimal) ? BigDecimal.valueOf(decimal).stripTrailingZeros().toPlainString()
-                    : number.toString();
+            if (!Double.isFinite(decimal)) return number.toString();
+            BigDecimal normalized = BigDecimal.valueOf(decimal).stripTrailingZeros();
+            String plain = normalized.toPlainString();
+            return plain.length() <= 24 ? plain : normalized.toString();
         }
         return String.valueOf(value);
     }
@@ -159,7 +153,7 @@ public final class IteConfigValuesScreen extends Screen {
         hovered = null;
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(font, title, width / 2, 14, 0xFFFFFF);
-        String hint = editableConfig != null ? "modern_ite.config.settings.edit_hint" : "modern_ite.config.settings.view_hint";
+        String hint = editable ? "modern_ite.config.settings.edit_hint" : "modern_ite.config.settings.view_hint";
         graphics.drawCenteredString(font, Component.translatable(hint), width / 2, 61, 0xBBBBBB);
         graphics.drawCenteredString(font, font.plainSubstrByWidth(
                         Component.translatable("modern_ite.config.values.count", matchCount).getString(), width - 24),
@@ -205,10 +199,14 @@ public final class IteConfigValuesScreen extends Screen {
     private final class ValueRow extends ObjectSelectionList.Entry<ValueRow> {
         private final Component name;
         private final IteConfig.Option option;
+        private final Button editButton;
 
         private ValueRow(Component name, IteConfig.Option option) {
             this.name = name;
             this.option = option;
+            editButton = option != null && editable
+                    ? Button.builder(Component.empty(), ignored -> openEditor()).size(60, 20).build()
+                    : null;
         }
 
         @Override
@@ -219,12 +217,15 @@ public final class IteConfigValuesScreen extends Screen {
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            return (button == 0 && openEditor()) || super.mouseClicked(mouseX, mouseY, button);
+            if (button == 0 && editButton != null) {
+                return editButton.mouseClicked(mouseX, mouseY, button) || openEditor();
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
         }
 
         private boolean openEditor() {
-            if (option == null || editableConfig == null || !IteConfigClient.editable()) return false;
-            minecraft.setScreen(SingleConfigValueScreen.create(IteConfigValuesScreen.this, editableConfig, option.path(), name));
+            if (option == null || !editable || !IteConfigClient.editable() || !IteConfig.SPEC.isLoaded()) return false;
+            minecraft.setScreen(new IteConfigOptionScreen(IteConfigValuesScreen.this, option));
             return true;
         }
 
@@ -236,12 +237,22 @@ public final class IteConfigValuesScreen extends Screen {
                 return;
             }
             String current = format(IteConfig.value(option.key()));
-            int valueWidth = Math.min(Math.max(54, font.width(current)), rowWidth / 3);
+            var action = Component.translatable("modern_ite.config.settings.edit_value", current);
+            int valueWidth = editButton == null
+                    ? Math.min(Math.max(54, font.width(current)), rowWidth / 3)
+                    : Math.min(Math.max(62, font.width(action) + 12), rowWidth / 2);
             graphics.drawString(font, font.plainSubstrByWidth(name.getString(), rowWidth - valueWidth - 16), x + 4, y + 3, 0xFFFFFF);
             graphics.drawString(font, font.plainSubstrByWidth(option.key(), rowWidth - valueWidth - 16),
                     x + 4, y + 16, 0x999999);
-            String shortValue = font.plainSubstrByWidth(current, valueWidth);
-            graphics.drawString(font, shortValue, x + rowWidth - font.width(shortValue) - 4, y + 9, 0xAADDFF);
+            if (editButton != null) {
+                editButton.setMessage(action);
+                editButton.setWidth(valueWidth);
+                editButton.setPosition(x + rowWidth - valueWidth - 4, y + 5);
+                editButton.render(graphics, mouseX, mouseY, partialTick);
+            } else {
+                String shortValue = font.plainSubstrByWidth(current, valueWidth);
+                graphics.drawString(font, shortValue, x + rowWidth - font.width(shortValue) - 4, y + 9, 0xAADDFF);
+            }
             if (values.isMouseOver(mouseX, mouseY) && mouseX >= x && mouseX < x + rowWidth
                     && mouseY >= y && mouseY < y + rowHeight)
                 hovered = option;

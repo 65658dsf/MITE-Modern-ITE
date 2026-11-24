@@ -119,11 +119,11 @@ public final class IteSpawnConfig {
         if (!validated.equals(values)) throw new IllegalArgumentException("Invalid ITE natural spawn rates");
         Map<String, Double> validatedWeights = validatedWeights(weights);
         if (!validatedWeights.equals(weights)) throw new IllegalArgumentException("Invalid ITE natural spawn weights");
-        NATURAL_SPAWN_RATES.set(entries(validated));
-        NATURAL_SPAWN_WEIGHTS.set(entries(validatedWeights));
-        IteConfig.SPEC.save();
-        refresh();
-        IteConfigSync.broadcast();
+        var expected = new Snapshot(validated, validatedWeights);
+        if (!IteConfig.saveValues(Map.of(NATURAL_SPAWN_RATES, entries(validated),
+                NATURAL_SPAWN_WEIGHTS, entries(validatedWeights)), () -> local.equals(expected))) {
+            throw new IllegalStateException("Could not save ITE natural spawn settings");
+        }
     }
 
     private static List<String> entries(Map<String, Double> values) {

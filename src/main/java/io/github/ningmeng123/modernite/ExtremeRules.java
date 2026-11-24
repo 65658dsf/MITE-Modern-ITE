@@ -85,26 +85,15 @@ public final class ExtremeRules implements MiteExtensions.Policy {
     @Override public boolean saveSpawningControls(Map<String,Object> values) {
         var options=spawningOptions();
         if(values==null||!values.keySet().equals(spawningControlValues().keySet()))return false;
-        var validated=new LinkedHashMap<String,Object>();
+        var validated=new LinkedHashMap<io.github.ningmeng123.modernite.config.IteConfig.Option,Object>();
         for(var option:options) {
             Object value=values.get(option.key());
             if(option.defaultValue() instanceof Boolean) {if(!(value instanceof Boolean))return false;}
             else if(!(value instanceof Number number)||!Double.isFinite(number.doubleValue())||number.doubleValue()<option.minimum()
                     ||number.doubleValue()>option.maximum()||option.defaultValue() instanceof Integer&&number.doubleValue()!=Math.rint(number.doubleValue()))return false;
-            validated.put(option.key(),option.validated(value));
+            validated.put(option,option.validated(value));
         }
-        var before=spawningControlValues();
-        try {
-            validated.forEach((key,value)->io.github.ningmeng123.modernite.config.IteConfig.setting(key).set(value));
-            io.github.ningmeng123.modernite.config.IteConfig.SPEC.save();
-            io.github.ningmeng123.modernite.config.IteConfig.refresh();
-            io.github.ningmeng123.modernite.config.IteConfigSync.broadcast();
-            return true;
-        } catch(RuntimeException exception) {
-            before.forEach((key,value)->io.github.ningmeng123.modernite.config.IteConfig.setting(key).set(value));
-            io.github.ningmeng123.modernite.config.IteConfig.refresh();
-            throw exception;
-        }
+        return io.github.ningmeng123.modernite.config.IteConfig.saveOptions(validated);
     }
     @Override public MonsterSpawningSettings.Settings hostileSpawningSettings(MonsterSpawningSettings.Settings original) {
         var values=new HashMap<>(original.values());

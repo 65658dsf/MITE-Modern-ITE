@@ -29,15 +29,17 @@ final class IteConfigSearch {
 
     static List<ConfigSearchIndex.Entry> entries(Screen parent) {
         var sharedSpawning = IteConfigClient.sharedSpawningKeys();
+        var options = IteConfig.options().stream().collect(Collectors.toMap(IteConfig.Option::key, Function.identity()));
         var definitions = ConfigSearchIndex.configurationEntries(ModernIte.MOD_ID, true, (config, path) -> {
             String key = path.getLast();
             if (sharedSpawning.contains(key)) return new MonsterSpawningRulesScreen(parent, key);
             if (IteConfigClient.editable()) {
+                var option = options.get(key);
+                if (option != null) return new IteConfigOptionScreen(parent, option);
                 return SingleConfigValueScreen.create(parent, config, path, Component.translatable("modern_ite.config." + key));
             }
             return spawnList(key) ? spawns(parent, "") : new IteConfigValuesScreen(parent, key);
         });
-        var options = IteConfig.options().stream().collect(Collectors.toMap(IteConfig.Option::key, Function.identity()));
         var entries = new ArrayList<ConfigSearchIndex.Entry>();
         for (var entry : definitions) {
             String id = entry.id();
