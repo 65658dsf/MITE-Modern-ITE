@@ -1,7 +1,9 @@
 package io.github.ningmeng123.modernite.entity;
 
 import com.mojang.authlib.GameProfile;
+import io.github.ningmeng123.mite.config.MiteConfig;
 import io.github.ningmeng123.mite.entity.MonsterDayScaling;
+import io.github.ningmeng123.mite.rules.MonsterGrowthRules;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasionData;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.modernite.config.IteSpawnConfig;
@@ -118,7 +120,9 @@ public final class ExtremeDeathAndExplosionGameTests {
         h.assertTrue(mimics.size()==1&&incoming.isEmpty(),"Only after the mimic joins does the original drop collection transfer");
         Mob mimic=mimics.getFirst();List<ItemEntity> recovered=new ArrayList<>();
         MonsterDayScaling.refresh(mimic);
-        h.assertTrue(mimic.getMaxHealth()==10&&mimic.getHealth()==10,"The spawned player substitute has exactly ten health after joining and calendar scaling");
+        float maximum = mimicMaximum(MonsterDayScaling.currentDay(h.getLevel()));
+        h.assertTrue(mimic.getAttributeBaseValue(Attributes.MAX_HEALTH)==10&&Math.abs(mimic.getMaxHealth()-maximum)<1E-4F
+                &&mimic.getHealth()==mimic.getMaxHealth(),"The spawned player substitute joins at its current-day maximum with a ten-health base");
         PlayerMimicInventory.release(mimic,recovered);
         h.assertTrue(mimic.isPersistenceRequired()&&recovered.size()==1&&recovered.getFirst().getItem().getCount()==23,"The persistent substitute owns the exact real player drop");
         mimic.discard();h.succeed();
@@ -221,7 +225,7 @@ public final class ExtremeDeathAndExplosionGameTests {
     }
 
     @GameTest(template="gear_empty")
-    public static void mimicHealthStaysTenAcrossDaysRefreshesAndReloadsWithoutHealing(GameTestHelper h){
+    public static void mimicKeepsTenBaseHealthWhileItsMaximumFollowsTheCurrentDay(GameTestHelper h){
         var level=h.getLevel().getServer().overworld();var history=BloodMoonInvasionData.get(level);
         long time=level.getDayTime(),highest=history.highestDay();boolean dirty=history.isDirty();
         try{
@@ -229,16 +233,19 @@ public final class ExtremeDeathAndExplosionGameTests {
             Mob mimic=mob(h,ExtremeKind.MIMIC_ZOMBIE);
             h.assertTrue(mimic.getMaxHealth()==10&&mimic.getHealth()==10,"A newly created substitute starts at exactly ten health");
             mimic.setHealth(4);
-            for(long day:new long[]{1,32,128,366,10_000}){
-                level.setDayTime((day-1)*24_000L);history.restoreProgress(day);
+            for(long day:new long[]{1,32,128,366,10_000,1}){
+                level.setDayTime((day-1)*24_000L);history.observeDay(day);
+                float maximum = mimicMaximum(day);
                 for(int refresh=0;refresh<3;refresh++){
                     MobAbilities.initialize(mimic,(ExtremeMob)mimic);MonsterDayScaling.refresh(mimic);
-                    h.assertTrue(mimic.getAttributeBaseValue(Attributes.MAX_HEALTH)==10&&mimic.getMaxHealth()==10&&mimic.getHealth()==4,"Day "+day+" refresh "+refresh+" keeps ten maximum health without healing injuries");
+                    h.assertTrue(mimic.getAttributeBaseValue(Attributes.MAX_HEALTH)==10&&Math.abs(mimic.getMaxHealth()-maximum)<1E-4F
+                            &&Math.abs(mimic.getHealth()-maximum*.4F)<1E-4F,"Day "+day+" refresh "+refresh+" recalculates maximum health and preserves injuries");
                 }
                 CompoundTag saved=new CompoundTag();mimic.saveWithoutId(saved);
                 Mob loaded=ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE).create(h.getLevel());loaded.load(saved);
                 MobAbilities.initialize(loaded,(ExtremeMob)loaded);MonsterDayScaling.refresh(loaded);
-                h.assertTrue(loaded.getMaxHealth()==10&&loaded.getHealth()==4,"A day "+day+" save reload keeps ten maximum health and the existing injury");
+                h.assertTrue(Math.abs(loaded.getMaxHealth()-maximum)<1E-4F&&Math.abs(loaded.getHealth()-maximum*.4F)<1E-4F,
+                        "A day "+day+" save reload keeps the current maximum health and existing injury");
                 mimic=loaded;
             }
         }finally{level.setDayTime(time);history.restoreProgress(highest);history.setDirty(dirty);}
@@ -260,10 +267,22 @@ public final class ExtremeDeathAndExplosionGameTests {
                 MobAbilities.initialize(loaded,(ExtremeMob)loaded);
                 h.assertTrue(loaded.getAttributeBaseValue(Attributes.MAX_HEALTH)==10&&loaded.getAttribute(Attributes.MAX_HEALTH).getModifier(MonsterDayScaling.HEALTH_MODIFIER)==null&&loaded.getMaxHealth()==10&&loaded.getHealth()==Math.min(health,10),"Loading an old substitute removes legacy health and growth while clipping excess health without healing");
                 MonsterDayScaling.refresh(loaded);MobAbilities.initialize(loaded,(ExtremeMob)loaded);MonsterDayScaling.refresh(loaded);
-                h.assertTrue(loaded.getMaxHealth()==10&&loaded.getHealth()==Math.min(health,10),"Repeated initialization and growth refresh preserve the migrated substitute's injury");
+                float maximum = mimicMaximum(366L);
+                h.assertTrue(Math.abs(loaded.getMaxHealth()-maximum)<1E-4F&&Math.abs(loaded.getHealth()-maximum*Math.min(health,10)/10F)<1E-4F,
+                        "Repeated initialization applies the current date without redoing the legacy migration or healing injuries");
+                Mob joined=ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE).create(h.getLevel());joined.load(saved);
+                NeoForge.EVENT_BUS.post(new EntityJoinLevelEvent(joined,h.getLevel(),true));
+                h.assertTrue(joined.getAttributeBaseValue(Attributes.MAX_HEALTH)==10&&Math.abs(joined.getMaxHealth()-maximum)<1E-4F
+                                &&Math.abs(joined.getHealth()-loaded.getHealth())<1E-4F,
+                        "The saved entity join migrates the legacy base before applying the date curve");
             }
         }finally{level.setDayTime(time);history.restoreProgress(highest);history.setDirty(dirty);}
         h.succeed();
+    }
+
+    private static float mimicMaximum(long day) {
+        return (float)Math.min(1024D, MonsterGrowthRules.health(day, MobAbilities.MIMIC_HEALTH, false,
+                MiteConfig.monsterGrowthSettings(), MiteConfig.monsterGrowthMultiplier() * MiteConfig.monsterHealthGrowthMultiplier()));
     }
 
     @GameTest(template="gear_empty")
@@ -332,13 +351,50 @@ public final class ExtremeDeathAndExplosionGameTests {
         h.succeed();
     }
 
+    @GameTest(template="gear_empty")
+    public static void runCreeperDetonatesAfterTwoThirdsOfItsBaseFuse(GameTestHelper h) {
+        for (ExtremeKind kind : List.of(ExtremeKind.RUN_CREEPER, ExtremeKind.PHASE_CREEPER)) {
+            Creeper creeper = (Creeper)mob(h, kind);
+            creeper.setSwellDir(1);
+            assertCreeperFuse(h, creeper, kind == ExtremeKind.RUN_CREEPER ? 20 : 30);
+        }
+
+        Creeper savedRunner = (Creeper)mob(h, ExtremeKind.RUN_CREEPER);
+        for (short baseFuse : new short[]{30, 45}) {
+            CompoundTag saved = savedRunner.saveWithoutId(new CompoundTag());
+            saved.putShort("Fuse", baseFuse);
+            Creeper restored = (Creeper)mob(h, ExtremeKind.RUN_CREEPER);
+            restored.load(saved);
+            h.assertTrue(restored.saveWithoutId(new CompoundTag()).getShort("Fuse") == baseFuse,
+                    "Saving preserves the base fuse instead of shortening it on every reload");
+            restored.ignite();
+            assertCreeperFuse(h, restored, baseFuse * 2 / 3);
+        }
+        savedRunner.discard();
+        h.succeed();
+    }
+
+    private static void assertCreeperFuse(GameTestHelper h, Creeper creeper, int ticks) {
+        creeper.moveTo(h.absolutePos(new BlockPos(0, 8, 0)).getCenter());
+        creeper.setNoGravity(true);
+        for (int elapsed = 1; elapsed < ticks; elapsed++) {
+            creeper.tick();
+            h.assertTrue(!creeper.isRemoved(), "The creeper is still charging on tick " + elapsed);
+        }
+        h.assertTrue(creeper.getSwelling(1) >= 1, "The swelling animation finishes before detonation");
+        creeper.tick();
+        h.assertTrue(creeper.isRemoved(), "The creeper detonates on tick " + ticks);
+    }
+
     @GameTest(template="gear_empty",timeoutTicks=40)
     public static void invisibleCreeperExplosionCannotCreateAnInfiniteInvisibilityCloud(GameTestHelper h){
         Creeper creeper=(Creeper)mob(h,ExtremeKind.INVISIBLE_CREEPER);
         // The one-block template only forces its own chunk; keep the ticking creeper inside it.
         creeper.moveTo(h.absolutePos(new BlockPos(0,2,0)).getCenter());
         CompoundTag saved=new CompoundTag();creeper.saveWithoutId(saved);saved.putShort("Fuse",(short)1);saved.putByte("ExplosionRadius",(byte)0);creeper.load(saved);
-        h.getLevel().addFreshEntity(creeper);creeper.ignite();
+        creeper.getPersistentData().putBoolean(SpawnPopulation.EXPLICIT_COMMAND,true);
+        h.assertTrue(h.getLevel().addFreshEntity(creeper),"The test creeper is admitted");
+        creeper.ignite();
         var bounds=creeper.getBoundingBox().inflate(3);
         h.runAfterDelay(5,()->{
             h.assertTrue(creeper.isRemoved(),"The real creeper fuse completes (entity ticks="+creeper.tickCount+", ignited="+creeper.isIgnited()+")");

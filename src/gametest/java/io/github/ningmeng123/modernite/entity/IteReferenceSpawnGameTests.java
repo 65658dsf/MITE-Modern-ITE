@@ -178,6 +178,7 @@ public final class IteReferenceSpawnGameTests {
         try(Fixture f=new Fixture(h)) {
             var site=f.site;var pos=net.minecraft.core.BlockPos.containing(site.origin);
             f.preset.set("extreme_mob_spawn_limit_day",1);site.date(32,32,true);site.level.setDayTime(31*24_000L+18_000L);
+            site.level.updateSkyBrightness();
             h.assertFalse(IteReferenceSpawns.naturalAllowed(site.level,EntityType.GHAST,pos),"The default ghast date still excludes an early blood night");
             f.preset.set("ghast_spawn_limit_day",32);
             h.assertTrue(IteReferenceSpawns.naturalAllowed(site.level,EntityType.GHAST,pos),"Editing the ghast date immediately permits the existing blood-night candidate");
@@ -216,7 +217,7 @@ public final class IteReferenceSpawnGameTests {
             f.preset.set("wandering_witch_spawn_limit_day_other",33);
             h.assertFalse(underWitch.checkSpawnRules(underworld,net.minecraft.world.entity.MobSpawnType.NATURAL),"Raising the Underworld date reaches its actual qualification predicate");
             }
-        }
+        } finally { h.getLevel().updateSkyBrightness(); }
         h.succeed();
     }
 

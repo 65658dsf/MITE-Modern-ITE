@@ -54,9 +54,10 @@ public final class ExtremeMobEvents {
             if(skeleton.getPersistentData().getBoolean("modern_ite:fire_arrows")&&MobAbilities.day(event.getLevel())>196)arrow.setRemainingFireTicks(100);
             if(IteConfig.bool("Entities.skeleton_triple_shot")&&skeleton.getPersistentData().getBoolean("modern_ite:triple")){
                 arrow.getPersistentData().putBoolean("modern_ite:split_arrow",true);
+                ItemStack ammunition=arrow instanceof Arrow ? arrow.getPickupItemStackOrigin() : new ItemStack(Items.ARROW);
                 for(double angle:new double[]{-.12,.12}){
-                    Arrow split=EntityType.ARROW.create(event.getLevel());if(split==null)continue;
-                    split.getPersistentData().putBoolean("modern_ite:split_arrow",true);split.setOwner(skeleton);split.setPos(arrow.position());
+                    Arrow split=new Arrow(event.getLevel(),skeleton,ammunition.copyWithCount(1),null);
+                    split.getPersistentData().putBoolean("modern_ite:split_arrow",true);split.setPos(arrow.position());
                     split.setDeltaMovement(arrow.getDeltaMovement().yRot((float)angle));split.setBaseDamage(arrow.getBaseDamage());
                     split.setRemainingFireTicks(arrow.getRemainingFireTicks());split.pickup=AbstractArrow.Pickup.DISALLOWED;event.getLevel().addFreshEntity(split);
                 }

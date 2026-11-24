@@ -1,8 +1,10 @@
 package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.config.MiteConfig;
+import io.github.ningmeng123.mite.entity.MobKind;
 import io.github.ningmeng123.mite.entity.MonsterDayScaling;
 import io.github.ningmeng123.mite.entity.R196Skeleton;
+import io.github.ningmeng123.mite.registry.MiteMobs;
 import io.github.ningmeng123.mite.rules.MonsterGrowthRules;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasionData;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -59,7 +62,7 @@ public final class NativeSkeletonHealthGameTests {
     }
 
     @GameTest(template = "gear_empty", batch = "native_skeleton_health")
-    public static void injuredNativeSkeletonRetainsGrowthAndHealthRatioAcrossSavedAndRepeatedJoins(GameTestHelper helper) {
+    public static void injuredNativeSkeletonRecalculatesGrowthAcrossSavedAndRepeatedJoins(GameTestHelper helper) {
         try (Fixture fixture = new Fixture(helper)) {
             fixture.day(1L);
             Mob skeleton = fixture.spawn(EntityType.SKELETON);
@@ -74,12 +77,14 @@ public final class NativeSkeletonHealthGameTests {
             fixture.day(1L);
             for (int repeat = 0; repeat < 20; repeat++) {
                 fixture.loadedJoin(restored);
-                health(helper, restored, 6D, 10.672D, 5.336D);
+                health(helper, restored, 6D, 6D, 3D);
             }
-            helper.assertTrue(restored.getPersistentData().getCompound(MonsterDayScaling.DATA_KEY).getLong("day") == 65L,
-                    "Loading in an earlier world day retains the saved skeleton's highest growth day");
+            helper.assertTrue(restored.getPersistentData().getCompound(MonsterDayScaling.DATA_KEY).getLong("day") == 1L,
+                    "Loading after a rollback updates the saved skeleton to the current day");
+            fixture.day(65L);
+            tickGrowth(restored);
             helper.assertTrue(restored.getAttribute(Attributes.MAX_HEALTH).getModifiers().size() == 1,
-                    "Repeated real join events retain exactly one calendar modifier");
+                    "The new date reinstalls exactly one calendar modifier");
             Mob secondReload = fixture.reload(restored);
             fixture.loadedJoin(secondReload);
             health(helper, secondReload, 6D, 10.672D, 5.336D);
@@ -100,7 +105,6 @@ public final class NativeSkeletonHealthGameTests {
                 Mob restored = fixture.reload(legacy);
                 close(helper, restored.getAttributeBaseValue(Attributes.MAX_HEALTH), 15D,
                         "The real saved entity still contains the old addon fifteen-health base before joining");
-                fixture.day(1L);
                 for (int repeat = 0; repeat < 20; repeat++) {
                     fixture.loadedJoin(restored);
                     health(helper, restored, 6D, maxima[index], maxima[index] / 4D);
@@ -132,14 +136,15 @@ public final class NativeSkeletonHealthGameTests {
             fixture.day(1L);
             for (int repeat = 0; repeat < 20; repeat++) {
                 fixture.loadedJoin(restored);
-                health(helper, restored, 6D, 15.312D, 3.828D);
+                health(helper, restored, 6D, 10D, 2.5D);
                 AttributeModifier extra = restored.getAttribute(Attributes.MAX_HEALTH).getModifier(EXTRA_HEALTH);
                 helper.assertTrue(extra != null && extra.amount() == 4D
                                 && extra.operation() == AttributeModifier.Operation.ADD_VALUE,
                         "The migration preserves the saved independent native health modifier");
-                helper.assertTrue(restored.getAttribute(Attributes.MAX_HEALTH).getModifiers().size() == 2,
-                        "The independent modifier and one recalculated calendar modifier remain unique");
+                helper.assertTrue(restored.getAttribute(Attributes.MAX_HEALTH).getModifiers().size() == 1,
+                        "Only the independent modifier remains after rolling back to the first day");
             }
+            fixture.day(65L);
             Mob secondReload = fixture.reload(restored);
             fixture.loadedJoin(secondReload);
             health(helper, secondReload, 6D, 15.312D, 3.828D);
@@ -158,7 +163,6 @@ public final class NativeSkeletonHealthGameTests {
                 MonsterDayScaling.refresh(custom);
                 custom.setHealth(custom.getMaxHealth() / 2F);
                 Mob restored = fixture.reload(custom);
-                fixture.day(1L);
                 for (int repeat = 0; repeat < 3; repeat++) {
                     fixture.loadedJoin(restored);
                     health(helper, restored, bases[index], maxima[index], maxima[index] / 2D);
@@ -173,6 +177,79 @@ public final class NativeSkeletonHealthGameTests {
             }
         }
         helper.succeed();
+    }
+
+    @GameTest(template = "gear_empty", batch = "native_skeleton_health")
+    public static void iteZombiesAndSkeletonsGrowAndRollBackWithTheCurrentWorldDay(GameTestHelper helper) {
+        try (Fixture fixture = new Fixture(helper, MonsterGrowthRules.DEFAULTS)) {
+            var kinds = List.of(ExtremeKind.ZOMBIE_CHAOS, ExtremeKind.ZOMBIE_FLY_AWAY, ExtremeKind.ZOMBIE_GHAST,
+                    ExtremeKind.ZOMBIE_KNOCKBACK, ExtremeKind.ZOMBIE_INVISIBLE_LOOK_UP, ExtremeKind.MIRROR_ZOMBIE,
+                    ExtremeKind.MIMIC_ZOMBIE, ExtremeKind.SKELETON_ZOMBIE, ExtremeKind.FISHING_ROD_ZOMBIE,
+                    ExtremeKind.DRAGON_ZOMBIE, ExtremeKind.RANDOM_ZOMBIE, ExtremeKind.MIRROR_SKELETON,
+                    ExtremeKind.SKELETON_FAST_ARROW, ExtremeKind.SKELETON_KNOCKBACK, ExtremeKind.SKELETON_LIGHTNING,
+                    ExtremeKind.SKELETON_FLOATING, ExtremeKind.SKELETON_BLAZE, ExtremeKind.WITHER_SKELETON_ARROW);
+            List<EntityType<?>> types = new ArrayList<>();
+            kinds.forEach(kind -> types.add(ExtremeMobs.type(kind)));
+            types.add(MiteMobs.type(MobKind.LONGDEAD));
+            for (EntityType<?> type : types) {
+                fixture.day(1L);
+                Mob mob = fixture.spawn(type);
+                double base = type == ExtremeMobs.type(ExtremeKind.MIMIC_ZOMBIE) ? 10D : 15D;
+                float initialMaximum = mob.getMaxHealth();
+                health(helper, mob, base, initialMaximum, initialMaximum);
+                mob.setHealth(initialMaximum / 2F);
+                fixture.day(65L);
+                tickGrowth(mob);
+                double grown = MonsterGrowthRules.health(65L, initialMaximum, false, MonsterGrowthRules.DEFAULTS, 1D);
+                health(helper, mob, base, grown, grown / 2D);
+                fixture.day(1L);
+                tickGrowth(mob);
+                health(helper, mob, base, initialMaximum, initialMaximum / 2F);
+                fixture.day(65L);
+                tickGrowth(mob);
+                Mob restored = fixture.reload(mob);
+                fixture.day(1L);
+                fixture.loadedJoin(restored);
+                health(helper, restored, base, initialMaximum, initialMaximum / 2F);
+            }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "gear_empty", batch = "native_skeleton_health")
+    public static void speciesHealthCurveRecalculatesBeforeSharedGrowthAndPreservesOtherHealthModifiers(GameTestHelper helper) {
+        try (Fixture fixture = new Fixture(helper)) {
+            fixture.day(1L);
+            Mob mob = fixture.spawn(ExtremeMobs.type(ExtremeKind.EXCHANGER));
+            double original = (.5D - 7D / 27D) * 50D;
+            var attribute = mob.getAttribute(Attributes.MAX_HEALTH);
+            attribute.addPermanentModifier(new AttributeModifier(EXTRA_HEALTH, 4D, AttributeModifier.Operation.ADD_VALUE));
+            mob.setHealth(mob.getMaxHealth() / 2F);
+            fixture.day(65L);
+            tickGrowth(mob);
+            double next = (.5D + 2D / 22D) * 50D + 20D;
+            double grown = (next + 4D + 3.2D) * 1.16D;
+            health(helper, mob, next, grown, grown / 2D);
+            Mob old = fixture.reload(mob);
+            old.getPersistentData().remove(MobAbilities.SPECIES_HEALTH_BASE);
+            fixture.day(1L);
+            tickGrowth(mob);
+            health(helper, mob, original, original + 4D, (original + 4D) / 2D);
+            fixture.loadedJoin(old);
+            health(helper, old, original, original + 4D, (original + 4D) / 2D);
+            old.getAttribute(Attributes.MAX_HEALTH).setBaseValue(100D);
+            old.setHealth(52F);
+            fixture.day(65L);
+            tickGrowth(old);
+            double custom = (100D + 4D + 3.2D) * 1.16D;
+            health(helper, old, 100D, custom, custom / 2D);
+        }
+        helper.succeed();
+    }
+
+    private static void tickGrowth(Mob mob) {
+        mob.tickCount = Math.floorMod(-mob.getId(), 20);
+        MonsterDayScaling.tick(new EntityTickEvent.Post(mob));
     }
 
     private static void health(GameTestHelper helper, Mob mob, double base, double maximum, double current) {
@@ -196,6 +273,11 @@ public final class NativeSkeletonHealthGameTests {
                 ? null : MiteConfig.effectiveSnapshot();
 
         private Fixture(GameTestHelper helper) {
+            this(helper, new MonsterGrowthRules.Settings(20D, 0D, 20D, .005D, .005D,
+                    MonsterGrowthRules.DEFAULT_FORMULA, MonsterGrowthRules.DEFAULT_FORMULA));
+        }
+
+        private Fixture(GameTestHelper helper, MonsterGrowthRules.Settings growth) {
             this.helper = helper;
             level = helper.getLevel();
             time = level.getServer().overworld().getDayTime();
@@ -205,15 +287,15 @@ public final class NativeSkeletonHealthGameTests {
             var source = MiteConfig.effectiveSnapshot();
             MiteConfig.receiveServerSnapshot(new MiteConfig.Snapshot(source.ores(), 1D, 1D, 1D,
                     source.reachMultiplier(), source.reachReduction(), source.heightPenalty(), source.underworldTrials(), source.overworldTrials(),
-                    source.caps(), source.disabled(), MonsterGrowthRules.DEFAULTS, source.oreCandidates(), source.oreChances(),
+                    source.caps(), source.disabled(), growth, source.oreCandidates(), source.oreChances(),
                     source.overworldOreCandidates(), source.overworldOreChances(), source.overworldOres(), source.enchantmentChances(),
                     source.monsterSpawnRates(), source.oreHeights(), source.overworldOreHeights(), source.spawningSettings(),
                     source.monsterSpawnWeights(), source.betterCombatMobs()));
         }
 
         private void day(long day) {
-            level.getServer().overworld().setDayTime(6000L);
-            BloodMoonInvasionData.get(level).restoreProgress(day);
+            level.getServer().overworld().setDayTime((day - 1L) * 24_000L + 6_000L);
+            BloodMoonInvasionData.get(level).observeDay(day);
         }
 
         private Mob create(EntityType<?> type) {

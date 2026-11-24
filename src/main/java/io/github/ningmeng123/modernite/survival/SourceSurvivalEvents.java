@@ -6,6 +6,7 @@ import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.mite.worldgen.R196StructureGeneration;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.entity.SpawnPopulation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -16,6 +17,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -99,10 +101,12 @@ public final class SourceSurvivalEvents {
         }
         save(player,data);
     }
-    /** The source checks an expanded contact box, not footwear, and starts on displayed day96. */
+    /** Checks contact with hot ground after the configured day while exempting Nether monsters. */
     public static boolean hotNetherrack(Entity entity,long day) {
-        if(!IteConfig.bool("netherrack_damage")||!entity.level().dimension().equals(Level.NETHER)||day<IteConfig.integer("netherrack_damage_limit_day")||entity.fireImmune()
-                ||entity instanceof LivingEntity living&&living.hasEffect(MobEffects.FIRE_RESISTANCE)) return false;
+        if (!IteConfig.bool("netherrack_damage") || !entity.level().dimension().equals(Level.NETHER)
+                || day < IteConfig.integer("netherrack_damage_limit_day") || entity.fireImmune()
+                || entity instanceof Mob mob && SpawnPopulation.hostile(mob.getType())
+                || entity instanceof LivingEntity living && living.hasEffect(MobEffects.FIRE_RESISTANCE)) return false;
         var box=entity.getBoundingBox().inflate(.001,.005,.001);
         return BlockPos.betweenClosedStream(BlockPos.containing(box.minX,box.minY,box.minZ),BlockPos.containing(box.maxX-1E-7,box.maxY-1E-7,box.maxZ-1E-7))
                 .anyMatch(pos->entity.level().hasChunkAt(pos)&&entity.level().getBlockState(pos).is(Blocks.NETHERRACK));

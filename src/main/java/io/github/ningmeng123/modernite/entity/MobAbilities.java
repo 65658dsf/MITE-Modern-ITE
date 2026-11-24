@@ -5,6 +5,7 @@ import io.github.ningmeng123.mite.entity.SourceMeleeGoal;
 import io.github.ningmeng123.mite.entity.SourceMonsterTargeting;
 import io.github.ningmeng123.mite.entity.R196ExplosionCalculator;
 import io.github.ningmeng123.mite.entity.BloodMoonEquipment;
+import io.github.ningmeng123.mite.entity.MonsterDayScaling;
 import io.github.ningmeng123.mite.worldgen.BloodMoonInvasion;
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
@@ -83,6 +84,7 @@ public final class MobAbilities {
     }
     private static void stat(Mob mob,Holder<net.minecraft.world.entity.ai.attributes.Attribute> key,double value){var a=mob.getAttribute(key);if(a!=null)a.setBaseValue(value);}
     private static final String FIXED_ATTACK_REVISION="modern_ite:fixed_attack_revision";
+    static final String SPECIES_HEALTH_BASE = "modern_ite:species_health_base";
     /** Preserve each former date curve's day-one attack without changing its health progression. */
     private static double fixedDateAttack(ExtremeKind kind){
         return switch(kind){
@@ -102,38 +104,92 @@ public final class MobAbilities {
         if(Double.isFinite(attack))stat(mob,Attributes.ATTACK_DAMAGE,attack);
         data.putInt(FIXED_ATTACK_REVISION,1);
     }
+
+    private static boolean hasSpeciesHealthCurve(ExtremeKind kind) {
+        return switch (kind) {
+            case EXCHANGER, ZOMBIE_DOOR, MINER_ZOMBIE, ZOMBIE_JUMP, ZOMBIE_BOSS, ZOMBIE_ELITE_LORD, ZOMBIE_LORD,
+                    UNDYING_ZOMBIE_EMPEROR, SKELETON_ELITE_LORD, DARK_IRON_GOLEM, BLACK_INFERNAL_CREEPER -> true;
+            default -> false;
+        };
+    }
+
+    private static double healthCurveRate(double offset) {
+        return .5D + offset / (20D + Math.abs(offset));
+    }
+
+    private static double speciesHealth(ExtremeKind kind, long currentDay) {
+        int rawDay = (int)Math.min(Integer.MAX_VALUE, currentDay);
+        int limit = IteConfig.integer("Entities.enhance_limit");
+        int day = Math.min(limit, rawDay);
+        int steps = Math.min(day / 16, 10);
+        double rate = healthCurveRate(day / 7 - 7);
+        return switch (kind) {
+            case EXCHANGER -> rate * 50D + steps * 5D;
+            case ZOMBIE_DOOR -> (healthCurveRate(day / 8 - 8) * 60D + steps * 10D) * 2D;
+            case MINER_ZOMBIE -> healthCurveRate(day / 8D - 8D) * 60D + steps * 10D;
+            case ZOMBIE_JUMP, ZOMBIE_ELITE_LORD, ZOMBIE_LORD -> rate * 60D + steps * 15D;
+            case ZOMBIE_BOSS -> 20D + Math.min(limit, rawDay / 10) * 45D;
+            case UNDYING_ZOMBIE_EMPEROR -> (rate * 60D + steps * 15D) * 2D;
+            case SKELETON_ELITE_LORD -> rate * 90D + steps * 15D;
+            case DARK_IRON_GOLEM -> (45D + rawDay / 6D) * 4D;
+            case BLACK_INFERNAL_CREEPER -> (30D + rawDay / 8D) * 3D + 100D;
+            default -> throw new IllegalArgumentException("Missing species health curve for " + kind);
+        };
+    }
+
+    /** Reconcile date-bearing species health before the shared growth formula evaluates it. */
+    public static void refreshSpeciesHealth(Mob mob) {
+        if (!mob.isAlive() || !(mob.level() instanceof ServerLevel level) || !(mob instanceof ExtremeMob extreme)) return;
+        ExtremeKind kind = extreme.extremeKind();
+        if (kind == MIMIC_ZOMBIE) normalizeMimicHealth(mob);
+        if (!hasSpeciesHealthCurve(kind)) return;
+        var attribute = mob.getAttribute(Attributes.MAX_HEALTH);
+        if (attribute == null) return;
+        var data = mob.getPersistentData();
+        double base = attribute.getBaseValue();
+        boolean tracked = data.contains(SPECIES_HEALTH_BASE);
+        // Older saves stored the constructor's date curve directly in the base attribute.
+        // Once tracked, an explicit edit to the base stays in place.
+        if (tracked && base != data.getDouble(SPECIES_HEALTH_BASE)) return;
+        double next = speciesHealth(kind, MonsterDayScaling.currentDay(level));
+        if (!tracked || next != base) data.putDouble(SPECIES_HEALTH_BASE, next);
+        if (next != base) {
+            float fraction = mob.getHealth() / mob.getMaxHealth();
+            attribute.setBaseValue(next);
+            mob.setHealth(fraction * mob.getMaxHealth());
+        }
+    }
+
     public static void attributes(Mob m,ExtremeKind k){
         if(k.boss())m.getPersistentData().putBoolean("modern_ite:boss",true);
-        int raw=day(m.level()),limit=IteConfig.integer("Entities.enhance_limit"),d=Math.min(limit,raw),healthRate=Math.min(d/16,10);
-        double x=d/7-7,rate=.5+x/(20+Math.abs(x));
-        // Calendar progression remains on health; innate attack stays at each species' first-day value.
         double health=15,attack=8,speed=k.family==Family.ZOMBIE?.23:k.family==Family.CREEPER?.25:.3;
         switch(k){
-            case EXCHANGER -> {health=rate*50+healthRate*5;speed=.2572;}
-            case ZOMBIE_DOOR -> {x=d/8-8;rate=.5+x/(20+Math.abs(x));health=(rate*60+healthRate*10)*2;speed=.3;}
-            case MINER_ZOMBIE -> {x=d/8D-8;rate=.5+x/(20+Math.abs(x));health=rate*60+healthRate*10;speed=.3;}
+            case EXCHANGER -> speed=.2572;
+            case ZOMBIE_DOOR,MINER_ZOMBIE -> speed=.3;
             case ZOMBIE_FLY_AWAY -> attack=3;
-            case ZOMBIE_JUMP -> health=rate*60+healthRate*15;
             case ZOMBIE_PUMPKIN -> {health=60;attack=8;speed=.23;}
             case ZOMBIE_IRON_BUCKET -> health=60;
             case MIMIC_ZOMBIE -> {health=MIMIC_HEALTH;attack=10;}
             case ZOMBIE_CALLER -> {health=60;speed=.22;}
-            case ZOMBIE_BOSS -> {int r=Math.min(limit,raw/10);health=20+r*45;speed=.3;}
-            case ZOMBIE_ELITE_LORD,ZOMBIE_LORD -> {health=rate*60+healthRate*15;attack=12;speed=.3;}
-            case UNDYING_ZOMBIE_EMPEROR -> {health=(rate*60+healthRate*15)*2;attack=12;speed=.3;}
-            case SKELETON_ELITE_LORD -> {health=rate*90+healthRate*15;attack=12;}
+            case ZOMBIE_BOSS -> speed=.3;
+            case ZOMBIE_ELITE_LORD,ZOMBIE_LORD,UNDYING_ZOMBIE_EMPEROR -> {attack=12;speed=.3;}
+            case SKELETON_ELITE_LORD -> attack=12;
             case ANNIHILATION_SKELETON -> health=30;
             case ZOMBIE_PIGMAN_LORD -> {health=50;attack=12;}
             case WANDERING_WITCH -> {health=100;speed=.3;}
             case WITCH_LORD -> {health=370;speed=.3;}
             case TIME_LORD -> {health=180;attack=12;speed=.28;}
-            case DARK_IRON_GOLEM -> health=(45+raw/6D)*4;
             case RED_GHOUL -> {health=20;attack=5;speed=.28;}
             case ZOMBIE_KNOCKBACK -> speed=.3;
             case FISHING_ROD_ZOMBIE -> speed=.27;
             case RUN_CREEPER -> {health=20;speed=.5;}
-            case BLACK_INFERNAL_CREEPER -> health=(30+raw/8D)*3+100;
             default -> {if(k.family==Family.CREEPER)health=20;}
+        }
+        if (hasSpeciesHealthCurve(k)) {
+            long currentDay = m.level() instanceof ServerLevel level ? MonsterDayScaling.currentDay(level)
+                    : Math.max(0L, m.level().getDayTime()) / 24_000L + 1L;
+            health = speciesHealth(k, currentDay);
+            m.getPersistentData().putDouble(SPECIES_HEALTH_BASE, health);
         }
         double fixedAttack=fixedDateAttack(k);
         stat(m,Attributes.MAX_HEALTH,health);stat(m,Attributes.ATTACK_DAMAGE,Double.isFinite(fixedAttack)?fixedAttack:attack);stat(m,Attributes.MOVEMENT_SPEED,speed);
@@ -166,18 +222,19 @@ public final class MobAbilities {
         if(mob instanceof ExtremeMob extreme)extreme.extremeMemory().spare=ItemStack.EMPTY;
         ExtremeNativeMobs.clearEarlySpawnEquipment(mob);
     }
+    private static void normalizeMimicHealth(Mob mob) {
+        var health = mob.getAttribute(Attributes.MAX_HEALTH);
+        if (health != null && health.getBaseValue() != MIMIC_HEALTH) {
+            health.setBaseValue(MIMIC_HEALTH);
+            health.removeModifier(MonsterDayScaling.HEALTH_MODIFIER);
+            mob.setHealth(Math.min(mob.getHealth(), MIMIC_HEALTH));
+        }
+    }
     public static void initialize(Mob mob,ExtremeMob state){
         var k=state.extremeKind();var s=state.extremeMemory();
         normalizeSavedDateAttack(mob,k);
         ZombieLordAbilities.initialize(mob,k,s);
-        if(k==MIMIC_ZOMBIE){
-            // Normalize older saves without healing an injured substitute or retaining old day growth.
-            var health=mob.getAttribute(Attributes.MAX_HEALTH);
-            if(health!=null&&health.getBaseValue()!=MIMIC_HEALTH){
-                health.setBaseValue(MIMIC_HEALTH);health.removeModifier(io.github.ningmeng123.mite.entity.MonsterDayScaling.HEALTH_MODIFIER);
-                mob.setHealth(Math.min(mob.getHealth(),MIMIC_HEALTH));
-            }
-        }
+        if(k==MIMIC_ZOMBIE)normalizeMimicHealth(mob);
         if(s.initialized){ZombieLordEquipment.upgradeSaved(mob,k);upgradeSavedCombat(mob,k);return;}s.initialized=true;
         s.phaseMaximum=s.phaseCharges=mob.getRandom().nextInt(3)+2;
         if(mob instanceof Zombie zombie)zombie.setCanBreakDoors(true);

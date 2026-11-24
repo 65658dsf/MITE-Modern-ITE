@@ -1,5 +1,6 @@
 package io.github.ningmeng123.modernite.entity;
 
+import io.github.ningmeng123.mite.entity.MonsterDayScaling;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
@@ -21,7 +22,7 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class ArrowAbilityGameTests {
     @GameTest(template = "gear_empty")
-    public static void lightningArrowDealsExactlyThreeHeartsThroughArmorAndResistance(GameTestHelper h) {
+    public static void lightningArrowKeepsFixedDamageAcrossDaysThroughArmorAndResistance(GameTestHelper h) {
         var shooter = ExtremeMobs.type(ExtremeKind.SKELETON_LIGHTNING).create(h.getLevel());
         shooter.moveTo(h.absolutePos(new BlockPos(1, 2, 1)).getCenter());
         var player = h.makeMockPlayer(GameType.SURVIVAL);
@@ -31,10 +32,28 @@ public final class ArrowAbilityGameTests {
         var armor = new ItemStack(Items.IRON_CHESTPLATE); armor.enchant(protection, 5);
         player.setItemSlot(EquipmentSlot.CHEST, armor);
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 4));
-        var arrow = EntityType.ARROW.create(h.getLevel()); arrow.setOwner(shooter);
-        float before = player.getHealth();
-        player.hurt(h.getLevel().damageSources().arrow(arrow, shooter), 2);
-        h.assertTrue(Math.abs(before - player.getHealth() - 6) < .001, "Lightning arrows deal exactly six health points despite armor and resistance");
+        var overworld = h.getLevel().getServer().overworld();
+        long previousTime = overworld.getDayTime();
+        try {
+            for (long day : new long[]{1L, 65L, 1L}) {
+                overworld.setDayTime((day - 1L) * 24_000L);
+                h.assertValueEqual(MonsterDayScaling.attackMultiplier(shooter), 1D,
+                        "Lightning skeletons are exempt from calendar attack scaling");
+                h.assertValueEqual(MonsterDayScaling.attackBase(shooter, 8D), 8D,
+                        "Lightning skeleton innate attacks retain the same base damage");
+                var arrow = EntityType.ARROW.create(h.getLevel());
+                arrow.setOwner(shooter);
+                player.invulnerableTime = 0;
+                player.setHealth(player.getMaxHealth());
+                float before = player.getHealth();
+                player.hurt(h.getLevel().damageSources().arrow(arrow, shooter), 2);
+                h.assertTrue(Math.abs(before - player.getHealth() - 6F) < .001,
+                        "Lightning arrows keep their six-point armor-bypassing damage on day " + day);
+                arrow.discard();
+            }
+        } finally {
+            overworld.setDayTime(previousTime);
+        }
         h.assertTrue(!h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.LightningBolt.class, player.getBoundingBox().inflate(2)).isEmpty(), "The hit produces a visual lightning strike");
         h.succeed();
     }

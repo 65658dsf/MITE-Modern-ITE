@@ -2,7 +2,9 @@ package io.github.ningmeng123.modernite.entity;
 
 import io.github.ningmeng123.mite.api.MiteExtensions;
 import io.github.ningmeng123.mite.entity.SourceMeleeGoal;
+import io.github.ningmeng123.mite.registry.MiteRangedItems;
 import io.github.ningmeng123.mite.rules.R196SpawnRules;
+import io.github.ningmeng123.mite.rules.R196RangedRules.Material;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
@@ -42,6 +45,7 @@ public final class IteMobConfigGameTests {
     private static void place(GameTestHelper h,Mob mob){
         h.assertTrue(mob!=null,"The real registered entity creates");
         mob.setNoAi(true);mob.setNoGravity(true);mob.moveTo(h.absolutePos(new BlockPos(1,160,1)).getCenter());
+        mob.getPersistentData().putBoolean(SpawnPopulation.EXPLICIT_COMMAND,true);
     }
 
     @GameTest(template="gear_empty")
@@ -58,10 +62,17 @@ public final class IteMobConfigGameTests {
             h.assertTrue(h.getLevel().getEntitiesOfClass(AbstractArrow.class,skeleton.getBoundingBox().inflate(4),a->a.getOwner()==skeleton).size()==1,
                     "Disabling triple shot stops an already saved triple-shot trait");
             settings.set("skeleton_triple_shot",true);
-            var second=EntityType.ARROW.create(h.getLevel());second.setOwner(skeleton);second.setPos(skeleton.position());
+            var ammunition=new ItemStack(MiteRangedItems.arrow(Material.ADAMANTIUM));
+            var second=new Arrow(h.getLevel(),skeleton,ammunition,null);second.setPos(skeleton.position());
+            second.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,600));
             h.assertTrue(h.getLevel().addFreshEntity(second),"The reenabled control arrow joins");
             h.assertTrue(h.getLevel().getEntitiesOfClass(AbstractArrow.class,skeleton.getBoundingBox().inflate(4),a->a.getOwner()==skeleton).size()==4,
                     "Reenabling the setting adds exactly two real companion arrows");
+            for (Arrow companion:h.getLevel().getEntitiesOfClass(Arrow.class,skeleton.getBoundingBox().inflate(4),
+                    a->a.getOwner()==skeleton&&a!=arrow&&a!=second)) {
+                h.assertTrue(companion.getPickupItemStackOrigin().is(ammunition.getItem()),"Companion arrows retain the upgraded material");
+                h.assertTrue(companion.getColor()==second.getColor(),"Companion arrows retain the original potion effect");
+            }
         }finally{
             h.getLevel().getEntitiesOfClass(AbstractArrow.class,skeleton.getBoundingBox().inflate(4),a->a.getOwner()==skeleton).forEach(AbstractArrow::discard);
             skeleton.discard();
@@ -161,7 +172,8 @@ public final class IteMobConfigGameTests {
     public static void nondefaultWitchDaysAndWeightsChangeTheActualSpawnPool(GameTestHelper h){
         var context=new MiteExtensions.SpawnContext(h.getLevel(),R196SpawnRules.Category.MONSTER,false);
         var pos=h.absolutePos(new BlockPos(1,2,1));
-        try(var settings=new IteReferenceSpawnGameTests.Settings()){
+        try(var site=new SpawnBalanceGameTests.Site(h);var settings=new IteReferenceSpawnGameTests.Settings()){
+            site.date(32,32,true);settings.set("extreme_mob_spawn_limit_day",1);
             settings.set("wandering_witch_spawn_limit_day_overworld",1);settings.set("wandering_witch_spawn_frequency",17);
             var entries=MiteExtensions.policy().spawnPool(context,pos,java.util.List.of());
             h.assertTrue(entries.stream().anyMatch(e->e.type()==ExtremeMobs.type(ExtremeKind.WANDERING_WITCH)&&e.weight()==17),

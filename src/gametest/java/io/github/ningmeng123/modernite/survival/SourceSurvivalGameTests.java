@@ -3,6 +3,7 @@ import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
@@ -10,8 +11,12 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 /** Boundary checks against actual player effects and persistent cloning. @author NingMeng123 */
@@ -61,6 +66,47 @@ public final class SourceSurvivalGameTests {
    IteConfig.setting("underworld_random_teleport").set(enabled);IteConfig.refresh();
   }h.succeed();
  }
+
+ @GameTest(template = "gear_empty", batch = "ite_config")
+ public static void hotNetherrackExemptsMonstersAndStillDamagesPassiveMobs(GameTestHelper h) {
+  var overworld = h.getLevel().getServer().overworld();
+  var nether = overworld.getServer().getLevel(Level.NETHER);
+  var floor = h.absolutePos(BlockPos.ZERO).atY(150);
+  var previous = nether.getBlockState(floor);
+  long previousTime = overworld.getDayTime();
+  boolean enabled = IteConfig.bool("netherrack_damage");
+  int limit = IteConfig.integer("netherrack_damage_limit_day");
+  var piglin = EntityType.PIGLIN.create(nether);
+  var cow = EntityType.COW.create(nether);
+  try {
+   IteConfig.setting("netherrack_damage").set(true);
+   IteConfig.setting("netherrack_damage_limit_day").set(96);
+   IteConfig.refresh();
+   overworld.setDayTime(95 * 24_000L);
+   nether.setBlockAndUpdate(floor, Blocks.NETHERRACK.defaultBlockState());
+   piglin.moveTo(floor.getX() + 0.5, floor.getY() + 1, floor.getZ() + 0.5, 0, 0);
+   cow.moveTo(floor.getX() + 0.5, floor.getY() + 1, floor.getZ() + 0.5, 0, 0);
+   float piglinHealth = piglin.getHealth();
+   float cowHealth = cow.getHealth();
+   for (int tick = 0; tick < 21; tick++) {
+    SourceSurvivalEvents.contact(new EntityTickEvent.Post(piglin));
+    SourceSurvivalEvents.contact(new EntityTickEvent.Post(cow));
+   }
+   h.assertValueEqual(piglin.getHealth(), piglinHealth, "Hot netherrack leaves a Nether monster unharmed");
+   h.assertValueEqual(cow.getHealth(), cowHealth - 1, "Hot netherrack still damages a passive mob after 21 contacts");
+   h.assertTrue(piglin.hurt(piglin.damageSources().inFire(), 1), "The Nether monster remains vulnerable to ordinary fire");
+  } finally {
+   piglin.discard();
+   cow.discard();
+   nether.setBlockAndUpdate(floor, previous);
+   overworld.setDayTime(previousTime);
+   IteConfig.setting("netherrack_damage").set(enabled);
+   IteConfig.setting("netherrack_damage_limit_day").set(limit);
+   IteConfig.refresh();
+  }
+  h.succeed();
+ }
+
  private static final class Session implements AutoCloseable {
   final ServerPlayer player;final EmbeddedChannel channel;
   Session(GameTestHelper h) {
