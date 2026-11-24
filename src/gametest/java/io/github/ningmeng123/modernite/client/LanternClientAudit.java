@@ -11,6 +11,7 @@ import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.content.DynamicCoreItem;
 import io.github.ningmeng123.modernite.content.ExtremeLifeEvents;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
+import net.neoforged.fml.ModList;
 import org.joml.Matrix4f;
 
 /** Real baked models, GPU item transforms and lightmap switching in the owned audit world. @author NingMeng123 */
@@ -208,6 +210,8 @@ final class LanternClientAudit {
         Field gameMode = PlayerInfo.class.getDeclaredField("gameMode");
         gameMode.setAccessible(true);
         GameType savedGameMode = info.getGameMode();
+        Method irisNightVision = irisNightVisionMethod();
+        if (irisNightVision != null) check(mc.getCameraEntity() == mc.player, "The Iris audit requires the local player camera");
         try {
             for (int slot = 0; slot < inventory.getContainerSize(); slot++) inventory.setItem(slot, ItemStack.EMPTY);
             mc.player.removeEffect(MobEffects.NIGHT_VISION);
@@ -215,10 +219,12 @@ final class LanternClientAudit {
             mc.options.gamma().set(0D);
             gameMode.set(info, GameType.SURVIVAL);
             int dark = pixel(mc, true);
+            checkIrisNightVision(irisNightVision, 0F, "An empty offhand must leave Iris night vision at zero");
             result.addProperty("baseline_dark_pixel", rgb(dark));
             ItemStack first = new ItemStack(items.getFirst());
             mc.player.setItemSlot(EquipmentSlot.MAINHAND, first);
             check(pixel(mc, true) == dark, "A lantern held only in the main hand must not illuminate the lightmap");
+            checkIrisNightVision(irisNightVision, 0F, "A main-hand lantern must not light the Iris scene");
             mc.player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             inventory.setItem(9, first);
             check(pixel(mc, true) == dark, "A lantern stored in the inventory must not illuminate the lightmap");
@@ -234,16 +240,19 @@ final class LanternClientAudit {
                 if (lit == 0) lit = active;
                 check(active == lit, "Every lantern material must provide the same full lightmap brightness");
                 check(!mc.player.hasEffect(MobEffects.NIGHT_VISION), "A lantern must not add a night-vision potion effect");
+                checkIrisNightVision(irisNightVision, 1F, "A fueled offhand lantern must light the Iris scene");
                 JsonObject material = new JsonObject();
                 material.addProperty("material", item.material.name());
                 material.addProperty("active_pixel", rgb(active));
                 materials.add(material);
                 mc.player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
                 check(pixel(mc, false) == dark, "Removing the lantern must restore the next frame without waiting for a tick");
+                checkIrisNightVision(irisNightVision, 0F, "Removing a lantern must immediately restore the Iris scene");
                 stack.setDamageValue(stack.getMaxDamage());
                 mc.player.setItemSlot(EquipmentSlot.OFFHAND, stack);
                 check(ExtremeLifeEvents.coreLevel(mc.player) == 0 && pixel(mc, true) == dark,
                     "An exhausted lantern must not illuminate the lightmap: " + item.material);
+                checkIrisNightVision(irisNightVision, 0F, "An exhausted lantern must not light the Iris scene");
                 mc.player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
             }
             result.add("all_material_pixels", materials);
@@ -253,6 +262,7 @@ final class LanternClientAudit {
             mc.player.setItemSlot(EquipmentSlot.OFFHAND, first);
             gameMode.set(info, GameType.SPECTATOR);
             check(mc.player.isSpectator() && pixel(mc, true) == dark, "A spectator's offhand lantern must not illuminate the lightmap");
+            checkIrisNightVision(irisNightVision, 0F, "A spectator's lantern must not light the Iris scene");
             gameMode.set(info, GameType.CREATIVE);
             check(mc.player.isCreative() && pixel(mc, false) == lit, "A creative player's fueled offhand lantern must illuminate the lightmap");
             result.addProperty("spectator_inactive_creative_active", true);
@@ -263,12 +273,20 @@ final class LanternClientAudit {
             check(potion != null, "The native short night-vision potion must be applied");
             float nativeScale = GameRenderer.getNightVisionScale(mc.player, 1);
             int potionPixel = pixel(mc, true);
+            float irisPotionScale = 0F;
+            if (irisNightVision != null) {
+                irisPotionScale = (float) irisNightVision.invoke(null);
+                check(irisPotionScale > 0F && irisPotionScale < 1F, "Iris must still see a fading night-vision potion");
+            }
             mc.player.setItemSlot(EquipmentSlot.OFFHAND, first);
             check(pixel(mc, false) == lit, "Lantern brightness must stay full during a fading night-vision potion");
+            checkIrisNightVision(irisNightVision, 1F, "Lantern lighting must keep Iris at full strength during a fading potion");
             check(mc.player.getEffect(MobEffects.NIGHT_VISION) == potion && potion.getDuration() == 7
                 && GameRenderer.getNightVisionScale(mc.player, 1) == nativeScale, "Lantern use must preserve the actual potion and native night-vision scale");
             mc.player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
             check(pixel(mc, false) == potionPixel, "Removing the lantern must restore the real fading night-vision potion immediately");
+            checkIrisNightVision(irisNightVision, irisPotionScale, "Removing the lantern must restore the actual potion strength to Iris");
+            result.addProperty("iris_night_vision_uniform_verified", irisNightVision != null);
             result.addProperty("fading_potion_unchanged", true);
             result.addProperty("native_fading_potion_scale", nativeScale);
             result.addProperty("native_fading_potion_pixel", rgb(potionPixel));
@@ -287,6 +305,17 @@ final class LanternClientAudit {
             mc.gameRenderer.lightTexture().tick();
             mc.gameRenderer.lightTexture().updateLightTexture(1);
         }
+    }
+
+    private static Method irisNightVisionMethod() throws ReflectiveOperationException {
+        if (!ModList.get().isLoaded("iris")) return null;
+        Method method = Class.forName("net.irisshaders.iris.uniforms.CommonUniforms").getDeclaredMethod("getNightVision");
+        method.setAccessible(true);
+        return method;
+    }
+
+    private static void checkIrisNightVision(Method method, float expected, String message) throws ReflectiveOperationException {
+        if (method != null) check((float) method.invoke(null) == expected, message);
     }
 
     private static int pixel(Minecraft mc, boolean tick) throws Exception {
