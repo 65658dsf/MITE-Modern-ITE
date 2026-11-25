@@ -24,7 +24,6 @@ public final class ExtremeVisuals {
         var player=Minecraft.getInstance().player;if(player==null)return;
         if(has(player,"reversed"))event.setRoll(event.getRoll()+180);
         if(has(player,"chaos")){float time=player.tickCount+(float)event.getPartialTick();event.setRoll(event.getRoll()+(float)Math.sin(time*.2)*18);event.setYaw(event.getYaw()+(float)Math.sin(time*.13)*12);}
-        if(has(player,"look_up")){player.setXRot(-90);event.setPitch(-90);}
     }
     @SubscribeEvent public static void movement(MovementInputUpdateEvent event) {
         if(has(event.getEntity(),"reversed")){event.getInput().forwardImpulse=-event.getInput().forwardImpulse;event.getInput().leftImpulse=-event.getInput().leftImpulse;}
