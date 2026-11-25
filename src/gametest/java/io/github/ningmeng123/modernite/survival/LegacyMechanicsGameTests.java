@@ -3,21 +3,29 @@ package io.github.ningmeng123.modernite.survival;
 import com.mojang.authlib.GameProfile;
 import io.github.ningmeng123.mite.enchantment.R196Enchantments;
 import io.github.ningmeng123.mite.enchantment.SourceEnchantmentCombat;
+import io.github.ningmeng123.mite.worldgen.MiteWorldDimensions;
 import io.github.ningmeng123.modernite.config.IteConfig;
 import io.github.ningmeng123.modernite.content.ExtremeLifeEvents;
 import io.github.ningmeng123.modernite.enchantment.ExtremeEnchantments;
 import io.netty.channel.embedded.EmbeddedChannel;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
+import net.minecraft.network.PacketSendListener;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
@@ -211,6 +219,77 @@ public final class LegacyMechanicsGameTests {
             h.assertTrue(!replacement.player.getPersistentData().contains(ExtremeLifeEvents.PENALTY)
                     &&!SourceSurvivalEvents.state(replacement.player).contains("nether_fatigue"),"Disabling either mechanism clears its own persistent timer");
         }h.succeed();
+    }
+
+    @GameTest(template = "gear_empty", batch = "ite_config")
+    public static void underworldCooldownHudTracksServerRecovery(GameTestHelper h) {
+        try (var config = new ConfigRestore(); var session = new Session(h)) {
+            config.set("underworld_debuff", true);
+            config.set("underworld_debuff_period1", 2);
+            var player = session.player;
+            var overworld = player.serverLevel();
+            var underworld = player.server.getLevel(MiteWorldDimensions.UNDERWORLD);
+            h.assertTrue(underworld != null, "The real Underworld dimension must be loaded");
+
+            List<Integer> countdown = new ArrayList<>();
+            var originalListener = player.connection;
+            var cookie = CommonListenerCookie.createInitial(player.getGameProfile(), false);
+            player.connection = new ServerGamePacketListenerImpl(player.server, originalListener.getConnection(), player, cookie) {
+                @Override
+                public void send(Packet<?> packet, PacketSendListener listener) {
+                    if (packet instanceof ClientboundCustomPayloadPacket custom
+                            && custom.payload() instanceof UnderworldCooldownPayload cooldown) {
+                        countdown.add(cooldown.secondsRemaining());
+                    }
+                    originalListener.send(packet, listener);
+                }
+            };
+            try {
+                var tick = new PlayerTickEvent.Post(player);
+                player.setServerLevel(underworld);
+                NeoForge.EVENT_BUS.post(tick);
+                player.setServerLevel(overworld);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.isEmpty(), "Leaving before the fatigue threshold does not show a cooldown");
+
+                player.setServerLevel(underworld);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.isEmpty(), "Passing the threshold inside the Underworld does not start recovery");
+                player.setServerLevel(overworld);
+                NeoForge.EVENT_BUS.post(tick);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.equals(List.of(1200)), "Recovery begins at 20:00 and publishes each whole second once");
+
+                player.getPersistentData().getCompound(ExtremeLifeEvents.PENALTY).putInt("recovery", 2920);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.getLast() == 1054, "The HUD receives 17:34 from the persisted recovery ticks");
+                player.setServerLevel(underworld);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.getLast() == 0, "Reentering the Underworld hides the recovery countdown");
+                player.setServerLevel(overworld);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.getLast() == 1200, "Leaving again restarts recovery at 20:00");
+
+                config.set("underworld_debuff", false);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.getLast() == 0, "Disabling Underworld fatigue clears a visible cooldown");
+                config.set("underworld_debuff", true);
+                var savedPenalty = new CompoundTag();
+                savedPenalty.putBoolean("active", true);
+                savedPenalty.putInt("elapsed", 2);
+                savedPenalty.putInt("recovery", 23_998);
+                savedPenalty.putInt("version", 1);
+                player.getPersistentData().put(ExtremeLifeEvents.PENALTY, savedPenalty);
+                NeoForge.EVENT_BUS.post(tick);
+                NeoForge.EVENT_BUS.post(tick);
+                h.assertTrue(countdown.equals(List.of(1200, 1054, 0, 1200, 0, 1, 0)),
+                        "Existing saves display the last second and clear at the exact completion tick");
+            } finally {
+                player.connection = originalListener;
+                player.setServerLevel(overworld);
+            }
+        }
+        h.succeed();
     }
 
     private static float hit(LivingEntity target,DamageSource source,float amount) {

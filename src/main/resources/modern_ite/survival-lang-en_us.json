@@ -1,4 +1,5 @@
 {
+  "hud.modern_ite.underworld_cooldown": "Underworld cooldown remaining %s",
   "message.modern_ite.teleport_five_minutes": "Underworld rune teleport in five minutes. Prepare to move.",
   "message.modern_ite.teleport_one_minute": "Underworld rune teleport in one minute.",
   "message.modern_ite.teleport_countdown": "Underworld rune teleport in %s seconds.",

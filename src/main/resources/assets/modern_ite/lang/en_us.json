@@ -328,6 +328,7 @@
   "item.modern_ite.annihilation_skeleton_spawn_egg": "Annihilation Skeleton Spawn Egg",
   "entity.modern_ite.nb_fireball": "NB Fireball",
   "entity.modern_ite.infernal_blast_fireball": "Infernal Blast Fireball",
+  "hud.modern_ite.underworld_cooldown": "Underworld cooldown remaining %s",
   "message.modern_ite.teleport_five_minutes": "Underworld rune teleport in five minutes. Prepare to move.",
   "message.modern_ite.teleport_one_minute": "Underworld rune teleport in one minute.",
   "message.modern_ite.teleport_countdown": "Underworld rune teleport in %s seconds.",

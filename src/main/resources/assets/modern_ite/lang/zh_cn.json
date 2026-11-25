@@ -328,6 +328,7 @@
   "item.modern_ite.annihilation_skeleton_spawn_egg": "湮灭骷髅刷怪蛋",
   "entity.modern_ite.nb_fireball": "NB火球",
   "entity.modern_ite.infernal_blast_fireball": "地狱爆裂火球",
+  "hud.modern_ite.underworld_cooldown": "地底世界冷却剩余 %s",
   "message.modern_ite.teleport_five_minutes": "五分钟后将被地底符文随机传送，请做好准备。",
   "message.modern_ite.teleport_one_minute": "一分钟后将被地底符文随机传送。",
   "message.modern_ite.teleport_countdown": "地底符文随机传送倒计时：%s 秒",

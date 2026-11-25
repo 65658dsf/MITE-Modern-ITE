@@ -2,6 +2,7 @@ package io.github.ningmeng123.modernite.content;
 
 import io.github.ningmeng123.modernite.ModernIte;
 import io.github.ningmeng123.modernite.config.IteConfig;
+import io.github.ningmeng123.modernite.survival.UnderworldCooldownPayload;
 import io.github.ningmeng123.mite.survival.PlayerExperience;
 import io.github.ningmeng123.mite.worldgen.R196MobSpawning;
 import io.github.ningmeng123.mite.block.entity.StrongboxBlockEntity;
@@ -34,6 +35,7 @@ import org.slf4j.LoggerFactory;
 @EventBusSubscriber(modid=ModernIte.MOD_ID)
 public final class ExtremeLifeEvents {
     public static final String ANCHOR="modern_ite:resurrection", PENALTY="modern_ite:underworld_penalty";
+    private static final int UNDERWORLD_RECOVERY_TICKS = 24_000;
     public static int coreLevel(Player player) {
         ItemStack offhand = player.getOffhandItem();
         return !player.isSpectator() && DynamicCoreItem.hasFuel(offhand)
@@ -48,9 +50,15 @@ public final class ExtremeLifeEvents {
         player.getInventory().setChanged();
     }
     @SubscribeEvent public static void tick(PlayerTickEvent.Post event) {
-        if(!(event.getEntity() instanceof ServerPlayer player)||player.isSpectator()||player.isCreative())return;
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (player.isSpectator() || player.isCreative()) {
+            UnderworldCooldownPayload.sync(player, 0);
+            return;
+        }
         tickLantern(player);
-        advanceUnderworldFatigue(player,R196MobSpawning.underworld(player.serverLevel()));
+        boolean underworld = R196MobSpawning.underworld(player.serverLevel());
+        advanceUnderworldFatigue(player, underworld);
+        UnderworldCooldownPayload.sync(player, underworldCooldownSeconds(player, underworld));
     }
     /** Reuses the existing Extreme counter and its one-day recovery, rather than adding another penalty. */
     public static void advanceUnderworldFatigue(ServerPlayer player,boolean under) {
@@ -66,9 +74,16 @@ public final class ExtremeLifeEvents {
                 player.sendSystemMessage(Component.translatable(stage==2?"message.modern_ite.underworld_penalty_second":"message.modern_ite.underworld_penalty"));
                 penalty.putBoolean("warned",true);penalty.putInt("warned_stage",stage);
             }
-        }else if(active&&++recovery>=24000){elapsed=0;recovery=0;active=false;penalty.putBoolean("warned",false);player.sendSystemMessage(Component.translatable("message.modern_ite.underworld_recovered"));}
+        }else if(active&&++recovery>=UNDERWORLD_RECOVERY_TICKS){elapsed=0;recovery=0;active=false;penalty.putBoolean("warned",false);player.sendSystemMessage(Component.translatable("message.modern_ite.underworld_recovered"));}
         if(!active)penalty.remove("warned_stage");
         penalty.putInt("elapsed",elapsed);penalty.putInt("recovery",recovery);penalty.putBoolean("active",active);penalty.putInt("version",1);data.put(PENALTY,penalty);
+    }
+    private static int underworldCooldownSeconds(ServerPlayer player, boolean underworld) {
+        if (underworld) return 0;
+        CompoundTag penalty = player.getPersistentData().getCompound(PENALTY);
+        if (!penalty.getBoolean("active")) return 0;
+        int recovery = Math.clamp(penalty.getInt("recovery"), 0, UNDERWORLD_RECOVERY_TICKS);
+        return Math.ceilDiv(UNDERWORLD_RECOVERY_TICKS - recovery, 20);
     }
     @SubscribeEvent(priority=EventPriority.LOW) public static void resurrect(LivingDeathEvent event) {
         if(event.isCanceled()||!(event.getEntity() instanceof ServerPlayer player))return;
