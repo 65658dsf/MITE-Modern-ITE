@@ -2,7 +2,7 @@
 
 开发者：NingMeng123。日期：2026-11-04。拓展版本保持 0.3.0。
 
-普通凋零和强化凋零最大生命均为 **1300**，末影龙为 **7500**。取值来自本地旧版极难 `Extreme-lh-0.6.6` 的 `cn.wensc.mitemod.extreme.mixin.entity.EntityWitherMixin.modifyDefaultHealth` 与 `EntityDragonMixin.moreHealth`；前者将原版 300 替换为 1300，后者直接设置 7500。它们是极难类内的硬编码值，不是另一参考 ITE 中的龙血量。普通凋零仅共用生命上限。
+普通凋零和强化凋零的基础生命均为 **1300**，末影龙的基础生命固定为 **3500**。旧版极难 `Extreme-lh-0.6.6` 的 `EntityWitherMixin.modifyDefaultHealth` 将凋零生命设为 1300，`EntityDragonMixin.moreHealth` 当时将末影龙生命设为 7500。普通凋零仅共用生命上限。
 
 当前整合包安装 WitherPlus 0.1.1 时：
 

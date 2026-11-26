@@ -11,6 +11,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -23,7 +25,7 @@ public final class BossHealthGameTests {
     private BossHealthGameTests() {}
 
     @GameTest(template = "gear_empty")
-    public static void actualFreshJoinsKeepBothWithersAtThirteenHundredAndDragonAtSeventyFiveHundred(GameTestHelper h) {
+    public static void actualFreshJoinsKeepBothWithersAtThirteenHundredAndDragonAtThirtyFiveHundred(GameTestHelper h) {
         for (boolean enhanced : new boolean[]{false, true}) {
             WitherBoss wither = WitherEncounterGameTests.create(h, enhanced);
             try {
@@ -41,8 +43,9 @@ public final class BossHealthGameTests {
             dragon.moveTo(h.absolutePos(new BlockPos(2, 4, 2)).getCenter());
             dragon.setNoAi(true);
             h.assertTrue(h.getLevel().addFreshEntity(dragon), "The actual dragon passes every installed mod's join callback");
-            h.assertTrue(dragon.getMaxHealth() == 7500F && dragon.getAttributeBaseValue(Attributes.MAX_HEALTH) == 7500D,
-                    "The final installed-mod join result retains the 7500-health dragon baseline");
+            h.assertTrue(dragon.getMaxHealth() == 3500F && dragon.getAttributeBaseValue(Attributes.MAX_HEALTH) == 3500D,
+                    "The final installed-mod join result uses the 3500-health dragon baseline");
+            h.assertValueEqual(dragon.getHealth(), 3500F, "A new dragon enters the world at full health");
         } finally { dragon.discard(); }
         h.succeed();
     }
@@ -75,7 +78,8 @@ public final class BossHealthGameTests {
     }
 
     @GameTest(template = "gear_empty")
-    public static void savedDragonRepairsOldAndOptionalModHealthWithoutHealingOrCompounding(GameTestHelper h) {
+    public static void savedDragonRepairsOldAndOptionalModHealthWithoutHealingOrCompounding(GameTestHelper h)
+            throws ReflectiveOperationException {
         EnderDragon original = EntityType.ENDER_DRAGON.create(h.getLevel());
         EnderDragon restored = EntityType.ENDER_DRAGON.create(h.getLevel());
         h.assertTrue(original != null && restored != null, "The actual dragon registry creates both saved and restored entities");
@@ -88,12 +92,28 @@ public final class BossHealthGameTests {
             h.assertTrue(restored.getMaxHealth() == 400F && restored.getHealth() == 100F,
                     "The native save/load carries the actual old 400-health, quarter-health dragon state");
             loadedJoin(h, restored);
-            assertQuarterHealth(h, restored, 7500F);
+            assertQuarterHealth(h, restored, 3500F);
+            if (ModList.get().isLoaded("enderdragonplus")) {
+                var config = Class.forName("com.enderdragonplus.EdpConfig");
+                var edpHealth = (ModConfigSpec.DoubleValue) config.getField("MAX_HEALTH").get(null);
+                double originalHealth = edpHealth.get();
+                try {
+                    edpHealth.set(3500D);
+                    legacyHealth(restored, 7500D);
+                    loadedJoin(h, restored);
+                    assertQuarterHealth(h, restored, 3500F);
+                } finally {
+                    edpHealth.set(originalHealth);
+                }
+            }
             legacyHealth(restored, 600D);
             loadedJoin(h, restored);
-            assertQuarterHealth(h, restored, 7500F);
+            assertQuarterHealth(h, restored, 3500F);
+            legacyHealth(restored, 7500D);
             loadedJoin(h, restored);
-            assertQuarterHealth(h, restored, 7500F);
+            assertQuarterHealth(h, restored, 3500F);
+            loadedJoin(h, restored);
+            assertQuarterHealth(h, restored, 3500F);
         } finally { original.discard(); restored.discard(); }
         h.succeed();
     }

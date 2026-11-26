@@ -46,7 +46,7 @@ public final class ExtremeNativeMobs {
     private static final String PROFILE="modern_ite:source_profile";
     private static final String SKELETON_HEALTH_PROFILE="modern_ite:skeleton_health_v2";
     public static final double WITHER_MAX_HEALTH=1300;
-    public static final double DRAGON_MAX_HEALTH=7500;
+    public static final double DRAGON_MAX_HEALTH=3500;
     private ExtremeNativeMobs(){}
     private static String id(Entity e){return BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).toString();}
     private static void stat(Mob m,Holder<Attribute> key,double value){var a=m.getAttribute(key);if(a!=null)a.setBaseValue(value);}
