@@ -37,7 +37,7 @@ public abstract class ControlLookMixin {
         if (lookUp == null || lookUp.endsWithin(0)) return;
 
         // Cap the pull at the pitch limit so downward input works even when already looking straight up.
-        double pullDegrees = Math.min(Math.max(0D, player.getXRot() + 90D), 45D * Mth.clamp(frameSeconds, 0D, .1D));
+        double pullDegrees = Math.min(Math.max(0D, player.getXRot() + 90D), 90D * Mth.clamp(frameSeconds, 0D, .1D));
         double pullInput = pullDegrees / .15D; // Entity.turn converts input units to degrees.
         double pitchInput = args.get(1);
         // Even a small downward movement remains responsive while resisting the pull.
