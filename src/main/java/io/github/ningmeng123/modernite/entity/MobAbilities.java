@@ -611,6 +611,7 @@ public final class MobAbilities {
                 if(level.noCollision(mob)){valid=true;break;}
             }
             if(!valid||!SpawnPopulation.reserveSupport(mob,owner,encounter)){mob.discard();continue;}
+            if(BossSummonedMobs.isBoss(owner))BossSummonedMobs.mark(mob);
             Set<UUID> existing=summonBaseline(level,owner);Set<Entity> owned=new LinkedHashSet<>();owned.add(mob);
             try{
                 net.neoforged.neoforge.event.EventHooks.finalizeMobSpawn(mob,level,level.getCurrentDifficultyAt(mob.blockPosition()),MobSpawnType.MOB_SUMMONED,null);

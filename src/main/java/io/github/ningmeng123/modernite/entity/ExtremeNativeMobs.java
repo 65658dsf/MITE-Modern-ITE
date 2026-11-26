@@ -307,6 +307,8 @@ public final class ExtremeNativeMobs {
             p.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,600));Mob troop=MobAbilities.summonId(d,"mite:revenant",1,true);if(troop!=null)troop.setTarget(p);
         }
         if(d.tickCount%(half?40:80)==0){
+            if (d.getPhaseManager().getCurrentPhase() instanceof DragonFinalNovaPhase nova
+                    && nova.modernIte$isPreparingFinalNova()) return;
             Player target=level.getNearestPlayer(d,128);if(target!=null&&!target.isCreative()&&!target.isSpectator()){
                 d.getPhaseManager().setPhase(EnderDragonPhase.CHARGING_PLAYER);
                 d.getPhaseManager().getPhase(EnderDragonPhase.CHARGING_PLAYER).setTarget(target.position());
@@ -317,8 +319,6 @@ public final class ExtremeNativeMobs {
     public static void incoming(LivingIncomingDamageEvent event){
         if(event.isCanceled()||event.getEntity().level().isClientSide)return;
         LivingEntity victim=event.getEntity();DamageSource src=event.getSource();Entity attacker=src.getEntity();
-        if(victim instanceof WitherBoss&&attacker!=null&&attacker.getPersistentData().getBoolean("modern_ite:wither_minion")
-                ||victim.getPersistentData().getBoolean("modern_ite:wither_minion")&&(attacker instanceof WitherBoss||src.getDirectEntity() instanceof WitherSkull)){event.setCanceled(true);return;}
         if(victim instanceof ElementalMaterial e&&e.modernIteMaterial()==1&&src.is(DamageTypeTags.IS_FIRE))event.setAmount(event.getAmount()*2);
         if(victim instanceof EnderDragon d){
             if(d.getHealth()<d.getMaxHealth()*IteConfig.number("Entities.ender_dragon_immune_to_arrow_health_percent")&&src.is(DamageTypeTags.IS_PROJECTILE)){event.setCanceled(true);return;}
@@ -334,7 +334,13 @@ public final class ExtremeNativeMobs {
         if(event.getSource().getEntity() instanceof EnderDragon dragon&&event.getEntity() instanceof Player player){
             if(IteConfig.bool("Entities.ender_dragon_attack_slowness"))player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,300));
             if(dragon.level() instanceof ServerLevel level&&dragon.getRandom().nextBoolean()){
-                LightningBolt bolt=EntityType.LIGHTNING_BOLT.create(level);if(bolt!=null){bolt.moveTo(player.position().add(dragon.getRandom().nextInt(17)-8,0,dragon.getRandom().nextInt(17)-8));level.addFreshEntity(bolt);}
+                LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+                if (bolt != null) {
+                    bolt.setDamage(bolt.getDamage() * BossSummonedMobs.DRAGON_DAMAGE_MULTIPLIER);
+                    BossSummonedMobs.markBossHazard(bolt);
+                    bolt.moveTo(player.position().add(dragon.getRandom().nextInt(17) - 8, 0, dragon.getRandom().nextInt(17) - 8));
+                    level.addFreshEntity(bolt);
+                }
             }
         }
         if(IteConfig.bool("Entities.bat_poison_attack")&&event.getSource().getEntity() instanceof R196Bat bat&&bat.miteKind()!=MobKind.NIGHTWING&&bat.getRandom().nextBoolean())event.getEntity().addEffect(new MobEffectInstance(MobEffects.POISON,480));

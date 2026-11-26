@@ -6,8 +6,14 @@ import org.spongepowered.asm.mixin.injection.*;
 /** Retains modern dragon phases while changing the source collision and crystal constants. @author NingMeng123 */
 @Mixin(EnderDragon.class)
 public class DragonCombatMixin {
-    @ModifyConstant(method="hurt(Ljava/util/List;)V",constant=@Constant(floatValue=10F))
-    private float modernIte$contact(float old){var d=(EnderDragon)(Object)this;return d.getHealth()<d.getMaxHealth()/2?85:60;}
+    // Ender Dragon Plus also modifies this argument. Apply ITE's head contact damage after it.
+    @ModifyArg(method = "hurt(Ljava/util/List;)V", at = @At(value = "INVOKE", target =
+            "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"),
+            index = 1, order = 1100)
+    private float modernIte$contact(float original) {
+        EnderDragon dragon = (EnderDragon)(Object)this;
+        return dragon.getHealth() < dragon.getMaxHealth() / 2 ? 85F : 60F;
+    }
     @ModifyConstant(method="knockBack",constant=@Constant(doubleValue=4D))
     private double modernIte$knock(double old){return old*1.5;}
     @ModifyArg(method="aiStep",at=@At(value="INVOKE",target="Lnet/minecraft/world/entity/boss/enderdragon/EnderDragon;move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V"),index=1)

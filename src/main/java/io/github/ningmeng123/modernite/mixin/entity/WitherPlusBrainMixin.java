@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -33,5 +34,11 @@ public abstract class WitherPlusBrainMixin {
     @Inject(method = "load", at = @At("TAIL"))
     private void modernIte$loadSummon(CompoundTag tag, CallbackInfo ci) {
         WitherEncounters.loadSpecialSummon(wither, specialSummon);
+    }
+
+    @ModifyVariable(method = "damage(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At("HEAD"),
+            argsOnly = true, ordinal = 0)
+    private double modernIte$scaleSkillDamage(double multiplier) {
+        return multiplier * 10D;
     }
 }
