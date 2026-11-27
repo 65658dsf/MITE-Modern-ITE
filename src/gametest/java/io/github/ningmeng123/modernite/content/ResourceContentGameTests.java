@@ -83,8 +83,10 @@ public final class ResourceContentGameTests {
 
     @GameTest(template="gear_empty")
     public static void loadedSourceCraftingRecipesMatchCoreClubFurnaceChestAndMapleInputs(GameTestHelper h) {
+        craft(h,"light_core","modern_ite:light_core",1,new String[]{"ABA","BCB","ABA"},
+                Map.of('A',"minecraft:glowstone",'B',"minecraft:golden_carrot",'C',"minecraft:ghast_tear"));
         craft(h,"dynamic_core_mithril","modern_ite:dynamic_core_mithril",1,new String[]{"ADA","BCB","ADA"},
-                Map.of('A',"mite:adamantium_ingot",'B',"minecraft:blaze_rod",'C',"minecraft:nether_star",'D',"minecraft:ghast_tear"));
+                Map.of('A',"mite:mithril_ingot",'B',"minecraft:blaze_rod",'C',"minecraft:nether_star",'D',"modern_ite:light_core"));
         craft(h,"dynamic_core_adamantium","modern_ite:dynamic_core_adamantium",1,new String[]{"ADA","BCB","ADA"},
                 Map.of('A',"minecraft:glowstone",'B',"mite:vibranium_ingot",'C',"modern_ite:dynamic_core_mithril",'D',"mite:adamantium_ingot"));
         craft(h,"dynamic_core_vibranium","modern_ite:dynamic_core_vibranium",1,new String[]{"ADA","BCB","ADA"},

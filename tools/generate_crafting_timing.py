@@ -25,6 +25,13 @@ def f32(value: float) -> float:
     return struct.unpack("!f", struct.pack("!f", value))[0]
 
 
+def recipe_components(recipe: dict) -> list[str]:
+    ingredients = recipe["ingredients"] if recipe["type"].endswith("shapeless") else [
+        recipe["key"][character] for row in recipe["pattern"] for character in row if character != " "
+    ]
+    return [ingredient.get("item", "#" + ingredient.get("tag", "")) for ingredient in ingredients]
+
+
 def generate() -> dict:
     registry_path = BASE / "reference-data/runtime-registry.json"
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
@@ -33,6 +40,14 @@ def generate() -> dict:
 
     def component(name: str, value: float, evidence: str) -> None:
         components[name] = (f32(value), evidence)
+
+    def batch_difficulty(names: list[str], recipe: str) -> float:
+        difficulty = 0.0
+        for name in names:
+            if name not in components:
+                raise ValueError(f"Unmapped crafting component {name} in {recipe}")
+            difficulty = f32(difficulty + components[name][0])
+        return difficulty
 
     # Numeric identities and component values are frozen by the guarded R196
     # registration dump. Charcoal is coal metadata 1, with the same component.
@@ -48,7 +63,7 @@ def generate() -> dict:
         "minecraft:string": 287, "minecraft:book": 340,
         "minecraft:glowstone_dust": 348, "minecraft:ender_pearl": 368,
         "minecraft:blaze_rod": 369, "minecraft:gold_nugget": 371,
-        "minecraft:blaze_powder": 377, "minecraft:nether_star": 399,
+        "minecraft:blaze_powder": 377, "minecraft:golden_carrot": 396, "minecraft:nether_star": 399,
         "mite:copper_nugget": 956, "mite:silver_nugget": 957,
         "minecraft:iron_nugget": 958, "minecraft:copper_ingot": 962,
         "mite:silver_ingot": 963, "mite:mithril_ingot": 964,
@@ -72,6 +87,9 @@ def generate() -> dict:
               "R196 item 397 has no component or producing recipe; RecipeHelper skips unresolved negative components")
     component("minecraft:ghast_tear", 5,
               "ITE MITEITEItemRegistryInit.registerRecipes explicitly sets ghastTear component to 5F")
+    light_core = json.loads((RES / "data/modern_ite/recipe/light_core.json").read_text(encoding="utf-8"))
+    component("modern_ite:light_core", batch_difficulty(recipe_components(light_core), "light_core"),
+              "Modern light core uses its own whole-batch manufacturing difficulty as its component value")
     component("mite:vibranium_ingot", 51200,
               "ITE EarlyRiser durability 512F; ItemIngot component = material durability * 100F")
     component("minecraft:netherite_ingot", 3200,
@@ -120,16 +138,8 @@ def generate() -> dict:
         if data.get("type") not in STATIC_TYPES:
             continue
         name = path.relative_to(RES / "data/modern_ite/recipe").with_suffix("").as_posix()
-        result = data["result"]["id"]
-        ingredient_list = data["ingredients"] if data["type"].endswith("shapeless") else [
-            data["key"][character] for row in data["pattern"] for character in row if character != " "
-        ]
-        component_names = [ingredient.get("item", "#" + ingredient.get("tag", "")) for ingredient in ingredient_list]
-        difficulty = 0.0
-        for component_name in component_names:
-            if component_name not in components:
-                raise ValueError(f"Unmapped crafting component {component_name} in {name}")
-            difficulty = f32(difficulty + components[component_name][0])
+        component_names = recipe_components(data)
+        difficulty = batch_difficulty(component_names, name)
         evidence = "RecipeHelper whole-batch float32 sum of the registered modern ingredients: " + "; ".join(
             f"{count} * {item} ({components[item][0]})" for item, count in Counter(component_names).items())
         required_bench = None
@@ -151,7 +161,9 @@ def generate() -> dict:
         elif name in ("vibranium_chest", "vibranium_furnace"):
             required_bench = "vibranium"
         elif name.startswith("dynamic_core_"):
-            if name in ("dynamic_core_mithril", "dynamic_core_adamantium"):
+            if name == "dynamic_core_mithril":
+                evidence += "; modern mithril lantern uses matching metal and two crafted light cores"
+            elif name == "dynamic_core_adamantium":
                 evidence += "; Extreme EXItemsRegistryInit.registerRecipes restores the matching source dynamic-core recipe as a held lantern"
             else:
                 evidence += "; vibranium lantern adapts the source adamantium upgrade layout with an adamantium lantern at the center"
@@ -178,7 +190,7 @@ def generate() -> dict:
         recipes["modern_ite:" + name] = {"difficulty": difficulty, "required_bench": required_bench,
             "source_order": source_order, "evidence": evidence}
 
-    assert len(recipes) == 172, f"Review added/removed static recipes: {len(recipes)}"
+    assert len(recipes) == 173, f"Review added/removed static recipes: {len(recipes)}"
     assert recipes["modern_ite:stack_torch_string_coal"]["difficulty"] == 195.0
     assert recipes["modern_ite:unpack_torches_1"]["difficulty"] == f32(1e-9)
 
@@ -198,8 +210,8 @@ def generate() -> dict:
         "notes": [
             "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
             "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
-            "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
-            "Coverage: 172 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+            "Gem upgrades preserve the old counted-stack expansion into three components; mithril lanterns use crafted light cores, adamantium lanterns use the source dynamic-core recipe, and vibranium lanterns adapt the source upgrade layout. The metal upgrading furnace uses explicitly identified modern ingredients.",
+            "Coverage: 173 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
             "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
         ],
         "components": {name: {"difficulty": value, "evidence": evidence} for name, (value, evidence) in sorted(components.items())},

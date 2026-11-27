@@ -8,7 +8,7 @@
   ],
   "key": {
     "A": {
-      "item": "mite:adamantium_ingot"
+      "item": "mite:mithril_ingot"
     },
     "B": {
       "item": "minecraft:blaze_rod"
@@ -17,7 +17,7 @@
       "item": "minecraft:nether_star"
     },
     "D": {
-      "item": "minecraft:ghast_tear"
+      "item": "modern_ite:light_core"
     }
   },
   "result": {

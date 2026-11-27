@@ -130,7 +130,7 @@ simple={
  'blaze_coal_powder':('烈焰煤粉','Blaze Coal Powder'), 'nether_ender_eye':('堡垒之眼','Fortress Eye'),
  'bastion_eye':('猪灵堡垒之眼','Bastion Remnant Eye'),
  'stack_torch':('捆装火把','Torch Bundle'), 'iron_bucket_helmet':('铁桶头盔','Iron Bucket Helmet'),
- 'crossbow':('极难弩','Extreme Crossbow')}
+ 'crossbow':('极难弩','Extreme Crossbow'), 'light_core':('光源核心','Light Core')}
 for id,(cn,eng) in simple.items():named(id,cn,eng);model(id)
 for id in ['fancy_red','nether_ender_eye','stack_torch']:tex(EX,f'assets/extreme/textures/items/{id}.png','item/'+id)
 for id in ['diamond_chunk','blaze_coal_powder']:tex(ITE,f'assets/miteite/textures/items/{id}.png','item/'+id)
@@ -196,7 +196,8 @@ state('vibranium_chest',{'variants':{'':{'model':'minecraft:block/chest'}}});sav
 shaped('resurrection_array',['ABA','BCB','ABA'],{'A':'mite:mithril_ingot','B':'minecraft:diamond','C':'minecraft:ender_pearl'})
 shaped('vibranium_furnace',['VOA','DND','AOV'],{'V':'mite:vibranium_ingot','O':'minecraft:netherite_ingot','A':'mite:adamantium_ingot','D':'minecraft:diamond','N':'mite:netherrack_furnace'})
 shaped('vibranium_chest',['VVV','V V','VVV'],{'V':'mite:vibranium_ingot'})
-shaped('dynamic_core_mithril',['ADA','BCB','ADA'],{'A':'mite:adamantium_ingot','B':'minecraft:blaze_rod','C':'minecraft:nether_star','D':'minecraft:ghast_tear'})
+shaped('light_core',['ABA','BCB','ABA'],{'A':'minecraft:glowstone','B':'minecraft:golden_carrot','C':'minecraft:ghast_tear'})
+shaped('dynamic_core_mithril',['ADA','BCB','ADA'],{'A':'mite:mithril_ingot','B':'minecraft:blaze_rod','C':'minecraft:nether_star','D':'modern_ite:light_core'})
 shaped('dynamic_core_adamantium',['ADA','BCB','ADA'],{'A':'minecraft:glowstone','B':'mite:vibranium_ingot','C':'modern_ite:dynamic_core_mithril','D':'mite:adamantium_ingot'})
 shaped('dynamic_core_vibranium',['ADA','BCB','ADA'],{'A':'minecraft:glowstone','B':'mite:vibranium_ingot','C':'modern_ite:dynamic_core_adamantium','D':'mite:adamantium_ingot'})
 shapeless('voucher_club_core',['modern_ite:voucher_'+v for v in ['fishing','planting','villager']])
@@ -210,6 +211,15 @@ save('data/modern_ite/advancement/recipes/misc/bastion_eye.json', {
     },
     'requirements':[['has_ingredient','has_the_recipe']],
     'rewards':{'recipes':['modern_ite:bastion_eye']},
+})
+save('data/modern_ite/advancement/recipes/misc/light_core.json', {
+    'parent':'minecraft:recipes/root',
+    'criteria': {
+        'has_ingredient':{'trigger':'minecraft:inventory_changed','conditions':{'items':[{'items':'minecraft:ghast_tear'}]}},
+        'has_the_recipe':{'trigger':'minecraft:recipe_unlocked','conditions':{'recipe':'modern_ite:light_core'}},
+    },
+    'requirements':[['has_ingredient','has_the_recipe']],
+    'rewards':{'recipes':['modern_ite:light_core']},
 })
 for binding in ['minecraft:string','mite:sinew']:
  for coal in ['minecraft:coal','minecraft:charcoal']:shapeless('stack_torch_'+binding.split(':')[1]+'_'+coal.split(':')[1],[{'tag':'minecraft:logs'},binding,coal,coal],'modern_ite:stack_torch')
@@ -280,5 +290,5 @@ for locale in ['zh_cn','en_us']:
     merged={}
     for fragment in sorted((RES/'modern_ite').glob('*-lang-'+locale+'.json')):merged.update(json.loads(fragment.read_text(encoding='utf-8')))
     save(f'assets/modern_ite/lang/{locale}.json',merged)
-save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; mithril, adamantium and vibranium lanterns are available through crafting, creative tabs and JEI.','Mithril and adamantium lanterns use Extreme\'s matching dynamic-core recipes; vibranium uses the source upgrade layout with an adamantium lantern at the center. Lanterns only light from the offhand and consume material-scaled durability.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket helmet inherits the full native bucket item model so resource packs retain matching geometry and UVs.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
+save('modern_ite/content-provenance.json',{'author':'NingMeng123','assets':provenance,'adaptations':['Modern namespaced identities replace old metadata subtypes.','Existing cherry wood, beds and lantern retain modern identities.','Material lanterns use original shared held-item geometry by NingMeng123 with native Minecraft lantern and Minecraft/MITE metal block textures; mithril, adamantium and vibranium lanterns are available through crafting, creative tabs and JEI.','Mithril lanterns use mithril ingots and crafted light cores with an original generated sprite. Adamantium retains Extreme\'s matching dynamic-core recipe; vibranium uses the source upgrade layout with an adamantium lantern at the center. Lanterns only light from the offhand and consume material-scaled durability.','Copper, silver and gold clubs receive matching material recipes to make the source-registered identities obtainable.','Native chest geometry uses the original ITE vibranium chest skin; the bucket helmet inherits the full native bucket item model so resource packs retain matching geometry and UVs.','Torch bundles unpack one at a time because modern MITE torches stack to sixteen.','Nether adamantium and red diamond heights are mapped to modern dimensions.']})
 print(f'Packaged {len(provenance)} source textures; merged all language fragments.')

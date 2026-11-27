@@ -44,6 +44,7 @@ public final class ExtremeContent {
     public static final DeferredItem<CrossbowItem> CROSSBOW = ITEMS.registerItem("crossbow", CrossbowItem::new, new Item.Properties().durability(326));
     public static final DeferredItem<FortressEyeItem> FORTRESS_EYE = ITEMS.registerItem("nether_ender_eye", FortressEyeItem::new);
     public static final DeferredItem<FortressEyeItem> BASTION_EYE = ITEMS.registerItem("bastion_eye", p -> new FortressEyeItem(p, "bastion_remnants"));
+    public static final DeferredItem<Item> LIGHT_CORE = item("light_core", new Item.Properties());
     public static final DeferredItem<DynamicCoreItem> MITHRIL_CORE = lantern("mithril", DynamicCoreItem.Material.MITHRIL);
     public static final DeferredItem<DynamicCoreItem> ADAMANTIUM_CORE = lantern("adamantium", DynamicCoreItem.Material.ADAMANTIUM);
     public static final DeferredItem<DynamicCoreItem> VIBRANIUM_CORE = lantern("vibranium", DynamicCoreItem.Material.VIBRANIUM);

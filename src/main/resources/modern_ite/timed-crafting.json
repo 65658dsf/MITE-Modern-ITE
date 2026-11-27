@@ -5,8 +5,8 @@
   "notes": [
     "Difficulty is per whole recipe batch, never multiplied by output count; existing base level, quality, bench, curse and beacon speed modifiers remain authoritative.",
     "The source minimum manufacturing period is 25 ticks, including the 1E-9 torch-bundle unpacking difficulty.",
-    "Gem upgrades preserve the old counted-stack expansion into three components; mithril and adamantium lanterns restore the source dynamic-core recipes, while vibranium lanterns adapt the source upgrade layout and the metal upgrading furnace uses explicitly identified modern ingredients.",
-    "Coverage: 172 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
+    "Gem upgrades preserve the old counted-stack expansion into three components; mithril lanterns use crafted light cores, adamantium lanterns use the source dynamic-core recipe, and vibranium lanterns adapt the source upgrade layout. The metal upgrading furnace uses explicitly identified modern ingredients.",
+    "Coverage: 173 static extension recipes plus the vanilla lantern recipe that reuses Extreme's identical eight-nugget-and-torch recipe.",
     "Maintenance, smithing, smelting and metal conversion recipes use their respective existing controllers and are outside this static crafting table."
   ],
   "components": {
@@ -81,6 +81,10 @@
     "minecraft:gold_nugget": {
       "difficulty": 44.44444274902344,
       "evidence": "R196 runtime-registry.json item 371: crafting_difficulty_as_component"
+    },
+    "minecraft:golden_carrot": {
+      "difficulty": 25.0,
+      "evidence": "R196 runtime-registry.json item 396: crafting_difficulty_as_component"
     },
     "minecraft:iron_ingot": {
       "difficulty": 800.0,
@@ -478,6 +482,10 @@
       "difficulty": 800.0,
       "evidence": "ITE MITEITEBlockRegistryInit: every BlockForgingTable metadata has hardness 8F; Block component = hardness * 100F"
     },
+    "modern_ite:light_core": {
+      "difficulty": 225.0,
+      "evidence": "Modern light core uses its own whole-batch manufacturing difficulty as its component value"
+    },
     "modern_ite:maple_log": {
       "difficulty": 120.00000762939453,
       "evidence": "Extreme BlockEXLog uses BlockHardness.log; same component as R196 log"
@@ -569,10 +577,10 @@
       "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:glowstone (30.000001907348633); 2 * mite:adamantium_ingot (25600.0); 2 * mite:vibranium_ingot (51200.0); 1 * modern_ite:dynamic_core_mithril (1.0); Extreme EXItemsRegistryInit.registerRecipes restores the matching source dynamic-core recipe as a held lantern; preserve the existing absence of a workbench-material gate"
     },
     "modern_ite:dynamic_core_mithril": {
-      "difficulty": 102910.0,
+      "difficulty": 26550.0,
       "required_bench": null,
       "source_order": -1,
-      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * mite:adamantium_ingot (25600.0); 2 * minecraft:ghast_tear (5.0); 2 * minecraft:blaze_rod (200.0); 1 * minecraft:nether_star (100.0); Extreme EXItemsRegistryInit.registerRecipes restores the matching source dynamic-core recipe as a held lantern; preserve the existing absence of a workbench-material gate"
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * mite:mithril_ingot (6400.0); 2 * modern_ite:light_core (225.0); 2 * minecraft:blaze_rod (200.0); 1 * minecraft:nether_star (100.0); modern mithril lantern uses matching metal and two crafted light cores; preserve the existing absence of a workbench-material gate"
     },
     "modern_ite:dynamic_core_vibranium": {
       "difficulty": 153721.0,
@@ -1401,6 +1409,12 @@
       "required_bench": "iron",
       "source_order": -1,
       "evidence": "Preserve the existing ExtremeRules.craftingDifficulty equipment fallback used before this recipe was included in the manufacturing ledger"
+    },
+    "modern_ite:light_core": {
+      "difficulty": 225.0,
+      "required_bench": null,
+      "source_order": -1,
+      "evidence": "RecipeHelper whole-batch float32 sum of the registered modern ingredients: 4 * minecraft:glowstone (30.000001907348633); 4 * minecraft:golden_carrot (25.0); 1 * minecraft:ghast_tear (5.0)"
     },
     "modern_ite:maple_planks": {
       "difficulty": 120.00001,
