@@ -2,7 +2,7 @@
 
 面向 Minecraft 1.21.1 的 MITE: Modern 生存扩展，将 MITE-ITE 2.0.28 与 Extreme LH 0.6.6 的移植内容整合为一个模组。在本体的生存、装备与日历系统上，加入极难生物、领主技能、宝石镶嵌、独立强化锻造和后期探索内容。
 
-开发者 **NingMeng123** · 当前源码配套版本 **0.4.0** · 模组 ID `modern_ite`
+开发者 **NingMeng123** · 当前源码配套版本 **0.4.1** · 模组 ID `modern_ite`
 
 [安装与版本配套](#安装与版本配套) · [主要内容](#主要内容) · [玩法配置](#玩法配置) · [本地开发](#本地开发) · [文档与历史记录](#文档与历史记录)
 
@@ -15,8 +15,8 @@
 | Minecraft | 1.21.1 |
 | 模组加载器 | NeoForge 21.1.259 或更新的 21.1 系列版本 |
 | Java | 21 |
-| 必需前置 | MITE: Modern 0.4.0 或更新版本 |
-| 当前配套文件 | `MITE-Modern-0.4.0.jar` 与 `MITE-Modern-ITE-0.4.0.jar` |
+| 必需前置 | MITE: Modern 0.4.1 或更新版本 |
+| 当前配套文件 | `MITE-Modern-0.4.1.jar` 与 `MITE-Modern-ITE-0.4.1.jar` |
 | 联机安装 | 客户端和服务端均安装本体与 ITE 扩展 |
 
 1. 首次加装或升级前备份存档。准备对应版本的本体和 ITE 扩展 JAR，源码构建步骤见下方“本地开发”。
@@ -101,10 +101,10 @@ cd ..\MITE-Modern-ITE
 .\gradlew.bat build
 ```
 
-默认本体依赖路径由 `mod_version` 决定，当前为 `../miteto1.21.1neoforge/build/libs/MITE-Modern-0.4.0.jar`。扩展产物输出到 `build/libs/MITE-Modern-ITE-0.4.0.jar`。也可通过 `miteJar` 指定本体文件。
+默认本体依赖路径由 `mod_version` 决定，当前为 `../miteto1.21.1neoforge/build/libs/MITE-Modern-0.4.1.jar`。扩展产物输出到 `build/libs/MITE-Modern-ITE-0.4.1.jar`。也可通过 `miteJar` 指定本体文件。
 
 ```powershell
-.\gradlew.bat build "-PmiteJar=D:\Mods\MITE-Modern-0.4.0.jar"
+.\gradlew.bat build "-PmiteJar=D:\Mods\MITE-Modern-0.4.1.jar"
 ```
 
 | 命令 | 作用 |
@@ -177,7 +177,7 @@ macOS 和 Linux 可通过 `bash ./gradlew` 执行对应任务。首次构建会�
 | 装备与生产 | [装备经济](docs/gear-economy-source.md) · [制造耗时](docs/crafting-time.md) · [灯笼维修](docs/lantern-repair.md) |
 | 外观与资源 | [立体宝石](docs/gem-3d-resource-pack.md) · [宝石扫光](docs/gem-item-shine.md) · [模型兼容](docs/model-compatibility.md) · [振金效果](docs/vibranium-runes-and-glint.md) |
 | 配置与验证 | [配置说明](docs/configuration.md) · [刷怪设置](docs/spawning-settings.md) · [接口差异](docs/base-interface-changes.md) · [验收记录](docs/verification.md) |
-| 历史版本 | [0.4.0](docs/release-0.4.0.md) · [0.3.9](docs/release-0.3.9.md) · [0.3.8-bugfix1](docs/release-0.3.8-bugfix1.md) · [0.3.8](docs/release-0.3.8.md) · [0.3.7](docs/release-0.3.7.md) · [0.3.6](docs/release-0.3.6.md) · [0.3.5](docs/release-0.3.5.md) · [0.3.4](docs/release-0.3.4.md) · [0.3.3](docs/release-0.3.3.md) · [0.3.2](docs/release-0.3.2.md) · [0.2.16](docs/release-0.2.16.md) · [0.2.12](docs/release-0.2.12.md) · [0.2.10](docs/release-0.2.10.md) |
+| 历史版本 | [0.4.1](docs/release-0.4.1.md) · [0.4.0](docs/release-0.4.0.md) · [0.3.9](docs/release-0.3.9.md) · [0.3.8-bugfix1](docs/release-0.3.8-bugfix1.md) · [0.3.8](docs/release-0.3.8.md) · [0.3.7](docs/release-0.3.7.md) · [0.3.6](docs/release-0.3.6.md) · [0.3.5](docs/release-0.3.5.md) · [0.3.4](docs/release-0.3.4.md) · [0.3.3](docs/release-0.3.3.md) · [0.3.2](docs/release-0.3.2.md) · [0.2.16](docs/release-0.2.16.md) · [0.2.12](docs/release-0.2.12.md) · [0.2.10](docs/release-0.2.10.md) |
 
 ## 来源与许可
 
