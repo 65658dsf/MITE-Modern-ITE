@@ -84,25 +84,35 @@ public final class MobAbilities {
     }
     private static void stat(Mob mob,Holder<net.minecraft.world.entity.ai.attributes.Attribute> key,double value){var a=mob.getAttribute(key);if(a!=null)a.setBaseValue(value);}
     private static final String FIXED_ATTACK_REVISION="modern_ite:fixed_attack_revision";
+    private static final double PREVIOUS_ANNIHILATION_ATTACK = (13D + 1D / 5D) * 3D;
     static final String SPECIES_HEALTH_BASE = "modern_ite:species_health_base";
-    /** Preserve each former date curve's day-one attack without changing its health progression. */
+    /** Fixed base attack for species that formerly scaled attack damage by date. */
     private static double fixedDateAttack(ExtremeKind kind){
         return switch(kind){
             case EXCHANGER,MIRROR_ZOMBIE,MIRROR_SKELETON -> (.5D-7D/27D)*40D;
             case ZOMBIE_DOOR -> (.5D-8D/28D)*50D;
             case MINER_ZOMBIE -> (.5D-7.875D/27.875D)*30D;
             case ZOMBIE_BOSS -> 6D;
-            case ANNIHILATION_SKELETON -> (13D+1D/5D)*3D;
+            case ANNIHILATION_SKELETON -> 80D;
             case DARK_IRON_GOLEM -> (30D+1D/20D)*2D;
             default -> Double.NaN;
         };
     }
-    private static void normalizeSavedDateAttack(Mob mob,ExtremeKind kind){
-        var data=mob.getPersistentData();
-        if(data.getInt(FIXED_ATTACK_REVISION)>=1)return;
-        double attack=fixedDateAttack(kind);
-        if(Double.isFinite(attack))stat(mob,Attributes.ATTACK_DAMAGE,attack);
-        data.putInt(FIXED_ATTACK_REVISION,1);
+    private static int fixedAttackRevision(ExtremeKind kind) {
+        return kind == ANNIHILATION_SKELETON ? 2 : 1;
+    }
+    private static void normalizeSavedDateAttack(Mob mob, ExtremeKind kind) {
+        var data = mob.getPersistentData();
+        int savedRevision = data.getInt(FIXED_ATTACK_REVISION);
+        int currentRevision = fixedAttackRevision(kind);
+        if (savedRevision >= currentRevision) return;
+        double attack = fixedDateAttack(kind);
+        boolean previousAnnihilationDefault = kind == ANNIHILATION_SKELETON
+                && mob.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) == PREVIOUS_ANNIHILATION_ATTACK;
+        if (Double.isFinite(attack) && (savedRevision < 1 || previousAnnihilationDefault)) {
+            stat(mob, Attributes.ATTACK_DAMAGE, attack);
+        }
+        data.putInt(FIXED_ATTACK_REVISION, currentRevision);
     }
 
     private static boolean hasSpeciesHealthCurve(ExtremeKind kind) {
@@ -193,7 +203,7 @@ public final class MobAbilities {
         }
         double fixedAttack=fixedDateAttack(k);
         stat(m,Attributes.MAX_HEALTH,health);stat(m,Attributes.ATTACK_DAMAGE,Double.isFinite(fixedAttack)?fixedAttack:attack);stat(m,Attributes.MOVEMENT_SPEED,speed);
-        m.getPersistentData().putInt(FIXED_ATTACK_REVISION,1);
+        m.getPersistentData().putInt(FIXED_ATTACK_REVISION,fixedAttackRevision(k));
         stat(m,Attributes.FOLLOW_RANGE,k==ZOMBIE_CALLER?35:k==RED_GHOUL?40:k==DARK_IRON_GOLEM?25:k==ANNIHILATION_SKELETON?48:64);
         if(k==ANNIHILATION_SKELETON||k==ZOMBIE_BOSS)stat(m,Attributes.KNOCKBACK_RESISTANCE,1);
         m.setHealth(m.getMaxHealth());

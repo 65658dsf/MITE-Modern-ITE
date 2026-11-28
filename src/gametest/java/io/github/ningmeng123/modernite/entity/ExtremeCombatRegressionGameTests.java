@@ -313,12 +313,12 @@ public final class ExtremeCombatRegressionGameTests {
                     ExtremeKind.ZOMBIE_BOSS,ExtremeKind.MIRROR_ZOMBIE,ExtremeKind.MIRROR_SKELETON,
                     ExtremeKind.ANNIHILATION_SKELETON,ExtremeKind.DARK_IRON_GOLEM};
             double[] expected={9.62962962962963D,10.714285714285715D,6.524663677130045D,6D,
-                    9.62962962962963D,9.62962962962963D,39.6D,60.1D};
+                    9.62962962962963D,9.62962962962963D,80D,60.1D};
             h.getLevel().setDayTime(9999L*24000L);
             for(int index=0;index<kinds.length;index++){
                 Mob fresh=mob(h,kinds[index]);
                 h.assertTrue(Math.abs(fresh.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-expected[index])<.000001D,
-                        "Far-future new mobs use the species' literal day-one attack: "+kinds[index]);
+                        "Far-future new mobs use the species' fixed base attack: "+kinds[index]);
                 float maximum=fresh.getMaxHealth();fresh.setHealth(maximum*.4F);float injured=fresh.getHealth();
                 var weapon=new ItemStack(Items.STICK);fresh.setItemSlot(EquipmentSlot.MAINHAND,weapon);
                 fresh.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(999D);
@@ -336,6 +336,22 @@ public final class ExtremeCombatRegressionGameTests {
                 h.assertTrue(Math.abs(loaded.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)-expected[index]-.5D)<.000001D,
                         "The one-time migration preserves later custom attack changes during live refresh: "+kinds[index]);
                 fresh.discard();loaded.discard();
+            }
+            double previousDefault = (13D + 1D / 5D) * 3D;
+            for (double savedAttack : new double[]{previousDefault, 52D}) {
+                Mob fresh = mob(h, ExtremeKind.ANNIHILATION_SKELETON);
+                fresh.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(savedAttack);
+                fresh.getPersistentData().putInt("modern_ite:fixed_attack_revision", 1);
+                var saved = new net.minecraft.nbt.CompoundTag();
+                fresh.saveWithoutId(saved);
+                Mob loaded = ExtremeMobs.type(ExtremeKind.ANNIHILATION_SKELETON).create(h.getLevel());
+                loaded.load(saved);
+                ExtremeMobEvents.join(new net.neoforged.neoforge.event.entity.EntityJoinLevelEvent(loaded, h.getLevel()));
+                double expectedAttack = savedAttack == previousDefault ? 80D : savedAttack;
+                h.assertTrue(loaded.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) == expectedAttack,
+                        "Revision-one annihilation skeletons upgrade only the old default: " + savedAttack);
+                fresh.discard();
+                loaded.discard();
             }
             Mob live=mob(h,ExtremeKind.EXCHANGER);live.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(999D);
             live.getPersistentData().remove("modern_ite:fixed_attack_revision");
